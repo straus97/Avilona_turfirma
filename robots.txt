@@ -1,0 +1,62 @@
+User-agent: *
+Disallow: /vendor/
+Disallow: /storage/
+Disallow: /resources/
+Disallow: /bootstrap/
+Disallow: /node_modules/
+Disallow: /config/
+Disallow: /routes/
+Disallow: /tests/
+Disallow: /database/
+Disallow: /public/storage/
+Disallow: /public/vendor/
+Disallow: /public/build/dist/
+Disallow: /public/build/documents/
+Disallow: /public/build/plugins/
+
+# Блокировка конфигурационных и служебных файлов
+Disallow: /.env
+Disallow: /.gitignore
+Disallow: /README.md
+Disallow: /composer.json
+Disallow: /composer.lock
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /phpunit.xml
+Disallow: /server.php
+Disallow: /webpack.mix.js
+Disallow: /vite.config.js
+Disallow: /postcss.config.js
+Disallow: /tailwind.config.js
+Disallow: /.htaccess
+
+# Блокировка страницы входа в систему
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /register
+Disallow: /admin
+
+# Блокировка документов
+Disallow: /public/documents/
+Disallow: /public/dist/
+Disallow: /public/plugins/
+
+# Разрешить сканирование публичных активов и маршрутов
+Allow: /public/assets/
+Allow: /public/css/
+Allow: /public/js/
+Allow: /public/images/
+
+# Разрешить индексацию важных страниц
+Allow: /countries/
+Allow: /destinations/
+Allow: /helpful_information/
+Allow: /home/
+Allow: /contact/
+Allow: /reviews/
+Allow: /about/
+Allow: /news/
+Allow: /special/
+
+# Местоположение карты сайта
+Sitemap: https://www.avilona.ru/sitemap.xml

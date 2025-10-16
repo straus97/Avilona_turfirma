@@ -1,0 +1,183 @@
+h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: .5rem
+}
+
+.p_img p {
+    font-size: 18px
+}
+
+.p_img img {
+    display: block;
+    margin: 0 auto;
+    max-width: 700px
+}
+
+.primary-button-profile {
+    background-color: #3490dc;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color .3s
+}
+
+.primary-button-profile:hover {
+    background-color: #2779bd
+}
+
+body {
+    background: snow
+}
+
+#button-up {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    z-index: 9999;
+    cursor: pointer;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 40px;
+    transition: .3s ease-in-out;
+    background-image: url('../img/airplane_start.png');
+    background-repeat: no-repeat;
+    background-size: 100%
+}
+
+#button-up:hover {
+    background-image: url('../img/airplane_end.png')
+}
+
+.navbar-brand img {
+    max-width: 200px;
+    max-height: 180px
+}
+
+.nav-item {
+    font-size: 1.3rem
+}
+
+.login-btn {
+    height: 40px
+}
+
+a {
+    text-decoration: none
+}
+
+.modal-managers, .modal1 {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, .4)
+}
+
+.modal-content-manager, .modal-content-managers {
+    margin: 15% auto;
+    padding: 20px;
+    width: 50%;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, .2)
+}
+
+.modal-content-manager {
+    position: relative;
+    background-color: #fefefe;
+    border: 1px solid #888;
+    border-radius: 5px
+}
+
+.close-button, .close-button-managers {
+    color: #aaa;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 28px;
+    font-weight: 700;
+    cursor: pointer
+}
+
+.close-button-managers:hover, .close-button:hover {
+    color: #000
+}
+
+.modal-content-manager .telegram-button, .modal-content-manager .whatsapp-button {
+    background-color: #25d366;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    width: 95%
+}
+
+.modal-content-manager .telegram-button, .telegram-button-managers {
+    background-color: #39f
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px
+}
+
+.telegram-button-managers:hover, .whatsapp-button-managers:hover, button:hover {
+    opacity: .8
+}
+
+button img {
+    height: 20px;
+    margin-right: 8px
+}
+
+.modal-content-managers {
+    position: relative;
+    background-color: #fefefe;
+    border: 1px solid #888;
+    text-align: center;
+    border-radius: 5px
+}
+
+.telegram-button-managers, .whatsapp-button-managers {
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 5px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    width: 80%
+}
+
+.whatsapp-button-managers {
+    background-color: #25d366
+}
+
+hr {
+    margin: 20px 0
+}
+
+.document-container {
+    margin-bottom: 15px
+}
+
+.document-date {
+    font-size: .8em;
+    color: #555;
+    display: block;
+    margin-top: 5px
+}

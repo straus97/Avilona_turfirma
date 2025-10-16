@@ -1,0 +1,430 @@
+# Laravel Development Rules
+
+## 🎯 Общие принципы
+
+### Архитектура
+- Следуй принципам MVC (Model-View-Controller)
+- Используй Service Layer для бизнес-логики
+- Применяй Repository Pattern для работы с данными
+- Реализуй SOLID принципы
+
+### Структура проекта
+- Модели в `app/Models/`
+- Контроллеры в `app/Http/Controllers/`
+- Сервисы в `app/Services/`
+- Репозитории в `app/Repositories/`
+- Middleware в `app/Http/Middleware/`
+- Requests в `app/Http/Requests/`
+
+## 📝 Кодирование
+
+### PHP стандарты
+- Следуй PSR-12 стандарту кодирования
+- Используй строгую типизацию (type hints)
+- Применяй DocBlock комментарии
+- Именуй методы в camelCase
+- Именуй классы в PascalCase
+
+### Laravel конвенции
+- Используй Eloquent ORM для работы с БД
+- Применяй Laravel Collections
+- Используй Form Requests для валидации
+- Применяй Resource Controllers
+- Используй Laravel Events и Listeners
+
+### Примеры кода
+
+#### Модель
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Tour extends Model
+{
+    protected $fillable = [
+        'title',
+        'description',
+        'price',
+        'departure_city',
+        'destination_country',
+        'start_date',
+        'end_date',
+        'hotel_stars',
+        'meal_type',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'price' => 'decimal:2',
+    ];
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+}
+```
+
+#### Контроллер
+```php
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\TourSearchRequest;
+use App\Services\TourSearchService;
+use Illuminate\Http\JsonResponse;
+
+class TourController extends Controller
+{
+    public function __construct(
+        private TourSearchService $tourSearchService
+    ) {}
+
+    public function search(TourSearchRequest $request): JsonResponse
+    {
+        $tours = $this->tourSearchService->search($request->validated());
+        
+        return response()->json([
+            'data' => $tours,
+            'meta' => [
+                'total' => $tours->total(),
+                'per_page' => $tours->perPage(),
+            ]
+        ]);
+    }
+}
+```
+
+#### Form Request
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class TourSearchRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'departure_city' => 'required|string|max:255',
+            'destination_country' => 'required|string|max:255',
+            'start_date' => 'required|date|after:today',
+            'end_date' => 'required|date|after:start_date',
+            'adults' => 'required|integer|min:1|max:10',
+            'children' => 'integer|min:0|max:10',
+            'hotel_stars' => 'integer|min:1|max:5',
+            'meal_type' => 'string|in:BB,HB,FB,AI,UAI',
+            'price_min' => 'numeric|min:0',
+            'price_max' => 'numeric|min:0|gte:price_min',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'start_date.after' => 'Дата начала должна быть в будущем',
+            'end_date.after' => 'Дата окончания должна быть после даты начала',
+        ];
+    }
+}
+```
+
+## 🗄 База данных
+
+### Миграции
+- Используй описательные имена миграций
+- Добавляй индексы для часто используемых полей
+- Используй foreign key constraints
+- Применяй soft deletes где необходимо
+
+### Пример миграции
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tours', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description');
+            $table->decimal('price', 10, 2);
+            $table->string('departure_city');
+            $table->string('destination_country');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->integer('hotel_stars')->nullable();
+            $table->enum('meal_type', ['BB', 'HB', 'FB', 'AI', 'UAI'])->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            
+            $table->index(['departure_city', 'destination_country']);
+            $table->index(['start_date', 'end_date']);
+            $table->index('price');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tours');
+    }
+};
+```
+
+### Eloquent отношения
+- Используй правильные типы отношений
+- Применяй eager loading для оптимизации
+- Используй accessors и mutators
+- Применяй scopes для часто используемых запросов
+
+## 🎨 Frontend (Blade)
+
+### Blade шаблоны
+- Используй компоненты для переиспользуемых элементов
+- Применяй layouts для общей структуры
+- Используй includes для повторяющихся блоков
+- Применяй директивы Blade для логики
+
+### Пример компонента
+```blade
+{{-- resources/views/components/tour-card.blade.php --}}
+@props(['tour'])
+
+<div class="tour-card bg-white rounded-lg shadow-md overflow-hidden">
+    <img src="{{ $tour->image_url }}" alt="{{ $tour->title }}" class="w-full h-48 object-cover">
+    
+    <div class="p-4">
+        <h3 class="text-lg font-semibold mb-2">{{ $tour->title }}</h3>
+        <p class="text-gray-600 text-sm mb-3">{{ Str::limit($tour->description, 100) }}</p>
+        
+        <div class="flex justify-between items-center">
+            <span class="text-2xl font-bold text-blue-600">{{ number_format($tour->price) }} ₽</span>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Забронировать
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+### Использование компонента
+```blade
+@foreach($tours as $tour)
+    <x-tour-card :tour="$tour" />
+@endforeach
+```
+
+## 🔒 Безопасность
+
+### Валидация
+- Всегда валидируй входные данные
+- Используй Form Requests
+- Применяй sanitization
+- Используй prepared statements
+
+### Аутентификация
+- Используй Laravel Sanctum для API
+- Применяй middleware для защиты маршрутов
+- Используй rate limiting
+- Применяй CSRF защиту
+
+### Пример middleware
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class CheckUserRole
+{
+    public function handle(Request $request, Closure $next, string $role): mixed
+    {
+        if (!$request->user() || !$request->user()->hasRole($role)) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        return $next($request);
+    }
+}
+```
+
+## ⚡ Производительность
+
+### Кэширование
+- Используй кэш для часто запрашиваемых данных
+- Применяй query caching
+- Используй view caching
+- Применяй route caching
+
+### Оптимизация запросов
+- Используй eager loading
+- Применяй lazy loading где необходимо
+- Используй database indexes
+- Применяй pagination
+
+### Пример оптимизации
+```php
+// Плохо - N+1 проблема
+$tours = Tour::all();
+foreach ($tours as $tour) {
+    echo $tour->bookings->count();
+}
+
+// Хорошо - eager loading
+$tours = Tour::with('bookings')->get();
+foreach ($tours as $tour) {
+    echo $tour->bookings->count();
+}
+```
+
+## 🧪 Тестирование
+
+### Unit тесты
+- Тестируй модели и сервисы
+- Используй factories для тестовых данных
+- Применяй assertions
+- Тестируй edge cases
+
+### Feature тесты
+- Тестируй API endpoints
+- Тестируй пользовательские сценарии
+- Используй database transactions
+- Применяй authentication в тестах
+
+### Пример теста
+```php
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use App\Models\Tour;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TourSearchTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_can_search_tours(): void
+    {
+        Tour::factory()->create([
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'price' => 50000,
+        ]);
+
+        $response = $this->getJson('/api/tours/search?' . http_build_query([
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'start_date' => '2024-06-01',
+            'end_date' => '2024-06-08',
+            'adults' => 2,
+        ]));
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'title',
+                        'price',
+                        'departure_city',
+                        'destination_country',
+                    ]
+                ]
+            ]);
+    }
+}
+```
+
+## 📱 Мобильная адаптация
+
+### Responsive дизайн
+- Используй Bootstrap grid system
+- Применяй TailwindCSS responsive utilities
+- Тестируй на разных устройствах
+- Оптимизируй изображения
+
+### Touch-friendly интерфейс
+- Используй достаточно большие кнопки
+- Применяй swipe жесты
+- Оптимизируй формы для мобильных
+- Используй мобильные паттерны навигации
+
+## 🔍 SEO оптимизация
+
+### Meta теги
+- Используй уникальные title и description
+- Применяй Open Graph теги
+- Используй Schema.org разметку
+- Оптимизируй URL структуру
+
+### Пример SEO оптимизации
+```blade
+@section('title', $tour->title . ' - Туристическое агентство Авилона')
+@section('description', Str::limit($tour->description, 160))
+
+@section('meta')
+    <meta property="og:title" content="{{ $tour->title }}">
+    <meta property="og:description" content="{{ Str::limit($tour->description, 160) }}">
+    <meta property="og:image" content="{{ $tour->image_url }}">
+    <meta property="og:type" content="product">
+@endsection
+```
+
+## 📊 Мониторинг и логирование
+
+### Логирование
+- Используй Laravel Log facade
+- Применяй разные уровни логирования
+- Логируй важные события
+- Используй structured logging
+
+### Мониторинг
+- Настрой мониторинг ошибок
+- Отслеживай производительность
+- Мониторь использование ресурсов
+- Настрой алерты
+
+## 🚀 Деплой
+
+### Подготовка к продакшену
+- Оптимизируй конфигурацию
+- Настрой кэширование
+- Используй environment variables
+- Настрой мониторинг
+
+### Команды для продакшена
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+```

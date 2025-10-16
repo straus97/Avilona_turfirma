@@ -1,0 +1,520 @@
+# Frontend Development Rules (Bootstrap + TailwindCSS)
+
+## 🎯 Общие принципы
+
+### Подход к стилизации
+- Используй Bootstrap 5 для базовой сетки и компонентов
+- Применяй TailwindCSS для кастомных стилей и утилит
+- Следуй mobile-first подходу
+- Используй semantic HTML
+- Применяй accessibility стандарты
+
+### Структура стилей
+- Bootstrap для layout и базовых компонентов
+- TailwindCSS для кастомных стилей
+- CSS переменные для цветовой схемы
+- Компонентный подход к стилизации
+
+## 🎨 Bootstrap 5
+
+### Grid система
+```html
+<!-- Хорошо - responsive grid -->
+<div class="container">
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100">
+                <!-- Card content -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Плохо - фиксированные размеры -->
+<div class="container">
+    <div class="row">
+        <div class="col-4">
+            <!-- Content -->
+        </div>
+    </div>
+</div>
+```
+
+### Компоненты
+```html
+<!-- Хорошо - используй Bootstrap компоненты -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="/">Авилона</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/tours">Туры</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Плохо - кастомная навигация без Bootstrap -->
+<div class="custom-nav">
+    <div class="nav-brand">Авилона</div>
+    <div class="nav-links">
+        <a href="/tours">Туры</a>
+    </div>
+</div>
+```
+
+### Формы
+```html
+<!-- Хорошо - Bootstrap формы с валидацией -->
+<form class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" required>
+        <div class="invalid-feedback">
+            Пожалуйста, введите корректный email.
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="phone" class="form-label">Телефон</label>
+        <input type="tel" class="form-control" id="phone" required>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Отправить</button>
+</form>
+
+<!-- Плохо - без Bootstrap стилей -->
+<form>
+    <div>
+        <label>Email</label>
+        <input type="email">
+    </div>
+    <button>Отправить</button>
+</form>
+```
+
+## 🎨 TailwindCSS
+
+### Utility-first подход
+```html
+<!-- Хорошо - используй Tailwind утилиты -->
+<div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-300">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">Заголовок</h3>
+    <p class="text-gray-600 leading-relaxed">Описание тура...</p>
+    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Забронировать
+    </button>
+</div>
+
+<!-- Плохо - кастомные CSS классы -->
+<div class="custom-card">
+    <h3 class="card-title">Заголовок</h3>
+    <p class="card-description">Описание тура...</p>
+    <button class="custom-button">Забронировать</button>
+</div>
+```
+
+### Responsive дизайн
+```html
+<!-- Хорошо - responsive с Tailwind -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+        <!-- Card content -->
+    </div>
+</div>
+
+<!-- Плохо - фиксированные размеры -->
+<div class="grid grid-cols-3 gap-4">
+    <div class="bg-white p-4 rounded-lg shadow">
+        <!-- Card content -->
+    </div>
+</div>
+```
+
+### Цветовая схема
+```html
+<!-- Хорошо - используй семантические цвета -->
+<button class="bg-primary-500 text-white hover:bg-primary-600">
+    Основная кнопка
+</button>
+
+<button class="bg-success-500 text-white hover:bg-success-600">
+    Успех
+</button>
+
+<button class="bg-danger-500 text-white hover:bg-danger-600">
+    Опасность
+</button>
+
+<!-- Плохо - хардкод цветов -->
+<button class="bg-blue-500 text-white hover:bg-blue-600">
+    Кнопка
+</button>
+```
+
+## 📱 Мобильная адаптация
+
+### Touch-friendly интерфейс
+```html
+<!-- Хорошо - большие кнопки для мобильных -->
+<button class="w-full md:w-auto bg-blue-500 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    Забронировать тур
+</button>
+
+<!-- Плохо - маленькие кнопки -->
+<button class="bg-blue-500 text-white px-2 py-1 rounded">
+    Забронировать
+</button>
+```
+
+### Мобильная навигация
+```html
+<!-- Хорошо - мобильная навигация -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="/" class="text-xl font-bold text-gray-800">Авилона</a>
+            </div>
+            
+            <!-- Desktop menu -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/tours" class="text-gray-600 hover:text-gray-900">Туры</a>
+                <a href="/countries" class="text-gray-600 hover:text-gray-900">Страны</a>
+            </div>
+            
+            <!-- Mobile menu button -->
+            <div class="md:hidden flex items-center">
+                <button class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+```
+
+## 🎯 Компоненты
+
+### Карточка тура
+```html
+<!-- Хорошо - переиспользуемый компонент -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div class="relative">
+        <img src="{{ $tour->image_url }}" alt="{{ $tour->title }}" 
+             class="w-full h-48 object-cover">
+        <div class="absolute top-4 right-4 bg-white bg-opacity-90 px-2 py-1 rounded">
+            <span class="text-sm font-medium text-gray-800">{{ $tour->duration }} дней</span>
+        </div>
+    </div>
+    
+    <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ $tour->title }}</h3>
+        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ $tour->description }}</p>
+        
+        <div class="flex items-center justify-between">
+            <div>
+                <span class="text-2xl font-bold text-blue-600">{{ number_format($tour->price) }} ₽</span>
+                <span class="text-sm text-gray-500">за человека</span>
+            </div>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                Подробнее
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+### Форма поиска туров
+```html
+<!-- Хорошо - адаптивная форма поиска -->
+<form class="bg-white p-6 rounded-lg shadow-md">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Откуда</label>
+            <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Выберите город</option>
+                <option value="moscow">Москва</option>
+                <option value="spb">Санкт-Петербург</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Куда</label>
+            <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Выберите страну</option>
+                <option value="turkey">Турция</option>
+                <option value="egypt">Египет</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Дата заезда</label>
+            <input type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Количество ночей</label>
+            <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="7">7 ночей</option>
+                <option value="10">10 ночей</option>
+                <option value="14">14 ночей</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="flex justify-center">
+        <button type="submit" class="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+            Найти туры
+        </button>
+    </div>
+</form>
+```
+
+## ⚡ Производительность
+
+### Оптимизация изображений
+```html
+<!-- Хорошо - lazy loading и оптимизация -->
+<img src="{{ $tour->image_url }}" 
+     alt="{{ $tour->title }}"
+     class="w-full h-48 object-cover"
+     loading="lazy"
+     decoding="async">
+
+<!-- Плохо - без оптимизации -->
+<img src="{{ $tour->image_url }}" alt="{{ $tour->title }}">
+```
+
+### Минификация CSS/JS
+```html
+<!-- Хорошо - минифицированные файлы -->
+<link rel="stylesheet" href="{{ mix('css/app.css') }}">
+<script src="{{ mix('js/app.js') }}" defer></script>
+
+<!-- Плохо - не минифицированные файлы -->
+<link rel="stylesheet" href="/css/style.css">
+<script src="/js/script.js"></script>
+```
+
+## 🔍 SEO оптимизация
+
+### Semantic HTML
+```html
+<!-- Хорошо - семантическая разметка -->
+<article class="tour-card bg-white rounded-lg shadow-md p-6">
+    <header>
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ $tour->title }}</h2>
+        <div class="flex items-center mb-4">
+            <span class="text-yellow-400">★★★★☆</span>
+            <span class="text-sm text-gray-600 ml-2">4.2 (127 отзывов)</span>
+        </div>
+    </header>
+    
+    <div class="tour-content">
+        <p class="text-gray-600 mb-4">{{ $tour->description }}</p>
+        
+        <footer class="flex items-center justify-between">
+            <div class="price">
+                <span class="text-2xl font-bold text-blue-600">{{ number_format($tour->price) }} ₽</span>
+                <span class="text-sm text-gray-500">за человека</span>
+            </div>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                Забронировать
+            </button>
+        </footer>
+    </div>
+</article>
+
+<!-- Плохо - не семантическая разметка -->
+<div class="tour-card">
+    <div class="title">{{ $tour->title }}</div>
+    <div class="description">{{ $tour->description }}</div>
+    <div class="price">{{ $tour->price }} ₽</div>
+    <div class="button">Забронировать</div>
+</div>
+```
+
+### Meta теги
+```html
+<!-- Хорошо - полные meta теги -->
+<head>
+    <title>{{ $tour->title }} - Туристическое агентство Авилона</title>
+    <meta name="description" content="{{ Str::limit($tour->description, 160) }}">
+    <meta name="keywords" content="{{ $tour->destination_country }}, туры, отдых, путешествия">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ $tour->title }}">
+    <meta property="og:description" content="{{ Str::limit($tour->description, 160) }}">
+    <meta property="og:image" content="{{ $tour->image_url }}">
+    <meta property="og:type" content="product">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $tour->title }}">
+    <meta name="twitter:description" content="{{ Str::limit($tour->description, 160) }}">
+    <meta name="twitter:image" content="{{ $tour->image_url }}">
+</head>
+```
+
+## 🎨 Анимации и интерактивность
+
+### Плавные переходы
+```html
+<!-- Хорошо - плавные анимации -->
+<div class="tour-card bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+    <!-- Card content -->
+</div>
+
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+    Кнопка
+</button>
+
+<!-- Плохо - резкие изменения -->
+<div class="tour-card hover:shadow-lg">
+    <!-- Card content -->
+</div>
+```
+
+### Loading состояния
+```html
+<!-- Хорошо - loading состояния -->
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+        :disabled="loading">
+    <span v-if="loading" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+    {{ loading ? 'Загрузка...' : 'Отправить' }}
+</button>
+
+<!-- Плохо - без loading состояний -->
+<button class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+    Отправить
+</button>
+```
+
+## 🔧 JavaScript интеграция
+
+### Alpine.js компоненты
+```html
+<!-- Хорошо - Alpine.js компонент -->
+<div x-data="tourSearch()" class="tour-search-form">
+    <form @submit.prevent="searchTours">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Откуда</label>
+                <select x-model="filters.departureCity" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="">Выберите город</option>
+                    <option value="moscow">Москва</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Куда</label>
+                <select x-model="filters.destinationCountry" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                    <option value="">Выберите страну</option>
+                    <option value="turkey">Турция</option>
+                </select>
+            </div>
+        </div>
+        
+        <button type="submit" class="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600" 
+                :disabled="loading">
+            <span x-show="loading" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+            <span x-text="loading ? 'Поиск...' : 'Найти туры'"></span>
+        </button>
+    </form>
+    
+    <div x-show="results.length > 0" class="mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <template x-for="tour in results" :key="tour.id">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 x-text="tour.title" class="text-lg font-semibold mb-2"></h3>
+                    <p x-text="tour.description" class="text-gray-600 mb-4"></p>
+                    <div class="flex justify-between items-center">
+                        <span x-text="tour.price + ' ₽'" class="text-xl font-bold text-blue-600"></span>
+                        <button @click="bookTour(tour)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            Забронировать
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<script>
+function tourSearch() {
+    return {
+        filters: {
+            departureCity: '',
+            destinationCountry: '',
+            startDate: '',
+            nights: 7
+        },
+        results: [],
+        loading: false,
+        
+        async searchTours() {
+            this.loading = true;
+            try {
+                const response = await fetch('/api/tours/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(this.filters)
+                });
+                
+                const data = await response.json();
+                this.results = data.tours;
+            } catch (error) {
+                console.error('Ошибка поиска туров:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        bookTour(tour) {
+            // Логика бронирования
+            window.location.href = `/tours/${tour.id}/book`;
+        }
+    }
+}
+</script>
+```
+
+## 🧪 Тестирование
+
+### Browser тесты
+```javascript
+// Хорошо - тестирование пользовательских сценариев
+test('can search for tours', async ({ page }) => {
+    await page.goto('/');
+    
+    await page.selectOption('[data-testid="departure-city"]', 'moscow');
+    await page.selectOption('[data-testid="destination-country"]', 'turkey');
+    await page.fill('[data-testid="start-date"]', '2024-06-01');
+    
+    await page.click('[data-testid="search-button"]');
+    
+    await expect(page.locator('[data-testid="tour-results"]')).toBeVisible();
+    await expect(page.locator('[data-testid="tour-card"]')).toHaveCount.greaterThan(0);
+});
+
+// Плохо - тестирование без data-testid
+test('can search for tours', async ({ page }) => {
+    await page.goto('/');
+    
+    await page.selectOption('select', 'moscow');
+    await page.click('button');
+    
+    await expect(page.locator('.tour-card')).toBeVisible();
+});
+```

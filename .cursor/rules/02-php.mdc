@@ -1,0 +1,488 @@
+# PHP Development Rules
+
+## 🎯 Общие принципы
+
+### Стандарты кодирования
+- Следуй PSR-12 стандарту
+- Используй строгую типизацию
+- Применяй DocBlock комментарии
+- Соблюдай принципы SOLID
+- Используй meaningful имена переменных и функций
+
+### Структура кода
+- Один класс на файл
+- Используй namespaces
+- Применяй autoloading
+- Следуй принципу единственной ответственности
+
+## 📝 Синтаксис и стиль
+
+### Объявление переменных
+```php
+// Хорошо
+$userName = 'john_doe';
+$isActive = true;
+$userCount = 0;
+
+// Плохо
+$u = 'john_doe';
+$flag = true;
+$cnt = 0;
+```
+
+### Функции и методы
+```php
+// Хорошо - с типизацией и документацией
+/**
+ * Вычисляет общую стоимость тура
+ *
+ * @param float $basePrice Базовая цена
+ * @param int $nights Количество ночей
+ * @param float $discount Скидка в процентах
+ * @return float Общая стоимость
+ */
+public function calculateTotalPrice(float $basePrice, int $nights, float $discount = 0.0): float
+{
+    $total = $basePrice * $nights;
+    
+    if ($discount > 0) {
+        $total -= $total * ($discount / 100);
+    }
+    
+    return round($total, 2);
+}
+
+// Плохо - без типизации и документации
+public function calc($price, $nights, $disc = 0)
+{
+    $total = $price * $nights;
+    if ($disc > 0) {
+        $total -= $total * ($disc / 100);
+    }
+    return $total;
+}
+```
+
+### Условные операторы
+```php
+// Хорошо
+if ($user->isActive() && $user->hasPermission('book_tour')) {
+    $this->processBooking($booking);
+}
+
+// Плохо
+if($user->isActive()==true && $user->hasPermission('book_tour')==true){
+    $this->processBooking($booking);
+}
+```
+
+### Циклы
+```php
+// Хорошо
+foreach ($tours as $tour) {
+    if ($tour->isAvailable()) {
+        $availableTours[] = $tour;
+    }
+}
+
+// Плохо
+for($i=0;$i<count($tours);$i++){
+    if($tours[$i]->isAvailable()==true){
+        $availableTours[]=$tours[$i];
+    }
+}
+```
+
+## 🏗 Архитектурные паттерны
+
+### Service Layer
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\Tour;
+use App\Models\Booking;
+use App\Repositories\TourRepository;
+use Illuminate\Support\Collection;
+
+class TourBookingService
+{
+    public function __construct(
+        private TourRepository $tourRepository
+    ) {}
+
+    public function searchAvailableTours(array $criteria): Collection
+    {
+        $tours = $this->tourRepository->search($criteria);
+        
+        return $tours->filter(function (Tour $tour) {
+            return $this->isTourAvailable($tour);
+        });
+    }
+
+    private function isTourAvailable(Tour $tour): bool
+    {
+        $bookedSlots = $tour->bookings()
+            ->where('status', '!=', 'cancelled')
+            ->sum('participants_count');
+            
+        return $bookedSlots < $tour->max_participants;
+    }
+}
+```
+
+### Repository Pattern
+```php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\Tour;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class TourRepository
+{
+    public function search(array $criteria): Collection
+    {
+        $query = Tour::query();
+
+        if (isset($criteria['departure_city'])) {
+            $query->where('departure_city', $criteria['departure_city']);
+        }
+
+        if (isset($criteria['destination_country'])) {
+            $query->where('destination_country', $criteria['destination_country']);
+        }
+
+        if (isset($criteria['start_date'])) {
+            $query->where('start_date', '>=', $criteria['start_date']);
+        }
+
+        if (isset($criteria['price_max'])) {
+            $query->where('price', '<=', $criteria['price_max']);
+        }
+
+        return $query->get();
+    }
+
+    public function findById(int $id): ?Tour
+    {
+        return Tour::find($id);
+    }
+
+    public function paginate(int $perPage = 15): LengthAwarePaginator
+    {
+        return Tour::paginate($perPage);
+    }
+}
+```
+
+## 🔒 Безопасность
+
+### Валидация входных данных
+```php
+// Хорошо
+public function validateEmail(string $email): bool
+{
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+public function sanitizeInput(string $input): string
+{
+    return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+
+// Плохо
+public function processInput($data)
+{
+    return $data; // Без валидации и санитизации
+}
+```
+
+### Работа с паролями
+```php
+// Хорошо
+public function hashPassword(string $password): string
+{
+    return password_hash($password, PASSWORD_DEFAULT);
+}
+
+public function verifyPassword(string $password, string $hash): bool
+{
+    return password_verify($password, $hash);
+}
+
+// Плохо
+public function hashPassword($password)
+{
+    return md5($password); // Устаревший и небезопасный
+}
+```
+
+### SQL Injection защита
+```php
+// Хорошо - используй prepared statements
+public function findUserByEmail(string $email): ?User
+{
+    $stmt = $this->pdo->prepare('SELECT * FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    
+    return $stmt->fetchObject(User::class);
+}
+
+// Плохо - уязвимо для SQL injection
+public function findUserByEmail($email)
+{
+    $sql = "SELECT * FROM users WHERE email = '$email'";
+    return $this->pdo->query($sql)->fetchObject(User::class);
+}
+```
+
+## ⚡ Производительность
+
+### Оптимизация запросов
+```php
+// Хорошо - используй индексы и ограничения
+public function getActiveTours(): Collection
+{
+    return Tour::select(['id', 'title', 'price', 'start_date'])
+        ->where('is_active', true)
+        ->where('start_date', '>', now())
+        ->orderBy('start_date')
+        ->limit(20)
+        ->get();
+}
+
+// Плохо - загружает все данные
+public function getActiveTours()
+{
+    return Tour::where('is_active', true)->get();
+}
+```
+
+### Кэширование
+```php
+// Хорошо
+public function getPopularDestinations(): Collection
+{
+    return Cache::remember('popular_destinations', 3600, function () {
+        return Tour::select('destination_country')
+            ->groupBy('destination_country')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(10)
+            ->pluck('destination_country');
+    });
+}
+
+// Плохо - без кэширования
+public function getPopularDestinations()
+{
+    return Tour::select('destination_country')
+        ->groupBy('destination_country')
+        ->orderByRaw('COUNT(*) DESC')
+        ->limit(10)
+        ->pluck('destination_country');
+}
+```
+
+### Обработка ошибок
+```php
+// Хорошо
+try {
+    $result = $this->externalApiService->getTourData($tourId);
+    
+    if (!$result) {
+        throw new TourNotFoundException("Тур с ID {$tourId} не найден");
+    }
+    
+    return $result;
+} catch (ApiException $e) {
+    Log::error('Ошибка API при получении данных тура', [
+        'tour_id' => $tourId,
+        'error' => $e->getMessage()
+    ]);
+    
+    throw new ServiceUnavailableException('Сервис временно недоступен');
+}
+
+// Плохо
+public function getTourData($tourId)
+{
+    $result = $this->externalApiService->getTourData($tourId);
+    return $result; // Без обработки ошибок
+}
+```
+
+## 🧪 Тестирование
+
+### Unit тесты
+```php
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\PriceCalculatorService;
+use PHPUnit\Framework\TestCase;
+
+class PriceCalculatorServiceTest extends TestCase
+{
+    private PriceCalculatorService $service;
+
+    protected function setUp(): void
+    {
+        $this->service = new PriceCalculatorService();
+    }
+
+    public function test_calculates_total_price_without_discount(): void
+    {
+        $result = $this->service->calculateTotalPrice(1000.0, 7, 0.0);
+        
+        $this->assertEquals(7000.0, $result);
+    }
+
+    public function test_calculates_total_price_with_discount(): void
+    {
+        $result = $this->service->calculateTotalPrice(1000.0, 7, 10.0);
+        
+        $this->assertEquals(6300.0, $result);
+    }
+
+    public function test_throws_exception_for_negative_price(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Цена не может быть отрицательной');
+        
+        $this->service->calculateTotalPrice(-100.0, 7);
+    }
+}
+```
+
+## 📱 Мобильная оптимизация
+
+### Обработка данных для мобильных
+```php
+// Хорошо - оптимизированные данные для мобильных
+public function getMobileTourData(Tour $tour): array
+{
+    return [
+        'id' => $tour->id,
+        'title' => $tour->title,
+        'price' => $tour->price,
+        'image' => $tour->getMobileImageUrl(),
+        'duration' => $tour->getDurationInDays(),
+        'rating' => $tour->average_rating,
+        'is_available' => $tour->isAvailable(),
+    ];
+}
+
+// Плохо - полные данные для мобильных
+public function getMobileTourData(Tour $tour)
+{
+    return $tour->toArray(); // Слишком много данных
+}
+```
+
+## 🔍 SEO и оптимизация
+
+### Генерация мета-данных
+```php
+// Хорошо
+public function generateMetaData(Tour $tour): array
+{
+    return [
+        'title' => "{$tour->title} - Туристическое агентство Авилона",
+        'description' => $this->truncateText($tour->description, 160),
+        'keywords' => implode(', ', [
+            $tour->destination_country,
+            $tour->departure_city,
+            'туры',
+            'отдых',
+            'путешествия'
+        ]),
+        'og_title' => $tour->title,
+        'og_description' => $this->truncateText($tour->description, 160),
+        'og_image' => $tour->getSocialImageUrl(),
+    ];
+}
+
+private function truncateText(string $text, int $length): string
+{
+    return mb_strlen($text) > $length 
+        ? mb_substr($text, 0, $length) . '...'
+        : $text;
+}
+```
+
+## 📊 Логирование и мониторинг
+
+### Структурированное логирование
+```php
+// Хорошо
+public function logBookingCreation(Booking $booking): void
+{
+    Log::info('Создана новая заявка', [
+        'booking_id' => $booking->id,
+        'user_id' => $booking->user_id,
+        'tour_id' => $booking->tour_id,
+        'price' => $booking->total_price,
+        'created_at' => $booking->created_at->toISOString(),
+    ]);
+}
+
+// Плохо
+public function logBookingCreation($booking)
+{
+    Log::info("Booking created: {$booking->id}"); // Неструктурированное логирование
+}
+```
+
+## 🚀 Оптимизация для продакшена
+
+### Конфигурация
+```php
+// Хорошо - используй конфигурационные файлы
+public function getApiEndpoint(): string
+{
+    return config('services.tour_api.endpoint');
+}
+
+public function getCacheTtl(): int
+{
+    return config('cache.tour_search_ttl', 3600);
+}
+
+// Плохо - хардкод значений
+public function getApiEndpoint()
+{
+    return 'https://api.tours.com/v1'; // Хардкод
+}
+```
+
+### Обработка исключений
+```php
+// Хорошо
+public function handleApiException(ApiException $e): void
+{
+    if ($e->getCode() === 429) {
+        // Rate limit exceeded
+        Log::warning('API rate limit exceeded', [
+            'service' => 'tour_api',
+            'retry_after' => $e->getRetryAfter(),
+        ]);
+        
+        throw new ServiceTemporarilyUnavailableException(
+            'Сервис временно недоступен. Попробуйте позже.'
+        );
+    }
+    
+    Log::error('API error occurred', [
+        'service' => 'tour_api',
+        'error_code' => $e->getCode(),
+        'error_message' => $e->getMessage(),
+    ]);
+    
+    throw new ServiceUnavailableException('Сервис недоступен');
+}
+```
