@@ -1,0 +1,841 @@
+# Правила работы с базой данных - Проект "Авилона"
+
+## 🗄 Общие принципы
+
+### Технологии
+- **СУБД**: MySQL/MariaDB
+- **ORM**: Laravel Eloquent
+- **Миграции**: Laravel Migrations
+- **Сидеры**: Laravel Seeders
+- **Фабрики**: Laravel Factories
+
+### Соглашения по именованию
+- Таблицы: `snake_case` (множественное число)
+- Поля: `snake_case`
+- Индексы: `idx_table_field`
+- Foreign keys: `fk_table_field`
+
+## 📊 Структура базы данных
+
+### Основные таблицы
+
+#### users (пользователи)
+```sql
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    email_verified_at TIMESTAMP NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NULL,
+    role ENUM('admin', 'manager', 'tourist') DEFAULT 'tourist',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_users_email (email),
+    INDEX idx_users_role (role),
+    INDEX idx_users_active (is_active)
+);
+```
+
+#### tours (туры)
+```sql
+CREATE TABLE tours (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    departure_city VARCHAR(100) NOT NULL,
+    destination_country VARCHAR(100) NOT NULL,
+    destination_city VARCHAR(100) NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    nights INT NOT NULL,
+    hotel_name VARCHAR(255) NULL,
+    hotel_stars INT NULL,
+    meal_type ENUM('BB', 'HB', 'FB', 'AI', 'UAI') NULL,
+    image_url VARCHAR(500) NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_tours_departure (departure_city),
+    INDEX idx_tours_destination (destination_country),
+    INDEX idx_tours_dates (start_date, end_date),
+    INDEX idx_tours_price (price),
+    INDEX idx_tours_active (is_active)
+);
+```
+
+#### bookings (заявки)
+```sql
+CREATE TABLE bookings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    tour_id BIGINT UNSIGNED NULL,
+    manager_id BIGINT UNSIGNED NULL,
+    status ENUM('new', 'progress', 'confirmed', 'cancelled', 'completed') DEFAULT 'new',
+    departure_city VARCHAR(100) NOT NULL,
+    destination_country VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    nights INT NOT NULL,
+    adults INT NOT NULL DEFAULT 1,
+    children INT DEFAULT 0,
+    total_price DECIMAL(10,2) NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE SET NULL,
+    FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL,
+    
+    INDEX idx_bookings_user (user_id),
+    INDEX idx_bookings_manager (manager_id),
+    INDEX idx_bookings_status (status),
+    INDEX idx_bookings_dates (start_date)
+);
+```
+
+#### messages (сообщения)
+```sql
+CREATE TABLE messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    booking_id BIGINT UNSIGNED NOT NULL,
+    sender_id BIGINT UNSIGNED NOT NULL,
+    receiver_id BIGINT UNSIGNED NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+    
+    INDEX idx_messages_booking (booking_id),
+    INDEX idx_messages_sender (sender_id),
+    INDEX idx_messages_receiver (receiver_id),
+    INDEX idx_messages_read (is_read)
+);
+```
+
+#### reviews (отзывы)
+```sql
+CREATE TABLE reviews (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    tour_id BIGINT UNSIGNED NULL,
+    booking_id BIGINT UNSIGNED NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    title VARCHAR(255) NULL,
+    comment TEXT NULL,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    
+    INDEX idx_reviews_user (user_id),
+    INDEX idx_reviews_tour (tour_id),
+    INDEX idx_reviews_approved (is_approved),
+    INDEX idx_reviews_rating (rating)
+);
+```
+
+#### news (новости)
+```sql
+CREATE TABLE news (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    excerpt TEXT NULL,
+    content TEXT NOT NULL,
+    image_url VARCHAR(500) NULL,
+    is_published BOOLEAN DEFAULT FALSE,
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_news_slug (slug),
+    INDEX idx_news_published (is_published),
+    INDEX idx_news_published_at (published_at)
+);
+```
+
+#### countries (страны)
+```sql
+CREATE TABLE countries (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    code VARCHAR(3) UNIQUE NOT NULL,
+    description TEXT NULL,
+    image_url VARCHAR(500) NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX idx_countries_slug (slug),
+    INDEX idx_countries_code (code),
+    INDEX idx_countries_active (is_active)
+);
+```
+
+## 🔧 Миграции
+
+### Создание миграций
+```bash
+# Создание миграции
+php artisan make:migration create_tours_table
+
+# Создание миграции с моделью
+php artisan make:model Tour -m
+
+# Создание миграции для изменения таблицы
+php artisan make:migration add_image_url_to_tours_table --table=tours
+```
+
+### Пример миграции
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tours', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->decimal('price', 10, 2);
+            $table->string('departure_city');
+            $table->string('destination_country');
+            $table->string('destination_city')->nullable();
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->integer('nights');
+            $table->string('hotel_name')->nullable();
+            $table->integer('hotel_stars')->nullable();
+            $table->enum('meal_type', ['BB', 'HB', 'FB', 'AI', 'UAI'])->nullable();
+            $table->string('image_url')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            
+            // Индексы
+            $table->index(['departure_city', 'destination_country']);
+            $table->index(['start_date', 'end_date']);
+            $table->index('price');
+            $table->index('is_active');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tours');
+    }
+};
+```
+
+### Миграция с foreign keys
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('bookings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('tour_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->enum('status', ['new', 'progress', 'confirmed', 'cancelled', 'completed'])->default('new');
+            $table->string('departure_city');
+            $table->string('destination_country');
+            $table->date('start_date');
+            $table->integer('nights');
+            $table->integer('adults')->default(1);
+            $table->integer('children')->default(0);
+            $table->decimal('total_price', 10, 2)->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+            
+            // Индексы
+            $table->index('status');
+            $table->index('start_date');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('bookings');
+    }
+};
+```
+
+## 🏗 Eloquent модели
+
+### Базовая модель
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Tour extends Model
+{
+    protected $fillable = [
+        'title',
+        'description',
+        'price',
+        'departure_city',
+        'destination_country',
+        'destination_city',
+        'start_date',
+        'end_date',
+        'nights',
+        'hotel_name',
+        'hotel_stars',
+        'meal_type',
+        'image_url',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'price' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    // Отношения
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'destination_country', 'name');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByDestination($query, $country)
+    {
+        return $query->where('destination_country', $country);
+    }
+
+    public function scopeByPriceRange($query, $min, $max)
+    {
+        return $query->whereBetween('price', [$min, $max]);
+    }
+
+    // Accessors
+    public function getDurationAttribute()
+    {
+        return $this->start_date->diffInDays($this->end_date);
+    }
+
+    public function getFormattedPriceAttribute()
+    {
+        return number_format($this->price, 0, ',', ' ') . ' ₽';
+    }
+
+    // Mutators
+    public function setTitleAttribute($value)
+    {
+        $this->attributes['title'] = ucfirst(trim($value));
+    }
+}
+```
+
+### Модель с soft deletes
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Booking extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'user_id',
+        'tour_id',
+        'manager_id',
+        'status',
+        'departure_city',
+        'destination_country',
+        'start_date',
+        'nights',
+        'adults',
+        'children',
+        'total_price',
+        'notes',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'total_price' => 'decimal:2',
+    ];
+
+    // Отношения
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function tour(): BelongsTo
+    {
+        return $this->belongsTo(Tour::class);
+    }
+
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    // Scopes
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    public function scopeByUser($query, $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeByManager($query, $managerId)
+    {
+        return $query->where('manager_id', $managerId);
+    }
+}
+```
+
+## 🌱 Сидеры и фабрики
+
+### Фабрика для туров
+```php
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Tour;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class TourFactory extends Factory
+{
+    protected $model = Tour::class;
+
+    public function definition(): array
+    {
+        $departureCities = ['Москва', 'Санкт-Петербург', 'Екатеринбург', 'Новосибирск'];
+        $destinations = ['Турция', 'Египет', 'ОАЭ', 'Тайланд', 'Испания'];
+        $mealTypes = ['BB', 'HB', 'FB', 'AI', 'UAI'];
+        
+        $startDate = $this->faker->dateTimeBetween('+1 month', '+6 months');
+        $nights = $this->faker->numberBetween(7, 21);
+        $endDate = (clone $startDate)->modify("+{$nights} days");
+
+        return [
+            'title' => $this->faker->sentence(3),
+            'description' => $this->faker->paragraph(3),
+            'price' => $this->faker->numberBetween(30000, 200000),
+            'departure_city' => $this->faker->randomElement($departureCities),
+            'destination_country' => $this->faker->randomElement($destinations),
+            'destination_city' => $this->faker->city(),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'nights' => $nights,
+            'hotel_name' => $this->faker->company() . ' Hotel',
+            'hotel_stars' => $this->faker->numberBetween(3, 5),
+            'meal_type' => $this->faker->randomElement($mealTypes),
+            'image_url' => $this->faker->imageUrl(800, 600, 'travel'),
+            'is_active' => $this->faker->boolean(90),
+        ];
+    }
+}
+```
+
+### Сидер для стран
+```php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Country;
+use Illuminate\Database\Seeder;
+
+class CountrySeeder extends Seeder
+{
+    public function run(): void
+    {
+        $countries = [
+            [
+                'name' => 'Турция',
+                'slug' => 'turkey',
+                'code' => 'TR',
+                'description' => 'Популярное направление для пляжного отдыха с богатой историей и культурой.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Египет',
+                'slug' => 'egypt',
+                'code' => 'EG',
+                'description' => 'Древние пирамиды, Красное море и круглогодичное солнце.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'ОАЭ',
+                'slug' => 'uae',
+                'code' => 'AE',
+                'description' => 'Современные мегаполисы, роскошные отели и пустынные пейзажи.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Тайланд',
+                'slug' => 'thailand',
+                'code' => 'TH',
+                'description' => 'Тропические пляжи, буддийские храмы и экзотическая кухня.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Испания',
+                'slug' => 'spain',
+                'code' => 'ES',
+                'description' => 'Средиземноморское побережье, архитектура Гауди и фламенко.',
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($countries as $country) {
+            Country::create($country);
+        }
+    }
+}
+```
+
+## 🔍 Оптимизация запросов
+
+### Eager loading
+```php
+// Плохо - N+1 проблема
+$tours = Tour::all();
+foreach ($tours as $tour) {
+    echo $tour->bookings->count();
+}
+
+// Хорошо - eager loading
+$tours = Tour::with('bookings')->get();
+foreach ($tours as $tour) {
+    echo $tour->bookings->count();
+}
+
+// Еще лучше - с условиями
+$tours = Tour::with(['bookings' => function ($query) {
+    $query->where('status', 'confirmed');
+}])->get();
+```
+
+### Scopes для часто используемых запросов
+```php
+// В модели Tour
+public function scopeSearch($query, $filters)
+{
+    return $query->when($filters['departure_city'] ?? null, function ($q, $city) {
+        $q->where('departure_city', $city);
+    })
+    ->when($filters['destination_country'] ?? null, function ($q, $country) {
+        $q->where('destination_country', $country);
+    })
+    ->when($filters['start_date'] ?? null, function ($q, $date) {
+        $q->where('start_date', '>=', $date);
+    })
+    ->when($filters['nights'] ?? null, function ($q, $nights) {
+        $q->where('nights', $nights);
+    })
+    ->when($filters['price_min'] ?? null, function ($q, $min) {
+        $q->where('price', '>=', $min);
+    })
+    ->when($filters['price_max'] ?? null, function ($q, $max) {
+        $q->where('price', '<=', $max);
+    });
+}
+
+// Использование
+$tours = Tour::search($filters)->active()->paginate(12);
+```
+
+### Кэширование запросов
+```php
+use Illuminate\Support\Facades\Cache;
+
+// Кэширование результатов поиска
+public function searchTours($filters)
+{
+    $cacheKey = 'tours_search_' . md5(serialize($filters));
+    
+    return Cache::remember($cacheKey, 300, function () use ($filters) {
+        return Tour::search($filters)->active()->get();
+    });
+}
+
+// Кэширование популярных направлений
+public function getPopularDestinations()
+{
+    return Cache::remember('popular_destinations', 3600, function () {
+        return Tour::select('destination_country')
+            ->active()
+            ->groupBy('destination_country')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(10)
+            ->pluck('destination_country');
+    });
+}
+```
+
+## 🧪 Тестирование
+
+### Тестирование моделей
+```php
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\Tour;
+use App\Models\Booking;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TourTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_tour_can_have_bookings(): void
+    {
+        $tour = Tour::factory()->create();
+        $booking = Booking::factory()->create(['tour_id' => $tour->id]);
+
+        $this->assertTrue($tour->bookings->contains($booking));
+    }
+
+    public function test_tour_scope_active(): void
+    {
+        Tour::factory()->create(['is_active' => true]);
+        Tour::factory()->create(['is_active' => false]);
+
+        $activeTours = Tour::active()->get();
+
+        $this->assertCount(1, $activeTours);
+        $this->assertTrue($activeTours->first()->is_active);
+    }
+
+    public function test_tour_search_scope(): void
+    {
+        Tour::factory()->create([
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'price' => 50000,
+        ]);
+
+        $filters = [
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'price_max' => 60000,
+        ];
+
+        $tours = Tour::search($filters)->get();
+
+        $this->assertCount(1, $tours);
+        $this->assertEquals('Москва', $tours->first()->departure_city);
+    }
+}
+```
+
+### Тестирование миграций
+```php
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
+
+class MigrationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_tours_table_has_required_columns(): void
+    {
+        $this->assertTrue(Schema::hasTable('tours'));
+        $this->assertTrue(Schema::hasColumn('tours', 'title'));
+        $this->assertTrue(Schema::hasColumn('tours', 'price'));
+        $this->assertTrue(Schema::hasColumn('tours', 'departure_city'));
+        $this->assertTrue(Schema::hasColumn('tours', 'destination_country'));
+    }
+
+    public function test_bookings_table_has_foreign_keys(): void
+    {
+        $this->assertTrue(Schema::hasTable('bookings'));
+        $this->assertTrue(Schema::hasColumn('bookings', 'user_id'));
+        $this->assertTrue(Schema::hasColumn('bookings', 'tour_id'));
+        $this->assertTrue(Schema::hasColumn('bookings', 'manager_id'));
+    }
+}
+```
+
+## 📊 Мониторинг и логирование
+
+### Логирование запросов
+```php
+// В AppServiceProvider
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+public function boot()
+{
+    if (config('app.debug')) {
+        DB::listen(function ($query) {
+            Log::info('Query executed', [
+                'sql' => $query->sql,
+                'bindings' => $query->bindings,
+                'time' => $query->time,
+            ]);
+        });
+    }
+}
+```
+
+### Мониторинг производительности
+```php
+use Illuminate\Support\Facades\DB;
+
+// Измерение времени выполнения запроса
+$start = microtime(true);
+$tours = Tour::search($filters)->get();
+$time = microtime(true) - $start;
+
+Log::info('Tour search performance', [
+    'query_time' => $time,
+    'results_count' => $tours->count(),
+    'filters' => $filters,
+]);
+```
+
+## 🔧 Команды Artisan
+
+### Создание команды для импорта туров
+```php
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\Tour;
+use Illuminate\Console\Command;
+
+class ImportToursCommand extends Command
+{
+    protected $signature = 'tours:import {file}';
+    protected $description = 'Import tours from CSV file';
+
+    public function handle(): int
+    {
+        $file = $this->argument('file');
+        
+        if (!file_exists($file)) {
+            $this->error("File {$file} not found");
+            return 1;
+        }
+
+        $this->info('Starting tours import...');
+        
+        $imported = 0;
+        $skipped = 0;
+
+        if (($handle = fopen($file, 'r')) !== FALSE) {
+            $headers = fgetcsv($handle);
+            
+            while (($data = fgetcsv($handle)) !== FALSE) {
+                $tourData = array_combine($headers, $data);
+                
+                try {
+                    Tour::create($tourData);
+                    $imported++;
+                } catch (\Exception $e) {
+                    $this->warn("Skipped tour: {$e->getMessage()}");
+                    $skipped++;
+                }
+            }
+            
+            fclose($handle);
+        }
+
+        $this->info("Import completed: {$imported} imported, {$skipped} skipped");
+        return 0;
+    }
+}
+```
+
+### Команда для очистки старых данных
+```php
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\Booking;
+use Illuminate\Console\Command;
+
+class CleanupOldBookingsCommand extends Command
+{
+    protected $signature = 'bookings:cleanup {--days=365}';
+    protected $description = 'Clean up old completed bookings';
+
+    public function handle(): int
+    {
+        $days = $this->option('days');
+        $cutoffDate = now()->subDays($days);
+
+        $count = Booking::where('status', 'completed')
+            ->where('updated_at', '<', $cutoffDate)
+            ->delete();
+
+        $this->info("Cleaned up {$count} old bookings");
+        return 0;
+    }
+}
+```
