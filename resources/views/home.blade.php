@@ -35,25 +35,81 @@
         <div class="container">
             <div class="row my-3">
                 <div class="col">
-                    <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Поиск туров - санатории</h1>
-                    <script async="true" src="//www.delfin-tour.ru/export/frame" data-delfin='10644'></script>
-                    <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Поиск туров - круизы</h1>
-                    <div class="infoflotWidget"
-                         data-id="YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9"
-                         data-index="1"></div>
-                    <script async>(function (d, w) {
-                            var h = d.getElementsByTagName("script")[0];
-                            s = d.createElement("script");
-                            s.src = "https://bitrix.infoflot.com/local/templates/infoflot/frontend/js/infoflotIframe.js";
-                            s.async = !0;
-                            s.onload = function () {
-                                w.createInfoflotWidget("https://bitrix.infoflot.com/rest/api/search.filter/", {
-                                    key: "YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9",
-                                    referer: encodeURIComponent(location.href)
-                                })
-                            };
-                            h.parentNode.insertBefore(s, h);
-                        })(document, window);</script>
+                    <!-- Собственный виджет поиска туров -->
+                    <div class="tour-search-widget bg-light p-4 rounded mb-4">
+                        <h2 class="text-center mb-4">Поиск туров</h2>
+                        <form action="/tours/search" method="GET" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Откуда</label>
+                                <select name="departure_city" class="form-select" required>
+                                    <option value="">Выберите город</option>
+                                    <option value="moscow">Москва</option>
+                                    <option value="spb">Санкт-Петербург</option>
+                                    <option value="ekaterinburg">Екатеринбург</option>
+                                    <option value="novosibirsk">Новосибирск</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Куда</label>
+                                <select name="destination_country" class="form-select" required>
+                                    <option value="">Выберите страну</option>
+                                    <option value="turkey">Турция</option>
+                                    <option value="egypt">Египет</option>
+                                    <option value="uae">ОАЭ</option>
+                                    <option value="thailand">Тайланд</option>
+                                    <option value="spain">Испания</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Дата заезда</label>
+                                <input type="date" name="start_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Количество ночей</label>
+                                <select name="nights" class="form-select">
+                                    <option value="7">7 ночей</option>
+                                    <option value="10">10 ночей</option>
+                                    <option value="14">14 ночей</option>
+                                    <option value="21">21 ночь</option>
+                                </select>
+                            </div>
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-search me-2"></i>Найти туры
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Опциональные внешние виджеты -->
+                    <div class="external-widgets">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Поиск туров - санатории</h5>
+                                        <p class="card-text">Расширенный поиск по санаториям и лечебным курортам</p>
+                                        <button id="loadDelfinWidget" class="btn btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-2"></i>Загрузить поиск
+                                        </button>
+                                        <div id="delfinWidget" style="display: none; margin-top: 15px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Поиск туров - круизы</h5>
+                                        <p class="card-text">Специализированный поиск круизных туров</p>
+                                        <button id="loadInfoflotWidget" class="btn btn-outline-primary">
+                                            <i class="fas fa-ship me-2"></i>Загрузить поиск
+                                        </button>
+                                        <div id="infoflotWidget" style="display: none; margin-top: 15px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Best offers -->
@@ -411,6 +467,86 @@
             window.open(`https://t.me/${number}`, '_blank');
             modalManagers.style.display = 'none';
         }
+
+        // Скрипт для загрузки внешних виджетов по требованию
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загрузка Delfin Tour виджета
+            document.getElementById('loadDelfinWidget').addEventListener('click', function() {
+                const widgetContainer = document.getElementById('delfinWidget');
+                const button = this;
+                
+                if (widgetContainer.children.length === 0) {
+                    // Показываем индикатор загрузки
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
+                    button.disabled = true;
+                    
+                    // Создаем скрипт для загрузки виджета
+                    const script = document.createElement('script');
+                    script.src = '//www.delfin-tour.ru/export/frame';
+                    script.setAttribute('data-delfin', '10644');
+                    script.async = true;
+                    
+                    script.onload = function() {
+                        button.innerHTML = '<i class="fas fa-check me-2"></i>Загружено';
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-success');
+                    };
+                    
+                    script.onerror = function() {
+                        button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Ошибка загрузки';
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-danger');
+                    };
+                    
+                    widgetContainer.appendChild(script);
+                    widgetContainer.style.display = 'block';
+                }
+            });
+
+            // Загрузка Infoflot виджета
+            document.getElementById('loadInfoflotWidget').addEventListener('click', function() {
+                const widgetContainer = document.getElementById('infoflotWidget');
+                const button = this;
+                
+                if (widgetContainer.children.length === 0) {
+                    // Показываем индикатор загрузки
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
+                    button.disabled = true;
+                    
+                    // Создаем контейнер для виджета
+                    const widgetDiv = document.createElement('div');
+                    widgetDiv.className = 'infoflotWidget';
+                    widgetDiv.setAttribute('data-id', 'YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9');
+                    widgetDiv.setAttribute('data-index', '1');
+                    
+                    // Создаем скрипт для загрузки виджета
+                    const script = document.createElement('script');
+                    script.src = 'https://bitrix.infoflot.com/local/templates/infoflot/frontend/js/infoflotIframe.js';
+                    script.async = true;
+                    
+                    script.onload = function() {
+                        window.createInfoflotWidget('https://bitrix.infoflot.com/rest/api/search.filter/', {
+                            key: 'YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9',
+                            referer: encodeURIComponent(location.href)
+                        });
+                        
+                        button.innerHTML = '<i class="fas fa-check me-2"></i>Загружено';
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-success');
+                    };
+                    
+                    script.onerror = function() {
+                        button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Ошибка загрузки';
+                        button.classList.remove('btn-outline-primary');
+                        button.classList.add('btn-danger');
+                    };
+                    
+                    widgetContainer.appendChild(widgetDiv);
+                    widgetContainer.appendChild(script);
+                    widgetContainer.style.display = 'block';
+                }
+            });
+        });
 
         closeButtonManagers.onclick = function () {
             modalManagers.style.display = "none";
