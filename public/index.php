@@ -4,7 +4,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 // Подавление deprecated warnings для совместимости с PHP 8.4
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', '0');
 
 define('LARAVEL_START', microtime(true));
