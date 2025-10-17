@@ -35,80 +35,62 @@
         <div class="container">
             <div class="row my-3">
                 <div class="col">
-                    <!-- Собственный виджет поиска туров -->
-                    <div class="tour-search-widget bg-light p-4 rounded mb-4">
-                        <h2 class="text-center mb-4">Поиск туров</h2>
-                        <form action="/tours/search" method="GET" class="row g-3">
+                    <!-- Виджет поиска туров (в разработке) -->
+                    <div class="tour-search-widget bg-gradient p-5 rounded-3 mb-4 shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="text-center text-white mb-4">
+                            <i class="fas fa-plane-departure fa-3x mb-3" style="opacity: 0.9;"></i>
+                            <h2 class="mb-3">Интеллектуальный поиск туров</h2>
+                            <p class="lead mb-4">Мы разрабатываем современный виджет поиска туров с расширенными фильтрами и удобным интерфейсом</p>
+                        </div>
+                        
+                        <div class="row g-3">
                             <div class="col-md-3">
-                                <label class="form-label">Откуда</label>
-                                <select name="departure_city" class="form-select" required>
-                                    <option value="">Выберите город</option>
-                                    <option value="moscow">Москва</option>
-                                    <option value="spb">Санкт-Петербург</option>
-                                    <option value="ekaterinburg">Екатеринбург</option>
-                                    <option value="novosibirsk">Новосибирск</option>
+                                <label class="form-label text-white"><i class="fas fa-map-marker-alt me-2"></i>Откуда</label>
+                                <select class="form-select" disabled>
+                                    <option>Скоро будет доступно</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Куда</label>
-                                <select name="destination_country" class="form-select" required>
-                                    <option value="">Выберите страну</option>
-                                    <option value="turkey">Турция</option>
-                                    <option value="egypt">Египет</option>
-                                    <option value="uae">ОАЭ</option>
-                                    <option value="thailand">Тайланд</option>
-                                    <option value="spain">Испания</option>
+                                <label class="form-label text-white"><i class="fas fa-globe me-2"></i>Куда</label>
+                                <select class="form-select" disabled>
+                                    <option>Скоро будет доступно</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Дата заезда</label>
-                                <input type="date" name="start_date" class="form-control" required>
+                                <label class="form-label text-white"><i class="fas fa-calendar-alt me-2"></i>Дата заезда</label>
+                                <input type="date" class="form-control" disabled>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Количество ночей</label>
-                                <select name="nights" class="form-select">
-                                    <option value="7">7 ночей</option>
-                                    <option value="10">10 ночей</option>
-                                    <option value="14">14 ночей</option>
-                                    <option value="21">21 ночь</option>
+                                <label class="form-label text-white"><i class="fas fa-moon me-2"></i>Количество ночей</label>
+                                <select class="form-select" disabled>
+                                    <option>Скоро будет доступно</option>
                                 </select>
-                            </div>
-                            <div class="col-12 text-center">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-search me-2"></i>Найти туры
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Опциональные внешние виджеты -->
-                    <div class="external-widgets">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="card">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">Поиск туров - санатории</h5>
-                                        <p class="card-text">Расширенный поиск по санаториям и лечебным курортам</p>
-                                        <button id="loadDelfinWidget" class="btn btn-outline-primary">
-                                            <i class="fas fa-external-link-alt me-2"></i>Загрузить поиск
-                                        </button>
-                                        <div id="delfinWidget" style="display: none; margin-top: 15px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="card">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">Поиск туров - круизы</h5>
-                                        <p class="card-text">Специализированный поиск круизных туров</p>
-                                        <button id="loadInfoflotWidget" class="btn btn-outline-primary">
-                                            <i class="fas fa-ship me-2"></i>Загрузить поиск
-                                        </button>
-                                        <div id="infoflotWidget" style="display: none; margin-top: 15px;"></div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
+                        
+                        <div class="text-center mt-4">
+                            <button class="btn btn-light btn-lg px-5" disabled>
+                                <i class="fas fa-cog fa-spin me-2"></i>В разработке
+                            </button>
+                            <p class="text-white mt-3 mb-0">
+                                <small><i class="fas fa-info-circle me-2"></i>Функционал будет доступен в ближайшее время</small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Информация о будущем функционале -->
+                    <div class="alert alert-info mb-4" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-tools me-2"></i>Что будет в виджете поиска туров:
+                        </h5>
+                        <hr>
+                        <ul class="mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>Поиск туров по странам и направлениям</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Гибкие фильтры (звездность отелей, тип питания, цена)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Интеграция с базами туроператоров</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Актуальные цены и наличие мест</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Быстрое бронирование и онлайн-оплата</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -467,86 +449,6 @@
             window.open(`https://t.me/${number}`, '_blank');
             modalManagers.style.display = 'none';
         }
-
-        // Скрипт для загрузки внешних виджетов по требованию
-        document.addEventListener('DOMContentLoaded', function() {
-            // Загрузка Delfin Tour виджета
-            document.getElementById('loadDelfinWidget').addEventListener('click', function() {
-                const widgetContainer = document.getElementById('delfinWidget');
-                const button = this;
-                
-                if (widgetContainer.children.length === 0) {
-                    // Показываем индикатор загрузки
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
-                    button.disabled = true;
-                    
-                    // Создаем скрипт для загрузки виджета
-                    const script = document.createElement('script');
-                    script.src = '//www.delfin-tour.ru/export/frame';
-                    script.setAttribute('data-delfin', '10644');
-                    script.async = true;
-                    
-                    script.onload = function() {
-                        button.innerHTML = '<i class="fas fa-check me-2"></i>Загружено';
-                        button.classList.remove('btn-outline-primary');
-                        button.classList.add('btn-success');
-                    };
-                    
-                    script.onerror = function() {
-                        button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Ошибка загрузки';
-                        button.classList.remove('btn-outline-primary');
-                        button.classList.add('btn-danger');
-                    };
-                    
-                    widgetContainer.appendChild(script);
-                    widgetContainer.style.display = 'block';
-                }
-            });
-
-            // Загрузка Infoflot виджета
-            document.getElementById('loadInfoflotWidget').addEventListener('click', function() {
-                const widgetContainer = document.getElementById('infoflotWidget');
-                const button = this;
-                
-                if (widgetContainer.children.length === 0) {
-                    // Показываем индикатор загрузки
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
-                    button.disabled = true;
-                    
-                    // Создаем контейнер для виджета
-                    const widgetDiv = document.createElement('div');
-                    widgetDiv.className = 'infoflotWidget';
-                    widgetDiv.setAttribute('data-id', 'YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9');
-                    widgetDiv.setAttribute('data-index', '1');
-                    
-                    // Создаем скрипт для загрузки виджета
-                    const script = document.createElement('script');
-                    script.src = 'https://bitrix.infoflot.com/local/templates/infoflot/frontend/js/infoflotIframe.js';
-                    script.async = true;
-                    
-                    script.onload = function() {
-                        window.createInfoflotWidget('https://bitrix.infoflot.com/rest/api/search.filter/', {
-                            key: 'YTo0OntzOjI6IklEIjtzOjQ6IjI3NDkiO3M6NDoiVVNFUiI7czoyNDoiWVhacGJHOXVZWFIxY2tCdFlXbHNMbkoxIjtzOjY6IlJBTkRPTSI7czo4OiJpZGVuN29tZSI7czoxNToiSU5GT0ZMT1QtQVBJS0VZIjtzOjQwOiJiYTA2Mjc5Yjc5N2IwOTcwMTZjMTUxZTA5YjY4NjdiODMxMzBiMTFiIjt9',
-                            referer: encodeURIComponent(location.href)
-                        });
-                        
-                        button.innerHTML = '<i class="fas fa-check me-2"></i>Загружено';
-                        button.classList.remove('btn-outline-primary');
-                        button.classList.add('btn-success');
-                    };
-                    
-                    script.onerror = function() {
-                        button.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Ошибка загрузки';
-                        button.classList.remove('btn-outline-primary');
-                        button.classList.add('btn-danger');
-                    };
-                    
-                    widgetContainer.appendChild(widgetDiv);
-                    widgetContainer.appendChild(script);
-                    widgetContainer.style.display = 'block';
-                }
-            });
-        });
 
         closeButtonManagers.onclick = function () {
             modalManagers.style.display = "none";
