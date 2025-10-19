@@ -189,25 +189,11 @@
                     
                     <!-- Дополнительные фильтры (скрытые по умолчанию) -->
                     <div class="row mt-3" id="additionalFilters" style="display: none;">
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Курорт</label>
-                            <select name="destination_city" id="resortSelect" class="form-select form-select-sm">
-                                <option value="">Выберите курорт</option>
-                                @if(request('destination_country'))
-                                    @php
-                                        $resorts = \App\Models\Tour::where('destination_country', request('destination_country'))
-                                            ->select('destination_city')
-                                            ->distinct()
-                                            ->pluck('destination_city')
-                                            ->filter();
-                                    @endphp
-                                    @foreach($resorts as $resort)
-                                        <option value="{{ $resort }}" {{ request('destination_city') == $resort ? 'selected' : '' }}>
-                                            {{ $resort }}
-                                        </option>
-                                    @endforeach
-                                @endif
-                            </select>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Курорты</label>
+                            <div id="resortsContainer" class="border rounded p-2" style="max-height: 120px; overflow-y: auto; background: white;">
+                                <div class="text-muted small">Выберите страну</div>
+                            </div>
                         </div>
                         
                         <div class="col-md-2">
@@ -242,13 +228,30 @@
                             <input type="number" name="price_max" class="form-control form-control-sm" placeholder="200000" min="0" value="{{ request('price_max') }}">
                         </div>
                         
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Дети</label>
-                            <select name="children" class="form-select form-select-sm">
-                                <option value="0" {{ request('children', 0) == 0 ? 'selected' : '' }}>Без детей</option>
-                                <option value="1" {{ request('children') == 1 ? 'selected' : '' }}>1 ребенок</option>
-                                <option value="2" {{ request('children') == 2 ? 'selected' : '' }}>2 ребенка</option>
-                                <option value="3" {{ request('children') == 3 ? 'selected' : '' }}>3 ребенка</option>
+                        <div class="col-md-1">
+                            <label class="form-label small text-muted mb-1">Туроператор</label>
+                            <select name="tour_operator" class="form-select form-select-sm">
+                                <option value="">Все</option>
+                                <option value="ambotis">Ambotis</option>
+                                <option value="anex">Anex</option>
+                                <option value="biblio_globus">Biblio Globus</option>
+                                <option value="bon_tour">Bon Tour</option>
+                                <option value="bsi_group">BSI Group</option>
+                                <option value="coral_travel">Coral Travel</option>
+                                <option value="delfin">Delfin</option>
+                                <option value="express_tours">Express Tours</option>
+                                <option value="good_time">Good Time</option>
+                                <option value="ics">ICS</option>
+                                <option value="intourist">Intourist</option>
+                                <option value="itm_group">ITM Group</option>
+                                <option value="mouzenidis_travel">Mouzenidis Travel</option>
+                                <option value="pac_group">PAC Group</option>
+                                <option value="pegas">Pegas</option>
+                                <option value="russian_express">Russian Express</option>
+                                <option value="sunmar">Sunmar</option>
+                                <option value="tez_tour">Tez Tour</option>
+                                <option value="tui">TUI</option>
+                                <option value="west_travel">West Travel</option>
                             </select>
                         </div>
                     </div>
@@ -688,36 +691,41 @@ function formatPhoneNumber(input) {
     }
 }
 
-// Автообновление курортов
+// Автообновление курортов с галочками
 function updateResorts() {
     const country = document.querySelector('select[name="destination_country"]').value;
-    const resortSelect = document.getElementById('resortSelect');
+    const resortsContainer = document.getElementById('resortsContainer');
     
     if (!country) {
-        resortSelect.innerHTML = '<option value="">Выберите курорт</option>';
+        resortsContainer.innerHTML = '<div class="text-muted small">Выберите страну</div>';
         return;
     }
     
-    resortSelect.innerHTML = '<option value="">Загрузка курортов...</option>';
+    resortsContainer.innerHTML = '<div class="text-muted small">Загрузка курортов...</div>';
     
     fetch(`/api/tours/resorts?country=${encodeURIComponent(country)}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                resortSelect.innerHTML = '<option value="">Выберите курорт</option>';
+            if (data.success && data.data.length > 0) {
+                let html = '';
                 data.data.forEach(resort => {
-                    const option = document.createElement('option');
-                    option.value = resort;
-                    option.textContent = resort;
-                    resortSelect.appendChild(option);
+                    html += `
+                        <div class="form-check form-check-sm">
+                            <input class="form-check-input" type="checkbox" name="resorts[]" value="${resort}" id="resort_${resort.replace(/\s+/g, '_')}">
+                            <label class="form-check-label small" for="resort_${resort.replace(/\s+/g, '_')}">
+                                ${resort}
+                            </label>
+                        </div>
+                    `;
                 });
+                resortsContainer.innerHTML = html;
             } else {
-                resortSelect.innerHTML = '<option value="">Курорты не найдены</option>';
+                resortsContainer.innerHTML = '<div class="text-muted small">Курорты не найдены</div>';
             }
         })
         .catch(error => {
             console.error('Ошибка загрузки курортов:', error);
-            resortSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+            resortsContainer.innerHTML = '<div class="text-muted small">Ошибка загрузки</div>';
         });
 }
 
@@ -731,17 +739,15 @@ function updateSort(sortBy) {
     form.submit();
 }
 
-// Стили для карточек туров
+// Стили для карточек туров (без скачков)
 document.addEventListener('DOMContentLoaded', function() {
     const tourCards = document.querySelectorAll('.tour-card');
     tourCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
             this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
         });
         
         card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
             this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
         });
     });

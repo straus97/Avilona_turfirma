@@ -28,6 +28,11 @@ class IndexController extends Controller
         if ($request->filled('destination_city')) {
             $query->where('destination_city', $request->destination_city);
         }
+
+        // Обработка курортов из галочек
+        if ($request->filled('resorts')) {
+            $query->whereIn('destination_city', $request->resorts);
+        }
         
         if ($request->filled('start_date')) {
             $query->where('start_date', '>=', $request->start_date);
