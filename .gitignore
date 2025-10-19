@@ -2,6 +2,7 @@
 /node_modules
 /public/hot
 /public/storage
+/public/build
 /storage/*.key
 /vendor
 .env
@@ -16,10 +17,20 @@ yarn-error.log
 /.vscode
 
 # Vite
-node_modules/.vite/deps_temp*
-public/build/manifest.json
+node_modules/.vite/
+
+# Public user ini
+/public/.user.ini
 
 # OS
 .DS_Store
 Thumbs.db
+
+# История и черновики
+cursor_file_path_organization_discussio.md
+начало.txt
+
+# Верификационные файлы (добавляются только в продакшен)
+google*.html
+yandex*.html
 
