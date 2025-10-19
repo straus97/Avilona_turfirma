@@ -5,6 +5,13 @@
 
 @section('content')
 <div class="container my-5">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
     <!-- Виджет поиска -->
     <div class="search-widget mb-4">
         <div class="card border-0 shadow-lg">
@@ -50,7 +57,12 @@
                             <label class="form-label text-white fw-bold mb-1 small">
                                 <i class="fas fa-calendar-alt me-1"></i>Даты вылета
                             </label>
-                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDatePicker()" value="{{ request('date_range') }}">
+                            <div class="input-group">
+                                <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDateRangePicker()" value="{{ request('date_range') }}">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="openDateRangePicker()">
+                                    <i class="fas fa-calendar"></i>
+                                </button>
+                            </div>
                             <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
                             <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
                         </div>
@@ -72,6 +84,29 @@
                     
                     <!-- Дополнительные фильтры -->
                     <div class="row g-2 mb-3">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-1 small">
+                                <i class="fas fa-map-marker-alt me-1"></i>Курорт
+                            </label>
+                            <select name="destination_city" id="resortSelect" class="form-select form-select-sm">
+                                <option value="">Выберите курорт</option>
+                                @if(request('destination_country'))
+                                    @php
+                                        $resorts = \App\Models\Tour::where('destination_country', request('destination_country'))
+                                            ->select('destination_city')
+                                            ->distinct()
+                                            ->pluck('destination_city')
+                                            ->filter();
+                                    @endphp
+                                    @foreach($resorts as $resort)
+                                        <option value="{{ $resort }}" {{ request('destination_city') == $resort ? 'selected' : '' }}>
+                                            {{ $resort }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        
                         <div class="col-md-6 col-lg-3">
                             <label class="form-label text-white fw-bold mb-1 small">
                                 <i class="fas fa-star me-1"></i>Звездность
@@ -276,7 +311,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Телефон <span class="text-danger">*</span></label>
-                            <input type="tel" name="phone" class="form-control" required placeholder="+7 (999) 123-45-67">
+                            <input type="tel" name="phone" id="phoneInput" class="form-control" required placeholder="+7 (999) 123-45-67">
                         </div>
                     @endauth
                     
@@ -328,29 +363,133 @@ function openBookingModal(tourId) {
     new bootstrap.Modal(document.getElementById('bookingModal')).show();
 }
 
-function openDatePicker() {
-    // Простой выбор дат через prompt (в будущем можно заменить на календарь)
-    const startDate = prompt('Введите дату начала (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+1 week')) }}');
-    if (startDate) {
-        const endDate = prompt('Введите дату окончания (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+2 weeks')) }}');
-        if (endDate) {
-            document.getElementById('start_date').value = startDate;
-            document.getElementById('end_date').value = endDate;
-            
-            // Форматируем даты для отображения
-            const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'short' 
-            });
-            const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'short',
-                year: '2-digit'
-            });
-            
-            document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
-        }
+function openDateRangePicker() {
+    // Создаем модальное окно с календарем
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Выберите даты вылета</h5>
+                    <button type="button" class="btn-close" onclick="closeDatePicker()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Дата от</label>
+                            <input type="date" id="startDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ request('start_date') ?: date('Y-m-d', strtotime('+1 week')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Дата до</label>
+                            <input type="date" id="endDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ request('end_date') ?: date('Y-m-d', strtotime('+2 weeks')) }}">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Выберите диапазон дат для поиска туров</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="applyDateRange()">Применить</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.classList.add('modal-open');
+}
+
+function closeDatePicker() {
+    const modal = document.querySelector('.modal.show');
+    if (modal) {
+        modal.remove();
+        document.body.classList.remove('modal-open');
     }
+}
+
+function applyDateRange() {
+    const startDate = document.getElementById('startDatePicker').value;
+    const endDate = document.getElementById('endDatePicker').value;
+    
+    if (startDate && endDate) {
+        document.getElementById('start_date').value = startDate;
+        document.getElementById('end_date').value = endDate;
+        
+        // Форматируем даты для отображения
+        const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'short' 
+        });
+        const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'short',
+            year: '2-digit'
+        });
+        
+        document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+    }
+    
+    closeDatePicker();
+}
+
+// Маска телефона
+function formatPhoneNumber(input) {
+    let value = input.value.replace(/\D/g, '');
+    
+    if (value.length === 0) {
+        input.value = '';
+        return;
+    }
+    
+    if (value.length <= 1) {
+        input.value = '+7';
+    } else if (value.length <= 4) {
+        input.value = '+7 (' + value.substring(1);
+    } else if (value.length <= 7) {
+        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4);
+    } else if (value.length <= 9) {
+        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4, 7) + '-' + value.substring(7);
+    } else {
+        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4, 7) + '-' + value.substring(7, 9) + '-' + value.substring(9, 11);
+    }
+}
+
+// Автообновление курортов
+function updateResorts() {
+    const country = document.querySelector('select[name="destination_country"]').value;
+    const resortSelect = document.getElementById('resortSelect');
+    
+    if (!country) {
+        resortSelect.innerHTML = '<option value="">Выберите курорт</option>';
+        return;
+    }
+    
+    // Показываем загрузку
+    resortSelect.innerHTML = '<option value="">Загрузка курортов...</option>';
+    
+    // Загружаем курорты через API
+    fetch(`/api/tours/resorts?country=${encodeURIComponent(country)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resortSelect.innerHTML = '<option value="">Выберите курорт</option>';
+                data.data.forEach(resort => {
+                    const option = document.createElement('option');
+                    option.value = resort;
+                    option.textContent = resort;
+                    resortSelect.appendChild(option);
+                });
+            } else {
+                resortSelect.innerHTML = '<option value="">Курорты не найдены</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки курортов:', error);
+            resortSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+        });
 }
 
 // Стили для карточек туров
@@ -382,6 +521,20 @@ document.addEventListener('DOMContentLoaded', function() {
             year: '2-digit'
         });
         document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+    }
+    
+    // Инициализация маски телефона
+    const phoneInput = document.getElementById('phoneInput');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            formatPhoneNumber(this);
+        });
+    }
+    
+    // Инициализация автообновления курортов
+    const countrySelect = document.querySelector('select[name="destination_country"]');
+    if (countrySelect) {
+        countrySelect.addEventListener('change', updateResorts);
     }
 });
 </script>

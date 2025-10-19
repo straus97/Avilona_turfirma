@@ -80,7 +80,12 @@
                                             <label class="form-label text-white fw-bold mb-1 small">
                                                 <i class="fas fa-calendar-alt me-1"></i>Даты вылета
                                             </label>
-                                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDatePicker()">
+                                            <div class="input-group">
+                                                <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDateRangePicker()">
+                                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="openDateRangePicker()">
+                                                    <i class="fas fa-calendar"></i>
+                                                </button>
+                                            </div>
                                             <input type="hidden" name="start_date" id="start_date">
                                             <input type="hidden" name="end_date" id="end_date">
                                         </div>
@@ -529,29 +534,76 @@
     </script>
     
     <script>
-    function openDatePicker() {
-        // Простой выбор дат через prompt (в будущем можно заменить на календарь)
-        const startDate = prompt('Введите дату начала (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+1 week')) }}');
-        if (startDate) {
-            const endDate = prompt('Введите дату окончания (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+2 weeks')) }}');
-            if (endDate) {
-                document.getElementById('start_date').value = startDate;
-                document.getElementById('end_date').value = endDate;
-                
-                // Форматируем даты для отображения
-                const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
-                    day: 'numeric', 
-                    month: 'short' 
-                });
-                const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
-                    day: 'numeric', 
-                    month: 'short',
-                    year: '2-digit'
-                });
-                
-                document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
-            }
+    function openDateRangePicker() {
+        // Создаем модальное окно с календарем
+        const modal = document.createElement('div');
+        modal.className = 'modal fade show';
+        modal.style.display = 'block';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Выберите даты вылета</h5>
+                        <button type="button" class="btn-close" onclick="closeDatePicker()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Дата от</label>
+                                <input type="date" id="startDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d', strtotime('+1 week')) }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Дата до</label>
+                                <input type="date" id="endDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d', strtotime('+2 weeks')) }}">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Выберите диапазон дат для поиска туров</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">Отмена</button>
+                        <button type="button" class="btn btn-primary" onclick="applyDateRange()">Применить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.body.classList.add('modal-open');
+    }
+
+    function closeDatePicker() {
+        const modal = document.querySelector('.modal.show');
+        if (modal) {
+            modal.remove();
+            document.body.classList.remove('modal-open');
         }
+    }
+
+    function applyDateRange() {
+        const startDate = document.getElementById('startDatePicker').value;
+        const endDate = document.getElementById('endDatePicker').value;
+        
+        if (startDate && endDate) {
+            document.getElementById('start_date').value = startDate;
+            document.getElementById('end_date').value = endDate;
+            
+            // Форматируем даты для отображения
+            const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
+                day: 'numeric', 
+                month: 'short' 
+            });
+            const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
+                day: 'numeric', 
+                month: 'short',
+                year: '2-digit'
+            });
+            
+            document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+        }
+        
+        closeDatePicker();
     }
     </script>
 @endsection
