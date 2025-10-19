@@ -1,5 +1,112 @@
 @extends('layouts.main')
 
+@section('styles')
+<style>
+/* Стили для компактного виджета */
+.tour-search-widget .card {
+    border: 1px solid #e9ecef;
+}
+
+.tour-search-widget .form-select-sm,
+.tour-search-widget .form-control-sm {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.5rem;
+}
+
+/* Стили для календаря */
+.calendar-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.weekday {
+    padding: 8px 4px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+    background: #fff;
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.calendar-day.past {
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+.calendar-day.past:hover {
+    background: #fff;
+    border-color: transparent;
+}
+
+.calendar-day.today {
+    background: #e3f2fd;
+    color: #1976d2;
+    font-weight: 600;
+}
+
+.calendar-day.selected {
+    background: #2196f3;
+    color: white;
+}
+
+.calendar-day.start {
+    background: #1976d2;
+    color: white;
+    border-radius: 4px 0 0 4px;
+}
+
+.calendar-day.end {
+    background: #1976d2;
+    color: white;
+    border-radius: 0 4px 4px 0;
+}
+
+.calendar-day.start.end {
+    border-radius: 4px;
+}
+
+.selected-dates {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.selected-range {
+    font-size: 1.1rem;
+    margin: 0.5rem 0;
+}
+</style>
+@endsection
+
 @section('title', 'Поиск туров - Туристическая фирма Авилона')
 @section('meta_description', 'Поиск лучших туров по выгодным ценам. Работаем с ведущими туроператорами России.')
 
@@ -12,23 +119,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-    <!-- Виджет поиска -->
+    
+    <!-- Компактный виджет поиска -->
     <div class="search-widget mb-4">
-        <div class="card border-0 shadow-lg">
-            <div class="card-body p-4 p-md-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
-                <div class="text-center text-white mb-4">
-                    <i class="fas fa-plane-departure fa-3x mb-3" style="opacity: 0.9;"></i>
-                    <h1 class="h2 mb-2 fw-bold">Поиск туров</h1>
-                    <p class="mb-0 opacity-75">Найдите свое идеальное путешествие</p>
-                </div>
-                
+        <div class="card border-0 shadow-sm" style="border-radius: 8px;">
+            <div class="card-body p-3" style="background: #f8f9fa;">
                 <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
-                    <!-- Основные фильтры -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-map-marker-alt me-1"></i>Откуда
-                            </label>
+                    <!-- Основные поля в одну строку -->
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Откуда</label>
                             <select name="departure_city" class="form-select form-select-sm" required>
                                 <option value="">Выберите город</option>
                                 @foreach($departureCities as $city)
@@ -39,10 +139,8 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-globe me-1"></i>Куда
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Куда</label>
                             <select name="destination_country" class="form-select form-select-sm" required>
                                 <option value="">Выберите страну</option>
                                 @foreach($destinationCountries as $country)
@@ -53,24 +151,15 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-calendar-alt me-1"></i>Даты вылета
-                            </label>
-                            <div class="input-group">
-                                <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDateRangePicker()" value="{{ request('date_range') }}">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="openDateRangePicker()">
-                                    <i class="fas fa-calendar"></i>
-                                </button>
-                            </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Даты вылета</label>
+                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="20 окт - 26 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDateRangePicker()" value="{{ request('date_range') }}">
                             <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
                             <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-moon me-1"></i>Ночей
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Ночей</label>
                             <div class="row g-1">
                                 <div class="col-6">
                                     <input type="number" name="nights_min" class="form-control form-control-sm" placeholder="от 7" min="1" max="30" value="{{ request('nights_min') }}">
@@ -80,14 +169,28 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Туристы</label>
+                            <select name="adults" class="form-select form-select-sm">
+                                <option value="1" {{ request('adults') == 1 ? 'selected' : '' }}>1 взрослый</option>
+                                <option value="2" {{ request('adults', 2) == 2 ? 'selected' : '' }}>2 взрослых</option>
+                                <option value="3" {{ request('adults') == 3 ? 'selected' : '' }}>3 взрослых</option>
+                                <option value="4" {{ request('adults') == 4 ? 'selected' : '' }}>4 взрослых</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">
+                                <i class="fas fa-search me-1"></i>Найти туры
+                            </button>
+                        </div>
                     </div>
                     
-                    <!-- Дополнительные фильтры -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-map-marker-alt me-1"></i>Курорт
-                            </label>
+                    <!-- Дополнительные фильтры (скрытые по умолчанию) -->
+                    <div class="row mt-3" id="additionalFilters" style="display: none;">
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Курорт</label>
                             <select name="destination_city" id="resortSelect" class="form-select form-select-sm">
                                 <option value="">Выберите курорт</option>
                                 @if(request('destination_country'))
@@ -107,10 +210,8 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-star me-1"></i>Звездность
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Звездность</label>
                             <select name="hotel_stars" class="form-select form-select-sm">
                                 <option value="">Любая</option>
                                 <option value="3" {{ request('hotel_stars') == 3 ? 'selected' : '' }}>3★</option>
@@ -119,10 +220,8 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-utensils me-1"></i>Питание
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Питание</label>
                             <select name="meal_type" class="form-select form-select-sm">
                                 <option value="">Любое</option>
                                 <option value="BB" {{ request('meal_type') == 'BB' ? 'selected' : '' }}>BB</option>
@@ -133,24 +232,31 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-ruble-sign me-1"></i>Цена от
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Цена от</label>
                             <input type="number" name="price_min" class="form-control form-control-sm" placeholder="30000" min="0" value="{{ request('price_min') }}">
                         </div>
                         
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-white fw-bold mb-1 small">
-                                <i class="fas fa-ruble-sign me-1"></i>Цена до
-                            </label>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Цена до</label>
                             <input type="number" name="price_max" class="form-control form-control-sm" placeholder="200000" min="0" value="{{ request('price_max') }}">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted mb-1">Дети</label>
+                            <select name="children" class="form-select form-select-sm">
+                                <option value="0" {{ request('children', 0) == 0 ? 'selected' : '' }}>Без детей</option>
+                                <option value="1" {{ request('children') == 1 ? 'selected' : '' }}>1 ребенок</option>
+                                <option value="2" {{ request('children') == 2 ? 'selected' : '' }}>2 ребенка</option>
+                                <option value="3" {{ request('children') == 3 ? 'selected' : '' }}>3 ребенка</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-light btn-lg px-4 py-2 fw-bold shadow" style="font-size: 1rem;">
-                            <i class="fas fa-search me-2"></i>Найти туры
+                    <!-- Кнопка показать/скрыть дополнительные фильтры -->
+                    <div class="text-center mt-2">
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none" onclick="toggleAdditionalFilters()">
+                            <i class="fas fa-sliders-h me-1"></i>Больше фильтров
                         </button>
                     </div>
                 </form>
@@ -162,19 +268,13 @@
     <div class="results-section">
         <!-- Заголовок и сортировка -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">
-                Найдено туров: <span class="text-primary">{{ $tours->total() }}</span>
-            </h2>
-            
-            <div class="d-flex align-items-center gap-2">
-                <label class="small text-muted mb-0">Сортировка:</label>
-                <select class="form-select form-select-sm" style="width: auto;" onchange="updateSort(this.value)">
-                    <option value="popular" {{ request('sort_by') == 'popular' ? 'selected' : '' }}>По популярности</option>
-                    <option value="price_asc" {{ request('sort_by') == 'price_asc' ? 'selected' : '' }}>Цена (возрастание)</option>
-                    <option value="price_desc" {{ request('sort_by') == 'price_desc' ? 'selected' : '' }}>Цена (убывание)</option>
-                    <option value="rating" {{ request('sort_by') == 'rating' ? 'selected' : '' }}>По рейтингу</option>
-                </select>
-            </div>
+            <h2 class="h4 mb-0 text-primary">Найдено туров: <span class="fw-bold">{{ $tours->total() }}</span></h2>
+            <select class="form-select w-auto" onchange="updateSort(this.value)">
+                <option value="popularity" {{ request('sort_by', 'popularity') == 'popularity' ? 'selected' : '' }}>По популярности</option>
+                <option value="price_asc" {{ request('sort_by') == 'price_asc' ? 'selected' : '' }}>По цене (сначала дешевые)</option>
+                <option value="price_desc" {{ request('sort_by') == 'price_desc' ? 'selected' : '' }}>По цене (сначала дорогие)</option>
+                <option value="rating" {{ request('sort_by') == 'rating' ? 'selected' : '' }}>По рейтингу</option>
+            </select>
         </div>
         
         @if($tours->count() > 0)
@@ -262,48 +362,32 @@
                 {{ $tours->links() }}
             </div>
         @else
-            <!-- Нет результатов -->
-            <div class="alert alert-info text-center py-5">
-                <i class="fas fa-search fa-3x mb-3 text-muted"></i>
-                <h4>Туры не найдены</h4>
-                <p class="mb-0">Попробуйте изменить параметры поиска</p>
+            <div class="alert alert-info text-center py-4" role="alert">
+                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <h4 class="alert-heading">Туры не найдены</h4>
+                <p class="mb-0">Попробуйте изменить параметры поиска или свяжитесь с нашим менеджером.</p>
             </div>
         @endif
     </div>
 </div>
 
-<!-- Модальное окно для создания заявки -->
-<div class="modal fade" id="bookingModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<!-- Модальное окно для заявки -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Создать заявку на тур</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="bookingModalLabel">Оставить заявку на тур</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST">
-                    @csrf
+            <form action="{{ route('bookings.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
                     <input type="hidden" name="tour_id" id="bookingTourId">
                     
-                    @auth
-                        <!-- Для авторизованных - данные предзаполнены -->
+                    @guest
                         <div class="mb-3">
-                            <label class="form-label">ФИО</label>
-                            <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="{{ auth()->user()->email }}" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Телефон</label>
-                            <input type="tel" class="form-control" value="{{ auth()->user()->phone }}" readonly>
-                        </div>
-                    @else
-                        <!-- Для неавторизованных -->
-                        <div class="mb-3">
-                            <label class="form-label">ФИО <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" required placeholder="Иван Иванов">
+                            <label for="contact_name" class="form-label">Ваше имя</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -319,21 +403,12 @@
                         <label class="form-label">Комментарий или пожелания</label>
                         <textarea name="notes" class="form-control" rows="3" placeholder="Напишите ваши пожелания..."></textarea>
                     </div>
-                    
-                    @guest
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Совет:</strong> Зарегистрируйтесь на сайте, чтобы отслеживать статус заявки и общаться с менеджером онлайн!
-                        </div>
-                    @endguest
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="submit" form="bookingForm" class="btn btn-primary">
-                    <i class="fas fa-paper-plane me-1"></i>Отправить заявку
-                </button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Отправить заявку</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -342,34 +417,18 @@
 
 @section('scripts')
 <script>
-function updateSort(sortBy) {
-    const form = document.getElementById('tourSearchForm');
-    const url = new URL(form.action);
-    const formData = new FormData(form);
-    
-    // Добавляем все параметры формы в URL
-    for (let [key, value] of formData.entries()) {
-        if (value) url.searchParams.set(key, value);
-    }
-    
-    // Добавляем сортировку
-    url.searchParams.set('sort_by', sortBy);
-    
-    window.location.href = url.toString();
-}
-
 function openBookingModal(tourId) {
     document.getElementById('bookingTourId').value = tourId;
     new bootstrap.Modal(document.getElementById('bookingModal')).show();
 }
 
 function openDateRangePicker() {
-    // Создаем модальное окно с календарем
+    // Создаем красивый календарь как на Sletat.ru
     const modal = document.createElement('div');
     modal.className = 'modal fade show';
     modal.style.display = 'block';
     modal.innerHTML = `
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Выберите даты вылета</h5>
@@ -377,22 +436,47 @@ function openDateRangePicker() {
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Дата от</label>
-                            <input type="date" id="startDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ request('start_date') ?: date('Y-m-d', strtotime('+1 week')) }}">
+                        <div class="col-md-8">
+                            <div class="calendar-container">
+                                <div class="calendar-header mb-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-2">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(-1)">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                        </div>
+                                        <div class="col-8 text-center">
+                                            <h6 class="mb-0" id="currentMonth">Октябрь 2025</h6>
+                                        </div>
+                                        <div class="col-2 text-end">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(1)">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="calendar-grid" id="calendarGrid">
+                                    <!-- Календарь будет сгенерирован JavaScript -->
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Дата до</label>
-                            <input type="date" id="endDatePicker" class="form-control" min="{{ date('Y-m-d') }}" value="{{ request('end_date') ?: date('Y-m-d', strtotime('+2 weeks')) }}">
+                        <div class="col-md-4">
+                            <div class="selected-dates">
+                                <h6>Выбранные даты:</h6>
+                                <div class="selected-range" id="selectedRange">
+                                    <span class="text-muted">Выберите даты</span>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted">Минимальная продолжительность: 1 день</small>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-muted">Выберите диапазон дат для поиска туров</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">Отмена</button>
-                    <button type="button" class="btn btn-primary" onclick="applyDateRange()">Применить</button>
+                    <button type="button" class="btn btn-primary" onclick="applyDateRange()" id="applyBtn" disabled>Применить</button>
                 </div>
             </div>
         </div>
@@ -400,6 +484,140 @@ function openDateRangePicker() {
     
     document.body.appendChild(modal);
     document.body.classList.add('modal-open');
+    
+    // Инициализируем календарь
+    initCalendar();
+}
+
+let selectedStartDate = null;
+let selectedEndDate = null;
+let currentDate = new Date();
+
+function initCalendar() {
+    generateCalendar();
+}
+
+function generateCalendar() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Обновляем заголовок
+    document.getElementById('currentMonth').textContent = 
+        new Date(year, month).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+    
+    // Получаем первый день месяца и количество дней
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Понедельник = 1
+    
+    let html = '<div class="calendar-weekdays mb-2">';
+    const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+    weekdays.forEach(day => {
+        html += `<div class="weekday text-center text-muted small">${day}</div>`;
+    });
+    html += '</div>';
+    
+    html += '<div class="calendar-days">';
+    
+    // Пустые ячейки для начала месяца
+    for (let i = 1; i < startDay; i++) {
+        html += '<div class="calendar-day"></div>';
+    }
+    
+    // Дни месяца
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const isToday = isSameDay(date, new Date());
+        const isPast = date < new Date();
+        const isSelected = selectedStartDate && selectedEndDate && 
+            date >= selectedStartDate && date <= selectedEndDate;
+        const isStart = selectedStartDate && isSameDay(date, selectedStartDate);
+        const isEnd = selectedEndDate && isSameDay(date, selectedEndDate);
+        
+        let classes = 'calendar-day';
+        if (isPast) classes += ' past';
+        if (isToday) classes += ' today';
+        if (isSelected) classes += ' selected';
+        if (isStart) classes += ' start';
+        if (isEnd) classes += ' end';
+        
+        html += `<div class="calendar-day ${classes}" onclick="selectDate(${day})" data-day="${day}">
+            <span>${day}</span>
+        </div>`;
+    }
+    
+    html += '</div>';
+    calendarGrid.innerHTML = html;
+}
+
+function selectDate(day) {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const date = new Date(year, month, day);
+    
+    if (date < new Date()) return; // Нельзя выбрать прошедшие даты
+    
+    if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+        // Начинаем новый выбор
+        selectedStartDate = date;
+        selectedEndDate = null;
+    } else if (selectedStartDate && !selectedEndDate) {
+        // Завершаем выбор
+        if (date < selectedStartDate) {
+            selectedEndDate = selectedStartDate;
+            selectedStartDate = date;
+        } else {
+            selectedEndDate = date;
+        }
+    }
+    
+    updateCalendar();
+    updateSelectedRange();
+}
+
+function updateCalendar() {
+    generateCalendar();
+}
+
+function updateSelectedRange() {
+    const rangeElement = document.getElementById('selectedRange');
+    const applyBtn = document.getElementById('applyBtn');
+    
+    if (selectedStartDate && selectedEndDate) {
+        const startStr = selectedStartDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long' 
+        });
+        const endStr = selectedEndDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long' 
+        });
+        rangeElement.innerHTML = `<strong>${startStr} — ${endStr}</strong>`;
+        applyBtn.disabled = false;
+    } else if (selectedStartDate) {
+        const startStr = selectedStartDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long' 
+        });
+        rangeElement.innerHTML = `<strong>${startStr}</strong> — выберите дату окончания`;
+        applyBtn.disabled = true;
+    } else {
+        rangeElement.innerHTML = '<span class="text-muted">Выберите даты</span>';
+        applyBtn.disabled = true;
+    }
+}
+
+function changeMonth(direction) {
+    currentDate.setMonth(currentDate.getMonth() + direction);
+    generateCalendar();
+}
+
+function isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
 }
 
 function closeDatePicker() {
@@ -408,31 +626,44 @@ function closeDatePicker() {
         modal.remove();
         document.body.classList.remove('modal-open');
     }
+    // Сбрасываем выбор
+    selectedStartDate = null;
+    selectedEndDate = null;
 }
 
 function applyDateRange() {
-    const startDate = document.getElementById('startDatePicker').value;
-    const endDate = document.getElementById('endDatePicker').value;
-    
-    if (startDate && endDate) {
-        document.getElementById('start_date').value = startDate;
-        document.getElementById('end_date').value = endDate;
+    if (selectedStartDate && selectedEndDate) {
+        document.getElementById('start_date').value = selectedStartDate.toISOString().split('T')[0];
+        document.getElementById('end_date').value = selectedEndDate.toISOString().split('T')[0];
         
         // Форматируем даты для отображения
-        const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
+        const startFormatted = selectedStartDate.toLocaleDateString('ru-RU', { 
             day: 'numeric', 
             month: 'short' 
         });
-        const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
+        const endFormatted = selectedEndDate.toLocaleDateString('ru-RU', { 
             day: 'numeric', 
             month: 'short',
             year: '2-digit'
         });
         
-        document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+        document.querySelector('input[name="date_range"]').value = `${startFormatted} — ${endFormatted}`;
     }
     
     closeDatePicker();
+}
+
+function toggleAdditionalFilters() {
+    const filters = document.getElementById('additionalFilters');
+    const button = event.target;
+    
+    if (filters.style.display === 'none') {
+        filters.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-chevron-up me-1"></i>Скрыть фильтры';
+    } else {
+        filters.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-sliders-h me-1"></i>Больше фильтров';
+    }
 }
 
 // Маска телефона
@@ -467,10 +698,8 @@ function updateResorts() {
         return;
     }
     
-    // Показываем загрузку
     resortSelect.innerHTML = '<option value="">Загрузка курортов...</option>';
     
-    // Загружаем курорты через API
     fetch(`/api/tours/resorts?country=${encodeURIComponent(country)}`)
         .then(response => response.json())
         .then(data => {
@@ -492,15 +721,25 @@ function updateResorts() {
         });
 }
 
+function updateSort(sortBy) {
+    const form = document.getElementById('tourSearchForm');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'sort_by';
+    input.value = sortBy;
+    form.appendChild(input);
+    form.submit();
+}
+
 // Стили для карточек туров
 document.addEventListener('DOMContentLoaded', function() {
     const tourCards = document.querySelectorAll('.tour-card');
     tourCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-2px)';
-            this.style.transition = 'all 0.3s ease';
-            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+            this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
         });
+        
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
             this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
@@ -520,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
             month: 'short',
             year: '2-digit'
         });
-        document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+        document.querySelector('input[name="date_range"]').value = `${startFormatted} — ${endFormatted}`;
     }
     
     // Инициализация маски телефона
@@ -539,5 +778,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-
-
