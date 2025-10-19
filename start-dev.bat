@@ -42,27 +42,23 @@ if not exist ".env" (
 )
 
 echo.
-echo Запуск серверов...
+echo Запуск Laravel сервера...
 echo.
 
-echo [1/2] Запуск Laravel сервера на http://localhost:8000
-start "Laravel Server" cmd /k "cd /d %~dp0 && C:\wamp\bin\php\php8.4.13\php.exe artisan serve"
+echo Открываю Laravel сервер на http://localhost:8000
+start "Laravel Server - Avilona" cmd /k "cd /d "%~dp0" && C:\wamp\bin\php\php8.4.13\php.exe artisan serve"
 
-timeout /t 2 /nobreak >nul
-
-echo [2/2] Запуск Vite dev server для hot reload
-start "Vite Dev Server" cmd /k "cd /d %~dp0 && npm run dev"
+timeout /t 3 /nobreak >nul
 
 echo.
 echo ========================================
-echo   ✅ Серверы запущены успешно!
+echo   ✅ Сервер запущен успешно!
 echo ========================================
 echo.
 echo 🌐 Веб-сайт: http://localhost:8000
-echo 🔥 Hot reload: http://localhost:5173
 echo.
-echo Для остановки серверов закройте окна терминалов
-echo или нажмите Ctrl+C в каждом окне
+echo Для остановки сервера закройте окно терминала
+echo или нажмите Ctrl+C в окне сервера
 echo.
 echo Нажмите любую клавишу для выхода из этого окна...
 pause >nul
