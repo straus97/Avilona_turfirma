@@ -1,25 +1,25 @@
 @echo off
 chcp 65001 >nul
 echo ========================================
-echo   Запуск сервера разработки Авилона
+echo    Starting Avilona Development Server
 echo ========================================
 echo.
 
-echo Проверка зависимостей...
+echo Checking dependencies...
 if not exist "vendor" (
-    echo Установка PHP зависимостей...
+    echo Installing PHP dependencies...
     C:\wamp\bin\php\php8.4.13\php.exe C:\wamp\bin\composer\composer.phar install
 )
 
 if not exist "node_modules" (
-    echo Установка Node.js зависимостей...
+    echo Installing Node.js dependencies...
     npm install
 )
 
 echo.
-echo Проверка файла .env...
+echo Checking .env file...
 if not exist ".env" (
-    echo Создание файла .env...
+    echo Creating .env file...
     copy .env.example .env >nul 2>&1
     if errorlevel 1 (
         echo APP_NAME=Avilona > .env
@@ -35,30 +35,30 @@ if not exist ".env" (
         echo DB_USERNAME=root >> .env
         echo DB_PASSWORD= >> .env
     )
-    echo Файл .env создан!
+    echo .env file created!
     echo.
-    echo Генерация ключа приложения...
+    echo Generating application key...
     C:\wamp\bin\php\php8.4.13\php.exe artisan key:generate
 )
 
 echo.
-echo Запуск Laravel сервера...
+echo Starting Laravel server...
 echo.
 
-echo Открываю Laravel сервер на http://localhost:8000
-start "Laravel Server - Avilona" cmd /k "cd /d "%~dp0" && C:\wamp\bin\php\php8.4.13\php.exe artisan serve"
+echo Opening Laravel server at http://localhost:8000
+start "Laravel Server - Avilona" cmd /k "cd /d %~dp0 && C:\wamp\bin\php\php8.4.13\php.exe artisan serve"
 
 timeout /t 3 /nobreak >nul
 
 echo.
 echo ========================================
-echo   ✅ Сервер запущен успешно!
+echo    Server started successfully!
 echo ========================================
 echo.
-echo 🌐 Веб-сайт: http://localhost:8000
+echo Website: http://localhost:8000
 echo.
-echo Для остановки сервера закройте окно терминала
-echo или нажмите Ctrl+C в окне сервера
+echo To stop the server, close the terminal window
+echo or press Ctrl+C in the server window
 echo.
-echo Нажмите любую клавишу для выхода из этого окна...
+echo Press any key to exit this window...
 pause >nul
