@@ -10,6 +10,14 @@ Route::group(['namespace' => 'Home'], function () {
     Route::get('/reviews/{id_reviews}', "ReviewsController")->name("reviews.show")->middleware('cache.response');
 });
 
+Route::group(['namespace' => 'Tour'], function () {
+    Route::get('/tours', 'IndexController')->name('tours.index');
+});
+
+Route::group(['namespace' => 'Booking'], function () {
+    Route::post('/bookings', 'StoreController')->name('bookings.store');
+});
+
 Route::group(['namespace' => 'Company'], function () {
     Route::get('/company/about_company', "AboutController")->name("about_company.index")->middleware('cache.response');
     Route::get('/company/employees', "EmployeesController")->name("employees.index")->middleware('cache.response');

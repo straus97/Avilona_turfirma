@@ -35,95 +35,73 @@
         <div class="container">
             <div class="row my-3">
                 <div class="col">
-                    <!-- Виджет поиска туров (в разработке) -->
+                    <!-- Виджет поиска туров -->
                     <div class="tour-search-widget mb-4">
                         <div class="card border-0 shadow-lg">
-                            <div class="card-body p-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
+                            <div class="card-body p-4 p-md-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
                                 <div class="text-center text-white mb-4">
-                                    <i class="fas fa-plane-departure fa-4x mb-3" style="opacity: 0.9;"></i>
-                                    <h1 class="display-4 mb-3 fw-bold">Виджет поиска туров</h1>
-                                    <p class="lead mb-0">Современный инструмент для поиска идеального путешествия</p>
+                                    <i class="fas fa-plane-departure fa-3x mb-3" style="opacity: 0.9;"></i>
+                                    <h1 class="h2 mb-2 fw-bold">Поиск туров</h1>
+                                    <p class="mb-0 opacity-75">Найдите свое идеальное путешествие</p>
                                 </div>
                                 
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="bg-white bg-opacity-10 p-3 rounded">
+                                <form action="{{ route('tours.index') }}" method="GET">
+                                    <div class="row g-3">
+                                        <div class="col-md-6 col-lg-3">
                                             <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-map-marker-alt me-2"></i>Откуда
+                                                <i class="fas fa-map-marker-alt me-1"></i>Откуда
                                             </label>
-                                            <select class="form-select" disabled>
-                                                <option>В разработке...</option>
+                                            <select name="departure_city" class="form-select" required>
+                                                <option value="">Выберите город</option>
+                                                <option value="Москва">Москва</option>
+                                                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                                                <option value="Екатеринбург">Екатеринбург</option>
+                                                <option value="Новосибирск">Новосибирск</option>
+                                                <option value="Казань">Казань</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-2">
+                                                <i class="fas fa-globe me-1"></i>Куда
+                                            </label>
+                                            <select name="destination_country" class="form-select" required>
+                                                <option value="">Выберите страну</option>
+                                                <option value="Турция">Турция</option>
+                                                <option value="Египет">Египет</option>
+                                                <option value="ОАЭ">ОАЭ</option>
+                                                <option value="Тайланд">Тайланд</option>
+                                                <option value="Испания">Испания</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-2">
+                                                <i class="fas fa-calendar-alt me-1"></i>Дата от
+                                            </label>
+                                            <input type="date" name="start_date" class="form-control" required min="{{ date('Y-m-d') }}">
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-2">
+                                                <i class="fas fa-moon me-1"></i>Ночей
+                                            </label>
+                                            <select name="nights" class="form-select">
+                                                <option value="">Любое</option>
+                                                <option value="7">7 ночей</option>
+                                                <option value="10">10 ночей</option>
+                                                <option value="14">14 ночей</option>
+                                                <option value="21">21 ночь</option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="bg-white bg-opacity-10 p-3 rounded">
-                                            <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-globe me-2"></i>Куда
-                                            </label>
-                                            <select class="form-select" disabled>
-                                                <option>В разработке...</option>
-                                            </select>
-                                        </div>
+                                    
+                                    <div class="text-center mt-4">
+                                        <button type="submit" class="btn btn-light btn-lg px-5 py-3 fw-bold shadow" style="font-size: 1.1rem;">
+                                            <i class="fas fa-search me-2"></i>Найти туры
+                                        </button>
                                     </div>
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="bg-white bg-opacity-10 p-3 rounded">
-                                            <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-calendar-alt me-2"></i>Дата заезда
-                                            </label>
-                                            <input type="date" class="form-control" disabled>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 col-lg-3">
-                                        <div class="bg-white bg-opacity-10 p-3 rounded">
-                                            <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-moon me-2"></i>Количество ночей
-                                            </label>
-                                            <select class="form-select" disabled>
-                                                <option>В разработке...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <button class="btn btn-light btn-lg px-5 py-3 fw-bold" disabled style="font-size: 1.1rem;">
-                                        <i class="fas fa-cog fa-spin me-2"></i>Функционал в разработке
-                                    </button>
-                                    <p class="text-white mt-3 mb-0 opacity-75">
-                                        <i class="fas fa-info-circle me-2"></i>Скоро вы сможете искать туры прямо на сайте!
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Информация о будущих возможностях -->
-                        <div class="alert alert-info mt-4" role="alert">
-                            <div class="row align-items-center">
-                                <div class="col-md-1 text-center">
-                                    <i class="fas fa-tools fa-3x text-primary"></i>
-                                </div>
-                                <div class="col-md-11">
-                                    <h5 class="alert-heading mb-3">
-                                        <strong>Что будет в виджете поиска туров:</strong>
-                                    </h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled mb-0">
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Поиск по странам и направлениям</li>
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Фильтры по звездности отелей</li>
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Выбор типа питания</li>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled mb-0">
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Актуальные цены и наличие</li>
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Быстрое бронирование</li>
-                                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Онлайн-оплата</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
