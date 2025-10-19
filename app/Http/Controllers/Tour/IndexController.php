@@ -14,7 +14,7 @@ class IndexController extends Controller
     public function __invoke(Request $request)
     {
         // Базовый запрос
-        $query = Tour::query()->active()->with('reviews');
+        $query = Tour::query()->active();
         
         // Применяем фильтры
         if ($request->filled('departure_city')) {
@@ -31,6 +31,18 @@ class IndexController extends Controller
         
         if ($request->filled('start_date')) {
             $query->where('start_date', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->where('start_date', '<=', $request->end_date);
+        }
+        
+        if ($request->filled('nights_min')) {
+            $query->where('nights', '>=', $request->nights_min);
+        }
+        
+        if ($request->filled('nights_max')) {
+            $query->where('nights', '<=', $request->nights_max);
         }
         
         if ($request->filled('nights')) {

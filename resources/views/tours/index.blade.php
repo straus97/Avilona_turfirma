@@ -6,102 +6,143 @@
 @section('content')
 <div class="container my-5">
     <!-- Виджет поиска -->
-    <div class="search-widget bg-white shadow-sm rounded-3 p-4 mb-4">
-        <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
-            <!-- Основные фильтры -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Откуда</label>
-                    <select name="departure_city" class="form-select" required>
-                        <option value="">Выберите город</option>
-                        @foreach($departureCities as $city)
-                            <option value="{{ $city }}" {{ request('departure_city') == $city ? 'selected' : '' }}>
-                                {{ $city }}
-                            </option>
-                        @endforeach
-                    </select>
+    <div class="search-widget mb-4">
+        <div class="card border-0 shadow-lg">
+            <div class="card-body p-4 p-md-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
+                <div class="text-center text-white mb-4">
+                    <i class="fas fa-plane-departure fa-3x mb-3" style="opacity: 0.9;"></i>
+                    <h1 class="h2 mb-2 fw-bold">Поиск туров</h1>
+                    <p class="mb-0 opacity-75">Найдите свое идеальное путешествие</p>
                 </div>
                 
-                <div class="col-md-3">
-                    <label class="form-label small text-muted">Куда</label>
-                    <select name="destination_country" class="form-select" required>
-                        <option value="">Выберите страну</option>
-                        @foreach($destinationCountries as $country)
-                            <option value="{{ $country }}" {{ request('destination_country') == $country ? 'selected' : '' }}>
-                                {{ $country }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label small text-muted">Дата от</label>
-                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" required>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label small text-muted">Ночей</label>
-                    <select name="nights" class="form-select">
-                        <option value="">Любое</option>
-                        @foreach([7, 10, 11, 14, 21] as $night)
-                            <option value="{{ $night }}" {{ request('nights') == $night ? 'selected' : '' }}>
-                                {{ $night }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search me-1"></i>Найти
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Кнопка расширенных фильтров -->
-            <div class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                    <i class="fas fa-sliders-h me-1"></i>Больше фильтров
-                </button>
-            </div>
-            
-            <!-- Расширенные фильтры (скрытые) -->
-            <div class="collapse mt-3" id="advancedFilters">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label small text-muted">Звездность</label>
-                        <select name="hotel_stars" class="form-select">
-                            <option value="">Любая</option>
-                            <option value="3" {{ request('hotel_stars') == 3 ? 'selected' : '' }}>3★</option>
-                            <option value="4" {{ request('hotel_stars') == 4 ? 'selected' : '' }}>4★</option>
-                            <option value="5" {{ request('hotel_stars') == 5 ? 'selected' : '' }}>5★</option>
-                        </select>
+                <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
+                    <!-- Основные фильтры -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-map-marker-alt me-1"></i>Откуда
+                            </label>
+                            <select name="departure_city" class="form-select" required>
+                                <option value="">Выберите город</option>
+                                @foreach($departureCities as $city)
+                                    <option value="{{ $city }}" {{ request('departure_city') == $city ? 'selected' : '' }}>
+                                        {{ $city }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-globe me-1"></i>Куда
+                            </label>
+                            <select name="destination_country" class="form-select" required>
+                                <option value="">Выберите страну</option>
+                                @foreach($destinationCountries as $country)
+                                    <option value="{{ $country }}" {{ request('destination_country') == $country ? 'selected' : '' }}>
+                                        {{ $country }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i>Дата от
+                            </label>
+                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" required min="{{ date('Y-m-d') }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i>Дата до
+                            </label>
+                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" min="{{ date('Y-m-d') }}">
+                        </div>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label class="form-label small text-muted">Питание</label>
-                        <select name="meal_type" class="form-select">
-                            <option value="">Любое</option>
-                            <option value="BB" {{ request('meal_type') == 'BB' ? 'selected' : '' }}>BB (завтрак)</option>
-                            <option value="HB" {{ request('meal_type') == 'HB' ? 'selected' : '' }}>HB (полупансион)</option>
-                            <option value="FB" {{ request('meal_type') == 'FB' ? 'selected' : '' }}>FB (полный пансион)</option>
-                            <option value="AI" {{ request('meal_type') == 'AI' ? 'selected' : '' }}>AI (всё включено)</option>
-                            <option value="UAI" {{ request('meal_type') == 'UAI' ? 'selected' : '' }}>UAI (ультра)</option>
-                        </select>
+                    <!-- Дополнительные фильтры -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-moon me-1"></i>Ночей (от)
+                            </label>
+                            <input type="number" name="nights_min" class="form-control" placeholder="7" min="1" max="30" value="{{ request('nights_min') }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-moon me-1"></i>Ночей (до)
+                            </label>
+                            <input type="number" name="nights_max" class="form-control" placeholder="14" min="1" max="30" value="{{ request('nights_max') }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-star me-1"></i>Звездность
+                            </label>
+                            <select name="hotel_stars" class="form-select">
+                                <option value="">Любая</option>
+                                <option value="3" {{ request('hotel_stars') == 3 ? 'selected' : '' }}>3★</option>
+                                <option value="4" {{ request('hotel_stars') == 4 ? 'selected' : '' }}>4★</option>
+                                <option value="5" {{ request('hotel_stars') == 5 ? 'selected' : '' }}>5★</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-utensils me-1"></i>Питание
+                            </label>
+                            <select name="meal_type" class="form-select">
+                                <option value="">Любое</option>
+                                <option value="BB" {{ request('meal_type') == 'BB' ? 'selected' : '' }}>BB (завтрак)</option>
+                                <option value="HB" {{ request('meal_type') == 'HB' ? 'selected' : '' }}>HB (полупансион)</option>
+                                <option value="FB" {{ request('meal_type') == 'FB' ? 'selected' : '' }}>FB (полный пансион)</option>
+                                <option value="AI" {{ request('meal_type') == 'AI' ? 'selected' : '' }}>AI (всё включено)</option>
+                                <option value="UAI" {{ request('meal_type') == 'UAI' ? 'selected' : '' }}>UAI (ультра)</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label class="form-label small text-muted">Цена от</label>
-                        <input type="number" name="price_min" class="form-control" placeholder="30000" value="{{ request('price_min') }}">
+                    <!-- Цены -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-ruble-sign me-1"></i>Цена от
+                            </label>
+                            <input type="number" name="price_min" class="form-control" placeholder="30000" min="0" value="{{ request('price_min') }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-ruble-sign me-1"></i>Цена до
+                            </label>
+                            <input type="number" name="price_max" class="form-control" placeholder="200000" min="0" value="{{ request('price_max') }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-users me-1"></i>Взрослых
+                            </label>
+                            <input type="number" name="adults" class="form-control" placeholder="2" min="1" max="10" value="{{ request('adults', 2) }}">
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label text-white fw-bold mb-2">
+                                <i class="fas fa-child me-1"></i>Детей
+                            </label>
+                            <input type="number" name="children" class="form-control" placeholder="0" min="0" max="10" value="{{ request('children', 0) }}">
+                        </div>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label class="form-label small text-muted">Цена до</label>
-                        <input type="number" name="price_max" class="form-control" placeholder="200000" value="{{ request('price_max') }}">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-light btn-lg px-5 py-3 fw-bold shadow" style="font-size: 1.1rem;">
+                            <i class="fas fa-search me-2"></i>Найти туры
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
     
     <!-- Результаты поиска -->

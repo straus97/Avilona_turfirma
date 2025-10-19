@@ -84,15 +84,9 @@
                                         
                                         <div class="col-md-6 col-lg-3">
                                             <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-moon me-1"></i>Ночей
+                                                <i class="fas fa-calendar-alt me-1"></i>Дата до
                                             </label>
-                                            <select name="nights" class="form-select">
-                                                <option value="">Любое</option>
-                                                <option value="7">7 ночей</option>
-                                                <option value="10">10 ночей</option>
-                                                <option value="14">14 ночей</option>
-                                                <option value="21">21 ночь</option>
-                                            </select>
+                                            <input type="date" name="end_date" class="form-control" min="{{ date('Y-m-d') }}">
                                         </div>
                                     </div>
                                     
