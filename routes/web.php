@@ -78,12 +78,8 @@ Route::group(['namespace' => 'Captcha'], function () {
     );
 });
 
-//dashvoard доступен только для auth и verified пользователей
-//Route::get('/dashboard', function () {
-//    return view('dashboard');
-//})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware(['auth', 'verified', 'role:user,admin'])->group(function () {
+// Маршруты для всех авторизованных пользователей (tourist, manager, admin)
+Route::middleware(['auth', 'verified', 'role:tourist,manager,admin'])->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile/settings', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile/settings', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -95,6 +91,27 @@ Route::middleware(['auth', 'verified', 'role:user,admin'])->group(function () {
     Route::get('/profile/message', function () {
         return view('profile.message');
     })->name('message');
+});
+
+// Маршруты только для менеджеров и администраторов
+Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('manager.dashboard');
+    })->name('dashboard');
+    
+    // TODO: Добавить маршруты для управления заявками
+    // Route::resource('bookings', ManagerBookingController::class);
+});
+
+// Маршруты только для администраторов
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
+    
+    // TODO: Добавить маршруты для управления системой
+    // Route::resource('users', AdminUserController::class);
+    // Route::resource('roles', AdminRoleController::class);
 });
 
 require __DIR__ . '/auth.php';

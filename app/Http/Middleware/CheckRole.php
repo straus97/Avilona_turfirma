@@ -3,25 +3,33 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    public function handle($request, Closure $next, ...$roles)
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  ...$roles
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!Auth::check()) {
-            return redirect('login');
+        // Проверяем, авторизован ли пользователь
+        if (!$request->user()) {
+            return redirect()->route('login')
+                ->with('error', 'Необходимо войти в систему');
         }
 
-        $user = Auth::user();
-        foreach ($roles as $role) {
-            // Проверяем, есть ли у пользователя нужная роль
-            if ($user->hasRole($role)) {
-                return $next($request);
-            }
+        // Проверяем, есть ли у пользователя одна из требуемых ролей
+        if (!$request->user()->hasAnyRole($roles)) {
+            abort(403, 'У вас нет доступа к этой странице');
         }
 
-        return redirect('/404')->with('error', 'Извините, но у вас нету прав для просмотра этой страницы');
+        return $next($request);
     }
 }
 
