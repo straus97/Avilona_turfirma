@@ -46,15 +46,16 @@
                                 </div>
                                 
                                 <form action="{{ route('tours.index') }}" method="GET">
-                                    <div class="row g-3">
+                                    <!-- Основные фильтры -->
+                                    <div class="row g-2 mb-3">
                                         <div class="col-md-6 col-lg-3">
-                                            <label class="form-label text-white fw-bold mb-2">
+                                            <label class="form-label text-white fw-bold mb-1 small">
                                                 <i class="fas fa-map-marker-alt me-1"></i>Откуда
                                             </label>
-                                            <select name="departure_city" class="form-select" required>
+                                            <select name="departure_city" class="form-select form-select-sm" required>
                                                 <option value="">Выберите город</option>
+                                                <option value="Санкт-Петербург" selected>Санкт-Петербург</option>
                                                 <option value="Москва">Москва</option>
-                                                <option value="Санкт-Петербург">Санкт-Петербург</option>
                                                 <option value="Екатеринбург">Екатеринбург</option>
                                                 <option value="Новосибирск">Новосибирск</option>
                                                 <option value="Казань">Казань</option>
@@ -62,10 +63,10 @@
                                         </div>
                                         
                                         <div class="col-md-6 col-lg-3">
-                                            <label class="form-label text-white fw-bold mb-2">
+                                            <label class="form-label text-white fw-bold mb-1 small">
                                                 <i class="fas fa-globe me-1"></i>Куда
                                             </label>
-                                            <select name="destination_country" class="form-select" required>
+                                            <select name="destination_country" class="form-select form-select-sm" required>
                                                 <option value="">Выберите страну</option>
                                                 <option value="Турция">Турция</option>
                                                 <option value="Египет">Египет</option>
@@ -76,22 +77,74 @@
                                         </div>
                                         
                                         <div class="col-md-6 col-lg-3">
-                                            <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-calendar-alt me-1"></i>Дата от
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-calendar-alt me-1"></i>Даты вылета
                                             </label>
-                                            <input type="date" name="start_date" class="form-control" required min="{{ date('Y-m-d') }}">
+                                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="26 окт – 27 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDatePicker()">
+                                            <input type="hidden" name="start_date" id="start_date">
+                                            <input type="hidden" name="end_date" id="end_date">
                                         </div>
                                         
                                         <div class="col-md-6 col-lg-3">
-                                            <label class="form-label text-white fw-bold mb-2">
-                                                <i class="fas fa-calendar-alt me-1"></i>Дата до
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-moon me-1"></i>Ночей
                                             </label>
-                                            <input type="date" name="end_date" class="form-control" min="{{ date('Y-m-d') }}">
+                                            <div class="row g-1">
+                                                <div class="col-6">
+                                                    <input type="number" name="nights_min" class="form-control form-control-sm" placeholder="от 7" min="1" max="30">
+                                                </div>
+                                                <div class="col-6">
+                                                    <input type="number" name="nights_max" class="form-control form-control-sm" placeholder="до 14" min="1" max="30">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-light btn-lg px-5 py-3 fw-bold shadow" style="font-size: 1.1rem;">
+                                    <!-- Дополнительные фильтры -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-star me-1"></i>Звездность
+                                            </label>
+                                            <select name="hotel_stars" class="form-select form-select-sm">
+                                                <option value="">Любая</option>
+                                                <option value="3">3★</option>
+                                                <option value="4">4★</option>
+                                                <option value="5">5★</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-utensils me-1"></i>Питание
+                                            </label>
+                                            <select name="meal_type" class="form-select form-select-sm">
+                                                <option value="">Любое</option>
+                                                <option value="BB">BB</option>
+                                                <option value="HB">HB</option>
+                                                <option value="FB">FB</option>
+                                                <option value="AI">AI</option>
+                                                <option value="UAI">UAI</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-ruble-sign me-1"></i>Цена от
+                                            </label>
+                                            <input type="number" name="price_min" class="form-control form-control-sm" placeholder="30000" min="0">
+                                        </div>
+                                        
+                                        <div class="col-md-6 col-lg-3">
+                                            <label class="form-label text-white fw-bold mb-1 small">
+                                                <i class="fas fa-ruble-sign me-1"></i>Цена до
+                                            </label>
+                                            <input type="number" name="price_max" class="form-control form-control-sm" placeholder="200000" min="0">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center mt-3">
+                                        <button type="submit" class="btn btn-light btn-lg px-4 py-2 fw-bold shadow" style="font-size: 1rem;">
                                             <i class="fas fa-search me-2"></i>Найти туры
                                         </button>
                                     </div>
@@ -473,5 +526,32 @@
                 modalManagers.style.display = "none";
             }
         });
+    </script>
+    
+    <script>
+    function openDatePicker() {
+        // Простой выбор дат через prompt (в будущем можно заменить на календарь)
+        const startDate = prompt('Введите дату начала (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+1 week')) }}');
+        if (startDate) {
+            const endDate = prompt('Введите дату окончания (YYYY-MM-DD):', '{{ date('Y-m-d', strtotime('+2 weeks')) }}');
+            if (endDate) {
+                document.getElementById('start_date').value = startDate;
+                document.getElementById('end_date').value = endDate;
+                
+                // Форматируем даты для отображения
+                const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
+                    day: 'numeric', 
+                    month: 'short' 
+                });
+                const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
+                    day: 'numeric', 
+                    month: 'short',
+                    year: '2-digit'
+                });
+                
+                document.querySelector('input[name="date_range"]').value = `${startFormatted} – ${endFormatted}`;
+            }
+        }
+    }
     </script>
 @endsection
