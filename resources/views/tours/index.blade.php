@@ -2,38 +2,118 @@
 
 @section('styles')
 <style>
-/* Стили для компактного виджета */
-.tour-search-widget .card {
-    border: 1px solid #e9ecef;
+/* Современные стили для виджета поиска туров */
+.tour-search-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.tour-search-widget .form-select-sm,
-.tour-search-widget .form-control-sm {
-    font-size: 0.875rem;
-    padding: 0.375rem 0.5rem;
+.modern-select,
+.modern-input {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
-/* Стили для календаря */
+.modern-select:focus,
+.modern-input:focus {
+    background: white;
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    outline: none;
+}
+
+.modern-btn {
+    background: linear-gradient(45deg, #ffc107, #ff8c00);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+}
+
+.modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+    background: linear-gradient(45deg, #ff8c00, #ffc107);
+}
+
+.modern-btn:active {
+    transform: translateY(0);
+}
+
+/* Стили для календаря диапазона дат */
+.date-range-picker {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 1000;
+    padding: 20px;
+    margin-top: 5px;
+}
+
 .calendar-container {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.weekday {
-    padding: 8px 4px;
-    font-weight: 500;
-    color: #6c757d;
+.calendar-nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.calendar-days {
+.calendar-nav-btn:hover {
+    background: #5a6fd8;
+    transform: scale(1.1);
+}
+
+.calendar-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    padding: 10px 0;
+    font-size: 0.9rem;
 }
 
 .calendar-day {
@@ -42,67 +122,224 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
     font-weight: 500;
-    color: #495057;
-    background: #fff;
-    border: 1px solid transparent;
+    color: #333;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    position: relative;
 }
 
 .calendar-day:hover {
-    background: #f8f9fa;
-    border-color: #dee2e6;
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: scale(1.05);
 }
 
 .calendar-day.past {
-    color: #adb5bd;
+    color: #ccc;
+    background: #f5f5f5;
     cursor: not-allowed;
 }
 
 .calendar-day.past:hover {
-    background: #fff;
+    background: #f5f5f5;
     border-color: transparent;
+    transform: none;
 }
 
 .calendar-day.today {
     background: #e3f2fd;
     color: #1976d2;
-    font-weight: 600;
+    font-weight: 700;
+    border-color: #1976d2;
 }
 
 .calendar-day.selected {
     background: #2196f3;
     color: white;
+    font-weight: 700;
 }
 
-.calendar-day.start {
+.calendar-day.range-start {
     background: #1976d2;
     color: white;
-    border-radius: 4px 0 0 4px;
+    border-radius: 8px 0 0 8px;
 }
 
-.calendar-day.end {
+.calendar-day.range-end {
     background: #1976d2;
     color: white;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 8px 8px 0;
 }
 
-.calendar-day.start.end {
-    border-radius: 4px;
+.calendar-day.in-range {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 0;
 }
 
-.selected-dates {
-    background: #f8f9fa;
-    padding: 1rem;
+.calendar-day.range-start.range-end {
     border-radius: 8px;
-    border: 1px solid #e9ecef;
 }
 
-.selected-range {
-    font-size: 1.1rem;
-    margin: 0.5rem 0;
+.calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.selected-range-display {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.apply-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.apply-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Стили для графика цен */
+.price-chart-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.price-chart-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.chart-timeline {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    height: 120px;
+    margin-bottom: 10px;
+}
+
+.chart-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 2px;
+}
+
+.chart-bar:hover {
+    transform: translateY(-2px);
+}
+
+.chart-bar.selected {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.bar-fill {
+    width: 100%;
+    background: linear-gradient(to top, #667eea, #764ba2);
+    border-radius: 2px 2px 0 0;
+    min-height: 4px;
+    transition: all 0.3s ease;
+}
+
+.chart-bar:hover .bar-fill {
+    background: linear-gradient(to top, #5a6fd8, #6a4c93);
+}
+
+.bar-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    margin-top: 5px;
+}
+
+.chart-bar.selected .bar-label {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.chart-months {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.chart-info {
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.date-range-picker {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .modern-select,
+    .modern-input {
+        font-size: 0.9rem;
+    }
+    
+    .modern-btn {
+        font-size: 1rem;
+    }
+    
+    .calendar-grid {
+        gap: 4px;
+    }
+    
+    .calendar-day {
+        font-size: 0.8rem;
+    }
+    
+    .chart-bars {
+        height: 80px;
+    }
+    
+    .bar-label {
+        font-size: 0.7rem;
+    }
 }
 </style>
 @endsection
@@ -120,95 +357,119 @@
         </div>
     @endif
     
-    <!-- Компактный виджет поиска -->
-    <div class="search-widget mb-4">
-        <div class="card border-0 shadow-sm" style="border-radius: 8px;">
-            <div class="card-body p-3" style="background: #f8f9fa;">
+    <!-- Полная форма поиска туров -->
+    <div class="tour-search-widget mb-4">
+        <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body p-4">
                 <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
                     <!-- Основные поля в одну строку -->
-                    <div class="row g-2 align-items-end">
+                    <div class="row g-3 align-items-center mb-4">
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Откуда</label>
-                            <select name="departure_city" class="form-select form-select-sm" required>
-                                <option value="">Выберите город</option>
-                                @foreach($departureCities as $city)
-                                    <option value="{{ $city }}" {{ request('departure_city') == $city ? 'selected' : '' }}>
-                                        {{ $city }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label text-white fw-bold mb-2">Откуда</label>
+                            <div class="position-relative">
+                                <select name="departure_city" class="form-select form-select-lg modern-select" required>
+                                    <option value="">Выберите город</option>
+                                    @foreach($departureCities as $city)
+                                        <option value="{{ $city }}" {{ request('departure_city') == $city ? 'selected' : '' }}>
+                                            {{ $city }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Куда</label>
-                            <select name="destination_country" class="form-select form-select-sm" required>
-                                <option value="">Выберите страну</option>
-                                @foreach($destinationCountries as $country)
-                                    <option value="{{ $country }}" {{ request('destination_country') == $country ? 'selected' : '' }}>
-                                        {{ $country }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label text-white fw-bold mb-2">Куда</label>
+                            <div class="position-relative">
+                                <select name="destination_country" class="form-select form-select-lg modern-select" required>
+                                    <option value="">Выберите страну</option>
+                                    @foreach($destinationCountries as $country)
+                                        <option value="{{ $country }}" {{ request('destination_country') == $country ? 'selected' : '' }}>
+                                            {{ $country }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Даты вылета</label>
-                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="20 окт - 26 окт 25" readonly style="background: white; cursor: pointer;" onclick="openDateRangePicker()" value="{{ request('date_range') }}">
-                            <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
-                            <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                            <label class="form-label text-white fw-bold mb-2">Интервал дат вылета</label>
+                            <div class="position-relative">
+                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="22 окт – 26 окт 25" readonly onclick="openDateRangePicker()" value="{{ request('date_range') }}">
+                                <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                                <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                            </div>
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Ночей</label>
+                            <label class="form-label text-white fw-bold mb-2">Количество ночей</label>
                             <div class="row g-1">
                                 <div class="col-6">
-                                    <input type="number" name="nights_min" class="form-control form-control-sm" placeholder="от 7" min="1" max="30" value="{{ request('nights_min') }}">
+                                    <select name="nights_min" class="form-select form-select-lg modern-select">
+                                        <option value="">от</option>
+                                        @for($i = 1; $i <= 30; $i++)
+                                            <option value="{{ $i }}" {{ request('nights_min') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" name="nights_max" class="form-control form-control-sm" placeholder="до 14" min="1" max="30" value="{{ request('nights_max') }}">
+                                    <select name="nights_max" class="form-select form-select-lg modern-select">
+                                        <option value="">до</option>
+                                        @for($i = 1; $i <= 30; $i++)
+                                            <option value="{{ $i }}" {{ request('nights_max') == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Туристы</label>
-                            <select name="adults" class="form-select form-select-sm">
-                                <option value="1" {{ request('adults') == 1 ? 'selected' : '' }}>1 взрослый</option>
-                                <option value="2" {{ request('adults', 2) == 2 ? 'selected' : '' }}>2 взрослых</option>
-                                <option value="3" {{ request('adults') == 3 ? 'selected' : '' }}>3 взрослых</option>
-                                <option value="4" {{ request('adults') == 4 ? 'selected' : '' }}>4 взрослых</option>
-                            </select>
+                            <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
+                            <div class="position-relative">
+                                <select name="adults" class="form-select form-select-lg modern-select" required>
+                                    <option value="1" {{ request('adults') == 1 ? 'selected' : '' }}>1 взрослый</option>
+                                    <option value="2" {{ request('adults', 2) == 2 ? 'selected' : '' }}>2 взрослых</option>
+                                    <option value="3" {{ request('adults') == 3 ? 'selected' : '' }}>3 взрослых</option>
+                                    <option value="4" {{ request('adults') == 4 ? 'selected' : '' }}>4 взрослых</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">
-                                <i class="fas fa-search me-1"></i>Найти туры
+                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
+                                <i class="fas fa-search me-2"></i>Найти туры
                             </button>
                         </div>
                     </div>
                     
-                    <!-- Дополнительные фильтры (скрытые по умолчанию) -->
-                    <div class="row mt-3" id="additionalFilters" style="display: none;">
+                    <!-- Дополнительные фильтры -->
+                    <div class="row g-3 mb-4">
+                        <!-- Курорты -->
                         <div class="col-md-3">
-                            <label class="form-label small text-muted mb-1">Курорты</label>
-                            <div id="resortsContainer" class="border rounded p-2" style="max-height: 120px; overflow-y: auto; background: white;">
+                            <label class="form-label text-white fw-bold mb-2">Курорты</label>
+                            <div id="resortsContainer" class="border rounded p-3" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.95);">
                                 <div class="text-muted small">Выберите страну</div>
                             </div>
                         </div>
                         
+                        <!-- Категория отеля -->
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Звездность</label>
-                            <select name="hotel_stars" class="form-select form-select-sm">
+                            <label class="form-label text-white fw-bold mb-2">Категория отеля</label>
+                            <select name="hotel_stars" class="form-select form-select-lg modern-select">
                                 <option value="">Любая</option>
-                                <option value="3" {{ request('hotel_stars') == 3 ? 'selected' : '' }}>3★</option>
-                                <option value="4" {{ request('hotel_stars') == 4 ? 'selected' : '' }}>4★</option>
                                 <option value="5" {{ request('hotel_stars') == 5 ? 'selected' : '' }}>5★</option>
+                                <option value="4" {{ request('hotel_stars') == 4 ? 'selected' : '' }}>4★</option>
+                                <option value="3" {{ request('hotel_stars') == 3 ? 'selected' : '' }}>3★</option>
+                                <option value="2" {{ request('hotel_stars') == 2 ? 'selected' : '' }}>2★</option>
+                                <option value="1" {{ request('hotel_stars') == 1 ? 'selected' : '' }}>1★</option>
                             </select>
                         </div>
                         
+                        <!-- Питание -->
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Питание</label>
-                            <select name="meal_type" class="form-select form-select-sm">
+                            <label class="form-label text-white fw-bold mb-2">Питание</label>
+                            <select name="meal_type" class="form-select form-select-lg modern-select">
                                 <option value="">Любое</option>
                                 <option value="BB" {{ request('meal_type') == 'BB' ? 'selected' : '' }}>BB</option>
                                 <option value="HB" {{ request('meal_type') == 'HB' ? 'selected' : '' }}>HB</option>
@@ -218,51 +479,140 @@
                             </select>
                         </div>
                         
+                        <!-- Пляжная линия -->
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Цена от</label>
-                            <input type="number" name="price_min" class="form-control form-control-sm" placeholder="30000" min="0" value="{{ request('price_min') }}">
+                            <label class="form-label text-white fw-bold mb-2">Пляжная линия</label>
+                            <select name="beach_line" class="form-select form-select-lg modern-select">
+                                <option value="">Любая</option>
+                                <option value="1" {{ request('beach_line') == 1 ? 'selected' : '' }}>1-я <100м</option>
+                                <option value="2" {{ request('beach_line') == 2 ? 'selected' : '' }}>2-я <500м</option>
+                                <option value="3" {{ request('beach_line') == 3 ? 'selected' : '' }}>3-я <2км</option>
+                            </select>
                         </div>
                         
+                        <!-- Рейтинг отеля -->
                         <div class="col-md-2">
-                            <label class="form-label small text-muted mb-1">Цена до</label>
-                            <input type="number" name="price_max" class="form-control form-control-sm" placeholder="200000" min="0" value="{{ request('price_max') }}">
+                            <label class="form-label text-white fw-bold mb-2">Рейтинг отеля</label>
+                            <select name="hotel_rating" class="form-select form-select-lg modern-select">
+                                <option value="">Любой</option>
+                                <option value="7" {{ request('hotel_rating') == 7 ? 'selected' : '' }}>7+</option>
+                                <option value="8" {{ request('hotel_rating') == 8 ? 'selected' : '' }}>8+</option>
+                                <option value="9" {{ request('hotel_rating') == 9 ? 'selected' : '' }}>9+</option>
+                            </select>
                         </div>
                         
+                        <!-- Туроператор -->
                         <div class="col-md-1">
-                            <label class="form-label small text-muted mb-1">Туроператор</label>
-                            <select name="tour_operator" class="form-select form-select-sm">
+                            <label class="form-label text-white fw-bold mb-2">Туроператор</label>
+                            <select name="tour_operator" class="form-select form-select-lg modern-select">
                                 <option value="">Все</option>
-                                <option value="ambotis">Ambotis</option>
-                                <option value="anex">Anex</option>
-                                <option value="biblio_globus">Biblio Globus</option>
-                                <option value="bon_tour">Bon Tour</option>
-                                <option value="bsi_group">BSI Group</option>
-                                <option value="coral_travel">Coral Travel</option>
-                                <option value="delfin">Delfin</option>
-                                <option value="express_tours">Express Tours</option>
-                                <option value="good_time">Good Time</option>
-                                <option value="ics">ICS</option>
-                                <option value="intourist">Intourist</option>
-                                <option value="itm_group">ITM Group</option>
-                                <option value="mouzenidis_travel">Mouzenidis Travel</option>
-                                <option value="pac_group">PAC Group</option>
-                                <option value="pegas">Pegas</option>
-                                <option value="russian_express">Russian Express</option>
-                                <option value="sunmar">Sunmar</option>
-                                <option value="tez_tour">Tez Tour</option>
-                                <option value="tui">TUI</option>
-                                <option value="west_travel">West Travel</option>
+                                <option value="ambotis" {{ request('tour_operator') == 'ambotis' ? 'selected' : '' }}>Ambotis</option>
+                                <option value="anex" {{ request('tour_operator') == 'anex' ? 'selected' : '' }}>Anex</option>
+                                <option value="biblio_globus" {{ request('tour_operator') == 'biblio_globus' ? 'selected' : '' }}>Biblio Globus</option>
+                                <option value="bon_tour" {{ request('tour_operator') == 'bon_tour' ? 'selected' : '' }}>Bon Tour</option>
+                                <option value="bsi_group" {{ request('tour_operator') == 'bsi_group' ? 'selected' : '' }}>BSI Group</option>
+                                <option value="coral_travel" {{ request('tour_operator') == 'coral_travel' ? 'selected' : '' }}>Coral Travel</option>
+                                <option value="delfin" {{ request('tour_operator') == 'delfin' ? 'selected' : '' }}>Delfin</option>
+                                <option value="express_tours" {{ request('tour_operator') == 'express_tours' ? 'selected' : '' }}>Express Tours</option>
+                                <option value="good_time" {{ request('tour_operator') == 'good_time' ? 'selected' : '' }}>Good Time</option>
+                                <option value="ics" {{ request('tour_operator') == 'ics' ? 'selected' : '' }}>ICS</option>
+                                <option value="intourist" {{ request('tour_operator') == 'intourist' ? 'selected' : '' }}>Intourist</option>
+                                <option value="itm_group" {{ request('tour_operator') == 'itm_group' ? 'selected' : '' }}>ITM Group</option>
+                                <option value="mouzenidis_travel" {{ request('tour_operator') == 'mouzenidis_travel' ? 'selected' : '' }}>Mouzenidis Travel</option>
+                                <option value="pac_group" {{ request('tour_operator') == 'pac_group' ? 'selected' : '' }}>PAC Group</option>
+                                <option value="pegas" {{ request('tour_operator') == 'pegas' ? 'selected' : '' }}>Pegas</option>
+                                <option value="russian_express" {{ request('tour_operator') == 'russian_express' ? 'selected' : '' }}>Russian Express</option>
+                                <option value="sunmar" {{ request('tour_operator') == 'sunmar' ? 'selected' : '' }}>Sunmar</option>
+                                <option value="tez_tour" {{ request('tour_operator') == 'tez_tour' ? 'selected' : '' }}>Tez Tour</option>
+                                <option value="tui" {{ request('tour_operator') == 'tui' ? 'selected' : '' }}>TUI</option>
+                                <option value="west_travel" {{ request('tour_operator') == 'west_travel' ? 'selected' : '' }}>West Travel</option>
                             </select>
                         </div>
                     </div>
                     
-                    <!-- Кнопка показать/скрыть дополнительные фильтры -->
-                    <div class="text-center mt-2">
-                        <button type="button" class="btn btn-link btn-sm text-decoration-none" onclick="toggleAdditionalFilters()">
-                            <i class="fas fa-sliders-h me-1"></i>Больше фильтров
-                        </button>
+                    <!-- Диапазон цен и дополнительные опции -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label text-white fw-bold mb-2">Диапазон цен</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" name="price_min" class="form-control form-control-lg modern-input" placeholder="ОТ" min="0" value="{{ request('price_min') }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="price_max" class="form-control form-control-lg modern-input" placeholder="ДО" min="0" value="{{ request('price_max') }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label text-white fw-bold mb-2">Дополнительные опции</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="charter" id="charter" {{ request('charter') ? 'checked' : '' }}>
+                                    <label class="form-check-label text-white" for="charter">Чартерные</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="direct" id="direct" {{ request('direct') ? 'checked' : '' }}>
+                                    <label class="form-check-label text-white" for="direct">Прямые</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="nonstop" id="nonstop" {{ request('nonstop') ? 'checked' : '' }}>
+                                    <label class="form-check-label text-white" for="nonstop">Без стопов</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label text-white fw-bold mb-2">Дети</label>
+                            <select name="children" class="form-select form-select-lg modern-select">
+                                <option value="0" {{ request('children', 0) == 0 ? 'selected' : '' }}>Без детей</option>
+                                <option value="1" {{ request('children') == 1 ? 'selected' : '' }}>1 ребенок</option>
+                                <option value="2" {{ request('children') == 2 ? 'selected' : '' }}>2 ребенка</option>
+                                <option value="3" {{ request('children') == 3 ? 'selected' : '' }}>3 ребенка</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-light btn-lg w-100" onclick="resetFilters()">
+                                <i class="fas fa-undo me-2"></i>Сбросить фильтры
+                            </button>
+                        </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- График низких цен -->
+    <div class="price-chart-widget mb-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">График низких цен на туры в {{ request('destination_country', 'выбранную страну') }} для {{ request('adults', 2) }} взрослых с вылетом из {{ request('departure_city', 'выбранного города') }} на {{ request('nights_min', 7) }}-{{ request('nights_max', 14) }} ночей</h6>
+                <div class="price-chart-container">
+                    <div class="chart-timeline">
+                        <div class="chart-bars">
+                            @for($i = 0; $i < 14; $i++)
+                                @php
+                                    $date = now()->addDays($i);
+                                    $isSelected = request('start_date') && request('end_date') && 
+                                        $date->between(request('start_date'), request('end_date'));
+                                    $price = rand(25000, 150000);
+                                @endphp
+                                <div class="chart-bar {{ $isSelected ? 'selected' : '' }}" data-date="{{ $date->format('Y-m-d') }}" data-price="{{ $price }}">
+                                    <div class="bar-fill" style="height: {{ ($price - 25000) / 125000 * 100 }}%"></div>
+                                    <div class="bar-label">{{ $date->format('d') }}</div>
+                                </div>
+                            @endfor
+                        </div>
+                        <div class="chart-months">
+                            <span>Октябрь 25</span>
+                            <span>Ноябрь 25</span>
+                        </div>
+                    </div>
+                    <div class="chart-info">
+                        <small class="text-muted">Указаны минимальные цены за человека в рублях</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

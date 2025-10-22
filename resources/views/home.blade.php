@@ -2,38 +2,118 @@
 
 @section('styles')
 <style>
-/* Стили для компактного виджета */
-.tour-search-widget .card {
-    border: 1px solid #e9ecef;
+/* Современные стили для виджета поиска туров */
+.tour-search-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.tour-search-widget .form-select-sm,
-.tour-search-widget .form-control-sm {
-    font-size: 0.875rem;
-    padding: 0.375rem 0.5rem;
+.modern-select,
+.modern-input {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
 }
 
-/* Стили для календаря */
+.modern-select:focus,
+.modern-input:focus {
+    background: white;
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    outline: none;
+}
+
+.modern-btn {
+    background: linear-gradient(45deg, #ffc107, #ff8c00);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+}
+
+.modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+    background: linear-gradient(45deg, #ff8c00, #ffc107);
+}
+
+.modern-btn:active {
+    transform: translateY(0);
+}
+
+/* Стили для календаря диапазона дат */
+.date-range-picker {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 1000;
+    padding: 20px;
+    margin-top: 5px;
+}
+
 .calendar-container {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.weekday {
-    padding: 8px 4px;
-    font-weight: 500;
-    color: #6c757d;
+.calendar-nav-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.calendar-days {
+.calendar-nav-btn:hover {
+    background: #5a6fd8;
+    transform: scale(1.1);
+}
+
+.calendar-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    padding: 10px 0;
+    font-size: 0.9rem;
 }
 
 .calendar-day {
@@ -42,67 +122,134 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
     font-weight: 500;
-    color: #495057;
-    background: #fff;
-    border: 1px solid transparent;
+    color: #333;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    position: relative;
 }
 
 .calendar-day:hover {
-    background: #f8f9fa;
-    border-color: #dee2e6;
+    background: #e3f2fd;
+    border-color: #2196f3;
+    transform: scale(1.05);
 }
 
 .calendar-day.past {
-    color: #adb5bd;
+    color: #ccc;
+    background: #f5f5f5;
     cursor: not-allowed;
 }
 
 .calendar-day.past:hover {
-    background: #fff;
+    background: #f5f5f5;
     border-color: transparent;
+    transform: none;
 }
 
 .calendar-day.today {
     background: #e3f2fd;
     color: #1976d2;
-    font-weight: 600;
+    font-weight: 700;
+    border-color: #1976d2;
 }
 
 .calendar-day.selected {
     background: #2196f3;
     color: white;
+    font-weight: 700;
 }
 
-.calendar-day.start {
+.calendar-day.range-start {
     background: #1976d2;
     color: white;
-    border-radius: 4px 0 0 4px;
+    border-radius: 8px 0 0 8px;
 }
 
-.calendar-day.end {
+.calendar-day.range-end {
     background: #1976d2;
     color: white;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 8px 8px 0;
 }
 
-.calendar-day.start.end {
-    border-radius: 4px;
+.calendar-day.in-range {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 0;
 }
 
-.selected-dates {
-    background: #f8f9fa;
-    padding: 1rem;
+.calendar-day.range-start.range-end {
     border-radius: 8px;
-    border: 1px solid #e9ecef;
 }
 
-.selected-range {
-    font-size: 1.1rem;
-    margin: 0.5rem 0;
+.calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.selected-range-display {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.apply-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.apply-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.date-range-picker {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .modern-select,
+    .modern-input {
+        font-size: 0.9rem;
+    }
+    
+    .modern-btn {
+        font-size: 1rem;
+    }
+    
+    .calendar-grid {
+        gap: 4px;
+    }
+    
+    .calendar-day {
+        font-size: 0.8rem;
+    }
 }
 </style>
 @endsection {{--указываем какой шаблон layout будет главный--}}
@@ -142,77 +289,99 @@
         <div class="container">
             <div class="row my-3">
                 <div class="col">
-                    <!-- Минималистичный виджет поиска туров -->
+                    <!-- Современный виджет поиска туров -->
                     <div class="tour-search-widget mb-4">
-                        <div class="card border-0 shadow-sm" style="border-radius: 8px;">
-                            <div class="card-body p-3" style="background: #f8f9fa;">
-                                <form action="{{ route('tours.index') }}" method="GET">
+                        <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="card-body p-4">
+                                <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
                                     <!-- Основные поля в одну строку -->
-                                    <div class="row g-2 align-items-end">
+                                    <div class="row g-3 align-items-center">
                                         <div class="col-md-2">
-                                            <label class="form-label small text-muted mb-1">Откуда</label>
-                                            <select name="departure_city" class="form-select form-select-sm" required>
-                                                <option value="">Выберите город</option>
-                                                <option value="Санкт-Петербург" selected>Санкт-Петербург</option>
-                                                <option value="Москва">Москва</option>
-                                                <option value="Екатеринбург">Екатеринбург</option>
-                                                <option value="Новосибирск">Новосибирск</option>
-                                                <option value="Казань">Казань</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="col-md-2">
-                                            <label class="form-label small text-muted mb-1">Куда</label>
-                                            <select name="destination_country" class="form-select form-select-sm" required>
-                                                <option value="">Выберите страну</option>
-                                                <option value="Турция">Турция</option>
-                                                <option value="Египет">Египет</option>
-                                                <option value="ОАЭ">ОАЭ</option>
-                                                <option value="Тайланд">Тайланд</option>
-                                                <option value="Испания">Испания</option>
-                                            </select>
+                                            <label class="form-label text-white fw-bold mb-2">Откуда</label>
+                                            <div class="position-relative">
+                                                <select name="departure_city" class="form-select form-select-lg modern-select" required>
+                                                    <option value="">Выберите город</option>
+                                                    <option value="Санкт-Петербург" selected>Санкт-Петербург</option>
+                                                    <option value="Москва">Москва</option>
+                                                    <option value="Екатеринбург">Екатеринбург</option>
+                                                    <option value="Новосибирск">Новосибирск</option>
+                                                    <option value="Казань">Казань</option>
+                                                    <option value="Ставрополь">Ставрополь</option>
+                                                    <option value="Самара">Самара</option>
+                                                    <option value="Тюмень">Тюмень</option>
+                                                    <option value="Уфа">Уфа</option>
+                                                    <option value="Нижний Новгород">Нижний Новгород</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         
                                         <div class="col-md-2">
-                                            <label class="form-label small text-muted mb-1">Даты вылета</label>
-                                            <input type="text" name="date_range" class="form-control form-control-sm" placeholder="20 окт - 26 окт 25" readonly style="background: white; cursor: pointer;" onclick="openSimpleCalendar()">
-                                            <input type="hidden" name="start_date" id="start_date">
-                                            <input type="hidden" name="end_date" id="end_date">
+                                            <label class="form-label text-white fw-bold mb-2">Куда</label>
+                                            <div class="position-relative">
+                                                <select name="destination_country" class="form-select form-select-lg modern-select" required>
+                                                    <option value="">Выберите страну</option>
+                                                    <option value="Турция">🇹🇷 Турция</option>
+                                                    <option value="Египет">🇪🇬 Египет</option>
+                                                    <option value="ОАЭ">🇦🇪 ОАЭ</option>
+                                                    <option value="Тайланд">🇹🇭 Таиланд</option>
+                                                    <option value="Испания">🇪🇸 Испания</option>
+                                                    <option value="Россия">🇷🇺 Россия</option>
+                                                    <option value="Абхазия">🇦🇧 Абхазия</option>
+                                                    <option value="Китай">🇨🇳 Китай</option>
+                                                    <option value="Вьетнам">🇻🇳 Вьетнам</option>
+                                                    <option value="Куба">🇨🇺 Куба</option>
+                                                    <option value="Мальдивы">🇲🇻 Мальдивы</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         
-                                        <div class="col-md-1">
-                                            <label class="form-label small text-muted mb-1">Ночей</label>
-                                            <select name="nights" class="form-select form-select-sm" required>
-                                                <option value="">Любое</option>
-                                                @for($i = 1; $i <= 30; $i++)
-                                                    <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'ночь' : ($i < 5 ? 'ночи' : 'ночей') }}</option>
-                                                @endfor
-                                            </select>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-white fw-bold mb-2">Интервал дат вылета</label>
+                                            <div class="position-relative">
+                                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="22 окт – 26 окт 25" readonly onclick="openDateRangePicker()">
+                                                <input type="hidden" name="start_date" id="start_date">
+                                                <input type="hidden" name="end_date" id="end_date">
+                                                <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                                            </div>
                                         </div>
                                         
-                                        <div class="col-md-1">
-                                            <label class="form-label small text-muted mb-1">Взрослых</label>
-                                            <select name="adults" class="form-select form-select-sm" required>
-                                                <option value="1">1</option>
-                                                <option value="2" selected>2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                            </select>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-white fw-bold mb-2">Количество ночей</label>
+                                            <div class="row g-1">
+                                                <div class="col-6">
+                                                    <select name="nights_min" class="form-select form-select-lg modern-select">
+                                                        <option value="">от</option>
+                                                        @for($i = 1; $i <= 30; $i++)
+                                                            <option value="{{ $i }}">{{ $i }}</option>
+                                                        @endfor
+                                                    </select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <select name="nights_max" class="form-select form-select-lg modern-select">
+                                                        <option value="">до</option>
+                                                        @for($i = 1; $i <= 30; $i++)
+                                                            <option value="{{ $i }}">{{ $i }}</option>
+                                                        @endfor
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                         
-                                        <div class="col-md-1">
-                                            <label class="form-label small text-muted mb-1">Детей</label>
-                                            <select name="children" class="form-select form-select-sm" required>
-                                                <option value="0" selected>0</option>
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                            </select>
+                                        <div class="col-md-2">
+                                            <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
+                                            <div class="position-relative">
+                                                <select name="tourists" class="form-select form-select-lg modern-select" required>
+                                                    <option value="1">1 взрослый</option>
+                                                    <option value="2" selected>2 взрослых</option>
+                                                    <option value="3">3 взрослых</option>
+                                                    <option value="4">4 взрослых</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         
-                                        <div class="col-md-3">
-                                            <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">
-                                                <i class="fas fa-search me-1"></i>Найти туры
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
+                                                <i class="fas fa-search me-2"></i>Найти туры
                                             </button>
                                         </div>
                                     </div>
@@ -596,210 +765,210 @@
         });
     </script>
     
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    function openSimpleCalendar() {
-        // Создаем простой календарь прямо на странице
-        const calendar = document.createElement('div');
-        calendar.id = 'simpleCalendar';
-        calendar.style.cssText = `
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            padding: 15px;
-            min-width: 300px;
-        `;
+    $(document).ready(function() {
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+        let currentDate = new Date();
         
-        calendar.innerHTML = `
-            <div class="calendar-header mb-3">
-                <div class="row align-items-center">
-                    <div class="col-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(-1)">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                    </div>
-                    <div class="col-8 text-center">
-                        <h6 class="mb-0" id="currentMonth">Октябрь 2025</h6>
-                    </div>
-                    <div class="col-2 text-end">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(1)">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
+        // Открытие календаря диапазона дат
+        window.openDateRangePicker = function() {
+            const dateField = $('input[name="date_range"]');
+            const container = dateField.closest('.position-relative');
+            
+            // Удаляем существующий календарь если есть
+            container.find('.date-range-picker').remove();
+            
+            // Создаем календарь
+            const calendar = $(`
+                <div class="date-range-picker">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button type="button" class="calendar-nav-btn" onclick="changeMonth(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="calendar-title" id="currentMonth">${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}</div>
+                            <button type="button" class="calendar-nav-btn" onclick="changeMonth(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            ${generateCalendarHTML()}
+                        </div>
+                        <div class="calendar-footer">
+                            <div class="selected-range-display" id="selectedRangeDisplay">
+                                ${selectedStartDate && selectedEndDate ? 
+                                    `${formatDate(selectedStartDate)} – ${formatDate(selectedEndDate)}` : 
+                                    'Выберите диапазон дат'
+                                }
+                            </div>
+                            <button type="button" class="apply-btn" id="applyDateBtn" ${!selectedStartDate || !selectedEndDate ? 'disabled' : ''}>
+                                Применить
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            `);
             
-            <div class="calendar-grid" id="calendarGrid">
-                <!-- Календарь будет сгенерирован JavaScript -->
-            </div>
+            container.append(calendar);
             
-            <div class="mt-3 text-center">
-                <button type="button" class="btn btn-primary btn-sm" onclick="applyDateRange()" id="applyBtn" disabled>Применить</button>
-                <button type="button" class="btn btn-secondary btn-sm ms-2" onclick="closeSimpleCalendar()">Отмена</button>
-            </div>
-        `;
+            // Закрытие календаря при клике вне его
+            $(document).on('click.datePicker', function(e) {
+                if (!$(e.target).closest('.date-range-picker, input[name="date_range"]').length) {
+                    closeDateRangePicker();
+                }
+            });
+        };
         
-        // Добавляем календарь к полю дат
-        const dateField = document.querySelector('input[name="date_range"]');
-        dateField.parentElement.style.position = 'relative';
-        dateField.parentElement.appendChild(calendar);
-        
-        // Инициализируем календарь
-        initSimpleCalendar();
-    }
-
-    let selectedStartDate = null;
-    let selectedEndDate = null;
-    let currentDate = new Date();
-
-    function initSimpleCalendar() {
-        generateSimpleCalendar();
-    }
-
-    function generateSimpleCalendar() {
-        const calendarGrid = document.getElementById('calendarGrid');
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        
-        // Обновляем заголовок
-        document.getElementById('currentMonth').textContent = 
-            new Date(year, month).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-        
-        // Получаем первый день месяца и количество дней
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Понедельник = 1
-        
-        let html = '<div class="calendar-weekdays mb-2">';
-        const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-        weekdays.forEach(day => {
-            html += `<div class="weekday text-center text-muted small fw-bold">${day}</div>`;
-        });
-        html += '</div>';
-        
-        html += '<div class="calendar-days">';
-        
-        // Пустые ячейки для начала месяца
-        for (let i = 1; i < startDay; i++) {
-            html += '<div class="calendar-day"></div>';
+        // Генерация HTML календаря
+        function generateCalendarHTML() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Понедельник = 1
+            
+            let html = '';
+            
+            // Дни недели
+            const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+            weekdays.forEach(day => {
+                html += `<div class="calendar-weekday">${day}</div>`;
+            });
+            
+            // Пустые ячейки для начала месяца
+            for (let i = 1; i < startDay; i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+            
+            // Дни месяца
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isToday = isSameDay(date, new Date());
+                const isPast = date < new Date();
+                const isSelected = selectedStartDate && selectedEndDate && 
+                    date >= selectedStartDate && date <= selectedEndDate;
+                const isStart = selectedStartDate && isSameDay(date, selectedStartDate);
+                const isEnd = selectedEndDate && isSameDay(date, selectedEndDate);
+                const inRange = selectedStartDate && selectedEndDate && 
+                    date > selectedStartDate && date < selectedEndDate;
+                
+                let classes = 'calendar-day';
+                if (isPast) classes += ' past';
+                if (isToday) classes += ' today';
+                if (isSelected) classes += ' selected';
+                if (isStart) classes += ' range-start';
+                if (isEnd) classes += ' range-end';
+                if (inRange) classes += ' in-range';
+                
+                html += `<div class="calendar-day ${classes}" data-day="${day}" onclick="selectDate(${day})">
+                    <span>${day}</span>
+                </div>`;
+            }
+            
+            return html;
         }
         
-        // Дни месяца
-        for (let day = 1; day <= daysInMonth; day++) {
+        // Выбор даты
+        window.selectDate = function(day) {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
             const date = new Date(year, month, day);
-            const isToday = isSameDay(date, new Date());
-            const isPast = date < new Date();
-            const isSelected = selectedStartDate && selectedEndDate && 
-                date >= selectedStartDate && date <= selectedEndDate;
-            const isStart = selectedStartDate && isSameDay(date, selectedStartDate);
-            const isEnd = selectedEndDate && isSameDay(date, selectedEndDate);
             
-            let classes = 'calendar-day';
-            if (isPast) classes += ' past';
-            if (isToday) classes += ' today';
-            if (isSelected) classes += ' selected';
-            if (isStart) classes += ' start';
-            if (isEnd) classes += ' end';
+            if (date < new Date()) return; // Нельзя выбрать прошедшие даты
             
-            html += `<div class="calendar-day ${classes}" onclick="selectDate(${day})" data-day="${day}">
-                <span>${day}</span>
-            </div>`;
+            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                // Начинаем новый выбор
+                selectedStartDate = date;
+                selectedEndDate = null;
+            } else if (selectedStartDate && !selectedEndDate) {
+                // Завершаем выбор
+                if (date < selectedStartDate) {
+                    selectedEndDate = selectedStartDate;
+                    selectedStartDate = date;
+                } else {
+                    selectedEndDate = date;
+                }
+            }
+            
+            updateCalendar();
+            updateSelectedRangeDisplay();
+        };
+        
+        // Обновление календаря
+        function updateCalendar() {
+            $('#calendarGrid').html(generateCalendarHTML());
         }
         
-        html += '</div>';
-        calendarGrid.innerHTML = html;
-    }
-
-    function selectDate(day) {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const date = new Date(year, month, day);
-        
-        if (date < new Date()) return; // Нельзя выбрать прошедшие даты
-        
-        if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-            // Начинаем новый выбор
-            selectedStartDate = date;
-            selectedEndDate = null;
-        } else if (selectedStartDate && !selectedEndDate) {
-            // Завершаем выбор
-            if (date < selectedStartDate) {
-                selectedEndDate = selectedStartDate;
-                selectedStartDate = date;
+        // Обновление отображения выбранного диапазона
+        function updateSelectedRangeDisplay() {
+            const display = $('#selectedRangeDisplay');
+            const applyBtn = $('#applyDateBtn');
+            
+            if (selectedStartDate && selectedEndDate) {
+                display.text(`${formatDate(selectedStartDate)} – ${formatDate(selectedEndDate)}`);
+                applyBtn.prop('disabled', false);
+            } else if (selectedStartDate) {
+                display.text(`${formatDate(selectedStartDate)} – выберите дату окончания`);
+                applyBtn.prop('disabled', true);
             } else {
-                selectedEndDate = date;
+                display.text('Выберите диапазон дат');
+                applyBtn.prop('disabled', true);
             }
         }
         
-        updateSimpleCalendar();
-        updateApplyButton();
-    }
-
-    function updateSimpleCalendar() {
-        generateSimpleCalendar();
-    }
-
-    function updateApplyButton() {
-        const applyBtn = document.getElementById('applyBtn');
-        applyBtn.disabled = !(selectedStartDate && selectedEndDate);
-    }
-
-    function changeMonth(direction) {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-        generateSimpleCalendar();
-    }
-
-    function isSameDay(date1, date2) {
-        return date1.getDate() === date2.getDate() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getFullYear() === date2.getFullYear();
-    }
-
-    function closeSimpleCalendar() {
-        const calendar = document.getElementById('simpleCalendar');
-        if (calendar) {
-            calendar.remove();
-        }
-        // Сбрасываем выбор
-        selectedStartDate = null;
-        selectedEndDate = null;
-    }
-
-    function applyDateRange() {
-        if (selectedStartDate && selectedEndDate) {
-            document.getElementById('start_date').value = selectedStartDate.toISOString().split('T')[0];
-            document.getElementById('end_date').value = selectedEndDate.toISOString().split('T')[0];
+        // Смена месяца
+        window.changeMonth = function(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            $('#currentMonth').text(`${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}`);
+            updateCalendar();
+        };
+        
+        // Применение выбранных дат
+        $('#applyDateBtn').on('click', function() {
+            if (selectedStartDate && selectedEndDate) {
+                $('#start_date').val(selectedStartDate.toISOString().split('T')[0]);
+                $('#end_date').val(selectedEndDate.toISOString().split('T')[0]);
+                
+                const startFormatted = formatDate(selectedStartDate);
+                const endFormatted = formatDate(selectedEndDate);
+                
+                $('input[name="date_range"]').val(`${startFormatted} – ${endFormatted}`);
+            }
             
-            // Форматируем даты для отображения
-            const startFormatted = selectedStartDate.toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'short' 
-            });
-            const endFormatted = selectedEndDate.toLocaleDateString('ru-RU', { 
+            closeDateRangePicker();
+        });
+        
+        // Закрытие календаря
+        window.closeDateRangePicker = function() {
+            $('.date-range-picker').remove();
+            $(document).off('click.datePicker');
+        };
+        
+        // Вспомогательные функции
+        function isSameDay(date1, date2) {
+            return date1.getDate() === date2.getDate() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getFullYear() === date2.getFullYear();
+        }
+        
+        function getMonthName(month) {
+            const months = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+            return months[month];
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('ru-RU', { 
                 day: 'numeric', 
                 month: 'short',
                 year: '2-digit'
             });
-            
-            document.querySelector('input[name="date_range"]').value = `${startFormatted} — ${endFormatted}`;
-        }
-        
-        closeSimpleCalendar();
-    }
-
-    // Закрываем календарь при клике вне его
-    document.addEventListener('click', function(event) {
-        const calendar = document.getElementById('simpleCalendar');
-        const dateField = document.querySelector('input[name="date_range"]');
-        
-        if (calendar && !calendar.contains(event.target) && !dateField.contains(event.target)) {
-            closeSimpleCalendar();
-        }
-    });
+            }
+        });
     </script>
 @endsection
