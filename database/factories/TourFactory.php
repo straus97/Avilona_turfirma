@@ -23,6 +23,12 @@ class TourFactory extends Factory
         
         $mealTypes = ['BB', 'HB', 'FB', 'AI', 'UAI'];
         $beachLines = ['1-я линия', '< 100м', '2-я линия', '< 500м', '3-я линия'];
+        $tourOperators = [
+            'Ambotis', 'Anex Tour', 'Biblio Globus', 'Bon Tour', 'BSI Group',
+            'Coral Travel', 'Delfin', 'Express Tours', 'Good Time', 'ICS',
+            'Intourist', 'ITM Group', 'Mouzenidis Travel', 'PAC Group',
+            'Pegas', 'Russian Express', 'Sunmar', 'Tez Tour', 'TUI', 'West Travel'
+        ];
         
         $country = $this->faker->randomElement(array_keys($destinations));
         $city = $this->faker->randomElement($destinations[$country]);
@@ -33,6 +39,8 @@ class TourFactory extends Factory
         
         $hotelStars = $this->faker->numberBetween(3, 5);
         $mealType = $this->faker->randomElement($mealTypes);
+        $beachLine = $this->faker->randomElement($beachLines);
+        $tourOperator = $this->faker->randomElement($tourOperators);
         
         // Генерация названия отеля
         $hotelPrefixes = ['Grand', 'Royal', 'Beach', 'Golden', 'Paradise', 'Sunset', 'Crystal', 'Diamond'];
@@ -90,7 +98,11 @@ class TourFactory extends Factory
             'nights' => $nights,
             'hotel_name' => $hotelName,
             'hotel_stars' => $hotelStars,
+            'hotel_rating' => $rating,
             'meal_type' => $mealType,
+            'beach_line' => $beachLine,
+            'tour_operator' => $tourOperator,
+            'resort' => $city,
             'max_tourists' => $this->faker->numberBetween(10, 50),
             'available_seats' => null, // Автоматически заполнится в модели
             'facilities' => $facilities,
@@ -102,6 +114,13 @@ class TourFactory extends Factory
             ],
             'is_active' => $this->faker->boolean(95), // 95% активных
             'is_hot_deal' => $this->faker->boolean(20), // 20% горящих
+            'is_charter' => $this->faker->boolean(70), // 70% чартерных
+            'is_direct' => $this->faker->boolean(80), // 80% прямых рейсов
+            'included_services' => 'Перелет, трансфер, проживание, питание по программе, страховка',
+            'not_included_services' => 'Виза, экскурсии, личные расходы, чаевые',
+            'adults' => $this->faker->numberBetween(1, 4),
+            'children' => $this->faker->numberBetween(0, 3),
+            'children_ages' => $this->faker->randomElements([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], $this->faker->numberBetween(0, 3)),
         ];
     }
 

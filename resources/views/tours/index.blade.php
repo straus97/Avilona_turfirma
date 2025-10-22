@@ -12,10 +12,11 @@
     background: rgba(255, 255, 255, 0.95);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    padding: 0.5rem 0.75rem;
 }
 
 .modern-select:focus,
@@ -46,6 +47,207 @@
 
 .modern-btn:active {
     transform: translateY(0);
+}
+
+/* Стили для выпадающего списка туристов */
+.tourist-popup-modal {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 300px;
+    animation: fadeIn 0.2s ease;
+}
+
+.tourist-popup-content {
+    padding: 12px;
+}
+
+.tourist-popup-section {
+    margin-bottom: 8px;
+}
+
+.tourist-popup-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.tourist-popup-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.tourist-popup-btn:hover {
+    background: #0056b3;
+}
+
+.tourist-popup-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.tourist-popup-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    min-width: 20px;
+    text-align: center;
+}
+
+.tourist-popup-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.tourist-popup-children {
+    margin-bottom: 8px;
+}
+
+.tourist-popup-child-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tourist-popup-child-item:last-child {
+    border-bottom: none;
+}
+
+.tourist-popup-child-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.tourist-popup-child-age {
+    font-size: 0.8rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.tourist-popup-child-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.6rem;
+    margin-left: 6px;
+}
+
+.tourist-popup-child-remove:hover {
+    background: #c82333;
+}
+
+.tourist-popup-add-child {
+    margin-bottom: 8px;
+}
+
+.tourist-popup-add-btn {
+    background: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-weight: 500;
+}
+
+.tourist-popup-add-btn:hover {
+    background: #007bff;
+    color: white;
+}
+
+.tourist-popup-add-btn:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    cursor: not-allowed;
+}
+
+.tourist-popup-age-grid {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.tourist-popup-age-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.tourist-popup-age-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.tourist-popup-age-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    padding: 4px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.tourist-popup-age-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.tourist-popup-age-btn.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Стили для календаря диапазона дат */
@@ -395,10 +597,9 @@
                         <div class="col-md-2">
                             <label class="form-label text-white fw-bold mb-2">Интервал дат вылета</label>
                             <div class="position-relative">
-                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="22 окт – 26 окт 25" readonly onclick="openDateRangePicker()" value="{{ request('date_range') }}">
+                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="22 окт – 26 окт 25" readonly value="{{ request('date_range') }}">
                                 <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
                                 <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
-                                <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
                             </div>
                         </div>
                         
@@ -427,19 +628,53 @@
                         <div class="col-md-2">
                             <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
                             <div class="position-relative">
-                                <select name="adults" class="form-select form-select-lg modern-select" required>
-                                    <option value="1" {{ request('adults') == 1 ? 'selected' : '' }}>1 взрослый</option>
-                                    <option value="2" {{ request('adults', 2) == 2 ? 'selected' : '' }}>2 взрослых</option>
-                                    <option value="3" {{ request('adults') == 3 ? 'selected' : '' }}>3 взрослых</option>
-                                    <option value="4" {{ request('adults') == 4 ? 'selected' : '' }}>4 взрослых</option>
-                                </select>
+                                <input type="text" name="tourist_summary" class="form-control form-control-lg modern-input" placeholder="2 взрослых" readonly onclick="toggleTouristDropdown()" id="touristSummary">
+                                <input type="hidden" name="adults" id="adults" value="{{ request('adults', 2) }}">
+                                <input type="hidden" name="children" id="children" value="{{ request('children', 0) }}">
+                                <div id="childrenAges"></div>
+                                
+                                                <!-- Выпадающий список как в примере -->
+                                                <div id="touristDropdown" class="tourist-popup-modal" style="display: none;">
+                                                    <div class="tourist-popup-content">
+                                                        <!-- Взрослые -->
+                                                        <div class="tourist-popup-section">
+                                                            <div class="tourist-popup-row">
+                                                                <button type="button" class="tourist-popup-btn" onclick="changeAdults(-1)">−</button>
+                                                                <span class="tourist-popup-count" id="adultsCount">{{ request('adults', 2) }}</span>
+                                                                <span class="tourist-popup-label">взрослый</span>
+                                                                <button type="button" class="tourist-popup-btn" onclick="changeAdults(1)">+</button>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Список детей -->
+                                                        <div id="childrenList" class="tourist-popup-children"></div>
+                                                        
+                                                        <!-- Кнопка добавить ребенка -->
+                                                        <div class="tourist-popup-add-child">
+                                                            <button type="button" class="tourist-popup-add-btn" onclick="addChild()" id="addChildBtn">
+                                                                Добавить ребёнка →
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <!-- Сетка возрастов (показывается при добавлении ребенка) -->
+                                                        <div id="ageSelectionGrid" class="tourist-popup-age-grid" style="display: none;">
+                                                            <div class="tourist-popup-age-title">Возраст на момент окончания поездки:</div>
+                                                            <div class="tourist-popup-age-buttons" id="ageButtons">
+                                                                <!-- Кнопки возрастов будут добавлены динамически -->
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                             </div>
                         </div>
                         
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
-                                <i class="fas fa-search me-2"></i>Найти туры
-                            </button>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="w-100">
+                                <div class="mb-2" style="height: 21px;"></div> <!-- Пустой div для выравнивания -->
+                                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
+                                    Найти туры
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -500,34 +735,6 @@
                                 <option value="9" {{ request('hotel_rating') == 9 ? 'selected' : '' }}>9+</option>
                             </select>
                         </div>
-                        
-                        <!-- Туроператор -->
-                        <div class="col-md-1">
-                            <label class="form-label text-white fw-bold mb-2">Туроператор</label>
-                            <select name="tour_operator" class="form-select form-select-lg modern-select">
-                                <option value="">Все</option>
-                                <option value="ambotis" {{ request('tour_operator') == 'ambotis' ? 'selected' : '' }}>Ambotis</option>
-                                <option value="anex" {{ request('tour_operator') == 'anex' ? 'selected' : '' }}>Anex</option>
-                                <option value="biblio_globus" {{ request('tour_operator') == 'biblio_globus' ? 'selected' : '' }}>Biblio Globus</option>
-                                <option value="bon_tour" {{ request('tour_operator') == 'bon_tour' ? 'selected' : '' }}>Bon Tour</option>
-                                <option value="bsi_group" {{ request('tour_operator') == 'bsi_group' ? 'selected' : '' }}>BSI Group</option>
-                                <option value="coral_travel" {{ request('tour_operator') == 'coral_travel' ? 'selected' : '' }}>Coral Travel</option>
-                                <option value="delfin" {{ request('tour_operator') == 'delfin' ? 'selected' : '' }}>Delfin</option>
-                                <option value="express_tours" {{ request('tour_operator') == 'express_tours' ? 'selected' : '' }}>Express Tours</option>
-                                <option value="good_time" {{ request('tour_operator') == 'good_time' ? 'selected' : '' }}>Good Time</option>
-                                <option value="ics" {{ request('tour_operator') == 'ics' ? 'selected' : '' }}>ICS</option>
-                                <option value="intourist" {{ request('tour_operator') == 'intourist' ? 'selected' : '' }}>Intourist</option>
-                                <option value="itm_group" {{ request('tour_operator') == 'itm_group' ? 'selected' : '' }}>ITM Group</option>
-                                <option value="mouzenidis_travel" {{ request('tour_operator') == 'mouzenidis_travel' ? 'selected' : '' }}>Mouzenidis Travel</option>
-                                <option value="pac_group" {{ request('tour_operator') == 'pac_group' ? 'selected' : '' }}>PAC Group</option>
-                                <option value="pegas" {{ request('tour_operator') == 'pegas' ? 'selected' : '' }}>Pegas</option>
-                                <option value="russian_express" {{ request('tour_operator') == 'russian_express' ? 'selected' : '' }}>Russian Express</option>
-                                <option value="sunmar" {{ request('tour_operator') == 'sunmar' ? 'selected' : '' }}>Sunmar</option>
-                                <option value="tez_tour" {{ request('tour_operator') == 'tez_tour' ? 'selected' : '' }}>Tez Tour</option>
-                                <option value="tui" {{ request('tour_operator') == 'tui' ? 'selected' : '' }}>TUI</option>
-                                <option value="west_travel" {{ request('tour_operator') == 'west_travel' ? 'selected' : '' }}>West Travel</option>
-                            </select>
-                        </div>
                     </div>
                     
                     <!-- Диапазон цен и дополнительные опции -->
@@ -540,6 +747,93 @@
                                 </div>
                                 <div class="col-6">
                                     <input type="number" name="price_max" class="form-control form-control-lg modern-input" placeholder="ДО" min="0" value="{{ request('price_max') }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Туроператоры -->
+                        <div class="col-md-3">
+                            <label class="form-label text-white fw-bold mb-2">Туроператоры</label>
+                            <div id="tourOperatorsContainer" class="border rounded p-3" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.95);">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ambotis" id="ambotis" {{ in_array('ambotis', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ambotis">Ambotis</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="anex" id="anex" {{ in_array('anex', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="anex">Anex Tour</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="biblio_globus" id="biblio_globus" {{ in_array('biblio_globus', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="biblio_globus">Библио Глобус</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="bon_tour" id="bon_tour" {{ in_array('bon_tour', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bon_tour">Bon Tour</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="bsi_group" id="bsi_group" {{ in_array('bsi_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="bsi_group">BSI Group</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="coral_travel" id="coral_travel" {{ in_array('coral_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="coral_travel">Coral Travel</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="delfin" id="delfin" {{ in_array('delfin', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="delfin">Delfin</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="express_tours" id="express_tours" {{ in_array('express_tours', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="express_tours">Express Tours</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="good_time" id="good_time" {{ in_array('good_time', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="good_time">Good Time</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ics" id="ics" {{ in_array('ics', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ics">ICS Travel Group</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="intourist" id="intourist" {{ in_array('intourist', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="intourist">Интурист</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="itm_group" id="itm_group" {{ in_array('itm_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="itm_group">ITM Group</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="mouzenidis_travel" id="mouzenidis_travel" {{ in_array('mouzenidis_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="mouzenidis_travel">Mouzenidis Travel</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="pac_group" id="pac_group" {{ in_array('pac_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="pac_group">PAC Group</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="pegas" id="pegas" {{ in_array('pegas', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="pegas">Pegas Touristik</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="russian_express" id="russian_express" {{ in_array('russian_express', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="russian_express">Russian Express</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="sunmar" id="sunmar" {{ in_array('sunmar', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="sunmar">Sunmar</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="tez_tour" id="tez_tour" {{ in_array('tez_tour', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="tez_tour">Tez Tour</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="tui" id="tui" {{ in_array('tui', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="tui">TUI</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="west_travel" id="west_travel" {{ in_array('west_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="west_travel">West Travel</label>
                                 </div>
                             </div>
                         </div>
@@ -562,19 +856,9 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-3">
-                            <label class="form-label text-white fw-bold mb-2">Дети</label>
-                            <select name="children" class="form-select form-select-lg modern-select">
-                                <option value="0" {{ request('children', 0) == 0 ? 'selected' : '' }}>Без детей</option>
-                                <option value="1" {{ request('children') == 1 ? 'selected' : '' }}>1 ребенок</option>
-                                <option value="2" {{ request('children') == 2 ? 'selected' : '' }}>2 ребенка</option>
-                                <option value="3" {{ request('children') == 3 ? 'selected' : '' }}>3 ребенка</option>
-                            </select>
-                        </div>
-                        
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="button" class="btn btn-outline-light btn-lg w-100" onclick="resetFilters()">
-                                <i class="fas fa-undo me-2"></i>Сбросить фильтры
+                                Сбросить фильтры
                             </button>
                         </div>
                     </div>
@@ -648,7 +932,7 @@
                                             @if($tour->is_hot_deal)
                                                 <div class="position-absolute top-0 start-0 m-2">
                                                     <span class="badge bg-danger rounded-pill">
-                                                        <i class="fas fa-fire me-1"></i>Горящий тур
+                                                        🔥 Горящий тур
                                                     </span>
                                                 </div>
                                             @endif
@@ -662,33 +946,29 @@
                                         <!-- Звездность -->
                                         <div class="mb-2">
                                             @for($i = 1; $i <= 5; $i++)
-                                                <i class="fas fa-star {{ $i <= $tour->hotel_stars ? 'text-warning' : 'text-muted' }}"></i>
+                                                <span class="{{ $i <= $tour->hotel_stars ? 'text-warning' : 'text-muted' }}">★</span>
                                             @endfor
                                         </div>
                                         
                                         <!-- Местоположение -->
                                         <div class="mb-2 text-muted">
-                                            <i class="fas fa-map-marker-alt me-1"></i>
-                                            {{ $tour->destination_city }}, {{ $tour->destination_country }}
+                                            📍 {{ $tour->destination_city }}, {{ $tour->destination_country }}
                                         </div>
                                         
                                         <!-- Даты и продолжительность -->
                                         <div class="mb-2">
-                                            <i class="fas fa-calendar me-1"></i>
-                                            <span class="fw-medium">{{ $tour->start_date->format('d.m.Y') }} - {{ $tour->end_date->format('d.m.Y') }}</span>
+                                            📅 <span class="fw-medium">{{ $tour->start_date->format('d.m.Y') }} - {{ $tour->end_date->format('d.m.Y') }}</span>
                                             <span class="text-muted">({{ $tour->nights }} ночей)</span>
                                         </div>
                                         
                                         <!-- Питание -->
                                         <div class="mb-2">
-                                            <i class="fas fa-utensils me-1"></i>
-                                            <span class="text-muted">{{ $tour->meal_type ?? 'Не указано' }}</span>
+                                            🍽️ <span class="text-muted">{{ $tour->meal_type ?? 'Не указано' }}</span>
                                         </div>
                                         
                                         <!-- Дополнительная информация -->
                                         <div class="small text-muted">
-                                            <i class="fas fa-plane me-1"></i>
-                                            Вылет из {{ $tour->departure_city }}
+                                            ✈️ Вылет из {{ $tour->departure_city }}
                                         </div>
                                     </div>
                                     
@@ -700,7 +980,7 @@
                                         </div>
                                         
                                         <button type="button" class="btn btn-primary btn-lg w-100" onclick="openBookingModal({{ $tour->id }})">
-                                            <i class="fas fa-phone me-2"></i>Связаться с менеджером
+                                            📞 Связаться с менеджером
                                         </button>
                                     </div>
                                 </div>
@@ -716,7 +996,7 @@
             </div>
         @else
             <div class="alert alert-info text-center py-4" role="alert">
-                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <div class="mb-3">ℹ️</div>
                 <h4 class="alert-heading">Туры не найдены</h4>
                 <p class="mb-0">Попробуйте изменить параметры поиска или свяжитесь с нашим менеджером.</p>
             </div>
@@ -769,255 +1049,73 @@
 @endsection
 
 @section('scripts')
+<!-- Подключаем jQuery и библиотеки для выбора дат -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
+
 <script>
 function openBookingModal(tourId) {
     document.getElementById('bookingTourId').value = tourId;
     new bootstrap.Modal(document.getElementById('bookingModal')).show();
 }
 
-function openDateRangePicker() {
-    // Создаем красивый календарь как на Sletat.ru
-    const modal = document.createElement('div');
-    modal.className = 'modal fade show';
-    modal.style.display = 'block';
-    modal.innerHTML = `
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Выберите даты вылета</h5>
-                    <button type="button" class="btn-close" onclick="closeDatePicker()"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="calendar-container">
-                                <div class="calendar-header mb-3">
-                                    <div class="row align-items-center">
-                                        <div class="col-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(-1)">
-                                                <i class="fas fa-chevron-left"></i>
-                                            </button>
-                                        </div>
-                                        <div class="col-8 text-center">
-                                            <h6 class="mb-0" id="currentMonth">Октябрь 2025</h6>
-                                        </div>
-                                        <div class="col-2 text-end">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeMonth(1)">
-                                                <i class="fas fa-chevron-right"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="calendar-grid" id="calendarGrid">
-                                    <!-- Календарь будет сгенерирован JavaScript -->
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="selected-dates">
-                                <h6>Выбранные даты:</h6>
-                                <div class="selected-range" id="selectedRange">
-                                    <span class="text-muted">Выберите даты</span>
-                                </div>
-                                <div class="mt-3">
-                                    <small class="text-muted">Минимальная продолжительность: 1 день</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeDatePicker()">Отмена</button>
-                    <button type="button" class="btn btn-primary" onclick="applyDateRange()" id="applyBtn" disabled>Применить</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    document.body.classList.add('modal-open');
-    
-    // Инициализируем календарь
-    initCalendar();
-}
-
-let selectedStartDate = null;
-let selectedEndDate = null;
-let currentDate = new Date();
-
-function initCalendar() {
-    generateCalendar();
-}
-
-function generateCalendar() {
-    const calendarGrid = document.getElementById('calendarGrid');
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    // Обновляем заголовок
-    document.getElementById('currentMonth').textContent = 
-        new Date(year, month).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-    
-    // Получаем первый день месяца и количество дней
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Понедельник = 1
-    
-    let html = '<div class="calendar-weekdays mb-2">';
-    const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-    weekdays.forEach(day => {
-        html += `<div class="weekday text-center text-muted small">${day}</div>`;
+// Инициализация daterangepicker
+$(document).ready(function() {
+    // Настройка локали для moment.js
+    moment.locale('ru', {
+        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+        monthsShort: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+        weekdays: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+        weekdaysShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+        weekdaysMin: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
     });
-    html += '</div>';
-    
-    html += '<div class="calendar-days">';
-    
-    // Пустые ячейки для начала месяца
-    for (let i = 1; i < startDay; i++) {
-        html += '<div class="calendar-day"></div>';
-    }
-    
-    // Дни месяца
-    for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const isToday = isSameDay(date, new Date());
-        const isPast = date < new Date();
-        const isSelected = selectedStartDate && selectedEndDate && 
-            date >= selectedStartDate && date <= selectedEndDate;
-        const isStart = selectedStartDate && isSameDay(date, selectedStartDate);
-        const isEnd = selectedEndDate && isSameDay(date, selectedEndDate);
-        
-        let classes = 'calendar-day';
-        if (isPast) classes += ' past';
-        if (isToday) classes += ' today';
-        if (isSelected) classes += ' selected';
-        if (isStart) classes += ' start';
-        if (isEnd) classes += ' end';
-        
-        html += `<div class="calendar-day ${classes}" onclick="selectDate(${day})" data-day="${day}">
-            <span>${day}</span>
-        </div>`;
-    }
-    
-    html += '</div>';
-    calendarGrid.innerHTML = html;
-}
 
-function selectDate(day) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const date = new Date(year, month, day);
-    
-    if (date < new Date()) return; // Нельзя выбрать прошедшие даты
-    
-    if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-        // Начинаем новый выбор
-        selectedStartDate = date;
-        selectedEndDate = null;
-    } else if (selectedStartDate && !selectedEndDate) {
-        // Завершаем выбор
-        if (date < selectedStartDate) {
-            selectedEndDate = selectedStartDate;
-            selectedStartDate = date;
-        } else {
-            selectedEndDate = date;
-        }
-    }
-    
-    updateCalendar();
-    updateSelectedRange();
-}
+    // Инициализация daterangepicker
+    $('input[name="date_range"]').daterangepicker({
+        opens: 'left',
+        autoUpdateInput: false,
+        locale: {
+            format: 'DD.MM.YYYY',
+            separator: ' - ',
+            applyLabel: 'Применить',
+            cancelLabel: 'Отмена',
+            fromLabel: 'От',
+            toLabel: 'До',
+            customRangeLabel: 'Выбрать',
+            weekLabel: 'Нед',
+            daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+            monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+            firstDay: 1
+        },
+        startDate: moment().add(1, 'day'),
+        endDate: moment().add(8, 'days'),
+        minDate: moment(),
+        maxDate: moment().add(2, 'years')
+    });
 
-function updateCalendar() {
-    generateCalendar();
-}
+    // Устанавливаем значения из запроса если они есть
+    @if(request('start_date') && request('end_date'))
+        const startDate = moment('{{ request('start_date') }}');
+        const endDate = moment('{{ request('end_date') }}');
+        $('input[name="date_range"]').val(startDate.format('DD.MM.YYYY') + ' - ' + endDate.format('DD.MM.YYYY'));
+    @endif
 
-function updateSelectedRange() {
-    const rangeElement = document.getElementById('selectedRange');
-    const applyBtn = document.getElementById('applyBtn');
-    
-    if (selectedStartDate && selectedEndDate) {
-        const startStr = selectedStartDate.toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'long' 
-        });
-        const endStr = selectedEndDate.toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'long' 
-        });
-        rangeElement.innerHTML = `<strong>${startStr} — ${endStr}</strong>`;
-        applyBtn.disabled = false;
-    } else if (selectedStartDate) {
-        const startStr = selectedStartDate.toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'long' 
-        });
-        rangeElement.innerHTML = `<strong>${startStr}</strong> — выберите дату окончания`;
-        applyBtn.disabled = true;
-    } else {
-        rangeElement.innerHTML = '<span class="text-muted">Выберите даты</span>';
-        applyBtn.disabled = true;
-    }
-}
+    // Обработчик применения дат
+    $('input[name="date_range"]').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD.MM.YYYY') + ' - ' + picker.endDate.format('DD.MM.YYYY'));
+        $('#start_date').val(picker.startDate.format('YYYY-MM-DD'));
+        $('#end_date').val(picker.endDate.format('YYYY-MM-DD'));
+    });
 
-function changeMonth(direction) {
-    currentDate.setMonth(currentDate.getMonth() + direction);
-    generateCalendar();
-}
-
-function isSameDay(date1, date2) {
-    return date1.getDate() === date2.getDate() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getFullYear() === date2.getFullYear();
-}
-
-function closeDatePicker() {
-    const modal = document.querySelector('.modal.show');
-    if (modal) {
-        modal.remove();
-        document.body.classList.remove('modal-open');
-    }
-    // Сбрасываем выбор
-    selectedStartDate = null;
-    selectedEndDate = null;
-}
-
-function applyDateRange() {
-    if (selectedStartDate && selectedEndDate) {
-        document.getElementById('start_date').value = selectedStartDate.toISOString().split('T')[0];
-        document.getElementById('end_date').value = selectedEndDate.toISOString().split('T')[0];
-        
-        // Форматируем даты для отображения
-        const startFormatted = selectedStartDate.toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'short' 
-        });
-        const endFormatted = selectedEndDate.toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'short',
-            year: '2-digit'
-        });
-        
-        document.querySelector('input[name="date_range"]').value = `${startFormatted} — ${endFormatted}`;
-    }
-    
-    closeDatePicker();
-}
-
-function toggleAdditionalFilters() {
-    const filters = document.getElementById('additionalFilters');
-    const button = event.target;
-    
-    if (filters.style.display === 'none') {
-        filters.style.display = 'block';
-        button.innerHTML = '<i class="fas fa-chevron-up me-1"></i>Скрыть фильтры';
-    } else {
-        filters.style.display = 'none';
-        button.innerHTML = '<i class="fas fa-sliders-h me-1"></i>Больше фильтров';
-    }
-}
+    // Обработчик отмены выбора дат
+    $('input[name="date_range"]').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        $('#start_date').val('');
+        $('#end_date').val('');
+    });
+});
 
 // Маска телефона
 function formatPhoneNumber(input) {
@@ -1054,8 +1152,15 @@ function updateResorts() {
     resortsContainer.innerHTML = '<div class="text-muted small">Загрузка курортов...</div>';
     
     fetch(`/api/tours/resorts?country=${encodeURIComponent(country)}`)
-        .then(response => response.json())
+        .then(response => {
+            console.log('Resorts API response:', response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Resorts data:', data);
             if (data.success && data.data.length > 0) {
                 let html = '';
                 data.data.forEach(resort => {
@@ -1089,6 +1194,68 @@ function updateSort(sortBy) {
     form.submit();
 }
 
+function resetFilters() {
+    console.log('Reset filters clicked');
+    
+    // Сбрасываем все поля формы
+    const form = document.getElementById('tourSearchForm');
+    if (form) {
+        form.reset();
+        console.log('Form reset');
+    } else {
+        console.error('Form not found');
+    }
+    
+    // Очищаем скрытые поля дат
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const dateRange = document.querySelector('input[name="date_range"]');
+    
+    if (startDate) startDate.value = '';
+    if (endDate) endDate.value = '';
+    if (dateRange) dateRange.value = '';
+    
+    // Очищаем курорты
+    const resortsContainer = document.getElementById('resortsContainer');
+    if (resortsContainer) {
+        resortsContainer.innerHTML = '<div class="text-muted small">Выберите страну</div>';
+    }
+    
+    // Восстанавливаем курорты если страна выбрана
+    const countrySelect = document.querySelector('select[name="destination_country"]');
+    if (countrySelect && countrySelect.value) {
+        console.log('Restoring resorts for country:', countrySelect.value);
+        updateResorts();
+    }
+    
+    // Сбрасываем туроператоров
+    const tourOperatorCheckboxes = document.querySelectorAll('input[name="tour_operators[]"]');
+    tourOperatorCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Сбрасываем виджет туристов
+    adultsCount = 2;
+    childrenList = [];
+    const adultsField = document.getElementById('adults');
+    const childrenField = document.getElementById('children');
+    
+    if (adultsField) adultsField.value = 2;
+    if (childrenField) childrenField.value = 0;
+    
+    updateTouristSummary();
+    updateChildrenAgesHidden();
+    renderChildrenList();
+    updatePopupSummary();
+    
+    // Перезагружаем страницу для полного сброса
+    console.log('Redirecting to tours index');
+    window.location.href = '{{ route("tours.index") }}';
+}
+
+// Делаем функцию доступной глобально
+window.resetFilters = resetFilters;
+
 // Стили для карточек туров (без скачков)
 document.addEventListener('DOMContentLoaded', function() {
     const tourCards = document.querySelectorAll('.tour-card');
@@ -1102,22 +1269,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Инициализация значений дат если они есть
-    const startDate = document.getElementById('start_date').value;
-    const endDate = document.getElementById('end_date').value;
-    if (startDate && endDate) {
-        const startFormatted = new Date(startDate).toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'short' 
-        });
-        const endFormatted = new Date(endDate).toLocaleDateString('ru-RU', { 
-            day: 'numeric', 
-            month: 'short',
-            year: '2-digit'
-        });
-        document.querySelector('input[name="date_range"]').value = `${startFormatted} — ${endFormatted}`;
-    }
-    
     // Инициализация маски телефона
     const phoneInput = document.getElementById('phoneInput');
     if (phoneInput) {
@@ -1130,7 +1281,216 @@ document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.querySelector('select[name="destination_country"]');
     if (countrySelect) {
         countrySelect.addEventListener('change', updateResorts);
+        
+        // Загружаем курорты если страна уже выбрана при загрузке страницы
+        if (countrySelect.value) {
+            console.log('Loading resorts for initial country:', countrySelect.value);
+            updateResorts();
+        }
     }
+
+    // Функции для управления количеством туристов
+    let adultsCount = {{ request('adults', 2) }};
+    let childrenList = [];
+    let currentChildIndex = -1; // Для выбора возраста
+
+    // Инициализация детей из запроса
+    @if(request('children', 0) > 0)
+        @for($i = 1; $i <= request('children', 0); $i++)
+            childrenList.push({{ request("children_age_$i", 5) }});
+        @endfor
+    @endif
+
+    window.toggleTouristDropdown = function(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        console.log('Toggle tourist dropdown clicked');
+        const dropdown = document.getElementById('touristDropdown');
+        console.log('Dropdown element:', dropdown);
+        console.log('Current display:', dropdown.style.display);
+        
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+        console.log('New display:', dropdown.style.display);
+    };
+
+    window.closeTouristDropdown = function() {
+        document.getElementById('touristDropdown').style.display = 'none';
+        updateTouristSummary();
+    };
+
+    window.changeAdults = function(delta) {
+        adultsCount = Math.max(1, Math.min(20, adultsCount + delta));
+        document.getElementById('adultsCount').textContent = adultsCount;
+        document.getElementById('adults').value = adultsCount;
+        updateTouristSummary();
+    };
+
+    window.addChild = function() {
+        if (childrenList.length < 10) {
+            currentChildIndex = childrenList.length;
+            childrenList.push(5); // Возраст по умолчанию
+            showAgeSelection();
+            updateTouristSummary();
+            updatePopupSummary();
+        }
+    };
+
+    window.removeChild = function(index) {
+        childrenList.splice(index, 1);
+        renderChildrenList();
+        updateTouristSummary();
+    };
+
+    window.updateChildAge = function(index, age) {
+        childrenList[index] = parseInt(age);
+        updateChildrenAgesHidden();
+    };
+
+    window.selectAge = function(age) {
+        if (currentChildIndex >= 0) {
+            childrenList[currentChildIndex] = parseInt(age);
+            hideAgeSelection();
+            renderChildrenList();
+            updateChildrenAgesHidden();
+            updateTouristSummary();
+            updatePopupSummary();
+        }
+    };
+
+    function showAgeSelection() {
+        const ageGrid = document.getElementById('ageSelectionGrid');
+        const ageButtons = document.getElementById('ageButtons');
+        
+        ageButtons.innerHTML = '';
+        
+        const ages = [
+            { value: 0, text: 'До года' },
+            { value: 1, text: '1 год' },
+            { value: 2, text: '2 года' },
+            { value: 3, text: '3 года' },
+            { value: 4, text: '4 года' },
+            { value: 5, text: '5 лет' },
+            { value: 6, text: '6 лет' },
+            { value: 7, text: '7 лет' },
+            { value: 8, text: '8 лет' },
+            { value: 9, text: '9 лет' },
+            { value: 10, text: '10 лет' },
+            { value: 11, text: '11 лет' },
+            { value: 12, text: '12 лет' },
+            { value: 13, text: '13 лет' },
+            { value: 14, text: '14 лет' },
+            { value: 15, text: '15 лет' },
+            { value: 16, text: '16 лет' },
+            { value: 17, text: '17 лет' }
+        ];
+        
+        ages.forEach(age => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tourist-popup-age-btn';
+            button.textContent = age.text;
+            button.onclick = () => selectAge(age.value);
+            ageButtons.appendChild(button);
+        });
+        
+        ageGrid.style.display = 'block';
+    }
+
+    function hideAgeSelection() {
+        document.getElementById('ageSelectionGrid').style.display = 'none';
+        currentChildIndex = -1;
+    }
+
+    function updatePopupSummary() {
+        const summary = document.getElementById('touristPopupSummary');
+        let text = `${adultsCount} взр`;
+        
+        if (childrenList.length > 0) {
+            text += ` и ${childrenList.length} реб`;
+        }
+        
+        summary.textContent = text;
+    }
+
+    function renderChildrenList() {
+        const container = document.getElementById('childrenList');
+        container.innerHTML = '';
+        
+        childrenList.forEach((age, index) => {
+            const childItem = document.createElement('div');
+            childItem.className = 'tourist-popup-child-item';
+            childItem.innerHTML = `
+                <span class="tourist-popup-child-label">Ребёнок ${index + 1}</span>
+                <div style="display: flex; align-items: center;">
+                    <span class="tourist-popup-child-age">${age} лет</span>
+                    <button type="button" class="tourist-popup-child-remove" onclick="removeChild(${index})" title="Удалить">×</button>
+                </div>
+            `;
+            container.appendChild(childItem);
+        });
+        
+        // Обновляем кнопку "Добавить ребенка"
+        const addBtn = document.getElementById('addChildBtn');
+        if (childrenList.length >= 10) {
+            addBtn.disabled = true;
+            addBtn.textContent = 'Максимум 10 детей';
+        } else {
+            addBtn.disabled = false;
+            addBtn.textContent = '+ Добавить ребёнка';
+        }
+    }
+
+    function updateChildrenAgesHidden() {
+        const container = document.getElementById('childrenAges');
+        container.innerHTML = '';
+        
+        childrenList.forEach((age, index) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `children_age_${index + 1}`;
+            input.value = age;
+            container.appendChild(input);
+        });
+        
+        // Обновляем скрытое поле количества детей
+        document.getElementById('children').value = childrenList.length;
+    }
+
+    function updateTouristSummary() {
+        const summary = document.getElementById('touristSummary');
+        let text = `${adultsCount} взросл${adultsCount === 1 ? 'ый' : adultsCount < 5 ? 'ых' : 'ых'}`;
+        
+        if (childrenList.length > 0) {
+            text += ` + ${childrenList.length} ребен${childrenList.length === 1 ? 'ок' : childrenList.length < 5 ? 'ка' : 'ок'}`;
+        }
+        
+        summary.value = text;
+    }
+
+    // Закрытие модального окна при клике вне его
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('touristDropdown');
+        const input = document.getElementById('touristSummary');
+        
+        // Проверяем, что клик был вне выпадающего списка и поля ввода
+        if (dropdown && dropdown.style.display === 'block' && 
+            !dropdown.contains(event.target) && 
+            !input.contains(event.target)) {
+            closeTouristDropdown();
+        }
+    });
+
+    // Инициализация виджета туристов
+    updateTouristSummary();
+    updateChildrenAgesHidden();
+    renderChildrenList();
+    updatePopupSummary();
 });
 </script>
 @endsection

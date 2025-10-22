@@ -42,17 +42,21 @@ if not exist ".env" (
 )
 
 echo.
-echo Optimizing Laravel for production...
-C:\wamp\bin\php\php8.4.13\php.exe artisan config:cache
-C:\wamp\bin\php\php8.4.13\php.exe artisan route:cache
-C:\wamp\bin\php\php8.4.13\php.exe artisan view:cache
+echo Clearing Laravel cache for development...
+C:\wamp\bin\php\php8.4.13\php.exe artisan cache:clear
+C:\wamp\bin\php\php8.4.13\php.exe artisan config:clear
+C:\wamp\bin\php\php8.4.13\php.exe artisan route:clear
+C:\wamp\bin\php\php8.4.13\php.exe artisan view:clear
 
 echo.
-echo Starting Laravel server...
+echo Starting development servers...
 echo.
 
 echo Opening Laravel server at http://localhost:8000
 start "Laravel Server - Avilona" cmd /k "cd /d %~dp0 && C:\wamp\bin\php\php8.4.13\php.exe artisan serve --host=127.0.0.1 --port=8000"
+
+echo Starting Vite development server...
+start "Vite Dev Server" cmd /k "cd /d %~dp0 && npm run dev"
 
 timeout /t 3 /nobreak >nul
 

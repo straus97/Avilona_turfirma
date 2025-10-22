@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'sletat' => [
+        'login' => env('SLETAT_LOGIN'),
+        'password' => env('SLETAT_PASSWORD'),
+        'timeout' => env('SLETAT_TIMEOUT', 30),
+    ],
+
 ];

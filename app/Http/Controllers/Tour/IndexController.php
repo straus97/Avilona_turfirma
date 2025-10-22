@@ -34,11 +34,12 @@ class IndexController extends Controller
             $query->whereIn('destination_city', $request->resorts);
         }
         
-        if ($request->filled('start_date')) {
+        // Фильтрация по датам вылета
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('start_date', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
             $query->where('start_date', '>=', $request->start_date);
-        }
-        
-        if ($request->filled('end_date')) {
+        } elseif ($request->filled('end_date')) {
             $query->where('start_date', '<=', $request->end_date);
         }
         
@@ -52,6 +53,15 @@ class IndexController extends Controller
         
         if ($request->filled('nights')) {
             $query->where('nights', $request->nights);
+        }
+        
+        // Фильтрация по количеству туристов
+        if ($request->filled('adults')) {
+            $query->where('adults', '>=', $request->adults);
+        }
+        
+        if ($request->filled('children')) {
+            $query->where('children', '>=', $request->children);
         }
         
         if ($request->filled('hotel_stars')) {

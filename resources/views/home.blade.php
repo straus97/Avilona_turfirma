@@ -12,10 +12,11 @@
     background: rgba(255, 255, 255, 0.95);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    padding: 0.5rem 0.75rem;
 }
 
 .modern-select:focus,
@@ -48,207 +49,216 @@
     transform: translateY(0);
 }
 
-/* Стили для календаря диапазона дат */
-.date-range-picker {
+/* Стили для выпадающего списка туристов */
+.tourist-popup-modal {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px);
     left: 0;
     right: 0;
     background: white;
     border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
-    padding: 20px;
-    margin-top: 5px;
+    min-width: 300px;
+    animation: fadeIn 0.2s ease;
 }
 
-.calendar-container {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+.tourist-popup-content {
+    padding: 12px;
 }
 
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #f0f0f0;
+.tourist-popup-section {
+    margin-bottom: 8px;
 }
 
-.calendar-nav-btn {
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+.tourist-popup-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.calendar-nav-btn:hover {
-    background: #5a6fd8;
-    transform: scale(1.1);
-}
-
-.calendar-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #333;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
     gap: 8px;
-    margin-bottom: 20px;
+    padding: 4px 0;
 }
 
-.calendar-weekday {
-    text-align: center;
-    font-weight: 600;
-    color: #666;
-    padding: 10px 0;
-    font-size: 0.9rem;
-}
-
-.calendar-day {
-    aspect-ratio: 1;
+.tourist-popup-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #333;
-    background: #f8f9fa;
-    border: 2px solid transparent;
-    position: relative;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.2s ease;
 }
 
-.calendar-day:hover {
-    background: #e3f2fd;
-    border-color: #2196f3;
-    transform: scale(1.05);
+.tourist-popup-btn:hover {
+    background: #0056b3;
 }
 
-.calendar-day.past {
-    color: #ccc;
-    background: #f5f5f5;
-    cursor: not-allowed;
-}
-
-.calendar-day.past:hover {
-    background: #f5f5f5;
-    border-color: transparent;
-    transform: none;
-}
-
-.calendar-day.today {
-    background: #e3f2fd;
-    color: #1976d2;
-    font-weight: 700;
-    border-color: #1976d2;
-}
-
-.calendar-day.selected {
-    background: #2196f3;
-    color: white;
-    font-weight: 700;
-}
-
-.calendar-day.range-start {
-    background: #1976d2;
-    color: white;
-    border-radius: 8px 0 0 8px;
-}
-
-.calendar-day.range-end {
-    background: #1976d2;
-    color: white;
-    border-radius: 0 8px 8px 0;
-}
-
-.calendar-day.in-range {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-radius: 0;
-}
-
-.calendar-day.range-start.range-end {
-    border-radius: 8px;
-}
-
-.calendar-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 15px;
-    border-top: 2px solid #f0f0f0;
-}
-
-.selected-range-display {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-}
-
-.apply-btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.apply-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.apply-btn:disabled {
+.tourist-popup-btn:disabled {
     background: #ccc;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
-/* Анимации */
+.tourist-popup-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    min-width: 20px;
+    text-align: center;
+}
+
+.tourist-popup-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.tourist-popup-children {
+    margin-bottom: 8px;
+}
+
+.tourist-popup-child-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tourist-popup-child-item:last-child {
+    border-bottom: none;
+}
+
+.tourist-popup-child-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.tourist-popup-child-age {
+    font-size: 0.8rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.tourist-popup-child-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.6rem;
+    margin-left: 6px;
+}
+
+.tourist-popup-child-remove:hover {
+    background: #c82333;
+}
+
+.tourist-popup-add-child {
+    margin-bottom: 8px;
+}
+
+.tourist-popup-add-btn {
+    background: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-weight: 500;
+}
+
+.tourist-popup-add-btn:hover {
+    background: #007bff;
+    color: white;
+}
+
+.tourist-popup-add-btn:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    cursor: not-allowed;
+}
+
+.tourist-popup-age-grid {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.tourist-popup-age-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.tourist-popup-age-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.tourist-popup-age-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    padding: 4px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.tourist-popup-age-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.tourist-popup-age-btn.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-.date-range-picker {
-    animation: fadeIn 0.3s ease;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
     .modern-select,
     .modern-input {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
     
     .modern-btn {
-        font-size: 1rem;
-    }
-    
-    .calendar-grid {
-        gap: 4px;
-    }
-    
-    .calendar-day {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
 }
 </style>
@@ -320,17 +330,17 @@
                                             <div class="position-relative">
                                                 <select name="destination_country" class="form-select form-select-lg modern-select" required>
                                                     <option value="">Выберите страну</option>
-                                                    <option value="Турция">🇹🇷 Турция</option>
-                                                    <option value="Египет">🇪🇬 Египет</option>
-                                                    <option value="ОАЭ">🇦🇪 ОАЭ</option>
-                                                    <option value="Тайланд">🇹🇭 Таиланд</option>
-                                                    <option value="Испания">🇪🇸 Испания</option>
-                                                    <option value="Россия">🇷🇺 Россия</option>
-                                                    <option value="Абхазия">🇦🇧 Абхазия</option>
-                                                    <option value="Китай">🇨🇳 Китай</option>
-                                                    <option value="Вьетнам">🇻🇳 Вьетнам</option>
-                                                    <option value="Куба">🇨🇺 Куба</option>
-                                                    <option value="Мальдивы">🇲🇻 Мальдивы</option>
+                                                    <option value="Турция">Турция</option>
+                                                    <option value="Египет">Египет</option>
+                                                    <option value="ОАЭ">ОАЭ</option>
+                                                    <option value="Тайланд">Таиланд</option>
+                                                    <option value="Испания">Испания</option>
+                                                    <option value="Россия">Россия</option>
+                                                    <option value="Абхазия">Абхазия</option>
+                                                    <option value="Китай">Китай</option>
+                                                    <option value="Вьетнам">Вьетнам</option>
+                                                    <option value="Куба">Куба</option>
+                                                    <option value="Мальдивы">Мальдивы</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -338,10 +348,9 @@
                                         <div class="col-md-2">
                                             <label class="form-label text-white fw-bold mb-2">Интервал дат вылета</label>
                                             <div class="position-relative">
-                                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="22 окт – 26 окт 25" readonly onclick="openDateRangePicker()">
+                                                <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="Выберите даты" readonly>
                                                 <input type="hidden" name="start_date" id="start_date">
                                                 <input type="hidden" name="end_date" id="end_date">
-                                                <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
                                             </div>
                                         </div>
                                         
@@ -370,19 +379,53 @@
                                         <div class="col-md-2">
                                             <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
                                             <div class="position-relative">
-                                                <select name="tourists" class="form-select form-select-lg modern-select" required>
-                                                    <option value="1">1 взрослый</option>
-                                                    <option value="2" selected>2 взрослых</option>
-                                                    <option value="3">3 взрослых</option>
-                                                    <option value="4">4 взрослых</option>
-                                                </select>
+                                                <input type="text" name="tourist_summary" class="form-control form-control-lg modern-input" placeholder="2 взрослых" readonly onclick="toggleTouristDropdown()" id="touristSummary">
+                                                <input type="hidden" name="adults" id="adults" value="2">
+                                                <input type="hidden" name="children" id="children" value="0">
+                                                <div id="childrenAges"></div>
+                                                
+                                                <!-- Выпадающий список как в примере -->
+                                                <div id="touristDropdown" class="tourist-popup-modal" style="display: none;">
+                                                    <div class="tourist-popup-content">
+                                                        <!-- Взрослые -->
+                                                        <div class="tourist-popup-section">
+                                                            <div class="tourist-popup-row">
+                                                                <button type="button" class="tourist-popup-btn" onclick="changeAdults(-1)">−</button>
+                                                                <span class="tourist-popup-count" id="adultsCount">2</span>
+                                                                <span class="tourist-popup-label">взрослый</span>
+                                                                <button type="button" class="tourist-popup-btn" onclick="changeAdults(1)">+</button>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Список детей -->
+                                                        <div id="childrenList" class="tourist-popup-children"></div>
+                                                        
+                                                        <!-- Кнопка добавить ребенка -->
+                                                        <div class="tourist-popup-add-child">
+                                                            <button type="button" class="tourist-popup-add-btn" onclick="addChild()" id="addChildBtn">
+                                                                Добавить ребёнка →
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <!-- Сетка возрастов (показывается при добавлении ребенка) -->
+                                                        <div id="ageSelectionGrid" class="tourist-popup-age-grid" style="display: none;">
+                                                            <div class="tourist-popup-age-title">Возраст на момент окончания поездки:</div>
+                                                            <div class="tourist-popup-age-buttons" id="ageButtons">
+                                                                <!-- Кнопки возрастов будут добавлены динамически -->
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2">
-                                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
-                                                <i class="fas fa-search me-2"></i>Найти туры
-                                            </button>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <div class="w-100">
+                                                <div class="mb-2" style="height: 21px;"></div> <!-- Пустой div для выравнивания -->
+                                                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
+                                                    Найти туры
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </form>
@@ -766,209 +809,243 @@
     </script>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    
     <script>
     $(document).ready(function() {
-        let selectedStartDate = null;
-        let selectedEndDate = null;
-        let currentDate = new Date();
-        
-        // Открытие календаря диапазона дат
-        window.openDateRangePicker = function() {
-            const dateField = $('input[name="date_range"]');
-            const container = dateField.closest('.position-relative');
-            
-            // Удаляем существующий календарь если есть
-            container.find('.date-range-picker').remove();
-            
-            // Создаем календарь
-            const calendar = $(`
-                <div class="date-range-picker">
-                    <div class="calendar-container">
-                        <div class="calendar-header">
-                            <button type="button" class="calendar-nav-btn" onclick="changeMonth(-1)">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <div class="calendar-title" id="currentMonth">${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}</div>
-                            <button type="button" class="calendar-nav-btn" onclick="changeMonth(1)">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div class="calendar-grid" id="calendarGrid">
-                            ${generateCalendarHTML()}
-                        </div>
-                        <div class="calendar-footer">
-                            <div class="selected-range-display" id="selectedRangeDisplay">
-                                ${selectedStartDate && selectedEndDate ? 
-                                    `${formatDate(selectedStartDate)} – ${formatDate(selectedEndDate)}` : 
-                                    'Выберите диапазон дат'
-                                }
-                            </div>
-                            <button type="button" class="apply-btn" id="applyDateBtn" ${!selectedStartDate || !selectedEndDate ? 'disabled' : ''}>
-                                Применить
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `);
-            
-            container.append(calendar);
-            
-            // Закрытие календаря при клике вне его
-            $(document).on('click.datePicker', function(e) {
-                if (!$(e.target).closest('.date-range-picker, input[name="date_range"]').length) {
-                    closeDateRangePicker();
-                }
-            });
-        };
-        
-        // Генерация HTML календаря
-        function generateCalendarHTML() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startDay = firstDay.getDay() === 0 ? 7 : firstDay.getDay(); // Понедельник = 1
-            
-            let html = '';
-            
-            // Дни недели
-            const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
-            weekdays.forEach(day => {
-                html += `<div class="calendar-weekday">${day}</div>`;
-            });
-            
-            // Пустые ячейки для начала месяца
-            for (let i = 1; i < startDay; i++) {
-                html += '<div class="calendar-day"></div>';
-            }
-            
-            // Дни месяца
-            for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month, day);
-                const isToday = isSameDay(date, new Date());
-                const isPast = date < new Date();
-                const isSelected = selectedStartDate && selectedEndDate && 
-                    date >= selectedStartDate && date <= selectedEndDate;
-                const isStart = selectedStartDate && isSameDay(date, selectedStartDate);
-                const isEnd = selectedEndDate && isSameDay(date, selectedEndDate);
-                const inRange = selectedStartDate && selectedEndDate && 
-                    date > selectedStartDate && date < selectedEndDate;
-                
-                let classes = 'calendar-day';
-                if (isPast) classes += ' past';
-                if (isToday) classes += ' today';
-                if (isSelected) classes += ' selected';
-                if (isStart) classes += ' range-start';
-                if (isEnd) classes += ' range-end';
-                if (inRange) classes += ' in-range';
-                
-                html += `<div class="calendar-day ${classes}" data-day="${day}" onclick="selectDate(${day})">
-                    <span>${day}</span>
-                </div>`;
-            }
-            
-            return html;
-        }
-        
-        // Выбор даты
-        window.selectDate = function(day) {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const date = new Date(year, month, day);
-            
-            if (date < new Date()) return; // Нельзя выбрать прошедшие даты
-            
-            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-                // Начинаем новый выбор
-                selectedStartDate = date;
-                selectedEndDate = null;
-            } else if (selectedStartDate && !selectedEndDate) {
-                // Завершаем выбор
-                if (date < selectedStartDate) {
-                    selectedEndDate = selectedStartDate;
-                    selectedStartDate = date;
-                } else {
-                    selectedEndDate = date;
-                }
-            }
-            
-            updateCalendar();
-            updateSelectedRangeDisplay();
-        };
-        
-        // Обновление календаря
-        function updateCalendar() {
-            $('#calendarGrid').html(generateCalendarHTML());
-        }
-        
-        // Обновление отображения выбранного диапазона
-        function updateSelectedRangeDisplay() {
-            const display = $('#selectedRangeDisplay');
-            const applyBtn = $('#applyDateBtn');
-            
-            if (selectedStartDate && selectedEndDate) {
-                display.text(`${formatDate(selectedStartDate)} – ${formatDate(selectedEndDate)}`);
-                applyBtn.prop('disabled', false);
-            } else if (selectedStartDate) {
-                display.text(`${formatDate(selectedStartDate)} – выберите дату окончания`);
-                applyBtn.prop('disabled', true);
-            } else {
-                display.text('Выберите диапазон дат');
-                applyBtn.prop('disabled', true);
-            }
-        }
-        
-        // Смена месяца
-        window.changeMonth = function(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            $('#currentMonth').text(`${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}`);
-            updateCalendar();
-        };
-        
-        // Применение выбранных дат
-        $('#applyDateBtn').on('click', function() {
-            if (selectedStartDate && selectedEndDate) {
-                $('#start_date').val(selectedStartDate.toISOString().split('T')[0]);
-                $('#end_date').val(selectedEndDate.toISOString().split('T')[0]);
-                
-                const startFormatted = formatDate(selectedStartDate);
-                const endFormatted = formatDate(selectedEndDate);
-                
-                $('input[name="date_range"]').val(`${startFormatted} – ${endFormatted}`);
-            }
-            
-            closeDateRangePicker();
+        // Инициализация daterangepicker
+        $('input[name="date_range"]').daterangepicker({
+            opens: 'left',
+            autoUpdateInput: false,
+            locale: {
+                format: 'DD.MM.YY',
+                separator: ' – ',
+                applyLabel: 'Применить',
+                cancelLabel: 'Отмена',
+                fromLabel: 'От',
+                toLabel: 'До',
+                customRangeLabel: 'Выбрать период',
+                weekLabel: 'Н',
+                daysOfWeek: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+                monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+                firstDay: 1
+            },
+            startDate: moment().add(1, 'day'),
+            endDate: moment().add(7, 'day'),
+            minDate: moment().add(1, 'day')
         });
         
-        // Закрытие календаря
-        window.closeDateRangePicker = function() {
-            $('.date-range-picker').remove();
-            $(document).off('click.datePicker');
-        };
+        // Обработка выбора дат
+        $('input[name="date_range"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD.MM.YY') + ' – ' + picker.endDate.format('DD.MM.YY'));
+            $('#start_date').val(picker.startDate.format('YYYY-MM-DD'));
+            $('#end_date').val(picker.endDate.format('YYYY-MM-DD'));
+        });
         
-        // Вспомогательные функции
-        function isSameDay(date1, date2) {
-            return date1.getDate() === date2.getDate() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getFullYear() === date2.getFullYear();
-        }
+        // Обработка отмены выбора
+        $('input[name="date_range"]').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            $('#start_date').val('');
+            $('#end_date').val('');
+        });
         
-        function getMonthName(month) {
-            const months = [
-                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-            ];
-            return months[month];
-        }
-        
-        function formatDate(date) {
-            return date.toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'short',
-                year: '2-digit'
-            });
+        // Функции для управления количеством туристов
+        let adultsCount = 2;
+        let childrenList = [];
+        let currentChildIndex = -1; // Для выбора возраста
+
+        window.toggleTouristDropdown = function(event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
             }
+            console.log('Toggle tourist dropdown clicked');
+            const dropdown = document.getElementById('touristDropdown');
+            console.log('Dropdown element:', dropdown);
+            console.log('Current display:', dropdown.style.display);
+            
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+            console.log('New display:', dropdown.style.display);
+        };
+
+        window.closeTouristDropdown = function() {
+            document.getElementById('touristDropdown').style.display = 'none';
+            updateTouristSummary();
+        };
+
+        window.changeAdults = function(delta) {
+            adultsCount = Math.max(1, Math.min(20, adultsCount + delta));
+            document.getElementById('adultsCount').textContent = adultsCount;
+            document.getElementById('adults').value = adultsCount;
+            updateTouristSummary();
+            updatePopupSummary();
+        };
+
+        window.addChild = function() {
+            if (childrenList.length < 10) {
+                currentChildIndex = childrenList.length;
+                childrenList.push(5); // Возраст по умолчанию
+                showAgeSelection();
+                updateTouristSummary();
+                updatePopupSummary();
+            }
+        };
+
+        window.removeChild = function(index) {
+            childrenList.splice(index, 1);
+            renderChildrenList();
+            updateTouristSummary();
+            updatePopupSummary();
+        };
+
+        window.selectAge = function(age) {
+            if (currentChildIndex >= 0) {
+                childrenList[currentChildIndex] = parseInt(age);
+                hideAgeSelection();
+                renderChildrenList();
+                updateChildrenAgesHidden();
+                updateTouristSummary();
+                updatePopupSummary();
+            }
+        };
+
+        function showAgeSelection() {
+            const ageGrid = document.getElementById('ageSelectionGrid');
+            const ageButtons = document.getElementById('ageButtons');
+            
+            ageButtons.innerHTML = '';
+            
+            const ages = [
+                { value: 0, text: 'До года' },
+                { value: 1, text: '1 год' },
+                { value: 2, text: '2 года' },
+                { value: 3, text: '3 года' },
+                { value: 4, text: '4 года' },
+                { value: 5, text: '5 лет' },
+                { value: 6, text: '6 лет' },
+                { value: 7, text: '7 лет' },
+                { value: 8, text: '8 лет' },
+                { value: 9, text: '9 лет' },
+                { value: 10, text: '10 лет' },
+                { value: 11, text: '11 лет' },
+                { value: 12, text: '12 лет' },
+                { value: 13, text: '13 лет' },
+                { value: 14, text: '14 лет' },
+                { value: 15, text: '15 лет' },
+                { value: 16, text: '16 лет' },
+                { value: 17, text: '17 лет' }
+            ];
+            
+            ages.forEach(age => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'tourist-popup-age-btn';
+                button.textContent = age.text;
+                button.onclick = () => selectAge(age.value);
+                ageButtons.appendChild(button);
+            });
+            
+            ageGrid.style.display = 'block';
+        }
+
+        function hideAgeSelection() {
+            document.getElementById('ageSelectionGrid').style.display = 'none';
+            currentChildIndex = -1;
+        }
+
+        function renderChildrenList() {
+            const container = document.getElementById('childrenList');
+            container.innerHTML = '';
+            
+            childrenList.forEach((age, index) => {
+                const childItem = document.createElement('div');
+                childItem.className = 'tourist-popup-child-item';
+                childItem.innerHTML = `
+                    <span class="tourist-popup-child-label">Ребёнок ${index + 1}</span>
+                    <div style="display: flex; align-items: center;">
+                        <span class="tourist-popup-child-age">${age} лет</span>
+                        <button type="button" class="tourist-popup-child-remove" onclick="removeChild(${index})" title="Удалить">×</button>
+                    </div>
+                `;
+                container.appendChild(childItem);
+            });
+            
+            // Обновляем кнопку "Добавить ребенка"
+            const addBtn = document.getElementById('addChildBtn');
+            if (childrenList.length >= 10) {
+                addBtn.disabled = true;
+                addBtn.textContent = 'Максимум 10 детей';
+            } else {
+                addBtn.disabled = false;
+                addBtn.textContent = '+ Добавить ребёнка';
+            }
+        }
+
+        function updateChildrenAgesHidden() {
+            const container = document.getElementById('childrenAges');
+            container.innerHTML = '';
+            
+            childrenList.forEach((age, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `children_age_${index + 1}`;
+                input.value = age;
+                container.appendChild(input);
+            });
+            
+            // Обновляем скрытое поле количества детей
+            document.getElementById('children').value = childrenList.length;
+        }
+
+        function updateTouristSummary() {
+            const summary = document.getElementById('touristSummary');
+            let text = `${adultsCount} взросл${adultsCount === 1 ? 'ый' : adultsCount < 5 ? 'ых' : 'ых'}`;
+            
+            if (childrenList.length > 0) {
+                text += ` + ${childrenList.length} ребен${childrenList.length === 1 ? 'ок' : childrenList.length < 5 ? 'ка' : 'ок'}`;
+            }
+            
+            summary.value = text;
+        }
+
+        function updatePopupSummary() {
+            const summary = document.getElementById('touristPopupSummary');
+            let text = `${adultsCount} взр`;
+            
+            if (childrenList.length > 0) {
+                text += ` и ${childrenList.length} реб`;
+            }
+            
+            summary.textContent = text;
+        }
+
+        // Закрытие модального окна при клике вне его
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('touristDropdown');
+            const input = document.getElementById('touristSummary');
+            
+            // Проверяем, что клик был вне выпадающего списка и поля ввода
+            if (dropdown && dropdown.style.display === 'block' && 
+                !dropdown.contains(event.target) && 
+                !input.contains(event.target)) {
+                closeTouristDropdown();
+            }
+        });
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTouristSummary();
+            updateChildrenAgesHidden();
+            renderChildrenList();
+            updatePopupSummary();
+        });
         });
     </script>
 @endsection
