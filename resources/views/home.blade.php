@@ -51,15 +51,15 @@
 
 /* Стили для выпадающего списка туристов */
 .tourist-popup-modal {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 0;
-    right: 0;
-    background: white;
+    position: absolute !important;
+    top: calc(100% + 5px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
     border: 1px solid #ddd;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 9999 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+    z-index: 10001 !important;
     min-width: 300px;
     animation: fadeIn 0.2s ease;
 }
@@ -300,9 +300,9 @@
             <div class="row my-3">
                 <div class="col">
                     <!-- Современный виджет поиска туров -->
-                    <div class="tour-search-widget mb-4" style="position: relative; z-index: 100;">
-                        <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <div class="card-body p-4" style="overflow: visible;">
+                    <div class="tour-search-widget mb-4" style="position: relative; z-index: 1;">
+                        <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); overflow: visible;">
+                            <div class="card-body p-4" style="overflow: visible; position: relative;">
                                 <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm" onsubmit="return validateTourSearchForm()">
                                     <!-- Основные поля в одну строку -->
                                     <div class="row g-3 align-items-center">
@@ -378,14 +378,14 @@
                                         
                                         <div class="col-md-2">
                                             <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
-                                            <div class="position-relative">
+                                            <div class="position-relative" style="z-index: 10000;">
                                                 <input type="text" name="tourist_summary" class="form-control form-control-lg modern-input" placeholder="2 взрослых" readonly onclick="toggleTouristDropdown()" id="touristSummary">
                                                 <input type="hidden" name="adults" id="adults" value="2">
                                                 <input type="hidden" name="children" id="children" value="0">
                                                 <div id="childrenAges"></div>
                                                 
                                                 <!-- Выпадающий список как в примере -->
-                                                <div id="touristDropdown" class="tourist-popup-modal" style="display: none;">
+                                                <div id="touristDropdown" class="tourist-popup-modal" style="display: none; position: absolute !important; z-index: 10001 !important;">
                                                     <div class="tourist-popup-content">
                                                         <!-- Взрослые -->
                                                         <div class="tourist-popup-section">
