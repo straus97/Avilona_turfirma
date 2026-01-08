@@ -86,36 +86,52 @@
                 {{--                    </button>--}}
                 {{--                </div>--}}
                 @auth
-                    <div class="d-none d-lg-flex mt-2">
-                        <button class="btn btn-primary w-100 me-2" type="button" data-bs-toggle="modal"
-                                data-bs-target="#importantInfoModal">Важная информация
+                    <div class="d-none d-lg-flex mt-2 gap-2">
+                        <button class="btn btn-primary me-2" type="button" data-bs-toggle="modal"
+                                data-bs-target="#importantInfoModal">
+                            <i class="bi bi-info-circle"></i> Важная информация
                         </button>
                         <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="userMenuDropdown"
+                            <button class="btn btn-success dropdown-toggle" type="button" id="userMenuDropdown"
                                     data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ Auth::user()->name }}
+                                <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="userMenuDropdown">
-                                <li><a class="dropdown-item" href="{{ route('account') }}">Личный кабинет</a></li>
-                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Настройки</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                                <li><a class="dropdown-item" href="{{ route('bookings.index') }}">
+                                    <i class="bi bi-bookmark"></i> Мои заявки
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('account') }}">
+                                    <i class="bi bi-house-door"></i> Личный кабинет
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <i class="bi bi-gear"></i> Настройки
+                                </a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button class="dropdown-item" type="submit">Выйти</button>
+                                        <button class="dropdown-item text-danger" type="submit">
+                                            <i class="bi bi-box-arrow-right"></i> Выйти
+                                        </button>
                                     </form>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 @else
-                    <div class="d-none d-lg-flex mt-2">
-                        <button class="btn btn-primary w-100 me-2" type="button" data-bs-toggle="modal"
-                                data-bs-target="#importantInfoModal">Важная информация
+                    <div class="d-none d-lg-flex mt-2 gap-2">
+                        <button class="btn btn-primary me-2" type="button" data-bs-toggle="modal"
+                                data-bs-target="#importantInfoModal">
+                            <i class="bi bi-info-circle"></i> Важная информация
                         </button>
-                        {{--<a class="btn btn-secondary login-btn" href="{{ route('login') }}">Авторизация</a>--}}
+                        <a class="btn btn-outline-primary" href="{{ route('login') }}">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </a>
+                        <a class="btn btn-success" href="{{ route('register') }}">
+                            <i class="bi bi-person-plus"></i> Регистрация
+                        </a>
                     </div>
                 @endauth
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -170,9 +186,42 @@
                                     словарь</a></li>
                         </ul>
                     </li>
-                    {{--                    <li class="d-lg-none">--}}
-                    {{--                        <button class="btn btn-secondary w-100" type="button">Авторизация</button>--}}
-                    {{--                    </li>--}}
+                    @auth
+                        <li class="nav-item d-lg-none mt-2">
+                            <a class="btn btn-primary w-100 mb-2" href="{{ route('bookings.index') }}">
+                                <i class="bi bi-bookmark"></i> Мои заявки
+                            </a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="btn btn-success w-100 mb-2" href="{{ route('account') }}">
+                                <i class="bi bi-house-door"></i> Личный кабинет
+                            </a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="btn btn-secondary w-100 mb-2" href="{{ route('profile.edit') }}">
+                                <i class="bi bi-gear"></i> Настройки
+                            </a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button class="btn btn-danger w-100" type="submit">
+                                    <i class="bi bi-box-arrow-right"></i> Выйти
+                                </button>
+                            </form>
+                        </li>
+                    @else
+                        <li class="nav-item d-lg-none mt-2">
+                            <a class="btn btn-outline-primary w-100 mb-2" href="{{ route('login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </a>
+                        </li>
+                        <li class="nav-item d-lg-none">
+                            <a class="btn btn-success w-100" href="{{ route('register') }}">
+                                <i class="bi bi-person-plus"></i> Регистрация
+                            </a>
+                        </li>
+                    @endauth
                 </ul>
             </div>
         </nav>
