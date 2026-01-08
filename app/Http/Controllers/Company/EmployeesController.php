@@ -10,9 +10,10 @@ class EmployeesController extends Controller
 {
     public function __invoke()
     {
-        $cacheTime = 60; // Время кеширования в минутах
-        $employees = Cache::remember('employees_all', $cacheTime, function () {
-            return Employee::all();
+        $employees = Cache::remember('employees_all', 3600, function () {
+            return Employee::select('id', 'name', 'position', 'phone', 'image')
+                ->orderBy('id')
+                ->get();
         });
         return view('company.employees', compact('employees'));
     }

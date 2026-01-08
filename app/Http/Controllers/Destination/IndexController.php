@@ -10,10 +10,10 @@ class IndexController extends Controller
 {
     public function __invoke()
     {
-        $cacheKey = 'destination_index';
-        $cacheTime = 60; // Время кеширования в минутах
-        $destination_image = Cache::remember($cacheKey, $cacheTime, function () {
-            return Destination_image::orderBy('title', 'asc')->get();
+        $destination_image = Cache::remember('destination_index', 3600, function () {
+            return Destination_image::select('id', 'title', 'slug', 'image_small')
+                ->orderBy('title', 'asc')
+                ->get();
         });
         return view('destinations', compact('destination_image'));
     }

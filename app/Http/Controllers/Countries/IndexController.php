@@ -13,25 +13,38 @@ class IndexController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $cacheKey = 'countries_index';
-        $cacheTime = 60; // Время кеширования в минутах
-        $query_reset = $request->query();
-        if (isset($query_reset['reset'])) {
+        $cacheTime = 3600; // 1 час
+        
+        // Сброс фильтров
+        if ($request->query('reset')) {
             $request->session()->forget('countries_filter');
             return redirect()->route('countries.index');
         }
+        
+        // Формируем ключ кэша с учетом фильтров
+        $filters = $request->only(['category', 'title']);
+        $cacheKey = 'countries_index_' . md5(serialize($filters));
+        
         $countries_image = Cache::remember($cacheKey, $cacheTime, function () use ($request) {
-            $query = Countries_image::query();
-            // применяем фильтры
-            (new CategoryFilter($request->all()))->apply($query);
-            (new TitleFilter($request->all()))->apply($query);
-            // получаем отфильтрованные записи
+            $query = Countries_image::select('id', 'title', 'slug', 'image_small', 'category');
+            
+            // Применяем фильтры
+            if ($request->filled('category')) {
+                $query->where('category', $request->category);
+            }
+            
+            if ($request->filled('title')) {
+                $query->where('title', 'like', '%' . $request->title . '%');
+            }
+            
             return $query->orderBy('title', 'asc')->get();
         });
-        // формируем список категорий
+        
+        // Список категорий
         $categories = Cache::remember('countries_categories', $cacheTime, function () {
-            return Countries_image::pluck('category')->unique()->toArray();
+            return Countries_image::distinct()->pluck('category')->filter()->sort()->values()->toArray();
         });
+        
         return view('countries', compact('countries_image', 'categories'));
     }
 }

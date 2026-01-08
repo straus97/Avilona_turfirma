@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tour;
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class IndexController extends Controller
 {
@@ -13,8 +14,15 @@ class IndexController extends Controller
      */
     public function __invoke(Request $request)
     {
-        // Базовый запрос
-        $query = Tour::query()->active();
+        // Базовый запрос с выборкой только нужных полей
+        $query = Tour::query()
+            ->active()
+            ->select([
+                'id', 'title', 'departure_city', 'destination_country', 
+                'destination_city', 'start_date', 'nights', 'price', 
+                'hotel_name', 'hotel_stars', 'meal_type', 'image_url',
+                'is_hot_deal', 'adults', 'children', 'created_at'
+            ]);
         
         // Применяем фильтры
         if ($request->filled('departure_city')) {
@@ -80,6 +88,11 @@ class IndexController extends Controller
             $query->where('price', '<=', $request->price_max);
         }
         
+        // Фильтр по туроператорам
+        if ($request->filled('tour_operators')) {
+            $query->whereIn('tour_operator', $request->tour_operators);
+        }
+        
         // Сортировка
         $sortBy = $request->get('sort_by', 'popular');
         
@@ -101,19 +114,25 @@ class IndexController extends Controller
                 break;
         }
         
-        // Пагинация
+        // Пагинация (12 туров на страницу)
         $tours = $query->paginate(12)->withQueryString();
         
-        // Данные для фильтров
-        $departureCities = Tour::active()
-            ->select('departure_city')
-            ->distinct()
-            ->pluck('departure_city');
+        // Данные для фильтров (кэшируем на 1 час)
+        $departureCities = Cache::remember('tour_departure_cities', 3600, function () {
+            return Tour::active()
+                ->select('departure_city')
+                ->distinct()
+                ->orderBy('departure_city')
+                ->pluck('departure_city');
+        });
             
-        $destinationCountries = Tour::active()
-            ->select('destination_country')
-            ->distinct()
-            ->pluck('destination_country');
+        $destinationCountries = Cache::remember('tour_destination_countries', 3600, function () {
+            return Tour::active()
+                ->select('destination_country')
+                ->distinct()
+                ->orderBy('destination_country')
+                ->pluck('destination_country');
+        });
         
         return view('tours.index', compact(
             'tours',

@@ -13,24 +13,34 @@ class IndexController extends Controller
 {
     public function __invoke()
     {
-        // Ключи кеша для каждой части данных
-        $newsCacheKey = 'home_news';
-        $reviewsCacheKey = 'home_reviews';
-        $bestOffersCacheKey = 'home_best_offers';
-        $partnersCacheKey = 'home_partners';
-        // Получаем данные из кеша или из базы данных
-        $news = Cache::remember($newsCacheKey, 60, function () {
-            return News::orderBy('pub_date', 'desc')->take(4)->get();
+        $cacheTime = 3600; // 1 час для главной страницы
+        
+        $news = Cache::remember('home_news', $cacheTime, function () {
+            return News::select('id', 'title', 'slug', 'content', 'image', 'created_at')
+                ->orderBy('pub_date', 'desc')
+                ->take(4)
+                ->get();
         });
-        $reviews = Cache::remember($reviewsCacheKey, 60, function () {
-            return Reviews::where('is_published', 1)->orderBy('id', 'desc')->take(3)->get();
+        
+        $reviews = Cache::remember('home_reviews', $cacheTime, function () {
+            return Reviews::select('id', 'name', 'content', 'image', 'created_at')
+                ->where('is_published', 1)
+                ->orderBy('id', 'desc')
+                ->take(3)
+                ->get();
         });
-        $best_offers = Cache::remember($bestOffersCacheKey, 60, function () {
-            return Best_offer::orderBy('id', 'desc')->take(4)->get();
+        
+        $best_offers = Cache::remember('home_best_offers', $cacheTime, function () {
+            return Best_offer::select('id', 'title', 'content', 'image', 'created_at')
+                ->orderBy('id', 'desc')
+                ->take(4)
+                ->get();
         });
-        $partners = Cache::remember($partnersCacheKey, 60, function () {
-            return Partner::all();
+        
+        $partners = Cache::remember('home_partners', $cacheTime, function () {
+            return Partner::select('id', 'name_partner', 'logo_partner')->get();
         });
+        
         return view('home', compact('news', 'reviews', 'best_offers', 'partners'));
     }
 }

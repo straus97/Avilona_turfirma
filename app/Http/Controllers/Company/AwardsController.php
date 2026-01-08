@@ -10,9 +10,10 @@ class AwardsController extends Controller
 {
     public function __invoke()
     {
-        $cacheTime = 60; // Время кеширования в минутах
-        $awards = Cache::remember('awards_all', $cacheTime, function () {
-            return Award::all();
+        $awards = Cache::remember('awards_all', 3600, function () {
+            return Award::select('id', 'name', 'year', 'image')
+                ->orderBy('year', 'desc')
+                ->get();
         });
         return view('company.awards', compact('awards'));
     }
