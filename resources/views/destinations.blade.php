@@ -23,22 +23,36 @@
                         мечталось.</p>
                     <p>Позвольте себе воплотить в жизнь свои желания и идти навстречу новым приключениям.</p>
                     <hr>
-                    <div class="row">
-                        @foreach($destination_image as $item_destination_image)
-                            <div class="col-md-4">
-                                <div class="card mb-4">
-                                    <img src="{{ $item_destination_image->image_small }}" class="card-img-top"
-                                         alt="...">
-                                    <div class="card-body text-center">
-                                        <a href="{{ route('destinations.show_destinations_image', $item_destination_image->slug) }}"
-                                           class="">
-                                            <h5 class="card-title">{{ $item_destination_image->title }}</h5>
-                                        </a>
+                    @if(isset($destination_image) && $destination_image->count() > 0)
+                        <div class="row">
+                            @foreach($destination_image as $item_destination_image)
+                                <div class="col-md-4">
+                                    <div class="card mb-4">
+                                        @if($item_destination_image->image_small)
+                                            <img src="{{ $item_destination_image->image_small }}" 
+                                                 class="card-img-top"
+                                                 alt="{{ $item_destination_image->title ?? 'Направление' }}"
+                                                 loading="lazy">
+                                        @else
+                                            <img src="/img/placeholder.png" 
+                                                 class="card-img-top"
+                                                 alt="{{ $item_destination_image->title ?? 'Направление' }}"
+                                                 loading="lazy">
+                                        @endif
+                                        <div class="card-body text-center">
+                                            <a href="{{ route('destinations.show_destinations_image', $item_destination_image->slug) }}">
+                                                <h5 class="card-title">{{ $item_destination_image->title }}</h5>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="alert alert-info" role="alert">
+                            <p class="mb-0">К сожалению, список направлений пока пуст. Мы работаем над добавлением новых направлений.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
