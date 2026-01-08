@@ -13,28 +13,18 @@
                     <article class="news-article">
                         <h1 class="text-center mb-4">{{ $id_news->title ?? 'Без названия' }}</h1>
                         
-                        @if($id_news->image)
-                        <div class="text-center mb-4">
-                            <img src="{{ $id_news->image }}" 
-                                 class="img-fluid rounded shadow" 
-                                 alt="{{ $id_news->title }}"
-                                 style="max-height: 500px; object-fit: cover;">
+                        <div class="news-content">
+                            {!! $id_news->description !!}
                         </div>
-                        @endif
                         
+                        <hr>
                         <div class="news-meta text-muted mb-4">
                             <small>
                                 <i class="bi bi-calendar3"></i> 
                                 {{ $id_news->pub_date ? Date::parse($id_news->pub_date)->format('j F Y г.') : '' }}
                             </small>
                         </div>
-                        
-                        <hr>
-                        
-                        <div class="news-content">
-                            {!! $id_news->description !!}
-                        </div>
-                        
+
                         @if($id_news->link)
                         <div class="mt-4">
                             <a href="{{ $id_news->link }}" 

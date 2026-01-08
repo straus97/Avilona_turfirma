@@ -983,7 +983,7 @@
             updatePopupSummary();
         };
 
-        window.removeChild = function(index) {
+        window.removeTouristChild = function(index) {
             childrenList.splice(index, 1);
             renderChildrenList();
             updateChildrenAgesHidden();
@@ -1002,7 +1002,7 @@
                     <span class="tourist-popup-child-label">Ребёнок ${index + 1}</span>
                     <div style="display: flex; align-items: center;">
                         <span class="tourist-popup-child-age">${age} лет</span>
-                        <button type="button" class="tourist-popup-child-remove" onclick="removeChild(${index})" title="Удалить">×</button>
+                        <button type="button" class="tourist-popup-child-remove" onclick="removeTouristChild(${index})" title="Удалить">×</button>
                     </div>
                 `;
                 container.appendChild(childItem);

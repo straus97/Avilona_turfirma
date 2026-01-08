@@ -65,7 +65,7 @@ class HelpfulNewsController extends Controller
         });
         
         // Получение новостей с фильтрами
-        $query = News::select('id', 'title', 'link', 'image', 'description', 'pub_date')
+        $query = News::select('id', 'title', 'slug', 'link', 'image', 'description', 'pub_date')
             ->orderBy('pub_date', 'desc');
         
         $newsFilter = new NewsFilter($request->all());
