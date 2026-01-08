@@ -1,0 +1,243 @@
+/**
+ * Tour Search Widget Styles
+ * Компактный и современный виджет поиска туров
+ */
+
+.tour-search-widget {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.95) 0%, rgba(245, 124, 0, 0.95) 100%);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--box-shadow-lg);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.tour-search-widget .form-label {
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
+
+.tour-search-widget .modern-select,
+.tour-search-widget .modern-input {
+    background: rgba(255, 255, 255, 0.98);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    height: 42px;
+    padding: 0 var(--spacing-md);
+    transition: all var(--transition-fast);
+    width: 100%;
+}
+
+.tour-search-widget .modern-select:focus,
+.tour-search-widget .modern-input:focus {
+    background: white;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25);
+    outline: none;
+}
+
+.tour-search-widget .modern-btn {
+    height: 42px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-normal);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 100%;
+}
+
+.tour-search-widget .modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background: #FFD54F;
+}
+
+.tour-search-widget .modern-btn:active {
+    transform: translateY(0);
+}
+
+/* Tourist Dropdown */
+.tourist-popup-modal {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-lg);
+    z-index: 1000;
+    min-width: 280px;
+    animation: fadeIn var(--transition-fast);
+}
+
+.tourist-popup-content {
+    padding: var(--spacing-md);
+}
+
+.tourist-popup-section {
+    margin-bottom: var(--spacing-sm);
+}
+
+.tourist-popup-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) 0;
+}
+
+.tourist-popup-btn {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.tourist-popup-btn:hover {
+    background: #0288D1;
+    transform: scale(1.1);
+}
+
+.tourist-popup-btn:active {
+    transform: scale(0.95);
+}
+
+.tourist-popup-count {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 30px;
+    text-align: center;
+}
+
+.tourist-popup-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.tourist-popup-children {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.tourist-popup-child-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.tourist-popup-child-label {
+    flex: 1;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.tourist-popup-child-age {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.tourist-popup-add-child {
+    margin-top: var(--spacing-sm);
+}
+
+.tourist-popup-add-btn {
+    width: 100%;
+    padding: var(--spacing-sm);
+    background: transparent;
+    color: var(--secondary);
+    border: 2px solid var(--secondary);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tourist-popup-add-btn:hover {
+    background: var(--secondary);
+    color: white;
+}
+
+/* Age Selection Grid */
+.tourist-popup-age-grid {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gray-200);
+}
+
+.tourist-popup-age-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.tourist-popup-age-buttons {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--spacing-xs);
+}
+
+.tourist-popup-age-btn {
+    padding: var(--spacing-sm);
+    background: var(--gray-100);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tourist-popup-age-btn:hover {
+    background: var(--gray-200);
+    border-color: var(--secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tour-search-widget {
+        padding: var(--spacing-lg);
+    }
+    
+    .tourist-popup-age-buttons {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .tour-search-widget {
+        padding: var(--spacing-md);
+    }
+    
+    .tourist-popup-age-buttons {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

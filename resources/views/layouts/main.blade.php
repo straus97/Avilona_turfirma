@@ -45,7 +45,9 @@
           integrity="sha384-4LISF5TTJX/fLmGSxO53rV4miRxdg84mZsxmO8Rx5jGtp/LbrixFETvWa5a6sESd" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css">
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ asset('css/unified.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style_min.css') }}">
+    @yield('styles')
 </head>
 <body onload="initMap()">
 {{-- шапка сайта --}}
