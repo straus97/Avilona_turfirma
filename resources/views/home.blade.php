@@ -59,7 +59,7 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
+    z-index: 9999 !important;
     min-width: 300px;
     animation: fadeIn 0.2s ease;
 }
@@ -303,7 +303,7 @@
                     <div class="tour-search-widget mb-4">
                         <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                             <div class="card-body p-4">
-                                <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm">
+                                <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm" onsubmit="return validateTourSearchForm()">
                                     <!-- Основные поля в одну строку -->
                                     <div class="row g-3 align-items-center">
                                         <div class="col-md-2">
@@ -442,12 +442,13 @@
                     <div class="row">
                         @foreach($best_offers as $item_best_offers)
                             <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                                <div class="card">
+                                <div class="card h-100 d-flex flex-column">
                                     @if($item_best_offers->image)
                                     <img src="{{ asset($item_best_offers->image) }}" class="card-img-top"
-                                         alt="{{ $item_best_offers->title }}">
+                                         alt="{{ $item_best_offers->title }}"
+                                         style="height: 200px; object-fit: cover;">
                                     @endif
-                                    <div class="card-body">
+                                    <div class="card-body flex-grow-1">
                                         <h5 class="card-title">{{ $item_best_offers->title ?? 'Без названия' }}</h5>
                                         <p class="card-text">{!! Str::limit($item_best_offers->content ?? '', 100) !!}</p>
                                     </div>
@@ -457,7 +458,7 @@
                                     </div>
                                     <div class="card-footer">
                                         <small class=""><a href="#" onclick="openContactModal()"
-                                                           class="btn btn-primary">Связаться с менеджером</a></small>
+                                                           class="btn btn-primary btn-sm w-100">Связаться с менеджером</a></small>
                                     </div>
                                 </div>
                             </div>
@@ -505,20 +506,20 @@
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 mt-3">
                 @foreach($news as $item_news)
                     <div class="col-12 col-md-4 col-lg-3">
-                        <div class="card h-100">
+                        <div class="card h-100 d-flex flex-column">
                             @if($item_news->image)
                             <img src="{{ $item_news->image }}" class="card-img-top" alt="{{ $item_news->title ?? 'Новость' }}"
                                  style="height: 200px; object-fit: cover;">
                             @endif
-                            <div class="card-body">
+                            <div class="card-body flex-grow-1 d-flex flex-column">
                                 <h5 class="card-title">{{ $item_news->title ?? 'Без названия' }}</h5>
-                                <p class="card-text">{{ Str::limit($item_news->content ?? '', 150) }}</p>
-                                @if($item_news->slug)
-                                <a href="{{ route('helpful_news_id.index', $item_news->slug) }}"
-                                   class="btn btn-primary">Подробнее</a>
+                                <p class="card-text flex-grow-1">{{ Str::limit($item_news->description ?? $item_news->content ?? '', 100) }}</p>
+                                @if($item_news->link)
+                                <a href="{{ $item_news->link }}" target="_blank"
+                                   class="btn btn-primary btn-sm mt-auto">Подробнее</a>
                                 @endif
                             </div>
-                            <div class="card-footer text-muted">{{ $item_news->created_at ? $item_news->created_at->format('F j, Y') : '' }}</div>
+                            <div class="card-footer text-muted">{{ $item_news->pub_date ? Date::parse($item_news->pub_date)->format('j F Y г.') : '' }}</div>
                         </div>
                     </div>
                 @endforeach
@@ -530,10 +531,12 @@
                 <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
                     @foreach ($partners as $item_partner)
                         <div class="col">
-                            <div class="h-100">
+                            <div class="h-100 d-flex align-items-center justify-content-center bg-light rounded p-3" style="min-height: 120px;">
                                 @if($item_partner->logo_partner)
-                                <img src="{{ $item_partner->logo_partner }}" class="card-img-top p-3"
-                                     alt="{{ $item_partner->name_partner ?? 'Партнер' }} logo">
+                                <img src="{{ $item_partner->logo_partner }}" 
+                                     class="img-fluid"
+                                     alt="{{ $item_partner->name_partner ?? 'Партнер' }} logo"
+                                     style="max-height: 100px; max-width: 100%; object-fit: contain;">
                                 @endif
                             </div>
                         </div>
