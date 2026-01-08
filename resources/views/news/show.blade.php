@@ -1,8 +1,8 @@
 @extends('layouts.main')
 
-@section('title', $title)
-@section('meta_description', $meta_description)
-@section('meta_keywords', $meta_keywords)
+@section('title', $title ?? $id_news->title . ' - Новости | Авилона')
+@section('meta_description', $meta_description ?? Str::limit(strip_tags($id_news->description ?? ''), 160))
+@section('meta_keywords', $meta_keywords ?? 'новости, туризм, путешествия')
 
 @section('content')
     <main>
@@ -10,14 +10,87 @@
             <div class="row">
                 @include('includes.sidebar')
                 <div class="col-md-10">
-                    <h1 class="text-center">{{$id_news->title}}</h1>
-                    <hr>
-                    <div class="p_img">
-                        {!! $id_news->description !!}
-                        <a href="{{route('helpful_news.index')}}" class="float-end btn btn-primary">Вернуться</a>
-                    </div>
+                    <article class="news-article">
+                        <h1 class="text-center mb-4">{{ $id_news->title ?? 'Без названия' }}</h1>
+                        
+                        @if($id_news->image)
+                        <div class="text-center mb-4">
+                            <img src="{{ $id_news->image }}" 
+                                 class="img-fluid rounded shadow" 
+                                 alt="{{ $id_news->title }}"
+                                 style="max-height: 500px; object-fit: cover;">
+                        </div>
+                        @endif
+                        
+                        <div class="news-meta text-muted mb-4">
+                            <small>
+                                <i class="bi bi-calendar3"></i> 
+                                {{ $id_news->pub_date ? Date::parse($id_news->pub_date)->format('j F Y г.') : '' }}
+                            </small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="news-content">
+                            {!! $id_news->description !!}
+                        </div>
+                        
+                        @if($id_news->link)
+                        <div class="mt-4">
+                            <a href="{{ $id_news->link }}" 
+                               target="_blank" 
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-link-45deg"></i> Источник новости
+                            </a>
+                        </div>
+                        @endif
+                        
+                        <div class="mt-4">
+                            <a href="{{ route('helpful_news.index') }}" 
+                               class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Вернуться к новостям
+                            </a>
+                        </div>
+                    </article>
                 </div>
             </div>
         </div>
     </main>
+@endsection
+
+@section('styles')
+<style>
+.news-article {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.news-content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+.news-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+    border-radius: 8px;
+}
+
+.news-content p {
+    margin-bottom: 1rem;
+}
+
+.news-content h2,
+.news-content h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.news-meta {
+    font-size: 0.9rem;
+}
+</style>
 @endsection

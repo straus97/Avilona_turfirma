@@ -300,9 +300,9 @@
             <div class="row my-3">
                 <div class="col">
                     <!-- Современный виджет поиска туров -->
-                    <div class="tour-search-widget mb-4">
+                    <div class="tour-search-widget mb-4" style="position: relative; z-index: 100;">
                         <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <div class="card-body p-4">
+                            <div class="card-body p-4" style="overflow: visible;">
                                 <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm" onsubmit="return validateTourSearchForm()">
                                     <!-- Основные поля в одну строку -->
                                     <div class="row g-3 align-items-center">
@@ -477,19 +477,19 @@
             <div class="row">
                 @foreach($reviews as $item_reviews)
                     <div class="col-12 col-sm-6 col-md-6 col-lg-4 mb-3">
-                        <div class="card">
-                            <div class="card-body">
+                        <div class="card h-100 d-flex flex-column">
+                            <div class="card-body flex-grow-1">
                                 <div class="d-flex align-items-center mb-3">
                                     @if($item_reviews->image)
                                     <img src="{{ asset($item_reviews->image) }}" class="mr-2" alt="User Avatar"
-                                         style="width: 80px; height: 80px;">
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
                                     @endif
                                     <h5 class="card-title mb-0">{!! $item_reviews->name ?? 'Анонимный пользователь' !!}</h5>
                                 </div>
                                 <p class="content card-text">{!! Str::limit($item_reviews->content ?? '', 200) !!}</p>
                                 @if($item_reviews->content && strlen($item_reviews->content) > 200)
                                     <p class="full-content d-none">{!! $item_reviews->content !!}</p>
-                                    <button class="btn btn-primary read-more">Читать полностью</button>
+                                    <button class="btn btn-primary btn-sm read-more mt-2">Читать полностью</button>
                                 @endif
                             </div>
                             <div class="card-footer">
@@ -513,9 +513,9 @@
                             @endif
                             <div class="card-body flex-grow-1 d-flex flex-column">
                                 <h5 class="card-title">{{ $item_news->title ?? 'Без названия' }}</h5>
-                                <p class="card-text flex-grow-1">{{ Str::limit($item_news->description ?? $item_news->content ?? '', 100) }}</p>
+                                <p class="card-text flex-grow-1">{{ Str::limit(strip_tags($item_news->description ?? ''), 100) }}</p>
                                 @if($item_news->link)
-                                <a href="{{ $item_news->link }}" target="_blank"
+                                <a href="{{ route('helpful_news_id.index', $item_news->slug ?? '#') }}"
                                    class="btn btn-primary btn-sm mt-auto">Подробнее</a>
                                 @endif
                             </div>
