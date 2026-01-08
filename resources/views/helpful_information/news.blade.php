@@ -21,20 +21,20 @@
                     <div id="news-container" class="row">
                         @foreach ($news as $item)
                             <div class="col-sm-6 col-lg-4 mb-3">
-                                <div class="card">
+                                <div class="card h-100 d-flex flex-column">
                                     @if($item->image)
                                     <img data-src="{{ $item->image }}" class="card-img-top lazyload"
                                          alt="{{ $item->title ?? 'Новость' }}"
-                                         style="height: 250px;">
+                                         style="height: 200px; object-fit: cover;">
                                     @endif
-                                    <div class="card-body">
+                                    <div class="card-body flex-grow-1 d-flex flex-column">
                                         <h5 class="card-title">{{ $item->title ?? 'Без названия' }}</h5>
                                         @if($item->description)
-                                        <p class="card-text">{!! App\Helpers\TextHelper::formatNewsDescription($item->description) !!}</p>
+                                        <p class="card-text flex-grow-1">{!! App\Helpers\TextHelper::formatNewsDescription($item->description) !!}</p>
                                         @endif
                                         @if($item->slug)
                                         <a href="{{ route('helpful_news_id.index', $item->slug) }}"
-                                           class="btn btn-primary">Подробнее</a>
+                                           class="btn btn-primary mt-auto">Подробнее</a>
                                         @endif
                                     </div>
                                 </div>
