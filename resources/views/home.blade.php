@@ -987,12 +987,18 @@
             if (event) {
                 event.stopPropagation();
                 event.preventDefault();
+                event.stopImmediatePropagation();
             }
             childrenList.splice(index, 1);
             renderChildrenList();
             updateChildrenAgesHidden();
             updateTouristSummary();
             updatePopupSummary();
+            // Убеждаемся, что dropdown остается открытым
+            const dropdown = document.getElementById('touristDropdown');
+            if (dropdown) {
+                dropdown.style.display = 'block';
+            }
         };
 
         function renderChildrenList() {
@@ -1065,6 +1071,11 @@
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('touristDropdown');
             const input = document.getElementById('touristSummary');
+            
+            // Игнорируем клики на кнопки удаления детей
+            if (event.target && event.target.classList.contains('tourist-popup-child-remove')) {
+                return;
+            }
             
             // Проверяем, что клик был вне выпадающего списка и поля ввода
             if (dropdown && dropdown.style.display === 'block' && 
