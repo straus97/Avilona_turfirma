@@ -17,11 +17,13 @@
                     попробовать что-то, чего в жизни еще не было, осуществить то, о чем давно мечталось.</p>
                 <p>Позвольте себе воплотить в жизнь свои желания и идти навстречу новым приключениям.</p>
                 <hr>
+                @if(isset($awards) && $awards->count() > 0)
                 <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
                     @foreach ($awards as $item_partner)
                         <div class="col">
                             <div class="h-100">
-                                <img src="{{ $item_partner->image }}" class="card-img-top p-3" alt=""
+                                @if($item_partner->image)
+                                <img src="{{ $item_partner->image }}" class="card-img-top p-3" alt="{{ $item_partner->category ?? 'Награда' }}"
                                      data-bs-toggle="modal" data-bs-target="#partnerModal{{ $item_partner->id }}">
                                 <!-- Modal -->
                                 <div class="modal fade" id="partnerModal{{ $item_partner->id }}" tabindex="-1"
@@ -30,7 +32,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title"
-                                                    id="partnerModalLabel{{ $item_partner->id }}">{{ $item_partner->category }}</h5>
+                                                    id="partnerModalLabel{{ $item_partner->id }}">{{ $item_partner->category ?? 'Награда' }}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                         aria-label="Close"></button>
                                             </div>
@@ -40,10 +42,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     @endforeach
                 </div>
+                @else
+                <div class="alert alert-info">
+                    <p class="mb-0">Награды пока не добавлены в базу данных.</p>
+                </div>
+                @endif
             </div>
         </div>
     </main>

@@ -34,19 +34,31 @@
                         <span class="document-date">Дата обновления: 22 мая 2024 г.</span>
                     </div>
                     <hr>
+                    @if(isset($countries_image) && $countries_image->count() > 0)
                     <div class="row">
                         @foreach($countries_image as $item_countries_image)
                             <div class="col-md-4">
                                 <div class="card mb-4">
-                                    <img src="{{ $item_countries_image->image_small }}" class="card-img-top" alt="...">
+                                    @if($item_countries_image->image_small)
+                                    <img src="{{ $item_countries_image->image_small }}" class="card-img-top" alt="{{ $item_countries_image->title ?? 'Страна' }}">
+                                    @endif
                                     <div class="card-body text-center">
+                                        @if($item_countries_image->slug)
                                         <a href="{{ route('countries.show_countries_image', $item_countries_image->slug) }}"
-                                           class=""><h5 class="card-title">{{ $item_countries_image->title }}</h5></a>
+                                           class=""><h5 class="card-title">{{ $item_countries_image->title ?? 'Без названия' }}</h5></a>
+                                        @else
+                                        <h5 class="card-title">{{ $item_countries_image->title ?? 'Без названия' }}</h5>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
+                    @else
+                    <div class="alert alert-info">
+                        <p class="mb-0">Страны пока не добавлены в базу данных.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

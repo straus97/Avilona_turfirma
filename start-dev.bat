@@ -23,17 +23,17 @@ if not exist ".env" (
     copy .env.example .env >nul 2>&1
     if errorlevel 1 (
         echo APP_NAME=Avilona > .env
-        echo APP_ENV=local >> .env
-        echo APP_KEY= >> .env
-        echo APP_DEBUG=true >> .env
-        echo APP_URL=http://localhost:8000 >> .env
-        echo. >> .env
-        echo DB_CONNECTION=mysql >> .env
-        echo DB_HOST=127.0.0.1 >> .env
-        echo DB_PORT=3306 >> .env
-        echo DB_DATABASE=turfirma >> .env
-        echo DB_USERNAME=root >> .env
-        echo DB_PASSWORD= >> .env
+    echo APP_ENV=local >> .env
+    echo APP_KEY= >> .env
+    echo APP_DEBUG=true >> .env
+    echo APP_URL=http://localhost:8000 >> .env
+    echo. >> .env
+    echo DB_CONNECTION=mysql >> .env
+    echo DB_HOST=127.0.0.1 >> .env
+    echo DB_PORT=3306 >> .env
+    echo DB_DATABASE=turfirma >> .env
+    echo DB_USERNAME=root >> .env
+    echo DB_PASSWORD= >> .env
     )
     echo .env file created!
     echo.

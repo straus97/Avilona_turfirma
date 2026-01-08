@@ -13,24 +13,32 @@
                     <h1 class="text-center" style="font-size: 2rem;">Немного о
                         стране {{$id_countries_image->title}}</h1>
                     <hr>
+                    @if($id_countries_image->image_large)
                     <div class="row justify-content-center">
                         <img src="{{ $id_countries_image->image_large }}" class="card-img-top w-75"
-                             alt="{{$id_countries_image->title}}">
+                             alt="{{$id_countries_image->title ?? 'Страна'}}">
                     </div>
                     <hr>
+                    @endif
                     <div class="row">
                         <div>
+                            @if($id_countries_image->description)
                             <p>{!! $id_countries_image->description !!}</p>
+                            @endif
+                            @if($id_countries_image->documents_url)
                             <h3>Памятка туристу</h3>
                             <div class="document-container">
                                 <img src="{{ asset('/img/pdf.png') }}" alt="PDF"
                                      style="width: 40px; vertical-align: middle;">
                                 <a href="{{ $id_countries_image->documents_url }}" target="_blank">
-                                    {{$id_countries_image->title}}. Памятка туристу
+                                    {{$id_countries_image->title ?? 'Страна'}}. Памятка туристу
                                 </a>
+                                @if($id_countries_image->updated_at)
                                 <span
                                     class="document-date">Дата обновления: {{Date::parse($id_countries_image->updated_at)->format('j F Y г.')}}</span>
+                                @endif
                             </div>
+                            @endif
                             <a href="{{route('countries.index')}}" class="float-end btn btn-primary">Вернуться</a>
                         </div>
                     </div>

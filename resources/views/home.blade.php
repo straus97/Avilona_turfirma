@@ -435,6 +435,7 @@
                 </div>
             </div>
             <!-- Best offers -->
+            @if(isset($best_offers) && $best_offers->count() > 0)
             <div class="row" id="block_best_offers">
                 <div class="col-12">
                     <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Лучшие предложения</h1>
@@ -442,15 +443,17 @@
                         @foreach($best_offers as $item_best_offers)
                             <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
                                 <div class="card">
+                                    @if($item_best_offers->image)
                                     <img src="{{ asset($item_best_offers->image) }}" class="card-img-top"
                                          alt="{{ $item_best_offers->title }}">
+                                    @endif
                                     <div class="card-body">
-                                        <h5 class="card-title">{{ $item_best_offers->title }}</h5>
-                                        <p class="card-text">{!! Str::limit($item_best_offers->content, 100) !!}</p>
+                                        <h5 class="card-title">{{ $item_best_offers->title ?? 'Без названия' }}</h5>
+                                        <p class="card-text">{!! Str::limit($item_best_offers->content ?? '', 100) !!}</p>
                                     </div>
                                     <div class="card-footer">
                                         <small
-                                            class="text-muted">{{ Date::parse($item_best_offers->created_at)->format('j F Y г.') }}</small>
+                                            class="text-muted">{{ $item_best_offers->created_at ? Date::parse($item_best_offers->created_at)->format('j F Y г.') : '' }}</small>
                                     </div>
                                     <div class="card-footer">
                                         <small class=""><a href="#" onclick="openContactModal()"
@@ -462,7 +465,9 @@
                     </div>
                 </div>
             </div>
+            @endif
             <!-- Reviews of our customers -->
+            @if(isset($reviews) && $reviews->count() > 0)
             <div class="row" id="block_reviews">
                 <div class="col-md-12">
                     <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Отзывы</h1>
@@ -474,55 +479,68 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
+                                    @if($item_reviews->image)
                                     <img src="{{ asset($item_reviews->image) }}" class="mr-2" alt="User Avatar"
                                          style="width: 80px; height: 80px;">
-                                    <h5 class="card-title mb-0">{!! $item_reviews->name !!}</h5>
+                                    @endif
+                                    <h5 class="card-title mb-0">{!! $item_reviews->name ?? 'Анонимный пользователь' !!}</h5>
                                 </div>
-                                <p class="content card-text">{!! Str::limit($item_reviews->content, 200) !!}</p>
-                                @if(strlen($item_reviews->content) > 200)
+                                <p class="content card-text">{!! Str::limit($item_reviews->content ?? '', 200) !!}</p>
+                                @if($item_reviews->content && strlen($item_reviews->content) > 200)
                                     <p class="full-content d-none">{!! $item_reviews->content !!}</p>
                                     <button class="btn btn-primary read-more">Читать полностью</button>
                                 @endif
                             </div>
                             <div class="card-footer">
                                 <small
-                                    class="text-muted">{{ Date::parse($item_reviews->created_at)->format('j F Y г.') }}</small>
+                                    class="text-muted">{{ $item_reviews->created_at ? Date::parse($item_reviews->created_at)->format('j F Y г.') : '' }}</small>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
+            @endif
+            @if(isset($news) && $news->count() > 0)
             <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Новости</h1>
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 mt-3">
                 @foreach($news as $item_news)
                     <div class="col-12 col-md-4 col-lg-3">
                         <div class="card h-100">
-                            <img src="{{ $item_news->image }}" class="card-img-top" alt="{{ $item_news->title }}"
-                                 style="height: 200px;">
+                            @if($item_news->image)
+                            <img src="{{ $item_news->image }}" class="card-img-top" alt="{{ $item_news->title ?? 'Новость' }}"
+                                 style="height: 200px; object-fit: cover;">
+                            @endif
                             <div class="card-body">
-                                <h5 class="card-title">{{ $item_news->title }}</h5>
-                                <p class="card-text">{{ Str::limit($item_news->content, 150) }}</p>
+                                <h5 class="card-title">{{ $item_news->title ?? 'Без названия' }}</h5>
+                                <p class="card-text">{{ Str::limit($item_news->content ?? '', 150) }}</p>
+                                @if($item_news->slug)
                                 <a href="{{ route('helpful_news_id.index', $item_news->slug) }}"
                                    class="btn btn-primary">Подробнее</a>
+                                @endif
                             </div>
-                            <div class="card-footer text-muted">{{ $item_news->created_at->format('F j, Y') }}</div>
+                            <div class="card-footer text-muted">{{ $item_news->created_at ? $item_news->created_at->format('F j, Y') : '' }}</div>
                         </div>
                     </div>
                 @endforeach
             </div>
+            @endif
+            @if(isset($partners) && $partners->count() > 0)
             <div class="container my-3">
                 <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Наши партнеры</h1>
                 <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
                     @foreach ($partners as $item_partner)
                         <div class="col">
                             <div class="h-100">
+                                @if($item_partner->logo_partner)
                                 <img src="{{ $item_partner->logo_partner }}" class="card-img-top p-3"
-                                     alt="{{ $item_partner->name_partner }} logo">
+                                     alt="{{ $item_partner->name_partner ?? 'Партнер' }} logo">
+                                @endif
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
+            @endif
             <div class="container py-5">
                 <div class="row">
                     <div class="col-md-6">

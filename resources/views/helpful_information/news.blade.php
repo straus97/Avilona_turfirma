@@ -17,18 +17,25 @@
                 @include('includes.sidebar_and_sorted_news')
                 <div class="col-12 col-lg-10">
                     <h1 class="text-center mb-3" style="font-size: 2rem;">Новости</h1>
+                    @if(isset($news) && $news->count() > 0)
                     <div id="news-container" class="row">
                         @foreach ($news as $item)
                             <div class="col-sm-6 col-lg-4 mb-3">
                                 <div class="card">
+                                    @if($item->image)
                                     <img data-src="{{ $item->image }}" class="card-img-top lazyload"
-                                         alt="{{ $item->title }}"
+                                         alt="{{ $item->title ?? 'Новость' }}"
                                          style="height: 250px;">
+                                    @endif
                                     <div class="card-body">
-                                        <h5 class="card-title">{{ $item->title }}</h5>
+                                        <h5 class="card-title">{{ $item->title ?? 'Без названия' }}</h5>
+                                        @if($item->description)
                                         <p class="card-text">{!! App\Helpers\TextHelper::formatNewsDescription($item->description) !!}</p>
+                                        @endif
+                                        @if($item->slug)
                                         <a href="{{ route('helpful_news_id.index', $item->slug) }}"
                                            class="btn btn-primary">Подробнее</a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -39,6 +46,11 @@
                             {{ $news->appends(request()->query())->links() }}
                         </ul>
                     </nav>
+                    @else
+                    <div class="alert alert-info">
+                        <p class="mb-0">Новости пока не добавлены в базу данных.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

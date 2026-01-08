@@ -17,29 +17,39 @@
             <div class="row">
                 @include('includes.sidebar')
                 <div class="col-12 col-md-10">
-                    @foreach($reviews as $item_review)
-                        <div class="row mb-4">
-                            <div class="col-md-1">
-                                <img src="{{ asset($item_review->image) }}" class="img-fluid rounded-circle"
-                                     alt="User Icon">
+                    @if(isset($reviews) && $reviews->count() > 0)
+                        @foreach($reviews as $item_review)
+                            <div class="row mb-4">
+                                <div class="col-md-1">
+                                    @if($item_review->image)
+                                    <img src="{{ asset($item_review->image) }}" class="img-fluid rounded-circle"
+                                         alt="User Icon">
+                                    @endif
+                                </div>
+                                <div class="col-md-11">
+                                    <h5>{{ $item_review->name ?? 'Анонимный пользователь' }}</h5>
+                                    <p class="text-muted">{{ $item_review->created_at ? Date::parse($item_review->created_at)->format('j F Y г.') : '' }}</p>
+                                    @if($item_review->title)
+                                    <h6>{{ $item_review->title }}</h6>
+                                    @endif
+                                    <p class="content">{{ Str::limit($item_review->content ?? '', 200) }}</p>
+                                    @if($item_review->content && strlen($item_review->content) > 200)
+                                        <p class="full-content d-none">{{ $item_review->content }}</p>
+                                        <button class="btn btn-primary read-more">Читать полностью</button>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="col-md-11">
-                                <h5>{{ $item_review->name }}</h5>
-                                <p class="text-muted">{{ Date::parse($item_review->created_at)->format('j F Y г.') }}</p>
-                                <h6>{{ $item_review->title }}</h6>
-                                <p class="content">{{ Str::limit($item_review->content, 200) }}</p>
-                                @if(strlen($item_review->content) > 200)
-                                    <p class="full-content d-none">{{ $item_review->content }}</p>
-                                    <button class="btn btn-primary read-more">Читать полностью</button>
-                                @endif
-                            </div>
+                        @endforeach
+                        <nav class="d-flex justify-content-center mt-3">
+                            <ul class="pagination">
+                                {{ $reviews->links() }}
+                            </ul>
+                        </nav>
+                    @else
+                        <div class="alert alert-info">
+                            <p class="mb-0">Отзывы пока не добавлены в базу данных.</p>
                         </div>
-                    @endforeach
-                    <nav class="d-flex justify-content-center mt-3">
-                        <ul class="pagination">
-                            {{ $reviews->links() }}
-                        </ul>
-                    </nav>
+                    @endif
                     <div class="row mb-4">
                         <h3>Напишите нам!</h3>
                         <p>Уважаемые туристы! Если Вы уже отдохнули с турфирмой Авилона, расскажите о Ваших
