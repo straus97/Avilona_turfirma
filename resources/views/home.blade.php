@@ -213,7 +213,7 @@
 }
 
 .tourist-popup-age-btn {
-    background: #f8f9fa;
+    background: #ffffff;
     border: 1px solid #dee2e6;
     border-radius: 3px;
     padding: 4px 6px;
@@ -221,11 +221,13 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
+    color: #333333;
 }
 
 .tourist-popup-age-btn:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
 }
 
 .tourist-popup-age-btn.selected {
@@ -514,8 +516,8 @@
                             <div class="card-body flex-grow-1 d-flex flex-column">
                                 <h5 class="card-title">{{ $item_news->title ?? 'Без названия' }}</h5>
                                 <p class="card-text flex-grow-1">{{ Str::limit(strip_tags($item_news->description ?? ''), 100) }}</p>
-                                @if($item_news->link)
-                                <a href="{{ route('helpful_news_id.index', $item_news->slug ?? '#') }}"
+                                @if($item_news->slug)
+                                <a href="{{ route('helpful_news_id.index', $item_news->slug) }}"
                                    class="btn btn-primary btn-sm mt-auto">Подробнее</a>
                                 @endif
                             </div>
@@ -979,6 +981,32 @@
         function hideAgeSelection() {
             document.getElementById('ageSelectionGrid').style.display = 'none';
             currentChildIndex = -1;
+        }
+
+        function selectAge(age) {
+            if (currentChildIndex === -1) {
+                // Добавляем нового ребенка
+                if (childrenList.length < 10) {
+                    childrenList.push(age);
+                }
+            } else {
+                // Изменяем возраст существующего ребенка
+                childrenList[currentChildIndex] = age;
+            }
+            
+            hideAgeSelection();
+            renderChildrenList();
+            updateChildrenAgesHidden();
+            updateTouristSummary();
+            updatePopupSummary();
+        }
+
+        function removeChild(index) {
+            childrenList.splice(index, 1);
+            renderChildrenList();
+            updateChildrenAgesHidden();
+            updateTouristSummary();
+            updatePopupSummary();
         }
 
         function renderChildrenList() {
