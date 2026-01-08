@@ -14,8 +14,24 @@ Route::group(['namespace' => 'Tour'], function () {
     Route::get('/tours', 'IndexController')->name('tours.index');
 });
 
-Route::group(['namespace' => 'Booking'], function () {
-    Route::post('/bookings', 'StoreController')->name('bookings.store');
+// Заявки (доступны только авторизованным пользователям)
+Route::middleware('auth')->group(function () {
+    Route::resource('bookings', \App\Http\Controllers\Booking\BookingController::class);
+    Route::post('bookings/{booking}/assign-manager', [\App\Http\Controllers\Booking\BookingController::class, 'assignManager'])
+        ->name('bookings.assign-manager')->middleware('role:admin');
+    Route::post('bookings/{booking}/confirm', [\App\Http\Controllers\Booking\BookingController::class, 'confirm'])
+        ->name('bookings.confirm')->middleware('role:manager,admin');
+    Route::post('bookings/{booking}/cancel', [\App\Http\Controllers\Booking\BookingController::class, 'cancel'])
+        ->name('bookings.cancel');
+    Route::post('bookings/{booking}/complete', [\App\Http\Controllers\Booking\BookingController::class, 'complete'])
+        ->name('bookings.complete')->middleware('role:manager,admin');
+    
+    // Сообщения
+    Route::get('messages', [\App\Http\Controllers\Message\MessageController::class, 'index'])->name('messages.index');
+    Route::post('messages', [\App\Http\Controllers\Message\MessageController::class, 'store'])->name('messages.store');
+    Route::post('messages/{message}/read', [\App\Http\Controllers\Message\MessageController::class, 'markAsRead'])->name('messages.read');
+    Route::get('messages/unread-count', [\App\Http\Controllers\Message\MessageController::class, 'unreadCount'])->name('messages.unread-count');
+    Route::delete('messages/{message}', [\App\Http\Controllers\Message\MessageController::class, 'destroy'])->name('messages.destroy');
 });
 
 Route::group(['namespace' => 'Company'], function () {
