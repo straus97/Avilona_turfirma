@@ -16,7 +16,7 @@ class IndexController extends Controller
         $cacheTime = 3600; // 1 час для главной страницы
         
         $news = Cache::remember('home_news', $cacheTime, function () {
-            return News::select('id', 'title', 'link', 'description', 'image', 'pub_date')
+            return News::select('id', 'title', 'slug', 'link', 'description', 'image', 'pub_date')
                 ->orderBy('pub_date', 'desc')
                 ->take(4)
                 ->get();

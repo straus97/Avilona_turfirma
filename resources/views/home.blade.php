@@ -921,24 +921,6 @@
             }
         };
 
-        window.removeChild = function(index) {
-            childrenList.splice(index, 1);
-            renderChildrenList();
-            updateTouristSummary();
-            updatePopupSummary();
-        };
-
-        window.selectAge = function(age) {
-            if (currentChildIndex >= 0) {
-                childrenList[currentChildIndex] = parseInt(age);
-                hideAgeSelection();
-                renderChildrenList();
-                updateChildrenAgesHidden();
-                updateTouristSummary();
-                updatePopupSummary();
-            }
-        };
-
         function showAgeSelection() {
             const ageGrid = document.getElementById('ageSelectionGrid');
             const ageButtons = document.getElementById('ageButtons');
@@ -983,7 +965,7 @@
             currentChildIndex = -1;
         }
 
-        function selectAge(age) {
+        window.selectAge = function(age) {
             if (currentChildIndex === -1) {
                 // Добавляем нового ребенка
                 if (childrenList.length < 10) {
@@ -999,15 +981,15 @@
             updateChildrenAgesHidden();
             updateTouristSummary();
             updatePopupSummary();
-        }
+        };
 
-        function removeChild(index) {
+        window.removeChild = function(index) {
             childrenList.splice(index, 1);
             renderChildrenList();
             updateChildrenAgesHidden();
             updateTouristSummary();
             updatePopupSummary();
-        }
+        };
 
         function renderChildrenList() {
             const container = document.getElementById('childrenList');
