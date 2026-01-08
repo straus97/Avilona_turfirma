@@ -8,11 +8,23 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
             ],
-            refresh: true,
+            refresh: [
+                'resources/views/**',
+                'app/Http/Controllers/**',
+                'routes/**',
+            ],
         }),
     ],
+    server: {
+        hmr: {
+            host: 'localhost',
+        },
+        watch: {
+            usePolling: true,
+        },
+    },
     build: {
-        outDir: 'public/build',  // Указывает, где хранить собранные файлы
+        outDir: 'public/build',
         manifest: true,
     },
     publicDir: 'public',
