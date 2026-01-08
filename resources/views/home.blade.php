@@ -1067,6 +1067,33 @@
             renderChildrenList();
             updatePopupSummary();
         });
+        
+        // Валидация формы поиска туров
+        window.validateTourSearchForm = function() {
+            const nightsMin = document.querySelector('select[name="nights_min"]').value;
+            const nightsMax = document.querySelector('select[name="nights_max"]').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            
+            // Проверка дат
+            if (!startDate || !endDate) {
+                alert('Пожалуйста, выберите даты вылета');
+                return false;
+            }
+            
+            // Проверка количества ночей
+            if (!nightsMin && !nightsMax) {
+                alert('Пожалуйста, выберите количество ночей (от и до)');
+                return false;
+            }
+            
+            if (nightsMin && nightsMax && parseInt(nightsMin) > parseInt(nightsMax)) {
+                alert('Количество ночей "от" не может быть больше чем "до"');
+                return false;
+            }
+            
+            return true;
+        };
         });
     </script>
 @endsection
