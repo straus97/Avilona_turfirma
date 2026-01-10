@@ -26,6 +26,9 @@ class ProfileController extends Controller
         $pendingBookings = Booking::where('user_id', $user->id)
             ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
             ->count();
+        $confirmedBookings = Booking::where('user_id', $user->id)
+            ->where('status', Booking::STATUS_CONFIRMED)
+            ->count();
         $activeBookings = Booking::where('user_id', $user->id)
             ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED])
             ->count();
@@ -49,6 +52,7 @@ class ProfileController extends Controller
             'user',
             'bookingsCount',
             'pendingBookings',
+            'confirmedBookings',
             'activeBookings',
             'completedBookings',
             'recentBookings',

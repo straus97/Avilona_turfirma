@@ -348,13 +348,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Переключение между существующим и новым клиентом
     const isNewClientCheckbox = document.getElementById('isNewClient');
-    const existingClientBlock = document.getElementById('existingClientBlock');
-    const newClientBlock = document.getElementById('newClientBlock');
-    const clientIdSelect = document.getElementById('client_id');
-    const clientNameInput = document.getElementById('client_name');
-
+    
     if (isNewClientCheckbox) {
+        const existingClientBlock = document.getElementById('existingClientBlock');
+        const newClientBlock = document.getElementById('newClientBlock');
+        const clientIdSelect = document.getElementById('client_id');
+        const clientNameInput = document.getElementById('client_name');
+        const clientEmailInput = document.getElementById('client_email');
+
         isNewClientCheckbox.addEventListener('change', function() {
+            console.log('Checkbox changed:', this.checked);
             if (this.checked) {
                 existingClientBlock.style.display = 'none';
                 newClientBlock.style.display = 'block';
@@ -367,7 +370,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 clientIdSelect.setAttribute('required', 'required');
                 clientNameInput.removeAttribute('required');
                 clientNameInput.value = '';
-                document.getElementById('client_email').value = '';
+                if (clientEmailInput) {
+                    clientEmailInput.value = '';
+                }
             }
         });
     }
