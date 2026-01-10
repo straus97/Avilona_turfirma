@@ -11,6 +11,7 @@
     
     <div class="info-box">
         <p><strong>Номер заявки:</strong> #{{ $booking->id }}</p>
+        <p><strong>Город вылета:</strong> {{ $booking->departure_city }}</p>
         <p><strong>Направление:</strong> {{ $booking->destination_country }}</p>
         <p><strong>Новый статус:</strong> 
             <span class="status-badge status-{{ $booking->status }}">

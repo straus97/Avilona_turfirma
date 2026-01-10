@@ -12,6 +12,7 @@
     <div class="info-box">
         <p><strong>От кого:</strong> {{ $message->sender->name }}</p>
         <p><strong>Заявка:</strong> #{{ $message->booking_id }}</p>
+        <p><strong>Город вылета:</strong> {{ $message->booking->departure_city }}</p>
         <p><strong>Направление:</strong> {{ $message->booking->destination_country }}</p>
         <p><strong>Дата:</strong> {{ $message->created_at->format('d.m.Y H:i') }}</p>
     </div>

@@ -185,16 +185,24 @@
 
                             <div class="d-flex flex-wrap gap-2">
                                 <!-- Кнопки для туриста -->
-                                @if(auth()->user()->isTourist() && $booking->status === App\Models\Booking::STATUS_NEW)
-                                    <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">
-                                        <i class="bi bi-pencil"></i> Редактировать
-                                    </a>
-                                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
-                                        @csrf
-                                        <button type="submit" class="btn btn-danger">
-                                            <i class="bi bi-x-circle"></i> Отменить заявку
-                                        </button>
-                                    </form>
+                                @if(auth()->user()->isTourist())
+                                    @can('cancel', $booking)
+                                        <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-x-circle"></i> Отменить заявку
+                                            </button>
+                                        </form>
+                                    @endcan
+                                    @if($booking->status === App\Models\Booking::STATUS_NEW && !$booking->manager_id)
+                                        <small class="text-muted align-self-center">
+                                            <i class="bi bi-info-circle"></i> Вы можете отменить заявку до назначения менеджера
+                                        </small>
+                                    @elseif($booking->manager_id)
+                                        <small class="text-muted align-self-center">
+                                            <i class="bi bi-info-circle"></i> Заявка взята в работу менеджером. Для отмены свяжитесь с менеджером.
+                                        </small>
+                                    @endif
                                 @endif
 
                                 <!-- Кнопки для менеджера/админа -->

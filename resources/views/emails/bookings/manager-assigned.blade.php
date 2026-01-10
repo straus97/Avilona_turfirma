@@ -14,6 +14,7 @@
         @if($booking->manager->email)
             <p><strong>Email:</strong> <a href="mailto:{{ $booking->manager->email }}">{{ $booking->manager->email }}</a></p>
         @endif
+        <p><strong>Город вылета:</strong> {{ $booking->departure_city }}</p>
         <p><strong>Направление:</strong> {{ $booking->destination_country }}
             @if($booking->destination_city)
                 - {{ $booking->destination_city }}
