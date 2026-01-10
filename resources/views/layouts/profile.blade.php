@@ -213,10 +213,10 @@
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="{{route('account')}}" class="brand-link">
-            <img src="{{asset('dist/img/AdminLTELogo.png')}}" alt="AdminLTE Logo"
-                 class="brand-image img-circle elevation-3" style="opacity: .8">
-            <span class="brand-text font-weight-light">Админка</span>
+        <a href="{{route('profile.dashboard')}}" class="brand-link">
+            <img src="{{asset('img/logo.png')}}" alt="Авилона"
+                 class="brand-image elevation-3" style="opacity: .8">
+            <span class="brand-text font-weight-light">Авилона</span>
         </a>
 
         <!-- Sidebar -->
@@ -269,133 +269,57 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-header">МЕНЮ</li>
+                    <li class="nav-header">ЛИЧНЫЙ КАБИНЕТ</li>
                     <li class="nav-item">
-                        <a href="{{route('account')}}" class="nav-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                 class="bi bi-person-bounding-box ml-1 mr-2" viewBox="0 0 16 16">
-                                <path
-                                    d="M1.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 1-1 0v-3A1.5 1.5 0 0 1 1.5 0h3a.5.5 0 0 1 0 1h-3zM11 .5a.5.5 0 0 1 .5-.5h3A1.5 1.5 0 0 1 16 1.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 1-.5-.5zM.5 11a.5.5 0 0 1 .5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 1 0 1h-3A1.5 1.5 0 0 1 0 14.5v-3a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 1 .5-.5z"/>
-                                <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                            </svg>
+                        <a href="{{route('profile.dashboard')}}" class="nav-link {{ request()->routeIs('profile.dashboard') ? 'active' : '' }}">
+                            <i class="bi bi-speedometer2 ml-1 mr-2"></i>
+                            <p>Главная</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{route('profile.bookings')}}" class="nav-link {{ request()->routeIs('profile.bookings') ? 'active' : '' }}">
+                            <i class="bi bi-bookmark ml-1 mr-2"></i>
+                            <p>Мои заявки</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{route('profile.chat')}}" class="nav-link {{ request()->routeIs('profile.chat') ? 'active' : '' }}">
+                            <i class="bi bi-chat-dots ml-1 mr-2"></i>
                             <p>
-                                Профиль
+                                Чат с менеджером
+                                @php
+                                    $unreadCount = \App\Models\Message::where('receiver_id', Auth::id())
+                                        ->where('is_read', false)
+                                        ->count();
+                                @endphp
+                                @if($unreadCount > 0)
+                                    <span class="badge badge-danger right">{{ $unreadCount }}</span>
+                                @endif
                             </p>
                         </a>
                     </li>
-                    {{--                    @if(Auth::user()->hasRole('admin'))--}}
                     <li class="nav-item">
-                        <a href="{{route('message')}}" class="nav-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                 class="bi bi-envelope-paper ml-1 mr-2" viewBox="0 0 16 16">
-                                <path
-                                    d="M4 0a2 2 0 0 0-2 2v1.133l-.941.502A2 2 0 0 0 0 5.4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5.4a2 2 0 0 0-1.059-1.765L14 3.133V2a2 2 0 0 0-2-2H4Zm10 4.267.47.25A1 1 0 0 1 15 5.4v.817l-1 .6v-2.55Zm-1 3.15-3.75 2.25L8 8.917l-1.25.75L3 7.417V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v5.417Zm-11-.6-1-.6V5.4a1 1 0 0 1 .53-.882L2 4.267v2.55Zm13 .566v5.734l-4.778-2.867L15 7.383Zm-.035 6.88A1 1 0 0 1 14 15H2a1 1 0 0 1-.965-.738L8 10.083l6.965 4.18ZM1 13.116V7.383l4.778 2.867L1 13.117Z"/>
-                            </svg>
-                            <p>
-                                Сообщения
-                                <span class="badge badge-info right">2</span>
-                            </p>
-                        </a>
-                    </li>
-                    {{--                    @endif--}}
-                    <li class="nav-item">
-                        <a href="pages/gallery.html" class="nav-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                 class="bi bi-card-checklist ml-1 mr-2" viewBox="0 0 16 16">
-                                <path
-                                    d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
-                                <path
-                                    d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
-                            </svg>
-                            <p>
-                                Заявки
-                            </p>
+                        <a href="{{route('profile.documents')}}" class="nav-link {{ request()->routeIs('profile.documents') ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark-text ml-1 mr-2"></i>
+                            <p>Документы</p>
                         </a>
                     </li>
                     @auth
                         @if(auth()->user()->roles->contains('role', 'admin'))
+                            <li class="nav-header">АДМИНИСТРИРОВАНИЕ</li>
                             <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-person-check ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514ZM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
-                                        <path
-                                            d="M8.256 14a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10c.26 0 .507.009.74.025.226-.341.496-.65.804-.918C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4s1 1 1 1h5.256Z"/>
-                                    </svg>
-                                    <p>
-                                        Коллектив
-                                    </p>
+                                <a href="{{ route('admin.dashboard') }}" class="nav-link">
+                                    <i class="bi bi-shield-check ml-1 mr-2"></i>
+                                    <p>Админ панель</p>
                                 </a>
                             </li>
+                        @endif
+                        @if(auth()->user()->roles->contains('role', 'manager') || auth()->user()->roles->contains('role', 'admin'))
+                            <li class="nav-header">УПРАВЛЕНИЕ</li>
                             <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-layout-text-window-reverse ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M13 6.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5zm0 3a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5zm-.5 2.5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1h5z"/>
-                                        <path
-                                            d="M14 0a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12zM2 1a1 1 0 0 0-1 1v1h14V2a1 1 0 0 0-1-1H2zM1 4v10a1 1 0 0 0 1 1h2V4H1zm4 0v11h9a1 1 0 0 0 1-1V4H5z"/>
-                                    </svg>
-                                    <p>
-                                        Отзывы
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-newspaper ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M0 2.5A1.5 1.5 0 0 1 1.5 1h11A1.5 1.5 0 0 1 14 2.5v10.528c0 .3-.05.654-.238.972h.738a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 1 1 0v9a1.5 1.5 0 0 1-1.5 1.5H1.497A1.497 1.497 0 0 1 0 13.5v-11zM12 14c.37 0 .654-.211.853-.441.092-.106.147-.279.147-.531V2.5a.5.5 0 0 0-.5-.5h-11a.5.5 0 0 0-.5.5v11c0 .278.223.5.497.5H12z"/>
-                                        <path
-                                            d="M2 3h10v2H2V3zm0 3h4v3H2V6zm0 4h4v1H2v-1zm0 2h4v1H2v-1zm5-6h2v1H7V6zm3 0h2v1h-2V6zM7 8h2v1H7V8zm3 0h2v1h-2V8zm-3 2h2v1H7v-1zm3 0h2v1h-2v-1zm-3 2h2v1H7v-1zm3 0h2v1h-2v-1z"/>
-                                    </svg>
-                                    <p>
-                                        Интересные статьи
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-newspaper ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M0 2.5A1.5 1.5 0 0 1 1.5 1h11A1.5 1.5 0 0 1 14 2.5v10.528c0 .3-.05.654-.238.972h.738a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 1 1 0v9a1.5 1.5 0 0 1-1.5 1.5H1.497A1.497 1.497 0 0 1 0 13.5v-11zM12 14c.37 0 .654-.211.853-.441.092-.106.147-.279.147-.531V2.5a.5.5 0 0 0-.5-.5h-11a.5.5 0 0 0-.5.5v11c0 .278.223.5.497.5H12z"/>
-                                        <path
-                                            d="M2 3h10v2H2V3zm0 3h4v3H2V6zm0 4h4v1H2v-1zm0 2h4v1H2v-1zm5-6h2v1H7V6zm3 0h2v1h-2V6zM7 8h2v1H7V8zm3 0h2v1h-2V8zm-3 2h2v1H7v-1zm3 0h2v1h-2v-1zm-3 2h2v1H7v-1zm3 0h2v1h-2v-1z"/>
-                                    </svg>
-                                    <p>
-                                        Специальные предложения
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-star ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
-                                    </svg>
-                                    <p>
-                                        Наши достижения
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="pages/gallery.html" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                                         class="bi bi-journal-text ml-1 mr-2" viewBox="0 0 16 16">
-                                        <path
-                                            d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                                        <path
-                                            d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2z"/>
-                                        <path
-                                            d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
-                                    </svg>
-                                    <p>
-                                        Пожелания
-                                    </p>
+                                <a href="{{ route('manager.dashboard') }}" class="nav-link">
+                                    <i class="bi bi-briefcase ml-1 mr-2"></i>
+                                    <p>Панель менеджера</p>
                                 </a>
                             </li>
                         @endif

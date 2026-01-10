@@ -103,19 +103,40 @@ Route::group(['namespace' => 'Captcha'], function () {
 });
 
 // Маршруты для всех авторизованных пользователей (tourist, manager, admin)
-Route::middleware(['auth', 'verified', 'role:tourist,manager,admin'])->group(function () {
-    Route::get('/profile/settings', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile/settings', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile/settings', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::middleware(['auth', 'verified', 'role:tourist,manager,admin'])->prefix('profile')->name('profile.')->group(function () {
+    // Главная страница личного кабинета
+    Route::get('/dashboard', [ProfileController::class, 'dashboard'])->name('dashboard');
+    
+    // Заявки туриста
+    Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
+    
+    // Чат с менеджером
+    Route::get('/chat/{bookingId?}', [ProfileController::class, 'chat'])->name('chat');
+    
+    // Документы
+    Route::get('/documents', [ProfileController::class, 'documents'])->name('documents');
+    Route::post('/documents/{booking}/upload', [ProfileController::class, 'uploadDocument'])->name('upload-document');
+    
+    // Настройки профиля
+    Route::get('/settings', [ProfileController::class, 'edit'])->name('edit');
+    Route::patch('/settings', [ProfileController::class, 'update'])->name('update');
+    Route::delete('/settings', [ProfileController::class, 'destroy'])->name('destroy');
 
-    Route::get('/profile/account', function () {
-        return view('profile.account');
-    })->name('account');
-
-    Route::get('/profile/message', function () {
-        return view('profile.message');
-    })->name('message');
+    // Старые маршруты для обратной совместимости
+    Route::get('/account', [ProfileController::class, 'dashboard'])->name('account.legacy');
+    Route::get('/message', function () {
+        return redirect()->route('profile.chat');
+    })->name('message.legacy');
 });
+
+// Редирект со старого маршрута account на новый
+Route::middleware(['auth'])->get('/account', function () {
+    return redirect()->route('profile.dashboard');
+})->name('account');
+
+Route::middleware(['auth'])->get('/message', function () {
+    return redirect()->route('profile.chat');
+})->name('message');
 
 // Маршруты только для менеджеров и администраторов
 Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
