@@ -22,24 +22,30 @@
 
 ### 2. 👥 Личные кабинеты - создание представлений
 **Приоритет:** Высокий  
-**Статус:** Backend готов, нужны views  
+**Статус:** Кабинет туриста завершен ✅  
 **Оценка:** 5-7 дней
 
-#### 2.1. Кабинет туриста
-**Что нужно создать:**
-- [ ] `resources/views/profile/dashboard.blade.php` - Главная страница кабинета
-- [ ] `resources/views/profile/bookings.blade.php` - Мои заявки
-- [ ] `resources/views/profile/chat.blade.php` - Чат с менеджером
-- [ ] `resources/views/profile/documents.blade.php` - Документы
-- [ ] `resources/views/profile/settings.blade.php` - Настройки профиля
-- [ ] `resources/views/layouts/app.blade.php` - Макет для кабинета (переделать)
+#### 2.1. Кабинет туриста ✅ ЗАВЕРШЕНО
+**Что создано:**
+- [x] `resources/views/profile/dashboard.blade.php` - Главная страница кабинета
+- [x] `resources/views/profile/bookings.blade.php` - Мои заявки
+- [x] `resources/views/profile/chat.blade.php` - Чат с менеджером
+- [x] `resources/views/profile/documents.blade.php` - Документы
+- [x] `resources/views/profile/settings.blade.php` - Настройки профиля
+- [x] `resources/views/layouts/profile.blade.php` - Обновлен макет для кабинета
+- [x] `ProfileController` - Расширен методами для кабинета
+- [x] Маршруты для всех функций кабинета
 
-**Функционал:**
-- Просмотр заявок и их статусов
-- Чат с назначенным менеджером
-- Загрузка документов
-- История бронирований
-- Редактирование профиля
+**Реализованный функционал:**
+- ✅ Просмотр заявок и их статусов с пагинацией
+- ✅ Чат с назначенным менеджером с автообновлением
+- ✅ Загрузка и просмотр документов
+- ✅ История бронирований
+- ✅ Редактирование профиля и смена пароля
+- ✅ Статистика и дашборд
+- ✅ Удаление аккаунта
+
+**Документация:** `docs/tourist-cabinet-summary.md`
 
 #### 2.2. Кабинет менеджера
 **Что нужно создать:**
