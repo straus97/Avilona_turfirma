@@ -12,6 +12,15 @@ class Booking extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * The event map for the model.
+     *
+     * @var array
+     */
+    protected $dispatchesEvents = [
+        'created' => \App\Events\BookingCreated::class,
+    ];
+
     // Константы для статусов
     const STATUS_NEW = 'new';
     const STATUS_PROGRESS = 'progress';
@@ -168,25 +177,40 @@ class Booking extends Model
             'manager_id' => $managerId,
             'status' => self::STATUS_PROGRESS,
         ]);
+        
+        // Отправляем событие о назначении менеджера
+        event(new \App\Events\ManagerAssigned($this));
     }
 
     public function confirm(): void
     {
+        $oldStatus = $this->status;
         $this->update(['status' => self::STATUS_CONFIRMED]);
+        
+        // Отправляем событие об изменении статуса
+        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
     }
 
     public function cancel(): void
     {
+        $oldStatus = $this->status;
         $this->update(['status' => self::STATUS_CANCELLED]);
         
         // Возвращаем места в тур
         if ($this->tour) {
             $this->tour->increaseAvailableSeats($this->total_tourists);
         }
+        
+        // Отправляем событие об изменении статуса
+        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
     }
 
     public function complete(): void
     {
+        $oldStatus = $this->status;
         $this->update(['status' => self::STATUS_COMPLETED]);
+        
+        // Отправляем событие об изменении статуса
+        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
     }
 }
