@@ -113,15 +113,9 @@
                                                 <td>{{ $booking->destination ?? 'Не указано' }}</td>
                                                 <td>{{ $booking->start_date ? \Carbon\Carbon::parse($booking->start_date)->format('d.m.Y') : '-' }}</td>
                                                 <td>
-                                                    @if($booking->status === 'pending')
-                                                        <span class="badge badge-warning">В обработке</span>
-                                                    @elseif($booking->status === 'confirmed')
-                                                        <span class="badge badge-info">Подтверждена</span>
-                                                    @elseif($booking->status === 'completed')
-                                                        <span class="badge badge-success">Завершена</span>
-                                                    @elseif($booking->status === 'cancelled')
-                                                        <span class="badge badge-danger">Отменена</span>
-                                                    @endif
+                                                    <span class="badge badge-{{ $booking->status_color }}">
+                                                        {{ $booking->status_label }}
+                                                    </span>
                                                 </td>
                                                 <td>{{ $booking->manager->name ?? 'Не назначен' }}</td>
                                                 <td>

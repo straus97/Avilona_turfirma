@@ -16,7 +16,8 @@
                         <input type="text" name="search" class="form-control mr-2" placeholder="Поиск..." value="{{ request('search') }}">
                         <select name="status" class="form-control mr-2">
                             <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>Все статусы</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>В обработке</option>
+                            <option value="new" {{ request('status') === 'new' ? 'selected' : '' }}>Новые</option>
+                            <option value="progress" {{ request('status') === 'progress' ? 'selected' : '' }}>В обработке</option>
                             <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Подтверждены</option>
                             <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Завершены</option>
                             <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Отменены</option>
@@ -40,7 +41,8 @@
             <div class="row mb-3">
                 <div class="col">
                     <span class="badge badge-info">Всего: {{ $statusCounts['all'] }}</span>
-                    <span class="badge badge-warning">В обработке: {{ $statusCounts['pending'] }}</span>
+                    <span class="badge badge-primary">Новые: {{ $statusCounts['new'] ?? 0 }}</span>
+                    <span class="badge badge-warning">В обработке: {{ $statusCounts['progress'] ?? 0 }}</span>
                     <span class="badge badge-success">Подтверждено: {{ $statusCounts['confirmed'] }}</span>
                     <span class="badge badge-secondary">Завершено: {{ $statusCounts['completed'] }}</span>
                     <span class="badge badge-danger">Не назначено: {{ $statusCounts['unassigned'] }}</span>
@@ -76,15 +78,9 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($booking->status === 'pending')
-                                            <span class="badge badge-warning">В обработке</span>
-                                        @elseif($booking->status === 'confirmed')
-                                            <span class="badge badge-info">Подтверждена</span>
-                                        @elseif($booking->status === 'completed')
-                                            <span class="badge badge-success">Завершена</span>
-                                        @elseif($booking->status === 'cancelled')
-                                            <span class="badge badge-danger">Отменена</span>
-                                        @endif
+                                        <span class="badge badge-{{ $booking->status_color }}">
+                                            {{ $booking->status_label }}
+                                        </span>
                                     </td>
                                     <td>
                                         @if($booking->manager)

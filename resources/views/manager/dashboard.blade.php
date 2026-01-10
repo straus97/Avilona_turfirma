@@ -42,7 +42,7 @@
                         <div class="icon">
                             <i class="bi bi-hourglass-split"></i>
                         </div>
-                        <a href="{{ route('manager.bookings', ['status' => 'pending']) }}" class="small-box-footer">
+                        <a href="{{ route('manager.bookings', ['status' => 'progress']) }}" class="small-box-footer">
                             Требуют обработки <i class="fas fa-arrow-circle-right"></i>
                         </a>
                     </div>
@@ -179,15 +179,9 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($booking->status === 'pending')
-                                                        <span class="badge badge-warning">В обработке</span>
-                                                    @elseif($booking->status === 'confirmed')
-                                                        <span class="badge badge-info">Подтверждена</span>
-                                                    @elseif($booking->status === 'completed')
-                                                        <span class="badge badge-success">Завершена</span>
-                                                    @elseif($booking->status === 'cancelled')
-                                                        <span class="badge badge-danger">Отменена</span>
-                                                    @endif
+                                                    <span class="badge badge-{{ $booking->status_color }}">
+                                                        {{ $booking->status_label }}
+                                                    </span>
                                                 </td>
                                                 <td>{{ $booking->created_at->format('d.m.Y H:i') }}</td>
                                                 <td>

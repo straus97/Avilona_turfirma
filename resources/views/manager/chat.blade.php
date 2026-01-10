@@ -92,15 +92,9 @@
                                             | Дата: {{ \Carbon\Carbon::parse($currentBooking->start_date)->format('d.m.Y') }}
                                         @endif
                                         | Статус: 
-                                        @if($currentBooking->status === 'pending')
-                                            <span class="badge badge-warning">В обработке</span>
-                                        @elseif($currentBooking->status === 'confirmed')
-                                            <span class="badge badge-success">Подтверждена</span>
-                                        @elseif($currentBooking->status === 'completed')
-                                            <span class="badge badge-primary">Завершена</span>
-                                        @elseif($currentBooking->status === 'cancelled')
-                                            <span class="badge badge-danger">Отменена</span>
-                                        @endif
+                                        <span class="badge badge-{{ $currentBooking->status_color }}">
+                                            {{ $currentBooking->status_label }}
+                                        </span>
                                     </small>
                                 </div>
 
@@ -167,7 +161,7 @@
                                 <h3 class="card-title">Быстрые действия</h3>
                             </div>
                             <div class="card-body">
-                                @if($currentBooking->status === 'pending')
+                                @if(in_array($currentBooking->status, ['new', 'progress']))
                                     <form action="{{ route('bookings.confirm', $currentBooking->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-primary mb-2">

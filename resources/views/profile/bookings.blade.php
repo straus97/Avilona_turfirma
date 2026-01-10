@@ -68,15 +68,9 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @if($booking->status === 'pending')
-                                                            <span class="badge badge-warning">В обработке</span>
-                                                        @elseif($booking->status === 'confirmed')
-                                                            <span class="badge badge-info">Подтверждена</span>
-                                                        @elseif($booking->status === 'completed')
-                                                            <span class="badge badge-success">Завершена</span>
-                                                        @elseif($booking->status === 'cancelled')
-                                                            <span class="badge badge-danger">Отменена</span>
-                                                        @endif
+                                                        <span class="badge badge-{{ $booking->status_color }}">
+                                                            {{ $booking->status_label }}
+                                                        </span>
                                                     </td>
                                                     <td>
                                                         @if($booking->manager)
@@ -98,7 +92,7 @@
                                                                class="btn btn-sm btn-info" title="Просмотр">
                                                                 <i class="bi bi-eye"></i>
                                                             </a>
-                                                            @if($booking->status === 'pending')
+                                                            @if(in_array($booking->status, ['new', 'progress']))
                                                                 <a href="{{ route('bookings.edit', $booking->id) }}" 
                                                                    class="btn btn-sm btn-primary" title="Редактировать">
                                                                     <i class="bi bi-pencil"></i>

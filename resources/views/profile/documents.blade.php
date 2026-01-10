@@ -61,15 +61,9 @@
                                 <div class="col-md-6">
                                     <p><strong>Менеджер:</strong> {{ $booking->manager->name ?? 'Не назначен' }}</p>
                                     <p><strong>Статус:</strong> 
-                                        @if($booking->status === 'pending')
-                                            В обработке
-                                        @elseif($booking->status === 'confirmed')
-                                            Подтверждена
-                                        @elseif($booking->status === 'completed')
-                                            Завершена
-                                        @elseif($booking->status === 'cancelled')
-                                            Отменена
-                                        @endif
+                                        <span class="badge badge-{{ $booking->status_color }}">
+                                            {{ $booking->status_label }}
+                                        </span>
                                     </p>
                                 </div>
                             </div>
@@ -121,7 +115,7 @@
                             @endif
 
                             <!-- Форма загрузки документа -->
-                            @if(in_array($booking->status, ['confirmed', 'pending']))
+                            @if(in_array($booking->status, ['confirmed', 'new', 'progress']))
                                 <div class="mt-3">
                                     <button class="btn btn-success btn-sm" data-toggle="collapse" 
                                             data-target="#uploadForm{{ $booking->id }}">

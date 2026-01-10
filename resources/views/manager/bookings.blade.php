@@ -61,16 +61,20 @@
                            class="btn {{ request('status', 'all') === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">
                             Все ({{ $statusCounts['all'] }})
                         </a>
-                        <a href="{{ route('manager.bookings', ['status' => 'pending']) }}" 
-                           class="btn {{ request('status') === 'pending' ? 'btn-warning' : 'btn-outline-warning' }}">
-                            В обработке ({{ $statusCounts['pending'] }})
+                        <a href="{{ route('manager.bookings', ['status' => 'new']) }}" 
+                           class="btn {{ request('status') === 'new' ? 'btn-info' : 'btn-outline-info' }}">
+                            Новые ({{ $statusCounts['new'] ?? 0 }})
+                        </a>
+                        <a href="{{ route('manager.bookings', ['status' => 'progress']) }}" 
+                           class="btn {{ request('status') === 'progress' ? 'btn-warning' : 'btn-outline-warning' }}">
+                            В обработке ({{ $statusCounts['progress'] ?? 0 }})
                         </a>
                         <a href="{{ route('manager.bookings', ['status' => 'confirmed']) }}" 
-                           class="btn {{ request('status') === 'confirmed' ? 'btn-info' : 'btn-outline-info' }}">
+                           class="btn {{ request('status') === 'confirmed' ? 'btn-success' : 'btn-outline-success' }}">
                             Подтверждены ({{ $statusCounts['confirmed'] }})
                         </a>
                         <a href="{{ route('manager.bookings', ['status' => 'completed']) }}" 
-                           class="btn {{ request('status') === 'completed' ? 'btn-success' : 'btn-outline-success' }}">
+                           class="btn {{ request('status') === 'completed' ? 'btn-secondary' : 'btn-outline-secondary' }}">
                             Завершены ({{ $statusCounts['completed'] }})
                         </a>
                         <a href="{{ route('manager.bookings', ['status' => 'cancelled']) }}" 
@@ -148,15 +152,9 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @if($booking->status === 'pending')
-                                                            <span class="badge badge-warning">В обработке</span>
-                                                        @elseif($booking->status === 'confirmed')
-                                                            <span class="badge badge-info">Подтверждена</span>
-                                                        @elseif($booking->status === 'completed')
-                                                            <span class="badge badge-success">Завершена</span>
-                                                        @elseif($booking->status === 'cancelled')
-                                                            <span class="badge badge-danger">Отменена</span>
-                                                        @endif
+                                                        <span class="badge badge-{{ $booking->status_color }}">
+                                                            {{ $booking->status_label }}
+                                                        </span>
                                                     </td>
                                                     <td>
                                                         <small>{{ $booking->created_at->format('d.m.Y H:i') }}</small>
@@ -173,7 +171,7 @@
                                                                title="Чат">
                                                                 <i class="bi bi-chat"></i> Чат
                                                             </a>
-                                                            @if($booking->status === 'pending')
+                                                            @if(in_array($booking->status, ['new', 'progress']))
                                                                 <form action="{{ route('bookings.confirm', $booking->id) }}" 
                                                                       method="POST" 
                                                                       style="display: inline;">
