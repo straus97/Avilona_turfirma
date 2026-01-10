@@ -1,191 +1,216 @@
 @extends('layouts.profile')
 
+@section('title', 'Мои документы - Авилона')
+
 @section('content')
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Мои документы</h1>
-                </div>
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-file-alt text-primary"></i> Мои документы
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('home.index') }}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('profile.dashboard') }}">Личный кабинет</a></li>
+                    <li class="breadcrumb-item active">Документы</li>
+                </ol>
             </div>
         </div>
     </div>
-    <!-- /.content-header -->
+</div>
 
-    <!-- Main content -->
-    <section class="content">
-        <div class="container-fluid">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    {{ session('success') }}
-                </div>
-            @endif
+<!-- Main content -->
+<div class="content">
+    <div class="container-fluid">
 
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            @if($bookings->count() > 0)
-                @foreach($bookings as $booking)
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="bi bi-bookmark"></i>
-                                Заявка #{{ $booking->id }} - {{ $booking->tour_name ?? 'Без названия' }}
-                            </h3>
-                            <div class="card-tools">
-                                <span class="badge {{ $booking->status === 'completed' ? 'badge-success' : 'badge-info' }}">
-                                    {{ $booking->status === 'completed' ? 'Завершена' : 'Активна' }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Направление:</strong> {{ $booking->destination ?? 'Не указано' }}</p>
-                                    <p><strong>Дата поездки:</strong> 
-                                        @if($booking->start_date && $booking->end_date)
-                                            {{ \Carbon\Carbon::parse($booking->start_date)->format('d.m.Y') }}
-                                            -
-                                            {{ \Carbon\Carbon::parse($booking->end_date)->format('d.m.Y') }}
-                                        @else
-                                            Не указано
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Менеджер:</strong> {{ $booking->manager->name ?? 'Не назначен' }}</p>
-                                    <p><strong>Статус:</strong> 
-                                        <span class="badge badge-{{ $booking->status_color }}">
-                                            {{ $booking->status_label }}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <hr>
-
-                            <h5><i class="bi bi-file-earmark-text"></i> Документы по заявке</h5>
-
-                            @if($booking->documents && count($booking->documents) > 0)
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Название файла</th>
-                                                <th>Дата загрузки</th>
-                                                <th>Действия</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($booking->documents as $index => $document)
-                                                <tr>
-                                                    <td>
-                                                        <i class="bi bi-file-earmark-pdf text-danger"></i>
-                                                        {{ $document['name'] ?? 'Документ_' . ($index + 1) }}
-                                                    </td>
-                                                    <td>{{ isset($document['uploaded_at']) ? \Carbon\Carbon::parse($document['uploaded_at'])->format('d.m.Y H:i') : '-' }}</td>
-                                                    <td>
-                                                        <a href="{{ asset('storage/' . $document['path']) }}" 
-                                                           class="btn btn-sm btn-primary" 
-                                                           target="_blank" 
-                                                           download>
-                                                            <i class="bi bi-download"></i> Скачать
-                                                        </a>
-                                                        <a href="{{ asset('storage/' . $document['path']) }}" 
-                                                           class="btn btn-sm btn-info" 
-                                                           target="_blank">
-                                                            <i class="bi bi-eye"></i> Просмотр
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> По данной заявке пока нет документов
-                                </div>
-                            @endif
-
-                            <!-- Форма загрузки документа -->
-                            @if(in_array($booking->status, ['confirmed', 'new', 'progress']))
-                                <div class="mt-3">
-                                    <button class="btn btn-success btn-sm" data-toggle="collapse" 
-                                            data-target="#uploadForm{{ $booking->id }}">
-                                        <i class="bi bi-upload"></i> Загрузить документ
-                                    </button>
-                                    
-                                    <div class="collapse mt-2" id="uploadForm{{ $booking->id }}">
-                                        <div class="card card-body">
-                                            <form action="{{ route('profile.upload-document', $booking->id) }}" 
-                                                  method="POST" 
-                                                  enctype="multipart/form-data">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label for="document{{ $booking->id }}">Выберите файл</label>
-                                                    <input type="file" 
-                                                           class="form-control-file" 
-                                                           id="document{{ $booking->id }}" 
-                                                           name="document" 
-                                                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
-                                                           required>
-                                                    <small class="form-text text-muted">
-                                                        Допустимые форматы: PDF, JPG, PNG, DOC, DOCX. Максимальный размер: 10 МБ
-                                                    </small>
-                                                </div>
-                                                <button type="submit" class="btn btn-primary btn-sm">
-                                                    <i class="bi bi-upload"></i> Загрузить
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
+        <!-- Форма загрузки -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-upload"></i> Загрузить документ
+                        </h3>
                     </div>
-                @endforeach
-            @else
-                <div class="card">
                     <div class="card-body">
-                        <div class="text-center text-muted p-5">
-                            <i class="bi bi-folder-x" style="font-size: 5rem;"></i>
-                            <h4 class="mt-3">У вас пока нет заявок с документами</h4>
-                            <p>Документы появятся после создания и подтверждения заявок</p>
-                            <a href="{{ route('bookings.create') }}" class="btn btn-primary btn-lg mt-3">
-                                <i class="bi bi-plus-circle"></i> Создать заявку
-                            </a>
-                        </div>
+                        <form action="{{ route('profile.upload-document') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <div class="custom-file">
+                                        <input type="file" 
+                                               class="custom-file-input @error('document') is-invalid @enderror" 
+                                               id="documentInput" 
+                                               name="document" 
+                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                               required>
+                                        <label class="custom-file-label" for="documentInput">Выберите файл...</label>
+                                        @error('document')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        Допустимые форматы: PDF, DOC, DOCX, JPG, PNG. Максимальный размер: 10 МБ
+                                    </small>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-upload"></i> Загрузить
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                </div>
-            @endif
-
-            <!-- Информационная карточка -->
-            <div class="card card-info">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-info-circle"></i> Информация о документах
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <p><strong>Какие документы могут быть здесь:</strong></p>
-                    <ul>
-                        <li>Договор на оказание туристических услуг</li>
-                        <li>Ваучеры и путевки</li>
-                        <li>Страховые полисы</li>
-                        <li>Билеты на транспорт</li>
-                        <li>Подтверждения бронирования отелей</li>
-                        <li>Памятки туристу</li>
-                    </ul>
-                    <p class="mb-0"><strong>Важно:</strong> Все документы доступны для скачивания и печати. Рекомендуем взять распечатанные копии документов в поездку.</p>
                 </div>
             </div>
         </div>
-    </section>
+
+        @if(session('status') === 'document-uploaded')
+            <div class="alert alert-success alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <i class="fas fa-check-circle"></i> Документ успешно загружен!
+            </div>
+        @endif
+
+        <!-- Список документов -->
+        @if(count($documents) > 0)
+            <div class="row">
+                @foreach($documents as $document)
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card card-document">
+                            <div class="card-body">
+                                <div class="document-icon text-center mb-3">
+                                    @php
+                                        $extension = strtolower(pathinfo($document['name'], PATHINFO_EXTENSION));
+                                        $iconClass = 'fa-file';
+                                        $iconColor = 'text-secondary';
+                                        
+                                        if (in_array($extension, ['pdf'])) {
+                                            $iconClass = 'fa-file-pdf';
+                                            $iconColor = 'text-danger';
+                                        } elseif (in_array($extension, ['doc', 'docx'])) {
+                                            $iconClass = 'fa-file-word';
+                                            $iconColor = 'text-primary';
+                                        } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                                            $iconClass = 'fa-file-image';
+                                            $iconColor = 'text-success';
+                                        }
+                                    @endphp
+                                    <i class="fas {{ $iconClass }} {{ $iconColor }} fa-5x"></i>
+                                </div>
+                                <h5 class="card-title text-center">
+                                    {{ Str::limit($document['name'], 30) }}
+                                </h5>
+                                <div class="document-info text-center text-muted">
+                                    <small>
+                                        <i class="fas fa-calendar"></i>
+                                        {{ \Carbon\Carbon::createFromTimestamp($document['last_modified'])->format('d.m.Y H:i') }}
+                                    </small>
+                                    <br>
+                                    <small>
+                                        <i class="fas fa-hdd"></i>
+                                        {{ number_format($document['size'] / 1024, 2) }} КБ
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <a href="{{ $document['url'] }}" 
+                                           target="_blank" 
+                                           class="btn btn-info btn-sm btn-block">
+                                            <i class="fas fa-eye"></i> Просмотр
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="{{ $document['url'] }}" 
+                                           download 
+                                           class="btn btn-success btn-sm btn-block">
+                                            <i class="fas fa-download"></i> Скачать
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-folder-open fa-5x text-muted mb-4"></i>
+                            <h4 class="text-muted">У вас пока нет документов</h4>
+                            <p class="text-muted">Загрузите свои документы (паспорт, визы и т.д.) для быстрого оформления</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Информация -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info border-left-info">
+                    <h5><i class="fas fa-info-circle"></i> Информация</h5>
+                    <ul class="mb-0">
+                        <li>Загружайте сканы паспортов, виз и других документов для ускорения процесса оформления</li>
+                        <li>Все документы хранятся в защищенном виде и доступны только вам и вашему менеджеру</li>
+                        <li>Рекомендуем загружать документы в формате PDF для лучшего качества</li>
+                        <li>При возникновении проблем с загрузкой, обратитесь к менеджеру через чат</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 @endsection
+
+@push('styles')
+<style>
+.card-document {
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,.1);
+    transition: all .3s;
+    border: none;
+}
+
+.card-document:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,.15);
+}
+
+.document-icon {
+    padding: 20px;
+    background: #f8f9fc;
+    border-radius: 10px;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc;
+}
+
+.custom-file-label::after {
+    content: "Обзор";
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Показ имени выбранного файла
+    $('#documentInput').on('change', function() {
+        const fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').html(fileName || 'Выберите файл...');
+    });
+});
+</script>
+@endpush

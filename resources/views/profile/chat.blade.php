@@ -1,185 +1,316 @@
 @extends('layouts.profile')
 
+@section('title', 'Чат с менеджером - Авилона')
+
 @section('content')
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Чат с менеджером</h1>
-                </div>
+<!-- Content Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="fas fa-comments text-primary"></i> Чат с менеджером
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('home.index') }}">Главная</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('profile.dashboard') }}">Личный кабинет</a></li>
+                    <li class="breadcrumb-item active">Чат</li>
+                </ol>
             </div>
         </div>
     </div>
-    <!-- /.content-header -->
+</div>
 
-    <!-- Main content -->
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Список заявок с чатами -->
-                <div class="col-md-4">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">Ваши заявки</h3>
-                        </div>
-                        <div class="card-body p-0">
-                            @if($bookings->count() > 0)
-                                <ul class="nav nav-pills flex-column">
-                                    @foreach($bookings as $booking)
-                                        <li class="nav-item">
-                                            <a href="{{ route('profile.chat', ['bookingId' => $booking->id]) }}" 
-                                               class="nav-link {{ $currentBooking && $currentBooking->id == $booking->id ? 'active' : '' }}">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <strong>#{{ $booking->id }}</strong> - {{ Str::limit($booking->tour_name ?? 'Без названия', 30) }}
-                                                        @if($booking->manager)
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                <i class="bi bi-person"></i> {{ $booking->manager->name }}
-                                                            </small>
-                                                        @endif
-                                                    </div>
-                                                    @php
-                                                        $unreadCount = \App\Models\Message::where('booking_id', $booking->id)
-                                                            ->where('receiver_id', $user->id)
-                                                            ->where('is_read', false)
-                                                            ->count();
-                                                    @endphp
-                                                    @if($unreadCount > 0)
-                                                        <span class="badge badge-danger">{{ $unreadCount }}</span>
-                                                    @endif
-                                                </div>
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <div class="p-4 text-center text-muted">
-                                    <i class="bi bi-chat-square-text" style="font-size: 3rem;"></i>
-                                    <p class="mt-2">У вас нет заявок с назначенным менеджером</p>
-                                    <a href="{{ route('bookings.create') }}" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-plus-circle"></i> Создать заявку
+<!-- Main content -->
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Список заявок с чатами -->
+            <div class="col-md-4">
+                <div class="card card-primary card-outline direct-chat direct-chat-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list"></i> Мои заявки
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        @if($bookings->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($bookings as $item)
+                                    <a href="{{ route('profile.chat', $item->id) }}" 
+                                       class="list-group-item list-group-item-action {{ $currentBooking && $currentBooking->id === $item->id ? 'active' : '' }}">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-bookmark"></i> Заявка #{{ $item->id }}
+                                            </h6>
+                                            <small>{{ $item->created_at->diffForHumans() }}</small>
+                                        </div>
+                                        <p class="mb-1">
+                                            <i class="fas fa-map-marker-alt"></i> {{ $item->destination_country }}
+                                            @if($item->destination_city)
+                                                - {{ $item->destination_city }}
+                                            @endif
+                                        </p>
+                                        @if($item->manager)
+                                            <small class="text-muted">
+                                                <i class="fas fa-user-tie"></i> {{ $item->manager->name }}
+                                            </small>
+                                        @else
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> Ожидание менеджера
+                                            </small>
+                                        @endif
                                     </a>
-                                </div>
-                            @endif
-                        </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="p-4 text-center text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>У вас нет заявок с активными чатами</p>
+                                <a href="{{ route('bookings.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Создать заявку
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
+            </div>
 
-                <!-- Окно чата -->
-                <div class="col-md-8">
-                    @if($currentBooking)
-                        <div class="card card-primary card-outline direct-chat direct-chat-primary">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    Заявка #{{ $currentBooking->id }} - {{ $currentBooking->tour_name ?? 'Без названия' }}
-                                </h3>
-                                <div class="card-tools">
-                                    @if($currentBooking->manager)
-                                        <span class="badge badge-success">
-                                            <i class="bi bi-person"></i> {{ $currentBooking->manager->name }}
-                                        </span>
-                                    @endif
-                                </div>
+            <!-- Окно чата -->
+            <div class="col-md-8">
+                @if($currentBooking)
+                    <div class="card card-primary card-outline direct-chat direct-chat-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bookmark"></i> Заявка #{{ $currentBooking->id }}
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-{{ $currentBooking->status_color }}">
+                                    {{ $currentBooking->status_label }}
+                                </span>
+                                <a href="{{ route('bookings.show', $currentBooking->id) }}" 
+                                   class="btn btn-tool" 
+                                   title="Просмотр заявки">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             </div>
-                            <div class="card-body">
-                                <div class="direct-chat-messages" style="height: 400px; overflow-y: auto;" id="chatMessages">
-                                    @if($messages->count() > 0)
-                                        @foreach($messages->reverse() as $message)
-                                            <div class="direct-chat-msg {{ $message->sender_id == $user->id ? 'right' : '' }}">
-                                                <div class="direct-chat-infos clearfix">
-                                                    <span class="direct-chat-name {{ $message->sender_id == $user->id ? 'float-right' : 'float-left' }}">
-                                                        {{ $message->sender->name }}
-                                                    </span>
-                                                    <span class="direct-chat-timestamp {{ $message->sender_id == $user->id ? 'float-left' : 'float-right' }}">
-                                                        {{ $message->created_at->format('d.m.Y H:i') }}
-                                                    </span>
-                                                </div>
-                                                <img class="direct-chat-img" src="{{ asset('dist/img/user2-160x160.jpg') }}" alt="User Image">
-                                                <div class="direct-chat-text">
-                                                    {{ $message->message }}
-                                                    @if($message->attachment_url)
-                                                        <br>
-                                                        <a href="{{ asset('storage/' . $message->attachment_url) }}" target="_blank" class="btn btn-sm btn-link">
-                                                            <i class="bi bi-paperclip"></i> Вложение
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    @else
-                                        <div class="text-center text-muted p-4">
-                                            <i class="bi bi-chat" style="font-size: 3rem;"></i>
-                                            <p class="mt-2">Пока нет сообщений</p>
-                                            <p>Напишите первое сообщение вашему менеджеру</p>
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Информация о заявке -->
+                            <div class="alert alert-info border-left-info mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-map-marker-alt"></i> Направление:</strong>
+                                        {{ $currentBooking->destination_country }}
+                                        @if($currentBooking->destination_city)
+                                            - {{ $currentBooking->destination_city }}
+                                        @endif
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-calendar"></i> Дата вылета:</strong>
+                                        @if($currentBooking->start_date)
+                                            {{ \Carbon\Carbon::parse($currentBooking->start_date)->format('d.m.Y') }}
+                                        @else
+                                            Не указана
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-users"></i> Туристов:</strong>
+                                        {{ $currentBooking->adults + $currentBooking->children }}
+                                    </div>
+                                    @if($currentBooking->manager)
+                                        <div class="col-md-6">
+                                            <strong><i class="fas fa-user-tie"></i> Менеджер:</strong>
+                                            {{ $currentBooking->manager->name }}
                                         </div>
                                     @endif
                                 </div>
                             </div>
-                            <div class="card-footer">
-                                <form action="{{ route('messages.store') }}" method="POST" enctype="multipart/form-data">
+
+                            <!-- Сообщения -->
+                            <div class="direct-chat-messages" id="chatMessages" style="height: 400px; overflow-y: auto;">
+                                @if($messages->count() > 0)
+                                    @foreach($messages as $message)
+                                        @if($message->sender_id === Auth::id())
+                                            <!-- Сообщение от пользователя (справа) -->
+                                            <div class="direct-chat-msg right">
+                                                <div class="direct-chat-infos clearfix">
+                                                    <span class="direct-chat-name float-right">Вы</span>
+                                                    <span class="direct-chat-timestamp float-left">
+                                                        {{ $message->created_at->format('d.m.Y H:i') }}
+                                                    </span>
+                                                </div>
+                                                <img class="direct-chat-img" src="{{ asset('dist/img/user2-160x160.jpg') }}" alt="user">
+                                                <div class="direct-chat-text">
+                                                    {{ $message->message }}
+                                                    @if($message->attachment_url)
+                                                        <div class="mt-2">
+                                                            <a href="{{ Storage::url($message->attachment_url) }}" 
+                                                               target="_blank" 
+                                                               class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-paperclip"></i> Вложение
+                                                            </a>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @else
+                                            <!-- Сообщение от менеджера (слева) -->
+                                            <div class="direct-chat-msg">
+                                                <div class="direct-chat-infos clearfix">
+                                                    <span class="direct-chat-name float-left">
+                                                        {{ $message->sender->name }}
+                                                    </span>
+                                                    <span class="direct-chat-timestamp float-right">
+                                                        {{ $message->created_at->format('d.m.Y H:i') }}
+                                                    </span>
+                                                </div>
+                                                <img class="direct-chat-img" src="{{ asset('dist/img/user1-128x128.jpg') }}" alt="manager">
+                                                <div class="direct-chat-text">
+                                                    {{ $message->message }}
+                                                    @if($message->attachment_url)
+                                                        <div class="mt-2">
+                                                            <a href="{{ Storage::url($message->attachment_url) }}" 
+                                                               target="_blank" 
+                                                               class="btn btn-sm btn-outline-info">
+                                                                <i class="fas fa-paperclip"></i> Вложение
+                                                            </a>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @else
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-comments fa-3x mb-3"></i>
+                                        <p>Начните общение с менеджером</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            @if($currentBooking->manager_id)
+                                <form action="{{ route('messages.store') }}" method="POST" enctype="multipart/form-data" id="messageForm">
                                     @csrf
                                     <input type="hidden" name="booking_id" value="{{ $currentBooking->id }}">
                                     <input type="hidden" name="receiver_id" value="{{ $currentBooking->manager_id }}">
                                     
                                     <div class="input-group">
-                                        <input type="text" name="message" placeholder="Введите сообщение..." 
-                                               class="form-control" required>
-                                        <div class="input-group-append">
-                                            <label for="attachment" class="btn btn-secondary mb-0" title="Прикрепить файл">
-                                                <i class="bi bi-paperclip"></i>
-                                            </label>
-                                            <input type="file" name="attachment" id="attachment" class="d-none">
+                                        <input type="text" 
+                                               name="message" 
+                                               placeholder="Введите сообщение..." 
+                                               class="form-control"
+                                               required>
+                                        <label class="btn btn-default btn-file ml-2">
+                                            <i class="fas fa-paperclip"></i>
+                                            <input type="file" name="attachment" style="display: none;" id="attachmentInput">
+                                        </label>
+                                        <span class="input-group-append">
                                             <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-send"></i> Отправить
+                                                <i class="fas fa-paper-plane"></i> Отправить
                                             </button>
-                                        </div>
+                                        </span>
                                     </div>
-                                    <small class="text-muted d-block mt-1" id="fileInfo"></small>
+                                    <small id="attachmentName" class="text-muted"></small>
                                 </form>
-                            </div>
-                        </div>
-                    @else
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="text-center text-muted p-5">
-                                    <i class="bi bi-chat-left-dots" style="font-size: 5rem;"></i>
-                                    <h4 class="mt-3">Выберите заявку для начала общения</h4>
-                                    <p>Выберите заявку из списка слева, чтобы начать переписку с менеджером</p>
+                            @else
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Менеджер еще не назначен на вашу заявку. Ожидайте назначения.
                                 </div>
-                            </div>
+                            @endif
                         </div>
-                    @endif
-                </div>
+                    </div>
+                @else
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-comment-slash fa-5x text-muted mb-4"></i>
+                            <h4 class="text-muted">Выберите заявку для общения</h4>
+                            <p class="text-muted">Выберите заявку из списка слева, чтобы начать общение с менеджером</p>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
-    </section>
+    </div>
+</div>
 @endsection
+
+@push('styles')
+<style>
+.border-left-info {
+    border-left: 4px solid #36b9cc;
+}
+
+.list-group-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.direct-chat-messages {
+    background: #f8f9fc;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.direct-chat-text {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 10px 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.05);
+}
+
+.direct-chat-msg.right .direct-chat-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-color: #667eea;
+}
+
+.direct-chat-img {
+    border: 3px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,.1);
+}
+
+#attachmentInput::-webkit-file-upload-button {
+    visibility: hidden;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
-    // Показать имя выбранного файла
-    document.getElementById('attachment').addEventListener('change', function(e) {
-        const fileInfo = document.getElementById('fileInfo');
-        if (this.files.length > 0) {
-            fileInfo.textContent = 'Файл: ' + this.files[0].name;
-        } else {
-            fileInfo.textContent = '';
-        }
-    });
-
-    // Автоматическая прокрутка к последнему сообщению
+$(document).ready(function() {
+    // Прокрутка к последнему сообщению
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Автообновление чата каждые 30 секунд
+    // Отображение имени файла
+    $('#attachmentInput').on('change', function() {
+        const fileName = $(this).val().split('\\').pop();
+        $('#attachmentName').text(fileName ? 'Файл: ' + fileName : '');
+    });
+
+    // Автообновление чата каждые 10 секунд
     @if($currentBooking)
         setInterval(function() {
             location.reload();
-        }, 30000);
+        }, 10000);
     @endif
+});
 </script>
 @endpush
