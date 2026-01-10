@@ -140,12 +140,20 @@ Route::middleware(['auth'])->get('/message', function () {
 
 // Маршруты только для менеджеров и администраторов
 Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('manager.dashboard');
-    })->name('dashboard');
+    // Главная страница панели менеджера
+    Route::get('/dashboard', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('dashboard');
     
-    // TODO: Добавить маршруты для управления заявками
-    // Route::resource('bookings', ManagerBookingController::class);
+    // Список клиентов
+    Route::get('/clients', [\App\Http\Controllers\Manager\ManagerController::class, 'clients'])->name('clients');
+    
+    // Управление заявками
+    Route::get('/bookings', [\App\Http\Controllers\Manager\ManagerController::class, 'bookings'])->name('bookings');
+    
+    // Чат с клиентами
+    Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Manager\ManagerController::class, 'chat'])->name('chat');
+    
+    // Статистика
+    Route::get('/statistics', [\App\Http\Controllers\Manager\ManagerController::class, 'statistics'])->name('statistics');
 });
 
 // Маршруты только для администраторов

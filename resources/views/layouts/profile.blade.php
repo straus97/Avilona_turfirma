@@ -269,57 +269,105 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-header">ЛИЧНЫЙ КАБИНЕТ</li>
-                    <li class="nav-item">
-                        <a href="{{route('profile.dashboard')}}" class="nav-link {{ request()->routeIs('profile.dashboard') ? 'active' : '' }}">
-                            <i class="bi bi-speedometer2 ml-1 mr-2"></i>
-                            <p>Главная</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{route('profile.bookings')}}" class="nav-link {{ request()->routeIs('profile.bookings') ? 'active' : '' }}">
-                            <i class="bi bi-bookmark ml-1 mr-2"></i>
-                            <p>Мои заявки</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{route('profile.chat')}}" class="nav-link {{ request()->routeIs('profile.chat') ? 'active' : '' }}">
-                            <i class="bi bi-chat-dots ml-1 mr-2"></i>
-                            <p>
-                                Чат с менеджером
-                                @php
-                                    $unreadCount = \App\Models\Message::where('receiver_id', Auth::id())
-                                        ->where('is_read', false)
-                                        ->count();
-                                @endphp
-                                @if($unreadCount > 0)
-                                    <span class="badge badge-danger right">{{ $unreadCount }}</span>
-                                @endif
-                            </p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{route('profile.documents')}}" class="nav-link {{ request()->routeIs('profile.documents') ? 'active' : '' }}">
-                            <i class="bi bi-file-earmark-text ml-1 mr-2"></i>
-                            <p>Документы</p>
-                        </a>
-                    </li>
-                    @auth
-                        @if(auth()->user()->roles->contains('role', 'admin'))
-                            <li class="nav-header">АДМИНИСТРИРОВАНИЕ</li>
+                    @php
+                        $unreadCount = \App\Models\Message::where('receiver_id', Auth::id())
+                            ->where('is_read', false)
+                            ->count();
+                        $isManager = auth()->user()->roles->contains('role', 'manager') || auth()->user()->roles->contains('role', 'admin');
+                        $isAdmin = auth()->user()->roles->contains('role', 'admin');
+                        $isTourist = auth()->user()->roles->contains('role', 'tourist');
+                    @endphp
+                    
+                    @if($isManager)
+                        {{-- Меню для менеджера --}}
+                        <li class="nav-header">ПАНЕЛЬ МЕНЕДЖЕРА</li>
+                        <li class="nav-item">
+                            <a href="{{route('manager.dashboard')}}" class="nav-link {{ request()->routeIs('manager.dashboard') ? 'active' : '' }}">
+                                <i class="bi bi-speedometer2 ml-1 mr-2"></i>
+                                <p>Главная</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('manager.bookings')}}" class="nav-link {{ request()->routeIs('manager.bookings') ? 'active' : '' }}">
+                                <i class="bi bi-bookmark ml-1 mr-2"></i>
+                                <p>Заявки</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('manager.clients')}}" class="nav-link {{ request()->routeIs('manager.clients') ? 'active' : '' }}">
+                                <i class="bi bi-people ml-1 mr-2"></i>
+                                <p>Клиенты</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('manager.chat')}}" class="nav-link {{ request()->routeIs('manager.chat') ? 'active' : '' }}">
+                                <i class="bi bi-chat-dots ml-1 mr-2"></i>
+                                <p>
+                                    Чат с клиентами
+                                    @if($unreadCount > 0)
+                                        <span class="badge badge-danger right">{{ $unreadCount }}</span>
+                                    @endif
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('manager.statistics')}}" class="nav-link {{ request()->routeIs('manager.statistics') ? 'active' : '' }}">
+                                <i class="bi bi-graph-up ml-1 mr-2"></i>
+                                <p>Статистика</p>
+                            </a>
+                        </li>
+                        
+                        @if($isTourist)
+                            {{-- Переключение на кабинет туриста --}}
+                            <li class="nav-header">МОЙ КАБИНЕТ</li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.dashboard') }}" class="nav-link">
-                                    <i class="bi bi-shield-check ml-1 mr-2"></i>
-                                    <p>Админ панель</p>
+                                <a href="{{route('profile.dashboard')}}" class="nav-link">
+                                    <i class="bi bi-person ml-1 mr-2"></i>
+                                    <p>Личный кабинет</p>
                                 </a>
                             </li>
                         @endif
-                        @if(auth()->user()->roles->contains('role', 'manager') || auth()->user()->roles->contains('role', 'admin'))
-                            <li class="nav-header">УПРАВЛЕНИЕ</li>
+                    @else
+                        {{-- Меню для туриста --}}
+                        <li class="nav-header">ЛИЧНЫЙ КАБИНЕТ</li>
+                        <li class="nav-item">
+                            <a href="{{route('profile.dashboard')}}" class="nav-link {{ request()->routeIs('profile.dashboard') ? 'active' : '' }}">
+                                <i class="bi bi-speedometer2 ml-1 mr-2"></i>
+                                <p>Главная</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('profile.bookings')}}" class="nav-link {{ request()->routeIs('profile.bookings') ? 'active' : '' }}">
+                                <i class="bi bi-bookmark ml-1 mr-2"></i>
+                                <p>Мои заявки</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('profile.chat')}}" class="nav-link {{ request()->routeIs('profile.chat') ? 'active' : '' }}">
+                                <i class="bi bi-chat-dots ml-1 mr-2"></i>
+                                <p>
+                                    Чат с менеджером
+                                    @if($unreadCount > 0)
+                                        <span class="badge badge-danger right">{{ $unreadCount }}</span>
+                                    @endif
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{route('profile.documents')}}" class="nav-link {{ request()->routeIs('profile.documents') ? 'active' : '' }}">
+                                <i class="bi bi-file-earmark-text ml-1 mr-2"></i>
+                                <p>Документы</p>
+                            </a>
+                        </li>
+                    @endif
+                    
+                    @auth
+                        @if($isAdmin)
+                            <li class="nav-header">АДМИНИСТРИРОВАНИЕ</li>
                             <li class="nav-item">
-                                <a href="{{ route('manager.dashboard') }}" class="nav-link">
-                                    <i class="bi bi-briefcase ml-1 mr-2"></i>
-                                    <p>Панель менеджера</p>
+                                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
+                                    <i class="bi bi-shield-check ml-1 mr-2"></i>
+                                    <p>Админ панель</p>
                                 </a>
                             </li>
                         @endif
