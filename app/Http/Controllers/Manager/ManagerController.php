@@ -23,7 +23,7 @@ class ManagerController extends Controller
         // Статистика для менеджера
         $assignedBookings = Booking::where('manager_id', $manager->id)->count();
         $pendingBookings = Booking::where('manager_id', $manager->id)
-            ->where('status', Booking::STATUS_PENDING)
+            ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
             ->count();
         $confirmedBookings = Booking::where('manager_id', $manager->id)
             ->where('status', Booking::STATUS_CONFIRMED)
@@ -85,7 +85,7 @@ class ManagerController extends Controller
         foreach ($clients as $client) {
             $client->active_bookings = Booking::where('user_id', $client->id)
                 ->where('manager_id', $manager->id)
-                ->whereIn('status', [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED])
+                ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED])
                 ->count();
             
             $client->latest_booking = Booking::where('user_id', $client->id)
@@ -130,7 +130,7 @@ class ManagerController extends Controller
         // Статистика для фильтров
         $statusCounts = [
             'all' => Booking::where('manager_id', $manager->id)->count(),
-            'pending' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_PENDING)->count(),
+            'pending' => Booking::where('manager_id', $manager->id)->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
             'confirmed' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CONFIRMED)->count(),
             'completed' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CANCELLED)->count(),
@@ -188,7 +188,7 @@ class ManagerController extends Controller
         
         // Статистика по статусам
         $statusStats = [
-            'pending' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_PENDING)->count(),
+            'pending' => Booking::where('manager_id', $manager->id)->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
             'confirmed' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CONFIRMED)->count(),
             'completed' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CANCELLED)->count(),

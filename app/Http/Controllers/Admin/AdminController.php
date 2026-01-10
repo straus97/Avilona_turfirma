@@ -33,7 +33,7 @@ class AdminController extends Controller
         
         // Статистика заявок по статусам
         $bookingsByStatus = [
-            'pending' => Booking::where('status', Booking::STATUS_PENDING)->count(),
+            'pending' => Booking::whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
             'confirmed' => Booking::where('status', Booking::STATUS_CONFIRMED)->count(),
             'completed' => Booking::where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('status', Booking::STATUS_CANCELLED)->count(),
@@ -189,7 +189,7 @@ class AdminController extends Controller
         // Счетчики
         $statusCounts = [
             'all' => Booking::count(),
-            'pending' => Booking::where('status', Booking::STATUS_PENDING)->count(),
+            'pending' => Booking::whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
             'confirmed' => Booking::where('status', Booking::STATUS_CONFIRMED)->count(),
             'completed' => Booking::where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('status', Booking::STATUS_CANCELLED)->count(),
