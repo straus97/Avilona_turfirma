@@ -88,6 +88,9 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        
+        // Базовая валидация
         $validated = $request->validate([
             'tour_id' => 'nullable|exists:tours,id',
             'departure_city' => 'required|string|max:255',
@@ -99,9 +102,33 @@ class BookingController extends Controller
             'children' => 'integer|min:0|max:10',
             'tourists_data' => 'nullable|array',
             'notes' => 'nullable|string',
+            'is_new_client' => 'nullable|boolean',
+            'client_id' => 'nullable|exists:users,id',
+            'client_name' => 'nullable|string|max:255',
+            'client_email' => 'nullable|email|max:255',
         ]);
 
-        $validated['user_id'] = Auth::id();
+        // Определяем user_id для заявки
+        if ($user->hasAnyRole(['manager', 'admin'])) {
+            // Если менеджер/админ создает заявку
+            if ($request->is_new_client) {
+                // Создаем нового пользователя (турист будет зарегистрирован позже)
+                // Сохраняем ФИО в notes пока клиент не зарегистрируется
+                $validated['notes'] = ($validated['notes'] ?? '') . "\n\nКлиент (не зарегистрирован): " . $request->client_name;
+                if ($request->client_email) {
+                    $validated['notes'] .= " (Email: {$request->client_email})";
+                }
+                // Временно привязываем к менеджеру, который создал заявку
+                $validated['user_id'] = $user->id;
+            } else {
+                // Выбран существующий клиент
+                $validated['user_id'] = $request->client_id;
+            }
+        } else {
+            // Турист создает заявку для себя
+            $validated['user_id'] = $user->id;
+        }
+
         $validated['status'] = Booking::STATUS_NEW;
 
         // Если указан тур, берем цену из него

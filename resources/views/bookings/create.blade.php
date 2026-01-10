@@ -63,21 +63,38 @@
                                     </div>
 
                                     <div id="newClientBlock" style="display: none;">
-                                        <label for="client_name" class="form-label">
-                                            ФИО нового клиента <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" 
-                                               class="form-control @error('client_name') is-invalid @enderror" 
-                                               id="client_name" 
-                                               name="client_name" 
-                                               value="{{ old('client_name') }}" 
-                                               placeholder="Иванов Иван Иванович">
-                                        @error('client_name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <small class="form-text text-muted">
-                                            После регистрации клиента в системе, заявка автоматически привяжется к его аккаунту
-                                        </small>
+                                        <div class="mb-3">
+                                            <label for="client_name" class="form-label">
+                                                ФИО нового клиента <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control @error('client_name') is-invalid @enderror" 
+                                                   id="client_name" 
+                                                   name="client_name" 
+                                                   value="{{ old('client_name') }}" 
+                                                   placeholder="Иванов Иван Иванович">
+                                            @error('client_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="client_email" class="form-label">
+                                                Email клиента (опционально)
+                                            </label>
+                                            <input type="email" 
+                                                   class="form-control @error('client_email') is-invalid @enderror" 
+                                                   id="client_email" 
+                                                   name="client_email" 
+                                                   value="{{ old('client_email') }}" 
+                                                   placeholder="client@example.com">
+                                            @error('client_email')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="form-text text-muted">
+                                                ФИО и email будут сохранены. После регистрации клиента в системе, заявка автоматически привяжется к его аккаунту
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -342,12 +359,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 existingClientBlock.style.display = 'none';
                 newClientBlock.style.display = 'block';
                 clientIdSelect.removeAttribute('required');
+                clientIdSelect.value = '';
                 clientNameInput.setAttribute('required', 'required');
             } else {
                 existingClientBlock.style.display = 'block';
                 newClientBlock.style.display = 'none';
                 clientIdSelect.setAttribute('required', 'required');
                 clientNameInput.removeAttribute('required');
+                clientNameInput.value = '';
+                document.getElementById('client_email').value = '';
             }
         });
     }
