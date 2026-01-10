@@ -72,7 +72,7 @@ class BookingController extends Controller
         $clients = collect();
         if (Auth::user()->hasAnyRole(['manager', 'admin'])) {
             $clients = User::whereHas('roles', function($query) {
-                $query->where('role', 'tourist');
+                $query->where('name', 'tourist');
             })
             ->select('id', 'name', 'email')
             ->orderBy('name')

@@ -49,6 +49,9 @@ class ManagerController extends Controller
             ->distinct('user_id')
             ->count('user_id');
         
+        // Общее количество заявок
+        $totalBookings = $assignedBookings;
+        
         return view('manager.dashboard', compact(
             'manager',
             'assignedBookings',
@@ -57,7 +60,8 @@ class ManagerController extends Controller
             'completedBookings',
             'unreadMessages',
             'recentBookings',
-            'totalClients'
+            'totalClients',
+            'totalBookings'
         ));
     }
     

@@ -109,9 +109,8 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         
-        // Получаем все заявки с документами
+        // Получаем все заявки пользователя
         $bookings = Booking::where('user_id', $user->id)
-            ->whereNotNull('documents')
             ->with('tour')
             ->latest()
             ->get();

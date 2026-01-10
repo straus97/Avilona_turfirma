@@ -56,7 +56,7 @@ class AdminController extends Controller
         
         // Менеджеры
         $managers = User::whereHas('roles', function ($query) {
-            $query->where('role', 'manager');
+            $query->where('name', 'manager');
         })->withCount('managedBookings')->get();
         
         return view('admin.dashboard', compact(
@@ -94,7 +94,7 @@ class AdminController extends Controller
         // Фильтр по роли
         if ($request->has('role') && $request->role !== 'all') {
             $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('role', $request->role);
+                $q->where('name', $request->role);
             });
         }
         
@@ -183,7 +183,7 @@ class AdminController extends Controller
         
         // Список менеджеров
         $managers = User::whereHas('roles', function ($query) {
-            $query->where('role', 'manager');
+            $query->where('name', 'manager');
         })->get();
         
         // Счетчики

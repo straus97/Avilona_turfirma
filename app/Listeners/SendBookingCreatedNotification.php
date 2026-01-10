@@ -21,7 +21,7 @@ class SendBookingCreatedNotification
 
         // Отправляем уведомление всем администраторам
         $admins = User::whereHas('roles', function($query) {
-            $query->where('role', 'admin');
+            $query->where('name', 'admin');
         })->get();
 
         foreach ($admins as $admin) {
