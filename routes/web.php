@@ -158,13 +158,25 @@ Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('mana
 
 // Маршруты только для администраторов
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    // Главная страница админ панели
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
     
-    // TODO: Добавить маршруты для управления системой
-    // Route::resource('users', AdminUserController::class);
-    // Route::resource('roles', AdminRoleController::class);
+    // Управление пользователями
+    Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users');
+    Route::get('/users/{user}/roles', [\App\Http\Controllers\Admin\AdminController::class, 'userRoles'])->name('user-roles');
+    Route::post('/users/{user}/assign-role', [\App\Http\Controllers\Admin\AdminController::class, 'assignRole'])->name('assign-role');
+    Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\Admin\AdminController::class, 'removeRole'])->name('remove-role');
+    Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('delete-user');
+    
+    // Управление заявками
+    Route::get('/bookings', [\App\Http\Controllers\Admin\AdminController::class, 'bookings'])->name('bookings');
+    
+    // Управление контентом
+    Route::get('/content', [\App\Http\Controllers\Admin\AdminController::class, 'content'])->name('content');
+    
+    // Системные настройки
+    Route::get('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings/clear-cache', [\App\Http\Controllers\Admin\AdminController::class, 'clearCache'])->name('clear-cache');
 });
 
 require __DIR__ . '/auth.php';

@@ -365,9 +365,33 @@
                         @if($isAdmin)
                             <li class="nav-header">АДМИНИСТРИРОВАНИЕ</li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
-                                    <i class="bi bi-shield-check ml-1 mr-2"></i>
-                                    <p>Админ панель</p>
+                                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                    <i class="bi bi-speedometer2 ml-1 mr-2"></i>
+                                    <p>Главная</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users') || request()->routeIs('admin.user-roles') ? 'active' : '' }}">
+                                    <i class="bi bi-people ml-1 mr-2"></i>
+                                    <p>Пользователи</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.bookings') }}" class="nav-link {{ request()->routeIs('admin.bookings') ? 'active' : '' }}">
+                                    <i class="bi bi-bookmark ml-1 mr-2"></i>
+                                    <p>Заявки</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.content') }}" class="nav-link {{ request()->routeIs('admin.content') ? 'active' : '' }}">
+                                    <i class="bi bi-newspaper ml-1 mr-2"></i>
+                                    <p>Контент</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.settings') }}" class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+                                    <i class="bi bi-gear ml-1 mr-2"></i>
+                                    <p>Настройки</p>
                                 </a>
                             </li>
                         @endif
