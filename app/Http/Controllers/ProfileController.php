@@ -23,6 +23,9 @@ class ProfileController extends Controller
         
         // Получаем статистику для туриста
         $bookingsCount = Booking::where('user_id', $user->id)->count();
+        $pendingBookings = Booking::where('user_id', $user->id)
+            ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
+            ->count();
         $activeBookings = Booking::where('user_id', $user->id)
             ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED])
             ->count();
@@ -45,6 +48,7 @@ class ProfileController extends Controller
         return view('profile.dashboard', compact(
             'user',
             'bookingsCount',
+            'pendingBookings',
             'activeBookings',
             'completedBookings',
             'recentBookings',

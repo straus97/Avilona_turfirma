@@ -54,6 +54,9 @@ class AdminController extends Controller
         // Заявки без менеджера
         $unassignedBookings = Booking::whereNull('manager_id')->count();
         
+        // Новые и в работе заявки
+        $pendingBookings = Booking::whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count();
+        
         // Менеджеры
         $managers = User::whereHas('roles', function ($query) {
             $query->where('name', 'manager');
@@ -62,6 +65,7 @@ class AdminController extends Controller
         return view('admin.dashboard', compact(
             'totalUsers',
             'totalBookings',
+            'pendingBookings',
             'totalRevenue',
             'totalMessages',
             'usersByRole',
