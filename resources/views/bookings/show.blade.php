@@ -272,7 +272,7 @@
                                     <label for="manager_id" class="form-label">Выберите менеджера</label>
                                     <select name="manager_id" id="manager_id" class="form-select" required>
                                         <option value="">-- Выберите --</option>
-                                        @foreach(\App\Models\User::where('role', 'manager')->get() as $manager)
+                                        @foreach(\App\Models\User::whereHas('roles', function($q) { $q->where('name', 'manager'); })->get() as $manager)
                                             <option value="{{ $manager->id }}">{{ $manager->name }}</option>
                                         @endforeach
                                     </select>

@@ -32,8 +32,8 @@
             <div class="col-lg-3 col-6">
                 <div class="small-box bg-gradient-info">
                     <div class="inner">
-                        <h3>{{ $totalBookings }}</h3>
-                        <p>{{ str_plural($totalBookings, 'заявка', 'заявки', 'заявок') }}</p>
+                        <h3>{{ $bookingsCount }}</h3>
+                        <p>{{ str_plural($bookingsCount, 'заявка', 'заявки', 'заявок') }}</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-clipboard-list"></i>
