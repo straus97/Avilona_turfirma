@@ -49,7 +49,37 @@ class BookingController extends Controller
         $tourId = $request->query('tour_id');
         $tour = $tourId ? Tour::findOrFail($tourId) : null;
         
-        return view('bookings.create', compact('tour'));
+        // Получаем уникальные города вылета
+        $departureCities = Tour::select('departure_city')
+            ->distinct()
+            ->orderBy('departure_city')
+            ->pluck('departure_city');
+        
+        // Получаем уникальные страны назначения
+        $destinationCountries = Tour::select('destination_country')
+            ->distinct()
+            ->orderBy('destination_country')
+            ->pluck('destination_country');
+        
+        // Получаем уникальные города/курорты назначения
+        $destinationCities = Tour::select('destination_city')
+            ->whereNotNull('destination_city')
+            ->distinct()
+            ->orderBy('destination_city')
+            ->pluck('destination_city');
+        
+        // Получаем список клиентов (только для менеджеров и админов)
+        $clients = collect();
+        if (Auth::user()->hasAnyRole(['manager', 'admin'])) {
+            $clients = User::whereHas('roles', function($query) {
+                $query->where('role', 'tourist');
+            })
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        }
+        
+        return view('bookings.create', compact('tour', 'departureCities', 'destinationCountries', 'destinationCities', 'clients'));
     }
 
     /**
