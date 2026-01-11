@@ -115,7 +115,7 @@
                 <h5 class="modal-title">Загрузить документ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('cabinet.documents.upload') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('cabinet.documents.personal.upload') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">

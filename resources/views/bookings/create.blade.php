@@ -346,7 +346,7 @@
 
                             <!-- Кнопки -->
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ route('bookings.index') }}" class="btn btn-secondary btn-lg">
+                                <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary btn-lg">
                                     <i class="bi bi-arrow-left"></i> Отмена
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg">

@@ -138,7 +138,7 @@
             <h6 class="mb-3">Статистика</h6>
             <div class="d-flex justify-content-between mb-2">
                 <span class="text-muted">Регистрация:</span>
-                <span class="fw-bold">{{ Auth::user()->created_at->format('d.m.Y') }}</span>
+                <span class="fw-bold">{{ Auth::user()->created_at ? Auth::user()->created_at->format('d.m.Y') : 'Не указана' }}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span class="text-muted">Заявок:</span>

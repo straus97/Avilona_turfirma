@@ -166,12 +166,12 @@
             <hr>
             <div class="mb-2">
                 <div class="text-muted small">Дата регистрации</div>
-                <div>{{ Auth::user()->created_at->format('d.m.Y') }}</div>
+                <div>{{ Auth::user()->created_at ? Auth::user()->created_at->format('d.m.Y') : 'Не указана' }}</div>
             </div>
             <hr>
             <div>
                 <div class="text-muted small">Последний вход</div>
-                <div>{{ Auth::user()->updated_at->format('d.m.Y H:i') }}</div>
+                <div>{{ Auth::user()->last_login_at ? Auth::user()->last_login_at->format('d.m.Y H:i') : (Auth::user()->updated_at ? Auth::user()->updated_at->format('d.m.Y H:i') : 'Неизвестно') }}</div>
             </div>
         </div>
 

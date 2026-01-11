@@ -102,7 +102,7 @@
                                 <li><a class="dropdown-item" href="{{ route('cabinet.bookings') }}">
                                     <i class="bi bi-bookmark"></i> Мои заявки
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ route('account') }}">
+                                <li><a class="dropdown-item" href="{{ route('cabinet.dashboard') }}">
                                     <i class="bi bi-house-door"></i> Личный кабинет
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
