@@ -40,7 +40,7 @@
     </div>
     @endif
     
-    @if($booking->user->password_change_required && isset($booking->user->temp_password))
+    @if($booking->user->password_change_required && $booking->user->temp_password)
         {{-- Для новых пользователей с временным паролем --}}
         <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #155724; margin-top: 0; text-align: center;">🔐 Вы добавлены в нашу систему!</h3>

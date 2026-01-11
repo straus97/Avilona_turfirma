@@ -113,6 +113,14 @@ class BookingController extends Controller
         if ($user->hasAnyRole(['manager', 'admin'])) {
             // Если менеджер/админ создает заявку
             if ($request->is_new_client) {
+                // Проверяем, существует ли email в базе
+                $existingUser = User::where('email', $request->client_email)->first();
+                if ($existingUser) {
+                    return back()->withErrors([
+                        'client_email' => 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.'
+                    ])->withInput();
+                }
+                
                 // Генерируем читаемый временный пароль
                 $tempPassword = 'AV' . rand(1000, 9999) . strtoupper(substr(md5(time()), 0, 4));
                 
@@ -121,8 +129,9 @@ class BookingController extends Controller
                     'name' => $request->client_name,
                     'email' => $request->client_email ?? 'temp_' . time() . '@avilona.ru',
                     'password' => bcrypt($tempPassword),
-                    'password_change_required' => true, // Требуется смена пароля
-                    'email_verified_at' => null, // Не верифицирован
+                    'password_change_required' => true,
+                    'temp_password' => $tempPassword, // Сохраняем временный пароль в БД
+                    'email_verified_at' => null,
                 ]);
                 
                 // Назначаем роль "tourist"
@@ -131,14 +140,11 @@ class BookingController extends Controller
                     $newTourist->roles()->attach($touristRole->id);
                 }
                 
-                // Сохраняем временный пароль для отправки в письме
-                $newTourist->temp_password = $tempPassword;
-                
                 // Привязываем заявку к новому туристу
                 $validated['user_id'] = $newTourist->id;
                 
                 // Добавляем пометку в notes
-                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Отправлены данные для входа на email.";
+                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Отправлены данные для входа на email: {$request->client_email}";
             } else {
                 // Выбран существующий клиент
                 $validated['user_id'] = $request->client_id;

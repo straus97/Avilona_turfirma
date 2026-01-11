@@ -38,6 +38,7 @@ class PasswordChangeController extends Controller
         // Обновляем пароль
         $user->password = Hash::make($request->password);
         $user->password_change_required = false;
+        $user->temp_password = null; // Очищаем временный пароль
         
         // Подтверждаем email автоматически
         if (!$user->email_verified_at) {
