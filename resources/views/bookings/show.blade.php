@@ -8,9 +8,14 @@
 @section('meta_description', 'Детали заявки на тур')
 
 @section('content')
+@auth
+<div class="container mt-4">
+    <div class="row">
+@else
 <main>
     <div class="container mt-5">
         <div class="row">
+@endauth
             <div class="col-md-8">
                 <!-- Основная информация о заявке -->
                 <div class="card shadow mb-4">
@@ -346,8 +351,8 @@
                 </div>
             </div>
 @auth
-        </div>
     </div>
+</div>
 @else
         </div>
     </div>

@@ -211,7 +211,15 @@ class CabinetController extends Controller
     public function personalDocuments(): View
     {
         $user = Auth::user();
-        $documents = UserDocument::where('user_id', $user->id)->latest()->get();
+        $type = request('type', 'all');
+        
+        $query = UserDocument::where('user_id', $user->id);
+        
+        if ($type !== 'all') {
+            $query->where('document_type', $type);
+        }
+        
+        $documents = $query->latest()->get();
         return view('cabinet.tourist.documents.personal', compact('documents'));
     }
     
@@ -365,6 +373,7 @@ class CabinetController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'document_type' => 'nullable|in:passport,foreign_passport,visa,birth_certificate,other',
             'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip,rar|max:10240', // 10MB
         ]);
         
@@ -386,6 +395,7 @@ class CabinetController extends Controller
             UserDocument::create([
                 'user_id' => Auth::id(),
                 'name' => $validated['name'],
+                'document_type' => $validated['document_type'] ?? 'other',
                 'file_path' => $path,
                 'file_type' => $file->getClientOriginalExtension(),
                 'file_size' => $file->getSize(),

@@ -33,17 +33,6 @@
                             </div>
                             <div class="card-body p-4">
 @endauth
-<main>
-    <div class="container mt-5 mb-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card shadow-lg">
-                    <div class="card-header bg-gradient-primary text-white py-3">
-                        <h3 class="mb-0">
-                            <i class="bi bi-plus-circle-fill"></i> Создать заявку на тур
-                        </h3>
-                    </div>
-                    <div class="card-body p-4">
                         @if($tour)
                             <div class="alert alert-info border-left-info">
                                 <i class="bi bi-info-circle-fill"></i>
@@ -383,11 +372,10 @@
                                 </button>
                             </div>
                         </form>
-                    </div>
 @auth
         </div>
-    </div>
 @else
+                    </div>
                 </div>
             </div>
         </div>

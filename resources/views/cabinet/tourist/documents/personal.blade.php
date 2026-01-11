@@ -77,10 +77,10 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-3">
-                        <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                        <a href="{{ Storage::disk('public')->url($document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
                             <i class="bi bi-eye"></i> Просмотр
                         </a>
-                        <a href="{{ Storage::url($document->file_path) }}" download class="btn btn-sm btn-outline-secondary flex-fill">
+                        <a href="{{ Storage::disk('public')->url($document->file_path) }}" download class="btn btn-sm btn-outline-secondary flex-fill">
                             <i class="bi bi-download"></i> Скачать
                         </a>
                         <form action="{{ route('cabinet.documents.personal.delete', $document->id) }}" method="POST" onsubmit="return confirm('Удалить документ?');">
@@ -114,6 +114,17 @@
             <form action="{{ route('cabinet.documents.personal.upload') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Тип документа</label>
+                        <select name="document_type" class="form-select">
+                            <option value="">-- Выберите тип --</option>
+                            <option value="passport">Паспорт</option>
+                            <option value="foreign_passport">Загранпаспорт</option>
+                            <option value="visa">Виза</option>
+                            <option value="birth_certificate">Свидетельство о рождении</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Название документа <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control" placeholder="Например: Паспорт Иванов И.И." required>
