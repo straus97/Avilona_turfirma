@@ -1,4 +1,8 @@
-@extends('layouts.main')
+@auth
+    @extends('cabinet.layouts.app')
+@else
+    @extends('layouts.main')
+@endauth
 
 @section('title', 'Создать заявку - Авилона')
 @section('meta_description', 'Создание заявки на тур')

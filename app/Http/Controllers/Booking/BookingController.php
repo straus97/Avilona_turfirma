@@ -49,6 +49,12 @@ class BookingController extends Controller
      */
     public function create(Request $request)
     {
+        // Редирект на кабинет если пользователь авторизован
+        if (Auth::check() && Auth::user()->hasAnyRole(['tourist', 'manager', 'admin'])) {
+            // TODO: создать страницу создания заявки в кабинете
+            // Пока используем старую страницу, но можно редиректить
+        }
+    {
         $tourId = $request->query('tour_id');
         $tour = $tourId ? Tour::findOrFail($tourId) : null;
         

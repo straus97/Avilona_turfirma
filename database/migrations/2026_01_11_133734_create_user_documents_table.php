@@ -14,17 +14,13 @@ return new class extends Migration
         Schema::create('user_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('document_type', ['passport', 'foreign_passport', 'birth_certificate', 'visa', 'other']);
-            $table->string('title');
+            $table->string('name'); // Название документа
             $table->string('file_path');
-            $table->integer('file_size')->nullable();
-            $table->timestamp('uploaded_at')->useCurrent();
-            $table->integer('version')->default(1);
-            $table->boolean('is_active')->default(true);
+            $table->string('file_type')->nullable(); // Тип файла (pdf, doc, jpg и т.д.)
+            $table->unsignedBigInteger('file_size')->nullable(); // Размер в байтах
             $table->timestamps();
-            $table->softDeletes();
             
-            $table->index(['user_id', 'document_type']);
+            $table->index('user_id');
         });
     }
 

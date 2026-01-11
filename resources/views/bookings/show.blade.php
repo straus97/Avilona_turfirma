@@ -1,4 +1,8 @@
-@extends('layouts.main')
+@auth
+    @extends('cabinet.layouts.app')
+@else
+    @extends('layouts.main')
+@endauth
 
 @section('title', 'Заявка #' . $booking->id . ' - Авилона')
 @section('meta_description', 'Детали заявки на тур')

@@ -18,9 +18,22 @@
         <div class="card-custom mb-4">
             <h5 class="mb-4"><i class="bi bi-shield-lock"></i> Смена пароля</h5>
             
-            @if(session('status') && str_contains(session('status'), 'пароль'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle"></i> {{ session('status') }}
+            @if(session('status'))
+                @php
+                    $statusMessage = session('status');
+                    $isPasswordSuccess = str_contains(strtolower($statusMessage), 'пароль') || str_contains(strtolower($statusMessage), 'password');
+                @endphp
+                @if($isPasswordSuccess)
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle"></i> <strong>Успешно!</strong> {{ $statusMessage }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+            @endif
+            
+            @if($errors->has('current_password') || $errors->has('password'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Ошибка!</strong> Проверьте правильность введенных данных.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif

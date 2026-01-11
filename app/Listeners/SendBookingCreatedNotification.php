@@ -16,16 +16,16 @@ class SendBookingCreatedNotification
     {
         $booking = $event->booking;
 
-        // Отправляем письмо клиенту
+        // Отправляем письмо клиенту (туристу)
         Mail::to($booking->user->email)->queue(new BookingCreatedMail($booking));
 
-        // Отправляем уведомление всем администраторам
+        // Отправляем отдельное письмо всем администраторам
         $admins = User::whereHas('roles', function($query) {
             $query->where('name', 'admin');
         })->get();
 
         foreach ($admins as $admin) {
-            Mail::to($admin->email)->queue(new BookingCreatedMail($booking));
+            Mail::to($admin->email)->queue(new \App\Mail\AdminBookingCreated($booking));
         }
     }
 }
