@@ -1,20 +1,35 @@
 @auth
     @extends('cabinet.layouts.app')
+    
+    @section('title', 'Заявка #' . $booking->id)
+    
+    @section('sidebar')
+        @if(Auth::user()->isTourist())
+            @include('cabinet.components.sidebar.tourist')
+        @elseif(Auth::user()->isManager())
+            @include('cabinet.components.sidebar.manager')
+        @elseif(Auth::user()->isAdmin())
+            @include('cabinet.components.sidebar.admin')
+        @endif
+    @endsection
+    
+    @section('content')
+        <div class="page-header">
+            <h1 class="page-title">Заявка #{{ $booking->id }}</h1>
+            <p class="page-subtitle">{{ $booking->destination_country }}@if($booking->destination_city), {{ $booking->destination_city }}@endif</p>
+        </div>
+        
+        <div class="row">
 @else
     @extends('layouts.main')
-@endauth
-
-@section('title', 'Заявка #' . $booking->id . ' - Авилона')
-@section('meta_description', 'Детали заявки на тур')
-
-@section('content')
-@auth
-<div class="container mt-4">
-    <div class="row">
-@else
-<main>
-    <div class="container mt-5">
-        <div class="row">
+    
+    @section('title', 'Заявка #' . $booking->id . ' - Авилона')
+    @section('meta_description', 'Детали заявки на тур')
+    
+    @section('content')
+        <main>
+            <div class="container mt-5">
+                <div class="row">
 @endauth
             <div class="col-md-8">
                 <!-- Основная информация о заявке -->
@@ -351,12 +366,13 @@
                 </div>
             </div>
 @auth
-    </div>
-</div>
-@else
         </div>
-    </div>
-</main>
+    @endsection
+@else
+                </div>
+            </div>
+        </main>
+    @endsection
 @endauth
 @endsection
 

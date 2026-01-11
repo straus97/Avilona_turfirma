@@ -28,8 +28,9 @@ class AdminBookingCreated extends Mailable
      */
     public function envelope(): Envelope
     {
+        $userName = $this->booking->user ? $this->booking->user->name : 'Не указан';
         return new Envelope(
-            subject: 'Новая заявка #' . $this->booking->id . ' от ' . $this->booking->user->name,
+            subject: 'Новая заявка #' . $this->booking->id . ' от ' . $userName,
         );
     }
 

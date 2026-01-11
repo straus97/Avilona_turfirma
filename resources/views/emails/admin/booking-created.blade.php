@@ -71,18 +71,19 @@
         </table>
     </div>
 
+    @if($booking->user)
     <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
         <h2 style="color: #1976d2; margin-top: 0;">Информация о туристе</h2>
         <table style="width: 100%; border-collapse: collapse;">
             <tr>
                 <td style="padding: 8px 0; color: #6c757d; width: 40%;"><strong>ФИО:</strong></td>
-                <td style="padding: 8px 0; color: #2c3e50;">{{ $booking->user->name }}</td>
+                <td style="padding: 8px 0; color: #2c3e50;">{{ $booking->user->name ?? 'Не указано' }}</td>
             </tr>
             <tr>
                 <td style="padding: 8px 0; color: #6c757d;"><strong>Email:</strong></td>
-                <td style="padding: 8px 0; color: #2c3e50;">{{ $booking->user->email }}</td>
+                <td style="padding: 8px 0; color: #2c3e50;">{{ $booking->user->email ?? 'Не указано' }}</td>
             </tr>
-            @if($booking->user->phone)
+            @if($booking->user->phone ?? null)
                 <tr>
                     <td style="padding: 8px 0; color: #6c757d;"><strong>Телефон:</strong></td>
                     <td style="padding: 8px 0; color: #2c3e50;">{{ $booking->user->phone }}</td>
@@ -91,7 +92,7 @@
             <tr>
                 <td style="padding: 8px 0; color: #6c757d;"><strong>Статус регистрации:</strong></td>
                 <td style="padding: 8px 0; color: #2c3e50;">
-                    @if($booking->user->email_verified_at)
+                    @if($booking->user->email_verified_at ?? null)
                         <span style="color: #4caf50; font-weight: bold;">✓ Зарегистрирован на сайте</span>
                     @else
                         <span style="color: #ff9800; font-weight: bold;">⚠ Не зарегистрирован</span>
@@ -101,10 +102,12 @@
             <tr>
                 <td style="padding: 8px 0; color: #6c757d;"><strong>Контактная информация:</strong></td>
                 <td style="padding: 8px 0; color: #2c3e50;">
+                    @if($booking->user->email ?? null)
                     <p style="margin: 4px 0;">
                         <strong>Email:</strong> <a href="mailto:{{ $booking->user->email }}" style="color: #2196f3;">{{ $booking->user->email }}</a>
                     </p>
-                    @if($booking->user->phone)
+                    @endif
+                    @if($booking->user->phone ?? null)
                         <p style="margin: 4px 0;">
                             <strong>Телефон:</strong> <a href="tel:{{ $booking->user->phone }}" style="color: #2196f3;">{{ $booking->user->phone }}</a>
                         </p>
@@ -116,9 +119,16 @@
 
     <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #fff3cd; border-radius: 8px;">
         <p style="margin: 0; color: #856404;">
-            <strong>⚠ Важно:</strong> {{ $booking->user->email_verified_at ? 'Турист зарегистрирован на сайте и может управлять заявкой самостоятельно.' : 'Турист не зарегистрирован на сайте. Рекомендуем связаться с ним и предложить зарегистрироваться для удобства взаимодействия.' }}
+            <strong>⚠ Важно:</strong> {{ ($booking->user->email_verified_at ?? null) ? 'Турист зарегистрирован на сайте и может управлять заявкой самостоятельно.' : 'Турист не зарегистрирован на сайте. Рекомендуем связаться с ним и предложить зарегистрироваться для удобства взаимодействия.' }}
         </p>
     </div>
+    @else
+    <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+        <p style="margin: 0; color: #856404;">
+            <strong>⚠ Внимание:</strong> Информация о туристе недоступна (пользователь удален или не указан).
+        </p>
+    </div>
+    @endif
 
     <div style="text-align: center; margin-top: 30px;">
         <a href="{{ url('/bookings/' . $booking->id) }}" 
