@@ -32,41 +32,22 @@
             </div>
 
             <div class="row">
-                @forelse($booking->documents as $document)
+                @forelse($booking->bookingDocuments as $document)
                     <div class="col-md-6 mb-3">
                         <div class="d-flex align-items-start gap-3 p-3 bg-light rounded">
                             <div style="width: 50px; height: 50px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                @switch($document->document_type)
-                                    @case('contract')
-                                        <i class="bi bi-file-earmark-text" style="font-size: 1.5rem; color: #3b82f6;"></i>
-                                        @break
-                                    @case('voucher')
-                                        <i class="bi bi-receipt" style="font-size: 1.5rem; color: #10b981;"></i>
-                                        @break
-                                    @case('tickets')
-                                        <i class="bi bi-ticket-perforated" style="font-size: 1.5rem; color: #f59e0b;"></i>
-                                        @break
-                                    @case('insurance')
-                                        <i class="bi bi-shield-check" style="font-size: 1.5rem; color: #ef4444;"></i>
-                                        @break
-                                    @default
-                                        <i class="bi bi-file-earmark" style="font-size: 1.5rem; color: #6b7280;"></i>
-                                @endswitch
+                                <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: #ef4444;"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <h6 class="mb-1" style="font-weight: 600;">{{ $document->title }}</h6>
+                                <h6 class="mb-1" style="font-weight: 600;">{{ $document->name }}</h6>
                                 <div style="font-size: 0.75rem; color: #6b7280;">
-                                    @switch($document->document_type)
-                                        @case('contract') Договор @break
-                                        @case('voucher') Ваучер @break
-                                        @case('tickets') Билеты @break
-                                        @case('insurance') Страховка @break
-                                        @case('instructions') Инструкции @break
-                                        @default Другое
-                                    @endswitch
+                                    {{ $document->file_type ?? 'Документ' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #9ca3af;">
-                                    {{ number_format($document->file_size / 1024, 0) }} КБ • {{ $document->uploaded_at->format('d.m.Y H:i') }}
+                                    @if($document->file_size)
+                                        {{ number_format($document->file_size / 1024, 0) }} КБ •
+                                    @endif
+                                    {{ $document->created_at->format('d.m.Y H:i') }}
                                 </div>
                             </div>
                             <div class="d-flex gap-2">

@@ -39,7 +39,15 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/wishlist', [\App\Http\Controllers\Cabinet\CabinetController::class, 'wishlist'])->name('wishlist');
         Route::get('/profile', [\App\Http\Controllers\Cabinet\CabinetController::class, 'profile'])->name('profile');
         Route::patch('/profile', [\App\Http\Controllers\Cabinet\CabinetController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/update-passport', [\App\Http\Controllers\Cabinet\CabinetController::class, 'updatePassport'])->name('profile.update-passport');
+        Route::post('/profile/upload-avatar', [\App\Http\Controllers\Cabinet\CabinetController::class, 'uploadAvatar'])->name('profile.upload-avatar');
+        
         Route::get('/settings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'settings'])->name('settings');
+        Route::post('/settings/notifications', [\App\Http\Controllers\Cabinet\CabinetController::class, 'updateNotifications'])->name('settings.notifications');
+        
+        // Документы
+        Route::post('/documents/personal/upload', [\App\Http\Controllers\Cabinet\CabinetController::class, 'uploadPersonalDocument'])->name('documents.personal.upload');
+        Route::delete('/documents/personal/{document}', [\App\Http\Controllers\Cabinet\CabinetController::class, 'deletePersonalDocument'])->name('documents.personal.delete');
     });
     
     // Менеджер
@@ -69,7 +77,19 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
 
 // Заявки (доступны только авторизованным пользователям)
 Route::middleware(['auth', 'password.change'])->group(function () {
-    Route::resource('bookings', \App\Http\Controllers\Booking\BookingController::class);
+    // Редирект /bookings на кабинет
+    Route::get('bookings', function() {
+        return redirect()->route('cabinet.bookings');
+    });
+    
+    // CRUD для заявок (только создание и просмотр доступны через старые routes)
+    Route::get('bookings/create', [\App\Http\Controllers\Booking\BookingController::class, 'create'])->name('bookings.create');
+    Route::post('bookings', [\App\Http\Controllers\Booking\BookingController::class, 'store'])->name('bookings.store');
+    Route::get('bookings/{booking}', [\App\Http\Controllers\Booking\BookingController::class, 'show'])->name('bookings.show');
+    Route::get('bookings/{booking}/edit', [\App\Http\Controllers\Booking\BookingController::class, 'edit'])->name('bookings.edit');
+    Route::put('bookings/{booking}', [\App\Http\Controllers\Booking\BookingController::class, 'update'])->name('bookings.update');
+    Route::delete('bookings/{booking}', [\App\Http\Controllers\Booking\BookingController::class, 'destroy'])->name('bookings.destroy');
+    
     Route::post('bookings/{booking}/assign-manager', [\App\Http\Controllers\Booking\BookingController::class, 'assignManager'])
         ->name('bookings.assign-manager')->middleware('role:admin');
     Route::post('bookings/{booking}/confirm', [\App\Http\Controllers\Booking\BookingController::class, 'confirm'])
@@ -155,41 +175,24 @@ Route::group(['namespace' => 'Captcha'], function () {
     );
 });
 
-// Маршруты для всех авторизованных пользователей (tourist, manager, admin)
-Route::middleware(['auth', 'password.change', 'verified', 'role:tourist,manager,admin'])->prefix('profile')->name('profile.')->group(function () {
-    // Главная страница личного кабинета
-    Route::get('/dashboard', [ProfileController::class, 'dashboard'])->name('dashboard');
-    
-    // Заявки туриста
-    Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
-    
-    // Чат с менеджером
-    Route::get('/chat/{bookingId?}', [ProfileController::class, 'chat'])->name('chat');
-    
-    // Документы
-    Route::get('/documents', [ProfileController::class, 'documents'])->name('documents');
-    Route::post('/documents/{booking}/upload', [ProfileController::class, 'uploadDocument'])->name('upload-document');
-    
-    // Настройки профиля
-    Route::get('/settings', [ProfileController::class, 'edit'])->name('edit');
-    Route::patch('/settings', [ProfileController::class, 'update'])->name('update');
-    Route::delete('/settings', [ProfileController::class, 'destroy'])->name('destroy');
-
-    // Старые маршруты для обратной совместимости
-    Route::get('/account', [ProfileController::class, 'dashboard'])->name('account.legacy');
-    Route::get('/message', function () {
-        return redirect()->route('profile.chat');
-    })->name('message.legacy');
+// СТАРЫЕ МАРШРУТЫ - РЕДИРЕКТЫ НА НОВЫЙ КАБИНЕТ
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile/dashboard', function () {
+        return redirect()->route('cabinet.dashboard');
+    });
+    Route::get('/profile/settings', function () {
+        return redirect()->route('cabinet.settings');
+    });
+    Route::get('/profile/bookings', function () {
+        return redirect()->route('cabinet.bookings');
+    });
+    Route::get('/profile/chat/{bookingId?}', function ($bookingId = null) {
+        return redirect()->route('cabinet.chat', $bookingId);
+    });
+    Route::get('/profile/documents', function () {
+        return redirect()->route('cabinet.documents.personal');
+    });
 });
-
-// Редирект со старого маршрута account на новый
-Route::middleware(['auth'])->get('/account', function () {
-    return redirect()->route('profile.dashboard');
-})->name('account');
-
-Route::middleware(['auth'])->get('/message', function () {
-    return redirect()->route('profile.chat');
-})->name('message');
 
 // Маршруты только для менеджеров и администраторов
 Route::middleware(['auth', 'password.change', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {

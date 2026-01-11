@@ -93,6 +93,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Получить количество непрочитанных сообщений
+     */
+    public function getUnreadMessagesCountAttribute()
+    {
+        return $this->receivedMessages()->where('is_read', false)->count();
+    }
+
+    /**
      * Проверка наличия роли у пользователя
      *
      * @param string|array $roles

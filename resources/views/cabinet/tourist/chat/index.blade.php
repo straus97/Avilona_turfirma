@@ -22,7 +22,7 @@
                 @foreach($bookings as $booking)
                     <a href="{{ route('cabinet.chat', $booking->id) }}" 
                        class="d-block p-3 mb-2 rounded {{ $currentBooking && $currentBooking->id == $booking->id ? 'bg-primary text-white' : 'bg-light' }}"
-                       style="text-decoration: none; transition: all 0.2s;">
+                       style="text-decoration: none; transition: all 0.2s; position: relative;">
                         <div class="d-flex align-items-start gap-2">
                             @if($booking->manager)
                                 <div class="user-avatar" style="width: 40px; height: 40px;">
@@ -34,21 +34,32 @@
                                 </div>
                             @endif
                             <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 600; font-size: 0.875rem;">
-                                    Заявка #{{ $booking->id }}
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div style="font-weight: 600; font-size: 0.875rem;">
+                                        Заявка #{{ $booking->id }}
+                                    </div>
+                                    @if($booking->unread_count > 0)
+                                        <span class="badge bg-danger rounded-pill">{{ $booking->unread_count }}</span>
+                                    @endif
                                 </div>
                                 <div style="font-size: 0.75rem; opacity: 0.8;">
                                     {{ $booking->destination_country }}
+                                    @if($booking->destination_city)
+                                        • {{ $booking->destination_city }}
+                                    @endif
                                 </div>
-                                @if($booking->manager)
-                                    <div style="font-size: 0.75rem; opacity: 0.7;">
-                                        {{ $booking->manager->name }}
-                                    </div>
-                                @else
-                                    <div style="font-size: 0.75rem; opacity: 0.7; font-style: italic;">
-                                        Менеджер не назначен
-                                    </div>
-                                @endif
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    @include('cabinet.components.status-badge', ['status' => $booking->status])
+                                    @if($booking->manager)
+                                        <div style="font-size: 0.75rem; opacity: 0.7;">
+                                            {{ $booking->manager->name }}
+                                        </div>
+                                    @else
+                                        <div style="font-size: 0.75rem; opacity: 0.7; font-style: italic;">
+                                            Менеджер не назначен
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -79,11 +90,14 @@
                             <h5 class="mb-0">{{ $currentBooking->manager->name }}</h5>
                             <div style="font-size: 0.875rem; color: #6b7280;">
                                 Заявка #{{ $currentBooking->id }} • {{ $currentBooking->destination_country }}
+                                @if($currentBooking->destination_city)
+                                    • {{ $currentBooking->destination_city }}
+                                @endif
+                            </div>
+                            <div class="mt-1">
+                                @include('cabinet.components.status-badge', ['status' => $currentBooking->status])
                             </div>
                         </div>
-                        <a href="{{ route('bookings.show', $currentBooking->id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> Заявка
-                        </a>
                     @else
                         <div class="alert alert-warning mb-0 flex-fill">
                             <i class="bi bi-exclamation-triangle"></i> Менеджер еще не назначен на эту заявку

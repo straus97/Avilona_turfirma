@@ -139,7 +139,19 @@ class CabinetController extends Controller
                 ->paginate(15);
         }
         
-        return view('cabinet.tourist.bookings.index', compact('bookings'));
+        // Статистика
+        $totalCount = $bookings->total();
+        $activeCount = Booking::where('user_id', $user->id)
+            ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
+            ->count();
+        $confirmedCount = Booking::where('user_id', $user->id)
+            ->where('status', Booking::STATUS_CONFIRMED)
+            ->count();
+        $completedCount = Booking::where('user_id', $user->id)
+            ->where('status', Booking::STATUS_COMPLETED)
+            ->count();
+        
+        return view('cabinet.tourist.bookings.index', compact('bookings', 'totalCount', 'activeCount', 'confirmedCount', 'completedCount'));
     }
     
     /**
@@ -148,10 +160,18 @@ class CabinetController extends Controller
     public function chat(Request $request, $bookingId = null): View
     {
         $user = $request->user();
+        
+        // Получаем заявки с менеджерами и считаем непрочитанные для каждой
         $bookings = Booking::where('user_id', $user->id)
             ->whereNotNull('manager_id')
-            ->with('manager')
-            ->get();
+            ->with(['manager', 'messages' => function($query) use ($user) {
+                $query->where('receiver_id', $user->id)->where('is_read', false);
+            }])
+            ->get()
+            ->map(function($booking) {
+                $booking->unread_count = $booking->messages->count();
+                return $booking;
+            });
 
         $messages = collect();
         $currentBooking = null;
@@ -161,8 +181,9 @@ class CabinetController extends Controller
                 ->where('id', $bookingId)
                 ->with(['manager', 'messages.sender'])
                 ->firstOrFail();
-            $messages = $currentBooking->messages()->with('sender')->latest()->get();
+            $messages = $currentBooking->messages()->with('sender')->orderBy('created_at', 'asc')->get();
 
+            // Отмечаем сообщения как прочитанные
             Message::where('booking_id', $bookingId)
                 ->where('receiver_id', $user->id)
                 ->where('is_read', false)
@@ -188,12 +209,12 @@ class CabinetController extends Controller
     public function bookingDocuments(): View
     {
         $user = Auth::user();
-        $bookings = Booking::where('user_id', $user->id)
+        $bookingsWithDocuments = Booking::where('user_id', $user->id)
             ->whereHas('bookingDocuments')
             ->with('bookingDocuments')
             ->latest()
             ->get();
-        return view('cabinet.tourist.documents.bookings', compact('bookings'));
+        return view('cabinet.tourist.documents.bookings', compact('bookingsWithDocuments'));
     }
     
     /**
@@ -202,7 +223,16 @@ class CabinetController extends Controller
     public function bonusProgram(): View
     {
         $user = Auth::user();
-        $bonusAccount = BonusAccount::firstOrCreate(['user_id' => $user->id]);
+        $bonusAccount = BonusAccount::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'balance' => 0,
+                'level' => 'newbie',
+                'total_earned' => 0,
+                'total_spent' => 0,
+                'referral_code' => strtoupper(substr(md5($user->id . time()), 0, 8))
+            ]
+        );
         $transactions = $bonusAccount->transactions()->latest()->paginate(10);
         $referralsCount = 0; // TODO: реализовать подсчет рефералов
         
