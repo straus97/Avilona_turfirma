@@ -37,11 +37,18 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1">
+                                        <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
                                         <label class="form-check-label" for="isNewClient">
                                             <strong>Новый клиент</strong> (клиента нет в базе)
                                         </label>
                                     </div>
+                                    
+                                    @error('client_email')
+                                        <div class="alert alert-danger">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
 
                                     <div id="existingClientBlock">
                                         <label for="client_id" class="form-label">
@@ -367,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clientEmailInput
         });
 
+        // Обработчик изменения чекбокса
         isNewClientCheckbox.addEventListener('change', function() {
             console.log('Checkbox changed:', this.checked);
             if (this.checked) {
@@ -386,6 +394,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        
+        // Триггерим событие при загрузке, если чекбокс был отмечен (после ошибки валидации)
+        if (isNewClientCheckbox.checked) {
+            isNewClientCheckbox.dispatchEvent(new Event('change'));
+        }
         
         console.log('Event listener attached successfully');
     } else {

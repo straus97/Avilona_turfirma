@@ -29,6 +29,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Проверяем, нужно ли сменить временный пароль
+        if (Auth::user()->password_change_required) {
+            return redirect()->route('password.change')
+                ->with('warning', 'Добро пожаловать! Пожалуйста, смените временный пароль для продолжения работы.');
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
