@@ -72,7 +72,7 @@ class BookingController extends Controller
             ->get();
         }
         
-        return view('bookings.create', compact('tour', 'departureCities', 'destinationCountries', 'destinationCities', 'clients'));
+        return view('bookings.create', compact('tour', 'departureCities', 'destinationCountries', 'clients'));
     }
 
     /**
