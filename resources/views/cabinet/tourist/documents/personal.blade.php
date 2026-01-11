@@ -87,7 +87,7 @@
                         <a href="{{ Storage::url($document->file_path) }}" download class="btn btn-sm btn-outline-secondary flex-fill">
                             <i class="bi bi-download"></i> Скачать
                         </a>
-                        <form action="{{ route('cabinet.documents.delete', $document->id) }}" method="POST" onsubmit="return confirm('Удалить документ?');">
+                        <form action="{{ route('cabinet.documents.personal.delete', $document->id) }}" method="POST" onsubmit="return confirm('Удалить документ?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -119,25 +119,26 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Тип документа <span class="text-danger">*</span></label>
-                        <select name="document_type" class="form-select" required>
-                            <option value="">Выберите тип</option>
-                            <option value="passport">Паспорт РФ</option>
-                            <option value="foreign_passport">Загранпаспорт</option>
-                            <option value="birth_certificate">Свидетельство о рождении</option>
-                            <option value="visa">Виза</option>
-                            <option value="other">Другое</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Название <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control" placeholder="Например: Паспорт Иванов И.И." required>
+                        <label class="form-label">Название документа <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Например: Паспорт Иванов И.И." required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Файл <span class="text-danger">*</span></label>
-                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
-                        <small class="text-muted">Максимум 10 МБ. Форматы: PDF, JPG, PNG</small>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.rar" required>
+                        <small class="text-muted">Максимум 10 МБ. Форматы: PDF, DOC, DOCX, JPG, PNG, ZIP, RAR</small>
                     </div>
+                    
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+                    
+                    @if(session('status'))
+                        <div class="alert alert-success">
+                            {{ session('status') }}
+                        </div>
+                    @endif
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
