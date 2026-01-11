@@ -59,24 +59,20 @@
                 <div class="card-custom">
                     <div class="d-flex align-items-start gap-3">
                         <div style="width: 60px; height: 60px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi {{ $document->document_type == 'passport' ? 'bi-person-badge' : ($document->document_type == 'visa' ? 'bi-globe' : 'bi-file-earmark-text') }}" style="font-size: 1.75rem; color: var(--primary-color);"></i>
+                            <i class="bi bi-file-earmark-pdf" style="font-size: 1.75rem; color: var(--primary-color);"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
-                            <h6 class="mb-1" style="font-weight: 600;">{{ $document->title }}</h6>
+                            <h6 class="mb-1" style="font-weight: 600;">{{ $document->name }}</h6>
                             <div style="font-size: 0.75rem; color: #9ca3af;">
-                                @switch($document->document_type)
-                                    @case('passport') Паспорт РФ @break
-                                    @case('foreign_passport') Загранпаспорт @break
-                                    @case('birth_certificate') Свидетельство о рождении @break
-                                    @case('visa') Виза @break
-                                    @default Другой документ
-                                @endswitch
+                                {{ strtoupper($document->file_type ?? 'Документ') }}
                             </div>
                             <div style="font-size: 0.75rem; color: #9ca3af;">
-                                {{ number_format($document->file_size / 1024, 0) }} КБ
+                                @if($document->file_size)
+                                    {{ number_format($document->file_size / 1024, 0) }} КБ
+                                @endif
                             </div>
                             <div style="font-size: 0.75rem; color: #9ca3af;">
-                                {{ $document->uploaded_at->format('d.m.Y H:i') }}
+                                {{ $document->created_at->format('d.m.Y H:i') }}
                             </div>
                         </div>
                     </div>

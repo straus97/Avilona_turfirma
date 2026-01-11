@@ -370,7 +370,18 @@ class CabinetController extends Controller
         
         try {
             $file = $request->file('file');
+            
+            if (!$file || !$file->isValid()) {
+                return redirect()->route('cabinet.documents.personal')
+                    ->with('error', 'Ошибка загрузки файла. Попробуйте еще раз.');
+            }
+            
             $path = $file->store('documents/personal', 'public');
+            
+            if (!$path) {
+                return redirect()->route('cabinet.documents.personal')
+                    ->with('error', 'Не удалось сохранить файл. Проверьте права доступа к storage.');
+            }
             
             UserDocument::create([
                 'user_id' => Auth::id(),
@@ -380,9 +391,12 @@ class CabinetController extends Controller
                 'file_size' => $file->getSize(),
             ]);
             
-            return redirect()->route('cabinet.documents.personal')->with('status', 'Документ успешно загружен!');
+            return redirect()->route('cabinet.documents.personal')
+                ->with('status', 'Документ успешно загружен!');
         } catch (\Exception $e) {
-            return redirect()->route('cabinet.documents.personal')->with('error', 'Ошибка загрузки: ' . $e->getMessage());
+            \Log::error('Ошибка загрузки документа: ' . $e->getMessage());
+            return redirect()->route('cabinet.documents.personal')
+                ->with('error', 'Ошибка загрузки: ' . $e->getMessage());
         }
     }
     
