@@ -91,7 +91,7 @@
                                             <div class="mb-2">
                                                 <small class="text-muted">
                                                     <i class="bi bi-person"></i> 
-                                                    Клиент: {{ $booking->user->name }}
+                                                    Клиент: {{ $booking->user->name ?? 'Удален' }}
                                                 </small>
                                             </div>
                                         @endif

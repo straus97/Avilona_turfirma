@@ -5,7 +5,7 @@
 @section('content')
     <h2>✈️ Напоминание о вашей поездке</h2>
     
-    <p>Здравствуйте, <strong>{{ $booking->user->name }}</strong>!</p>
+    <p>Здравствуйте, <strong>{{ $booking->user->name ?? 'Уважаемый клиент' }}</strong>!</p>
     
     @if($daysUntilTrip == 1)
         <p><strong class="highlight">Завтра ваш вылет!</strong> 🎉</p>

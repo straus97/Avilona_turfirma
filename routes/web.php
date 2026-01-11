@@ -14,8 +14,14 @@ Route::group(['namespace' => 'Tour'], function () {
     Route::get('/tours', 'IndexController')->name('tours.index');
 });
 
-// Заявки (доступны только авторизованным пользователям)
+// Маршруты смены пароля (без проверки password.change)
 Route::middleware('auth')->group(function () {
+    Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'show'])->name('password.change');
+    Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'update'])->name('password.update');
+});
+
+// Заявки (доступны только авторизованным пользователям)
+Route::middleware(['auth', 'password.change'])->group(function () {
     Route::resource('bookings', \App\Http\Controllers\Booking\BookingController::class);
     Route::post('bookings/{booking}/assign-manager', [\App\Http\Controllers\Booking\BookingController::class, 'assignManager'])
         ->name('bookings.assign-manager')->middleware('role:admin');
@@ -103,7 +109,7 @@ Route::group(['namespace' => 'Captcha'], function () {
 });
 
 // Маршруты для всех авторизованных пользователей (tourist, manager, admin)
-Route::middleware(['auth', 'verified', 'role:tourist,manager,admin'])->prefix('profile')->name('profile.')->group(function () {
+Route::middleware(['auth', 'password.change', 'verified', 'role:tourist,manager,admin'])->prefix('profile')->name('profile.')->group(function () {
     // Главная страница личного кабинета
     Route::get('/dashboard', [ProfileController::class, 'dashboard'])->name('dashboard');
     
@@ -139,7 +145,7 @@ Route::middleware(['auth'])->get('/message', function () {
 })->name('message');
 
 // Маршруты только для менеджеров и администраторов
-Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
+Route::middleware(['auth', 'password.change', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
     // Главная страница панели менеджера
     Route::get('/dashboard', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('dashboard');
     
@@ -157,7 +163,7 @@ Route::middleware(['auth', 'role:manager,admin'])->prefix('manager')->name('mana
 });
 
 // Маршруты только для администраторов
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'password.change', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Главная страница админ панели
     Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
     

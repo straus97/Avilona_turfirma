@@ -5,7 +5,7 @@
 @section('content')
     <h2>🔔 Статус вашей заявки изменен</h2>
     
-    <p>Здравствуйте, <strong>{{ $booking->user->name }}</strong>!</p>
+    <p>Здравствуйте, <strong>{{ $booking->user->name ?? 'Уважаемый клиент' }}</strong>!</p>
     
     <p>Статус вашей заявки #{{ $booking->id }} был изменен.</p>
     

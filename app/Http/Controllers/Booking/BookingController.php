@@ -113,11 +113,15 @@ class BookingController extends Controller
         if ($user->hasAnyRole(['manager', 'admin'])) {
             // Если менеджер/админ создает заявку
             if ($request->is_new_client) {
+                // Генерируем читаемый временный пароль
+                $tempPassword = 'AV' . rand(1000, 9999) . strtoupper(substr(md5(time()), 0, 4));
+                
                 // Создаем нового пользователя-туриста
                 $newTourist = User::create([
                     'name' => $request->client_name,
                     'email' => $request->client_email ?? 'temp_' . time() . '@avilona.ru',
-                    'password' => bcrypt(Str::random(16)), // Временный пароль
+                    'password' => bcrypt($tempPassword),
+                    'password_change_required' => true, // Требуется смена пароля
                     'email_verified_at' => null, // Не верифицирован
                 ]);
                 
@@ -127,11 +131,14 @@ class BookingController extends Controller
                     $newTourist->roles()->attach($touristRole->id);
                 }
                 
+                // Сохраняем временный пароль для отправки в письме
+                $newTourist->temp_password = $tempPassword;
+                
                 // Привязываем заявку к новому туристу
                 $validated['user_id'] = $newTourist->id;
                 
                 // Добавляем пометку в notes
-                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Ожидает регистрации на сайте.";
+                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Отправлены данные для входа на email.";
             } else {
                 // Выбран существующий клиент
                 $validated['user_id'] = $request->client_id;

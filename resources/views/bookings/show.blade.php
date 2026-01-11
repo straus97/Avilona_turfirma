@@ -148,8 +148,8 @@
                                 <h5 class="text-primary">
                                     <i class="bi bi-person"></i> Клиент
                                 </h5>
-                                <p class="mb-1"><strong>Имя:</strong> {{ $booking->user->name }}</p>
-                                <p class="mb-1"><strong>Email:</strong> {{ $booking->user->email }}</p>
+                                <p class="mb-1"><strong>Имя:</strong> {{ $booking->user->name ?? 'Удален' }}</p>
+                                <p class="mb-1"><strong>Email:</strong> {{ $booking->user->email ?? 'Нет email' }}</p>
                             </div>
                             <hr>
                         @endif

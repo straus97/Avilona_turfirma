@@ -157,8 +157,8 @@
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <strong>{{ $booking->user->name }}</strong>
-                                                    <br><small class="text-muted">{{ $booking->user->email }}</small>
+                                                    <strong>{{ $booking->user->name ?? 'Удален' }}</strong>
+                                                    <br><small class="text-muted">{{ $booking->user->email ?? 'Нет email' }}</small>
                                                 </td>
                                                 <td>
                                                     <strong>{{ $booking->destination_country }}</strong>
