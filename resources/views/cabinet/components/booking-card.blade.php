@@ -1,5 +1,3 @@
-@props(['booking'])
-
 <div class="card-custom booking-card" style="transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
      onclick="window.location.href='{{ route('bookings.show', $booking->id) }}'">
     <div class="d-flex justify-content-between align-items-start mb-3">

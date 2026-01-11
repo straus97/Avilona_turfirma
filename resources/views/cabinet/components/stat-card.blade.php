@@ -1,4 +1,7 @@
-@props(['title', 'value', 'icon', 'color' => 'primary', 'trend' => null])
+@php
+    $color = $color ?? 'primary';
+    $trend = $trend ?? null;
+@endphp
 
 <div class="card-custom" style="border-left: 4px solid var(--{{ $color }}-color);">
     <div class="d-flex align-items-center justify-content-between">

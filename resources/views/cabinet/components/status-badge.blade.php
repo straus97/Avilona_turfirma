@@ -1,5 +1,3 @@
-@props(['status'])
-
 @php
     $statusConfig = [
         'new' => ['text' => 'Новая', 'class' => 'status-new', 'icon' => 'bi-file-earmark-plus'],

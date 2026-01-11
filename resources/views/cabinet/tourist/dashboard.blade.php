@@ -15,28 +15,28 @@
 <!-- Статистика -->
 <div class="row mb-4">
     <div class="col-md-4">
-        <x-cabinet.stat-card 
-            title="Всего заявок" 
-            :value="$bookingsCount" 
-            icon="bi-journal-text" 
-            color="primary" 
-        />
+        @include('cabinet.components.stat-card', [
+            'title' => 'Всего заявок',
+            'value' => $bookingsCount,
+            'icon' => 'bi-journal-text',
+            'color' => 'primary'
+        ])
     </div>
     <div class="col-md-4">
-        <x-cabinet.stat-card 
-            title="Активных" 
-            :value="$activeBookings" 
-            icon="bi-hourglass-split" 
-            color="warning" 
-        />
+        @include('cabinet.components.stat-card', [
+            'title' => 'Активных',
+            'value' => $activeBookings,
+            'icon' => 'bi-hourglass-split',
+            'color' => 'warning'
+        ])
     </div>
     <div class="col-md-4">
-        <x-cabinet.stat-card 
-            title="Завершенных" 
-            :value="$completedBookings" 
-            icon="bi-check-circle" 
-            color="success" 
-        />
+        @include('cabinet.components.stat-card', [
+            'title' => 'Завершенных',
+            'value' => $completedBookings,
+            'icon' => 'bi-check-circle',
+            'color' => 'success'
+        ])
     </div>
 </div>
 
@@ -106,18 +106,18 @@
         <div class="row">
             @foreach($latestBookings as $booking)
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <x-cabinet.booking-card :booking="$booking" />
+                    @include('cabinet.components.booking-card', ['booking' => $booking])
                 </div>
             @endforeach
         </div>
     @else
-        <x-cabinet.empty-state 
-            icon="bi-journal-plus"
-            title="У вас пока нет заявок"
-            description="Создайте первую заявку и начните планировать свой отпуск"
-            actionUrl="{{ route('bookings.create') }}"
-            actionText="Создать заявку"
-        />
+        @include('cabinet.components.empty-state', [
+            'icon' => 'bi-journal-plus',
+            'title' => 'У вас пока нет заявок',
+            'description' => 'Создайте первую заявку и начните планировать свой отпуск',
+            'actionUrl' => route('bookings.create'),
+            'actionText' => 'Создать заявку'
+        ])
     @endif
 </div>
 @endsection

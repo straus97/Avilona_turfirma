@@ -1,4 +1,9 @@
-@props(['icon' => 'bi-inbox', 'title', 'description' => '', 'actionUrl' => null, 'actionText' => null])
+@php
+    $icon = $icon ?? 'bi-inbox';
+    $description = $description ?? '';
+    $actionUrl = $actionUrl ?? null;
+    $actionText = $actionText ?? null;
+@endphp
 
 <div class="card-custom text-center" style="padding: 3rem 2rem;">
     <div style="width: 80px; height: 80px; border-radius: 50%; background: #f3f4f6; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
