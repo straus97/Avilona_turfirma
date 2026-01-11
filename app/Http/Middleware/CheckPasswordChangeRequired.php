@@ -18,7 +18,7 @@ class CheckPasswordChangeRequired
         // Если пользователь авторизован и требуется смена пароля
         if ($user && $user->password_change_required) {
             // Разрешаем доступ только к маршрутам смены пароля и выхода
-            if (!$request->routeIs('password.change', 'password.update', 'logout')) {
+            if (!$request->routeIs('password.change', 'password.change.update', 'logout')) {
                 return redirect()->route('password.change')
                     ->with('warning', 'Пожалуйста, смените временный пароль для продолжения работы.');
             }

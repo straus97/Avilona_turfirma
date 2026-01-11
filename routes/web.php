@@ -17,7 +17,7 @@ Route::group(['namespace' => 'Tour'], function () {
 // Маршруты смены пароля (без проверки password.change)
 Route::middleware('auth')->group(function () {
     Route::get('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'show'])->name('password.change');
-    Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'update'])->name('password.update');
+    Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'update'])->name('password.change.update');
 });
 
 // Заявки (доступны только авторизованным пользователям)
