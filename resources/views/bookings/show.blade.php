@@ -199,7 +199,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-2 justify-content-between">
-                            <a href="{{ route('bookings.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> К списку заявок
                             </a>
 

@@ -343,7 +343,7 @@ class CabinetController extends Controller
     {
         $user = Auth::user();
         
-        // Сохраняем настройки в JSON (можно создать отдельную таблицу notification_settings)
+        // Сохраняем настройки в JSON
         $settings = [
             'email_notifications' => $request->has('email_notifications'),
             'booking_updates' => $request->has('booking_updates'),
@@ -352,8 +352,8 @@ class CabinetController extends Controller
             'promotions' => $request->has('promotions'),
         ];
         
-        // Сохраняем в поле notification_settings (нужно добавить в миграцию)
-        // Пока сохраним временно, позже создадим таблицу
+        $user->notification_settings = json_encode($settings);
+        $user->save();
         
         return redirect()->route('cabinet.settings')->with('status', 'Настройки уведомлений обновлены!');
     }

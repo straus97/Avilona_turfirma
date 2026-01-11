@@ -34,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'passport_number',
         'passport_issued_date',
         'passport_issued_by',
+        'notification_settings',
         'is_active',
         'password_change_required',
         'temp_password',

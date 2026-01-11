@@ -17,7 +17,15 @@
         <!-- Смена пароля -->
         <div class="card-custom mb-4">
             <h5 class="mb-4"><i class="bi bi-shield-lock"></i> Смена пароля</h5>
-            <form method="POST" action="{{ route('password.update') }}">
+            
+            @if(session('status') && str_contains(session('status'), 'пароль'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> {{ session('status') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            
+            <form method="POST" action="{{ route('password.update') }}" id="passwordForm">
                 @csrf
                 @method('PUT')
                 
@@ -52,12 +60,25 @@
         <!-- Уведомления -->
         <div class="card-custom mb-4">
             <h5 class="mb-4"><i class="bi bi-bell"></i> Уведомления</h5>
+            
+            @if(session('status') && str_contains(session('status'), 'уведомлений'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> {{ session('status') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            
             <form method="POST" action="{{ route('cabinet.settings.notifications') }}">
                 @csrf
                 
+                @php
+                    $settings = json_decode(Auth::user()->notification_settings ?? '{}', true);
+                @endphp
+                
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="emailNotifications" name="email_notifications" checked>
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" name="email_notifications" 
+                               {{ ($settings['email_notifications'] ?? true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="emailNotifications">
                             Email-уведомления
                         </label>
@@ -67,7 +88,8 @@
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="bookingUpdates" name="booking_updates" checked>
+                        <input class="form-check-input" type="checkbox" id="bookingUpdates" name="booking_updates" 
+                               {{ ($settings['booking_updates'] ?? true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="bookingUpdates">
                             Изменения в заявках
                         </label>
@@ -77,7 +99,8 @@
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="newMessages" name="new_messages" checked>
+                        <input class="form-check-input" type="checkbox" id="newMessages" name="new_messages" 
+                               {{ ($settings['new_messages'] ?? true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="newMessages">
                             Новые сообщения
                         </label>
@@ -87,7 +110,8 @@
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="tripReminders" name="trip_reminders" checked>
+                        <input class="form-check-input" type="checkbox" id="tripReminders" name="trip_reminders" 
+                               {{ ($settings['trip_reminders'] ?? true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="tripReminders">
                             Напоминания о поездках
                         </label>
@@ -97,7 +121,8 @@
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="promotions" name="promotions">
+                        <input class="form-check-input" type="checkbox" id="promotions" name="promotions" 
+                               {{ ($settings['promotions'] ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label" for="promotions">
                             Акции и специальные предложения
                         </label>
@@ -109,29 +134,6 @@
                     <i class="bi bi-check-circle"></i> Сохранить настройки
                 </button>
             </form>
-        </div>
-
-        <!-- Приватность -->
-        <div class="card-custom mb-4">
-            <h5 class="mb-4"><i class="bi bi-eye-slash"></i> Приватность</h5>
-            
-            <div class="mb-3">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="showInReviews">
-                    <label class="form-check-label" for="showInReviews">
-                        Показывать мое имя в отзывах
-                    </label>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="allowMarketing">
-                    <label class="form-check-label" for="allowMarketing">
-                        Согласие на обработку персональных данных для маркетинга
-                    </label>
-                </div>
-            </div>
         </div>
 
         <!-- Опасная зона -->
