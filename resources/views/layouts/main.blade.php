@@ -33,6 +33,12 @@
     <meta name="twitter:image" content="https://www.avilona.ru/img/logo.png">
     <link rel="shortcut icon" href="{{ asset('img/favicon.ico') }}" type="image/x-icon">
     <title>@yield('title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')</title>
+    
+    <!-- Заглушка для предотвращения ошибок Google Maps и других API -->
+    <script>
+        window.initMap = window.initMap || function() { console.log('initMap stub called'); };
+    </script>
+    
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">

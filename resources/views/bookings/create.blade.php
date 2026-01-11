@@ -345,11 +345,6 @@
 
 @push('scripts')
 <script>
-// Заглушка для Google Maps (чтобы не было ошибок)
-window.initMap = function() {
-    console.log('Google Maps initialized');
-};
-
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing form scripts...');
     
