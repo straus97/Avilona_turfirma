@@ -165,15 +165,17 @@
                                                    id="destination_city" 
                                                    name="destination_city" 
                                                    value="{{ old('destination_city', $tour->destination_city ?? '') }}"
-                                                   list="destinationCitiesList">
+                                                   list="destinationCitiesList"
+                                                   placeholder="Сначала выберите страну">
                                             <datalist id="destinationCitiesList">
-                                                @foreach($destinationCities as $city)
-                                                    <option value="{{ $city }}">
-                                                @endforeach
+                                                <!-- Будет заполнено динамически через JS -->
                                             </datalist>
                                             @error('destination_city')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
+                                            <small class="form-text text-muted">
+                                                Выберите из списка или введите свой вариант
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -506,6 +508,48 @@ document.addEventListener('DOMContentLoaded', function() {
             return 'года';
         }
         return 'лет';
+    }
+
+    // Фильтрация курортов по выбранной стране
+    const destinationCountryInput = document.getElementById('destination_country');
+    const destinationCityInput = document.getElementById('destination_city');
+    const destinationCitiesList = document.getElementById('destinationCitiesList');
+
+    destinationCountryInput.addEventListener('change', function() {
+        const country = this.value.trim();
+        
+        if (!country) {
+            destinationCitiesList.innerHTML = '';
+            destinationCityInput.placeholder = 'Сначала выберите страну';
+            return;
+        }
+
+        // Загружаем курорты для выбранной страны
+        fetch(`{{ route('api.destination-cities') }}?country=${encodeURIComponent(country)}`)
+            .then(response => response.json())
+            .then(cities => {
+                destinationCitiesList.innerHTML = '';
+                
+                if (cities.length > 0) {
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        destinationCitiesList.appendChild(option);
+                    });
+                    destinationCityInput.placeholder = 'Выберите курорт или введите свой';
+                } else {
+                    destinationCityInput.placeholder = 'Введите название курорта';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки курортов:', error);
+                destinationCityInput.placeholder = 'Введите название курорта';
+            });
+    });
+
+    // Триггерим событие при загрузке, если страна уже выбрана
+    if (destinationCountryInput.value.trim()) {
+        destinationCountryInput.dispatchEvent(new Event('change'));
     }
 });
 </script>

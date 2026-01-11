@@ -20,6 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/password/change', [\App\Http\Controllers\Auth\PasswordChangeController::class, 'update'])->name('password.change.update');
 });
 
+// API для получения курортов по стране
+Route::get('/api/destination-cities', [\App\Http\Controllers\Api\DestinationCityController::class, 'getCitiesByCountry'])
+    ->name('api.destination-cities');
+
 // Заявки (доступны только авторизованным пользователям)
 Route::middleware(['auth', 'password.change'])->group(function () {
     Route::resource('bookings', \App\Http\Controllers\Booking\BookingController::class);

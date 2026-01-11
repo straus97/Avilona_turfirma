@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Tour;
 use App\Models\User;
+use App\Models\DestinationCity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -57,18 +58,8 @@ class BookingController extends Controller
             ->orderBy('departure_city')
             ->pluck('departure_city');
         
-        // Получаем уникальные страны назначения
-        $destinationCountries = Tour::select('destination_country')
-            ->distinct()
-            ->orderBy('destination_country')
-            ->pluck('destination_country');
-        
-        // Получаем уникальные города/курорты назначения
-        $destinationCities = Tour::select('destination_city')
-            ->whereNotNull('destination_city')
-            ->distinct()
-            ->orderBy('destination_city')
-            ->pluck('destination_city');
+        // Получаем страны из таблицы countries_images
+        $destinationCountries = \App\Models\Countries_image::orderBy('title')->pluck('title');
         
         // Получаем список клиентов (только для менеджеров и админов)
         $clients = collect();
@@ -169,6 +160,14 @@ class BookingController extends Controller
         }
 
         $booking = Booking::create($validated);
+
+        // Автоматически добавляем курорт/город в БД если его нет
+        if (!empty($validated['destination_country']) && !empty($validated['destination_city'])) {
+            DestinationCity::addCityIfNotExists(
+                $validated['destination_country'],
+                $validated['destination_city']
+            );
+        }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка успешно создана! Наш менеджер свяжется с вами в ближайшее время.');
