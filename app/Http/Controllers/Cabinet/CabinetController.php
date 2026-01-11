@@ -363,23 +363,27 @@ class CabinetController extends Controller
      */
     public function uploadPersonalDocument(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'file' => 'required|file|max:10240', // 10MB
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip,rar|max:10240', // 10MB
         ]);
         
-        $file = $request->file('file');
-        $path = $file->store('documents/personal', 'public');
-        
-        UserDocument::create([
-            'user_id' => Auth::id(),
-            'name' => $request->name,
-            'file_path' => $path,
-            'file_type' => $file->getClientOriginalExtension(),
-            'file_size' => $file->getSize(),
-        ]);
-        
-        return redirect()->route('cabinet.documents.personal')->with('status', 'Документ успешно загружен!');
+        try {
+            $file = $request->file('file');
+            $path = $file->store('documents/personal', 'public');
+            
+            UserDocument::create([
+                'user_id' => Auth::id(),
+                'name' => $validated['name'],
+                'file_path' => $path,
+                'file_type' => $file->getClientOriginalExtension(),
+                'file_size' => $file->getSize(),
+            ]);
+            
+            return redirect()->route('cabinet.documents.personal')->with('status', 'Документ успешно загружен!');
+        } catch (\Exception $e) {
+            return redirect()->route('cabinet.documents.personal')->with('error', 'Ошибка загрузки: ' . $e->getMessage());
+        }
     }
     
     /**
