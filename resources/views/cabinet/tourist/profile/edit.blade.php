@@ -41,7 +41,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Телефон</label>
-                    <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" 
+                    <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" 
                            value="{{ old('phone', Auth::user()->phone) }}" placeholder="+7 (___) ___-__-__">
                     @error('phone')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -91,18 +91,21 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Серия и номер паспорта</label>
-                        <input type="text" name="passport_number" class="form-control" 
+                        <input type="text" name="passport_number" id="passport_number" class="form-control" 
+                               value="{{ old('passport_number', Auth::user()->passport_number) }}"
                                placeholder="__ __ ______">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Дата выдачи</label>
-                        <input type="date" name="passport_issued_date" class="form-control">
+                        <input type="date" name="passport_issued_date" class="form-control"
+                               value="{{ old('passport_issued_date', Auth::user()->passport_issued_date) }}">
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Кем выдан</label>
-                    <input type="text" name="passport_issued_by" class="form-control">
+                    <input type="text" name="passport_issued_by" class="form-control"
+                           value="{{ old('passport_issued_by', Auth::user()->passport_issued_by) }}">
                 </div>
 
                 <div class="alert alert-warning">
@@ -111,7 +114,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle"></i> Сохранить
+                    <i class="bi bi-check-circle"></i> Сохранить паспортные данные
                 </button>
             </form>
         </div>
@@ -176,4 +179,25 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/imask@6.4.3/dist/imask.min.js"></script>
+<script>
+    // Маска для телефона
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+    
+    // Маска для паспорта
+    const passportInput = document.getElementById('passport_number');
+    if (passportInput) {
+        IMask(passportInput, {
+            mask: '00 00 000000'
+        });
+    }
+</script>
+@endpush
 @endsection

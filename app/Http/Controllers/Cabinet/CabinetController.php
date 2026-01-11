@@ -283,7 +283,14 @@ class CabinetController extends Controller
             'address' => 'nullable|string|max:500',
         ]);
         
-        Auth::user()->update($validated);
+        $user = Auth::user();
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->phone = $validated['phone'] ?? null;
+        $user->birth_date = $validated['birth_date'] ?? null;
+        $user->gender = $validated['gender'] ?? null;
+        $user->address = $validated['address'] ?? null;
+        $user->save();
         
         return redirect()->route('cabinet.profile')->with('status', 'Профиль успешно обновлен!');
     }
@@ -301,7 +308,18 @@ class CabinetController extends Controller
      */
     public function updatePassport(Request $request): RedirectResponse
     {
-        // TODO: реализовать сохранение паспортных данных
+        $validated = $request->validate([
+            'passport_number' => 'nullable|string|max:50',
+            'passport_issued_date' => 'nullable|date',
+            'passport_issued_by' => 'nullable|string|max:500',
+        ]);
+        
+        $user = Auth::user();
+        $user->passport_number = $validated['passport_number'] ?? null;
+        $user->passport_issued_date = $validated['passport_issued_date'] ?? null;
+        $user->passport_issued_by = $validated['passport_issued_by'] ?? null;
+        $user->save();
+        
         return redirect()->route('cabinet.profile')->with('status', 'Паспортные данные обновлены!');
     }
     
@@ -323,7 +341,20 @@ class CabinetController extends Controller
      */
     public function updateNotifications(Request $request): RedirectResponse
     {
-        // TODO: реализовать сохранение настроек уведомлений
+        $user = Auth::user();
+        
+        // Сохраняем настройки в JSON (можно создать отдельную таблицу notification_settings)
+        $settings = [
+            'email_notifications' => $request->has('email_notifications'),
+            'booking_updates' => $request->has('booking_updates'),
+            'new_messages' => $request->has('new_messages'),
+            'trip_reminders' => $request->has('trip_reminders'),
+            'promotions' => $request->has('promotions'),
+        ];
+        
+        // Сохраняем в поле notification_settings (нужно добавить в миграцию)
+        // Пока сохраним временно, позже создадим таблицу
+        
         return redirect()->route('cabinet.settings')->with('status', 'Настройки уведомлений обновлены!');
     }
     

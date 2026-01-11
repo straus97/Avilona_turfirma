@@ -105,7 +105,7 @@
                                 <li><a class="dropdown-item" href="{{ route('cabinet.dashboard') }}">
                                     <i class="bi bi-house-door"></i> Личный кабинет
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                <li><a class="dropdown-item" href="{{ route('cabinet.settings') }}">
                                     <i class="bi bi-gear"></i> Настройки
                                 </a></li>
                                 <li>
