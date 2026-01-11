@@ -283,4 +283,78 @@ class CabinetController extends Controller
     {
         return view('cabinet.tourist.settings.index');
     }
+    
+    /**
+     * Обновление паспортных данных
+     */
+    public function updatePassport(Request $request): RedirectResponse
+    {
+        // TODO: реализовать сохранение паспортных данных
+        return redirect()->route('cabinet.profile')->with('status', 'Паспортные данные обновлены!');
+    }
+    
+    /**
+     * Загрузка аватара
+     */
+    public function uploadAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => 'required|image|max:2048',
+        ]);
+        
+        // TODO: реализовать загрузку аватара
+        return redirect()->route('cabinet.profile')->with('status', 'Аватар загружен!');
+    }
+    
+    /**
+     * Обновление настроек уведомлений
+     */
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        // TODO: реализовать сохранение настроек уведомлений
+        return redirect()->route('cabinet.settings')->with('status', 'Настройки уведомлений обновлены!');
+    }
+    
+    /**
+     * Загрузка личного документа
+     */
+    public function uploadPersonalDocument(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'file' => 'required|file|max:10240', // 10MB
+        ]);
+        
+        $file = $request->file('file');
+        $path = $file->store('documents/personal', 'public');
+        
+        UserDocument::create([
+            'user_id' => Auth::id(),
+            'name' => $request->name,
+            'file_path' => $path,
+            'file_type' => $file->getClientOriginalExtension(),
+            'file_size' => $file->getSize(),
+        ]);
+        
+        return redirect()->route('cabinet.documents.personal')->with('status', 'Документ успешно загружен!');
+    }
+    
+    /**
+     * Удаление личного документа
+     */
+    public function deletePersonalDocument(UserDocument $document): RedirectResponse
+    {
+        // Проверка прав доступа
+        if ($document->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        // Удаление файла
+        Storage::disk('public')->delete($document->file_path);
+        
+        // Удаление записи
+        $document->delete();
+        
+        return redirect()->route('cabinet.documents.personal')->with('status', 'Документ удален!');
+    }
 }

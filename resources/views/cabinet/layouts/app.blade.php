@@ -408,15 +408,6 @@
         a>
 
         <div class="header-actions">
-            <!-- Notifications -->
-            <div class="header-notifications">
-                <a href="#" class="btn btn-sm btn-light position-relative">
-                    <i class="bi bi-bell"></i>
-                    @if(isset($unreadNotifications) && $unreadNotifications > 0)
-                        <span class="notification-badge">{{ $unreadNotifications }}</span>
-                    @endif
-                </a>
-            </div>
 
             <!-- User Menu -->
             <div class="dropdown">
