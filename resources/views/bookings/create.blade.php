@@ -345,9 +345,17 @@
 
 @push('scripts')
 <script>
+// Заглушка для Google Maps (чтобы не было ошибок)
+window.initMap = function() {
+    console.log('Google Maps initialized');
+};
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing form scripts...');
+    
     // Переключение между существующим и новым клиентом
     const isNewClientCheckbox = document.getElementById('isNewClient');
+    console.log('isNewClientCheckbox found:', isNewClientCheckbox);
     
     if (isNewClientCheckbox) {
         const existingClientBlock = document.getElementById('existingClientBlock');
@@ -355,6 +363,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const clientIdSelect = document.getElementById('client_id');
         const clientNameInput = document.getElementById('client_name');
         const clientEmailInput = document.getElementById('client_email');
+        
+        console.log('All elements found:', {
+            existingClientBlock,
+            newClientBlock,
+            clientIdSelect,
+            clientNameInput,
+            clientEmailInput
+        });
 
         isNewClientCheckbox.addEventListener('change', function() {
             console.log('Checkbox changed:', this.checked);
@@ -375,6 +391,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        
+        console.log('Event listener attached successfully');
+    } else {
+        console.log('isNewClientCheckbox not found - user is probably a tourist');
     }
 
     // Управление возрастом детей

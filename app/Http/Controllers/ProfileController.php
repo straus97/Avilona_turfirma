@@ -43,6 +43,9 @@ class ProfileController extends Controller
             ->limit(5)
             ->get();
         
+        // Последние заявки (alias для совместимости)
+        $latestBookings = $recentBookings;
+        
         // Непрочитанные сообщения
         $unreadMessages = Message::where('receiver_id', $user->id)
             ->where('is_read', false)
@@ -56,6 +59,7 @@ class ProfileController extends Controller
             'activeBookings',
             'completedBookings',
             'recentBookings',
+            'latestBookings',
             'unreadMessages'
         ));
     }
