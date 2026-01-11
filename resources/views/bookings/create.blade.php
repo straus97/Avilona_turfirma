@@ -188,7 +188,7 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="start_date" class="form-label">
-                                                Дата вылета <span class="text-danger">*</span>
+                                                Дата вылета (с) <span class="text-danger">*</span>
                                             </label>
                                             <input type="date" 
                                                    class="form-control @error('start_date') is-invalid @enderror" 
@@ -200,11 +200,32 @@
                                             @error('start_date')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
+                                            <small class="form-text text-muted">
+                                                Начало диапазона дат
+                                            </small>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label for="start_date_end" class="form-label">
+                                                Дата вылета (по)
+                                            </label>
+                                            <input type="date" 
+                                                   class="form-control @error('start_date_end') is-invalid @enderror" 
+                                                   id="start_date_end" 
+                                                   name="start_date_end" 
+                                                   value="{{ old('start_date_end') }}" 
+                                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+                                            @error('start_date_end')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="form-text text-muted">
+                                                Конец диапазона (необязательно)
+                                            </small>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
                                             <label for="nights" class="form-label">
-                                                Количество ночей <span class="text-danger">*</span>
+                                                Количество ночей (от) <span class="text-danger">*</span>
                                             </label>
                                             <input type="number" 
                                                    class="form-control @error('nights') is-invalid @enderror" 
@@ -217,6 +238,28 @@
                                             @error('nights')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
+                                            <small class="form-text text-muted">
+                                                Минимальное количество
+                                            </small>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label for="nights_max" class="form-label">
+                                                Количество ночей (до)
+                                            </label>
+                                            <input type="number" 
+                                                   class="form-control @error('nights_max') is-invalid @enderror" 
+                                                   id="nights_max" 
+                                                   name="nights_max" 
+                                                   value="{{ old('nights_max') }}" 
+                                                   min="1" 
+                                                   max="30">
+                                            @error('nights_max')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="form-text text-muted">
+                                                Максимальное (необязательно)
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -410,20 +453,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const childrenAgesBlock = document.getElementById('childrenAgesBlock');
     const childrenAgesContainer = document.getElementById('childrenAgesContainer');
 
-    childrenCountSelect.addEventListener('change', function() {
-        const count = parseInt(this.value);
+    function updateChildrenAges() {
+        const count = parseInt(childrenCountSelect.value);
         childrenAgesContainer.innerHTML = '';
         
         if (count > 0) {
             childrenAgesBlock.style.display = 'block';
+            const oldAges = @json(old('children_ages', []));
+            
             for (let i = 0; i < count; i++) {
                 const col = document.createElement('div');
                 col.className = 'col-md-4 mb-3';
+                const selectedAge = oldAges[i] || '';
+                
+                let optionsHtml = '<option value="">Выберите возраст</option>';
+                for (let j = 0; j < 18; j++) {
+                    const selected = selectedAge == j ? 'selected' : '';
+                    optionsHtml += `<option value="${j}" ${selected}>${j} ${getYearWord(j)}</option>`;
+                }
+                
                 col.innerHTML = `
                     <label class="form-label">Ребенок ${i + 1}</label>
                     <select class="form-select" name="children_ages[]" required>
-                        <option value="">Выберите возраст</option>
-                        ${Array.from({length: 18}, (_, j) => `<option value="${j}">${j} ${getYearWord(j)}</option>`).join('')}
+                        ${optionsHtml}
                     </select>
                 `;
                 childrenAgesContainer.appendChild(col);
@@ -431,11 +483,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             childrenAgesBlock.style.display = 'none';
         }
-    });
+    }
+    
+    childrenCountSelect.addEventListener('change', updateChildrenAges);
 
-    // Триггерим событие при загрузке, если уже выбрано количество детей
-    if (childrenCountSelect.value > 0) {
-        childrenCountSelect.dispatchEvent(new Event('change'));
+    // Инициализация при загрузке страницы
+    if (parseInt(childrenCountSelect.value) > 0) {
+        updateChildrenAges();
     }
 
     function getYearWord(age) {

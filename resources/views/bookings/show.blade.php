@@ -68,19 +68,39 @@
                                 <div class="col-md-4">
                                     <p class="mb-1">
                                         <strong>Дата вылета:</strong><br>
-                                        {{ $booking->start_date ? $booking->start_date->format('d.m.Y') : 'Не указано' }}
+                                        @if($booking->start_date_end && $booking->start_date_end != $booking->start_date)
+                                            {{ $booking->start_date->format('d.m.Y') }} - {{ $booking->start_date_end->format('d.m.Y') }}
+                                        @else
+                                            {{ $booking->start_date ? $booking->start_date->format('d.m.Y') : 'Не указано' }}
+                                        @endif
                                     </p>
                                 </div>
                                 <div class="col-md-4">
                                     <p class="mb-1">
                                         <strong>Ночей:</strong><br>
-                                        {{ $booking->nights }}
+                                        @if($booking->nights_max && $booking->nights_max != $booking->nights)
+                                            {{ $booking->nights }} - {{ $booking->nights_max }}
+                                        @else
+                                            {{ $booking->nights }}
+                                        @endif
                                     </p>
                                 </div>
                                 <div class="col-md-4">
                                     <p class="mb-1">
                                         <strong>Туристов:</strong><br>
-                                        {{ $booking->adults }} взрослых, {{ $booking->children }} детей
+                                        {{ $booking->adults }} {{ str_plural($booking->adults, 'взрослый', 'взрослых', 'взрослых') }}
+                                        @if($booking->children > 0)
+                                            , {{ $booking->children }} {{ str_plural($booking->children, 'ребенок', 'ребенка', 'детей') }}
+                                            @if($booking->children_ages && count($booking->children_ages) > 0)
+                                                <br>
+                                                <small class="text-muted">
+                                                    Возраст детей: 
+                                                    @foreach($booking->children_ages as $age)
+                                                        {{ $age }} {{ str_plural($age, 'год', 'года', 'лет') }}@if(!$loop->last), @endif
+                                                    @endforeach
+                                                </small>
+                                            @endif
+                                        @endif
                                     </p>
                                 </div>
                             </div>

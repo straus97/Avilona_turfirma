@@ -26,12 +26,31 @@
         <p><strong>Дата вылета:</strong> 
             @if($booking->start_date)
                 {{ \Carbon\Carbon::parse($booking->start_date)->format('d.m.Y') }}
+                @if($booking->start_date_end && $booking->start_date_end != $booking->start_date)
+                    - {{ \Carbon\Carbon::parse($booking->start_date_end)->format('d.m.Y') }}
+                @endif
             @else
                 Не указана
             @endif
         </p>
-        <p><strong>Количество ночей:</strong> {{ $booking->nights }}</p>
-        <p><strong>Количество туристов:</strong> {{ $booking->adults + $booking->children }}</p>
+        <p><strong>Количество ночей:</strong> 
+            {{ $booking->nights }}
+            @if($booking->nights_max && $booking->nights_max != $booking->nights)
+                - {{ $booking->nights_max }}
+            @endif
+        </p>
+        <p><strong>Взрослых:</strong> {{ $booking->adults }}</p>
+        @if($booking->children > 0)
+            <p><strong>Детей:</strong> {{ $booking->children }}
+                @if($booking->children_ages && count($booking->children_ages) > 0)
+                    <br><small style="color: #666;">Возраст: 
+                    @foreach($booking->children_ages as $age)
+                        {{ $age }} {{ str_plural($age, 'год', 'года', 'лет') }}@if(!$loop->last), @endif
+                    @endforeach
+                    </small>
+                @endif
+            </p>
+        @endif
     </div>
     
     <p><strong>Чек-лист перед поездкой:</strong></p>

@@ -37,9 +37,12 @@ class Booking extends Model
         'destination_country',
         'destination_city',
         'start_date',
+        'start_date_end',
         'nights',
+        'nights_max',
         'adults',
         'children',
+        'children_ages',
         'tourists_data',
         'total_price',
         'paid_amount',
@@ -49,9 +52,11 @@ class Booking extends Model
 
     protected $casts = [
         'start_date' => 'date',
+        'start_date_end' => 'date',
         'total_price' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'tourists_data' => 'array',
+        'children_ages' => 'array',
     ];
 
     /**
