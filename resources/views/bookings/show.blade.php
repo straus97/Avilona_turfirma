@@ -33,7 +33,7 @@
 @endauth
             <div class="col-md-8">
                 <!-- Основная информация о заявке -->
-                <div class="card shadow mb-4">
+                <div class="@auth card-custom @else card shadow @endauth mb-4">
                     <div class="card-header bg-{{ $booking->status_color }} text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             <h3 class="mb-0">
@@ -220,7 +220,7 @@
                 </div>
 
                 <!-- Кнопки действий -->
-                <div class="card shadow mb-4">
+                <div class="@auth card-custom @else card shadow @endauth mb-4">
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-2 justify-content-between">
                             <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
@@ -303,7 +303,7 @@
             <div class="col-md-4">
                 <!-- Назначение менеджера (для админа) -->
                 @if(auth()->user()->isAdmin() && !$booking->manager)
-                    <div class="card shadow mb-4">
+                    <div class="@auth card-custom @else card shadow @endauth mb-4">
                         <div class="card-header bg-warning text-dark">
                             <h5 class="mb-0">
                                 <i class="bi bi-person-plus"></i> Назначить менеджера
@@ -330,7 +330,7 @@
                 @endif
 
                 <!-- История статусов -->
-                <div class="card shadow mb-4">
+                <div class="@auth card-custom @else card shadow @endauth mb-4">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
                             <i class="bi bi-clock-history"></i> Статус заявки
@@ -349,7 +349,7 @@
                 </div>
 
                 <!-- Информация -->
-                <div class="card shadow">
+                <div class="@auth card-custom @else card shadow @endauth">
                     <div class="card-header bg-secondary text-white">
                         <h5 class="mb-0">
                             <i class="bi bi-info-circle"></i> Информация
@@ -374,7 +374,6 @@
         </main>
     @endsection
 @endauth
-@endsection
 
 @push('styles')
 <style>

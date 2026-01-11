@@ -36,11 +36,15 @@
 
                             <!-- Информация о клиенте (только для менеджеров и админов) -->
                             @if(Auth::user()->hasAnyRole(['manager', 'admin']))
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="bi bi-person-circle"></i> Информация о клиенте</h5>
-                                </div>
-                                <div class="card-body">
+                            <div class="@auth card-custom @else card @endauth mb-4">
+                                @auth
+                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-person-circle"></i> Информация о клиенте</h5>
+                                @else
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-person-circle"></i> Информация о клиенте</h5>
+                                    </div>
+                                    <div class="card-body">
+                                @endauth
                                     <div class="form-check mb-3">
                                         <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
                                         <label class="form-check-label" for="isNewClient">
@@ -108,16 +112,22 @@
                                             </small>
                                         </div>
                                     </div>
-                                </div>
+                                @guest
+                                    </div>
+                                @endguest
                             </div>
                             @endif
 
                             <!-- Направление -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
-                                </div>
-                                <div class="card-body">
+                            <div class="@auth card-custom @else card @endauth mb-4">
+                                @auth
+                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
+                                @else
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
+                                    </div>
+                                    <div class="card-body">
+                                @endauth
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label for="departure_city" class="form-label">
@@ -183,15 +193,21 @@
                                             </small>
                                         </div>
                                     </div>
-                                </div>
+                                @guest
+                                    </div>
+                                @endguest
                             </div>
 
                             <!-- Даты и ночи -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
-                                </div>
-                                <div class="card-body">
+                            <div class="@auth card-custom @else card @endauth mb-4">
+                                @auth
+                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
+                                @else
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
+                                    </div>
+                                    <div class="card-body">
+                                @endauth
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="start_date" class="form-label">
@@ -269,15 +285,21 @@
                                             </small>
                                         </div>
                                     </div>
-                                </div>
+                                @guest
+                                    </div>
+                                @endguest
                             </div>
 
                             <!-- Туристы -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Количество туристов</h5>
-                                </div>
-                                <div class="card-body">
+                            <div class="@auth card-custom @else card @endauth mb-4">
+                                @auth
+                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-people-fill"></i> Количество туристов</h5>
+                                @else
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-people-fill"></i> Количество туристов</h5>
+                                    </div>
+                                    <div class="card-body">
+                                @endauth
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label for="adults" class="form-label">
@@ -321,14 +343,21 @@
                                         <div id="childrenAgesContainer" class="row"></div>
                                     </div>
                                 </div>
+                                @guest
+                                    </div>
+                                @endguest
                             </div>
 
                             <!-- Дополнительные пожелания -->
-                            <div class="card mb-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
-                                </div>
-                                <div class="card-body">
+                            <div class="@auth card-custom @else card @endauth mb-4">
+                                @auth
+                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
+                                @else
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
+                                    </div>
+                                    <div class="card-body">
+                                @endauth
                                     <label for="notes" class="form-label">
                                         Пожелания и комментарии
                                     </label>
@@ -340,7 +369,9 @@
                                     @error('notes')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>
+                                @guest
+                                    </div>
+                                @endguest
                             </div>
 
                             <!-- Информация -->
