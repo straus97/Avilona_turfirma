@@ -99,7 +99,7 @@
                                 <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
-                                <li><a class="dropdown-item" href="{{ route('bookings.index') }}">
+                                <li><a class="dropdown-item" href="{{ route('cabinet.bookings') }}">
                                     <i class="bi bi-bookmark"></i> Мои заявки
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ route('account') }}">

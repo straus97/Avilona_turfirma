@@ -124,23 +124,35 @@ class CabinetController extends Controller
     /**
      * Список заявок
      */
-    public function bookings(): View
+    public function bookings(Request $request): View
     {
         $user = Auth::user();
         
+        $query = Booking::query();
+        
         if ($user->hasAnyRole(['admin', 'manager'])) {
-            $bookings = Booking::with(['user', 'manager'])
-                ->latest()
-                ->paginate(15);
+            $query->with(['user', 'manager']);
         } else {
-            $bookings = Booking::where('user_id', $user->id)
-                ->with(['manager'])
-                ->latest()
-                ->paginate(15);
+            $query->where('user_id', $user->id)->with(['manager']);
         }
         
-        // Статистика
-        $totalCount = $bookings->total();
+        // Фильтры
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        if ($request->filled('country')) {
+            $query->where('destination_country', 'like', '%' . $request->country . '%');
+        }
+        
+        if ($request->filled('date_from')) {
+            $query->whereDate('start_date', '>=', $request->date_from);
+        }
+        
+        $bookings = $query->latest()->paginate(15)->withQueryString();
+        
+        // Статистика (без учета фильтров)
+        $totalCount = Booking::where('user_id', $user->id)->count();
         $activeCount = Booking::where('user_id', $user->id)
             ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
             ->count();
@@ -356,5 +368,30 @@ class CabinetController extends Controller
         $document->delete();
         
         return redirect()->route('cabinet.documents.personal')->with('status', 'Документ удален!');
+    }
+    
+    /**
+     * Удаление аккаунта
+     */
+    public function destroyAccount(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => 'required|current_password',
+        ]);
+        
+        $user = Auth::user();
+        
+        // Удаление связанных данных
+        $user->bookings()->delete();
+        $user->userDocuments()->delete();
+        $user->bonusAccount()->delete();
+        
+        // Выход из системы
+        Auth::logout();
+        
+        // Удаление пользователя
+        $user->delete();
+        
+        return redirect()->route('home.index')->with('status', 'Ваш аккаунт успешно удален.');
     }
 }

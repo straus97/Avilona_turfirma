@@ -202,7 +202,7 @@
                 <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Удалить аккаунт</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ route('profile.destroy') }}">
+            <form method="POST" action="{{ route('cabinet.settings.destroy-account') }}">
                 @csrf
                 @method('DELETE')
                 <div class="modal-body">

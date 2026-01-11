@@ -145,13 +145,21 @@
                             <input type="hidden" name="receiver_id" value="{{ $currentBooking->manager_id }}">
                             
                             <div class="d-flex gap-2">
-                                <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." required>
-                                <label class="btn btn-outline-secondary" style="cursor: pointer;">
+                                <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." required id="messageInput">
+                                <label class="btn btn-outline-secondary" style="cursor: pointer;" title="Прикрепить файл">
                                     <i class="bi bi-paperclip"></i>
-                                    <input type="file" name="attachment" style="display: none;">
+                                    <input type="file" name="attachment" style="display: none;" id="attachmentInput" 
+                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                                           onchange="updateFileName(this)">
                                 </label>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-send"></i>
+                                </button>
+                            </div>
+                            <div id="attachmentName" class="mt-2 text-muted small" style="display: none;">
+                                <i class="bi bi-file-earmark"></i> <span id="fileName"></span>
+                                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="clearAttachment()">
+                                    <i class="bi bi-x-circle"></i>
                                 </button>
                             </div>
                         </form>
@@ -176,6 +184,26 @@
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Функция для отображения имени файла
+    function updateFileName(input) {
+        const attachmentName = document.getElementById('attachmentName');
+        const fileName = document.getElementById('fileName');
+        
+        if (input.files && input.files[0]) {
+            fileName.textContent = input.files[0].name;
+            attachmentName.style.display = 'block';
+        }
+    }
+    
+    // Функция для очистки вложения
+    function clearAttachment() {
+        const attachmentInput = document.getElementById('attachmentInput');
+        const attachmentName = document.getElementById('attachmentName');
+        
+        attachmentInput.value = '';
+        attachmentName.style.display = 'none';
     }
     
     // Автообновление чата каждые 10 секунд

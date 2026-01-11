@@ -44,6 +44,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         
         Route::get('/settings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'settings'])->name('settings');
         Route::post('/settings/notifications', [\App\Http\Controllers\Cabinet\CabinetController::class, 'updateNotifications'])->name('settings.notifications');
+        Route::delete('/settings/delete-account', [\App\Http\Controllers\Cabinet\CabinetController::class, 'destroyAccount'])->name('settings.destroy-account');
         
         // Документы
         Route::post('/documents/personal/upload', [\App\Http\Controllers\Cabinet\CabinetController::class, 'uploadPersonalDocument'])->name('documents.personal.upload');
@@ -191,6 +192,9 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::get('/profile/documents', function () {
         return redirect()->route('cabinet.documents.personal');
+    });
+    Route::get('/account', function () {
+        return redirect()->route('cabinet.dashboard');
     });
 });
 
