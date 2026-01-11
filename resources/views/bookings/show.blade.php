@@ -345,9 +345,14 @@
                     </div>
                 </div>
             </div>
+@auth
+        </div>
+    </div>
+@else
         </div>
     </div>
 </main>
+@endauth
 @endsection
 
 @push('styles')
