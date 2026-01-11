@@ -1,13 +1,38 @@
 @auth
     @extends('cabinet.layouts.app')
+    
+    @section('title', 'Создать заявку')
+    
+    @section('sidebar')
+        @include('cabinet.components.sidebar.tourist')
+    @endsection
+    
+    @section('content')
+        <div class="page-header">
+            <h1 class="page-title">Создать заявку на тур</h1>
+            <p class="page-subtitle">Заполните форму ниже</p>
+        </div>
+        
+        <div class="card-custom">
 @else
     @extends('layouts.main')
+    
+    @section('title', 'Создать заявку - Авилона')
+    @section('meta_description', 'Создание заявки на тур')
+    
+    @section('content')
+        <main>
+            <div class="container mt-5 mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card shadow-lg">
+                            <div class="card-header bg-gradient-primary text-white py-3">
+                                <h3 class="mb-0">
+                                    <i class="bi bi-plus-circle-fill"></i> Создать заявку на тур
+                                </h3>
+                            </div>
+                            <div class="card-body p-4">
 @endauth
-
-@section('title', 'Создать заявку - Авилона')
-@section('meta_description', 'Создание заявки на тур')
-
-@section('content')
 <main>
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
@@ -359,11 +384,16 @@
                             </div>
                         </form>
                     </div>
+@auth
+        </div>
+    </div>
+@else
                 </div>
             </div>
         </div>
     </div>
 </main>
+@endauth
 @endsection
 
 @push('styles')
