@@ -14,7 +14,7 @@
                 <i class="bi bi-calendar3"></i> {{ $booking->start_date ? $booking->start_date->format('d.m.Y') : 'Не указана' }}
             </div>
         </div>
-        <x-cabinet.status-badge :status="$booking->status" />
+        @include('cabinet.components.status-badge', ['status' => $booking->status])
     </div>
 
     <div class="row g-3 mb-3" style="font-size: 0.875rem;">
