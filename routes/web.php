@@ -28,18 +28,18 @@ Route::get('/api/destination-cities', [\App\Http\Controllers\Api\DestinationCity
 Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet.')->group(function () {
     // Общие маршруты
     Route::get('/', [\App\Http\Controllers\Cabinet\CabinetController::class, 'dashboard'])->name('dashboard');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
     
     // Турист
     Route::middleware('role:tourist,manager,admin')->group(function () {
-        Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
-        Route::get('/chat/{bookingId?}', [ProfileController::class, 'chat'])->name('chat');
-        Route::get('/documents/personal', [ProfileController::class, 'documents'])->name('documents.personal');
-        Route::get('/documents/bookings', [ProfileController::class, 'documents'])->name('documents.bookings');
-        Route::get('/bonus', [ProfileController::class, 'dashboard'])->name('bonus'); // TODO: отдельный контроллер
-        Route::get('/wishlist', [ProfileController::class, 'dashboard'])->name('wishlist'); // TODO: отдельный контроллер
+        Route::get('/bookings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bookings'])->name('bookings');
+        Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Cabinet\CabinetController::class, 'chat'])->name('chat');
+        Route::get('/documents/personal', [\App\Http\Controllers\Cabinet\CabinetController::class, 'personalDocuments'])->name('documents.personal');
+        Route::get('/documents/bookings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bookingDocuments'])->name('documents.bookings');
+        Route::get('/bonus', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bonusProgram'])->name('bonus');
+        Route::get('/wishlist', [\App\Http\Controllers\Cabinet\CabinetController::class, 'wishlist'])->name('wishlist');
+        Route::get('/profile', [\App\Http\Controllers\Cabinet\CabinetController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [\App\Http\Controllers\Cabinet\CabinetController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/settings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'settings'])->name('settings');
     });
     
     // Менеджер
