@@ -83,6 +83,14 @@ class Booking extends Model
     }
 
     /**
+     * Связь с документами по заявке
+     */
+    public function bookingDocuments(): HasMany
+    {
+        return $this->hasMany(BookingDocument::class);
+    }
+
+    /**
      * Scopes
      */
     public function scopeByStatus($query, $status)
