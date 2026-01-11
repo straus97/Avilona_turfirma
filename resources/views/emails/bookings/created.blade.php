@@ -40,11 +40,37 @@
     </div>
     @endif
     
-    <p style="text-align: center;">
-        <a href="{{ route('bookings.show', $booking->id) }}" class="button">
-            Посмотреть заявку
-        </a>
-    </p>
+    @if(!$booking->user->email_verified_at)
+        {{-- Для незарегистрированных пользователей --}}
+        <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <h3 style="color: #856404; margin-top: 0;">🎯 Зарегистрируйтесь для удобства!</h3>
+            <p style="color: #856404;">
+                Создайте личный кабинет на нашем сайте, чтобы:
+            </p>
+            <ul style="text-align: left; color: #856404; display: inline-block;">
+                <li>Отслеживать статус заявки онлайн</li>
+                <li>Общаться с менеджером в чате</li>
+                <li>Получать уведомления об изменениях</li>
+                <li>Хранить все документы в одном месте</li>
+            </ul>
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="{{ route('register') }}" class="button" style="background-color: #28a745; border-color: #28a745;">
+                    📝 Зарегистрироваться
+                </a>
+            </p>
+            <p style="font-size: 12px; color: #856404; margin-bottom: 0;">
+                При регистрации используйте email: <strong>{{ $booking->user->email }}</strong><br>
+                Заявка автоматически появится в вашем личном кабинете
+            </p>
+        </div>
+    @else
+        {{-- Для зарегистрированных пользователей --}}
+        <p style="text-align: center;">
+            <a href="{{ route('bookings.show', $booking->id) }}" class="button">
+                Посмотреть заявку
+            </a>
+        </p>
+    @endif
     
     <p><strong>Что дальше?</strong></p>
     <ol>
@@ -54,7 +80,11 @@
         <li>Подготовим все необходимые документы</li>
     </ol>
     
-    <p>Если у вас возникнут вопросы, вы всегда можете связаться с нами по телефону или написать в чат на сайте.</p>
+    <p>Если у вас возникнут вопросы, вы всегда можете связаться с нами по телефону @if($booking->user->email_verified_at)или написать в чат на сайте @endif.</p>
+    
+    <p style="font-size: 11px; color: #999; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee;">
+        <em>Это письмо сформировано автоматически. Пожалуйста, не отвечайте на него.</em>
+    </p>
     
     <p>С уважением,<br><strong>Команда Авилона</strong></p>
 @endsection

@@ -8,6 +8,7 @@ use App\Models\Tour;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -112,14 +113,25 @@ class BookingController extends Controller
         if ($user->hasAnyRole(['manager', 'admin'])) {
             // Если менеджер/админ создает заявку
             if ($request->is_new_client) {
-                // Создаем нового пользователя (турист будет зарегистрирован позже)
-                // Сохраняем ФИО в notes пока клиент не зарегистрируется
-                $validated['notes'] = ($validated['notes'] ?? '') . "\n\nКлиент (не зарегистрирован): " . $request->client_name;
-                if ($request->client_email) {
-                    $validated['notes'] .= " (Email: {$request->client_email})";
+                // Создаем нового пользователя-туриста
+                $newTourist = User::create([
+                    'name' => $request->client_name,
+                    'email' => $request->client_email ?? 'temp_' . time() . '@avilona.ru',
+                    'password' => bcrypt(Str::random(16)), // Временный пароль
+                    'email_verified_at' => null, // Не верифицирован
+                ]);
+                
+                // Назначаем роль "tourist"
+                $touristRole = \App\Models\Role::where('name', 'tourist')->first();
+                if ($touristRole) {
+                    $newTourist->roles()->attach($touristRole->id);
                 }
-                // Временно привязываем к менеджеру, который создал заявку
-                $validated['user_id'] = $user->id;
+                
+                // Привязываем заявку к новому туристу
+                $validated['user_id'] = $newTourist->id;
+                
+                // Добавляем пометку в notes
+                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Ожидает регистрации на сайте.";
             } else {
                 // Выбран существующий клиент
                 $validated['user_id'] = $request->client_id;
