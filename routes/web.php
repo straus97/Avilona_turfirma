@@ -24,6 +24,49 @@ Route::middleware('auth')->group(function () {
 Route::get('/api/destination-cities', [\App\Http\Controllers\Api\DestinationCityController::class, 'getCitiesByCountry'])
     ->name('api.destination-cities');
 
+// Новый личный кабинет (единая система для всех ролей)
+Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet.')->group(function () {
+    // Общие маршруты
+    Route::get('/', [\App\Http\Controllers\Cabinet\CabinetController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
+    
+    // Турист
+    Route::middleware('role:tourist,manager,admin')->group(function () {
+        Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
+        Route::get('/chat/{bookingId?}', [ProfileController::class, 'chat'])->name('chat');
+        Route::get('/documents/personal', [ProfileController::class, 'documents'])->name('documents.personal');
+        Route::get('/documents/bookings', [ProfileController::class, 'documents'])->name('documents.bookings');
+        Route::get('/bonus', [ProfileController::class, 'dashboard'])->name('bonus'); // TODO: отдельный контроллер
+        Route::get('/wishlist', [ProfileController::class, 'dashboard'])->name('wishlist'); // TODO: отдельный контроллер
+    });
+    
+    // Менеджер
+    Route::middleware('role:manager,admin')->prefix('manager')->name('manager.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/clients', [\App\Http\Controllers\Manager\ManagerController::class, 'clients'])->name('clients');
+        Route::get('/bookings', [\App\Http\Controllers\Manager\ManagerController::class, 'bookings'])->name('bookings');
+        Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Manager\ManagerController::class, 'chat'])->name('chat');
+        Route::get('/statistics', [\App\Http\Controllers\Manager\ManagerController::class, 'statistics'])->name('statistics');
+        Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('finance'); // TODO
+        Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('knowledge'); // TODO
+    });
+    
+    // Админ
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users');
+        Route::get('/bookings', [\App\Http\Controllers\Admin\AdminController::class, 'bookings'])->name('bookings');
+        Route::get('/roles', [\App\Http\Controllers\Admin\AdminController::class, 'roles'])->name('roles');
+        Route::get('/content', [\App\Http\Controllers\Admin\AdminController::class, 'content'])->name('content');
+        Route::get('/finance', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('finance'); // TODO
+        Route::get('/bonus', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('bonus'); // TODO
+        Route::get('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('settings');
+        Route::get('/logs', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('logs'); // TODO
+    });
+});
+
 // Заявки (доступны только авторизованным пользователям)
 Route::middleware(['auth', 'password.change'])->group(function () {
     Route::resource('bookings', \App\Http\Controllers\Booking\BookingController::class);
