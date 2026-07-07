@@ -11,9 +11,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('countries_images', function (Blueprint $table) {
-            if (!Schema::hasColumn('countries_images', 'slug')) {
-                $table->string('slug')->unique()->nullable();
-            }
+            $table->string('slug')->unique()->after('title');
         });
     }
 
@@ -23,9 +21,8 @@ return new class extends Migration {
     public function down()
     {
         Schema::table('countries_images', function (Blueprint $table) {
-            if (Schema::hasColumn('countries_images', 'slug')) {
-                $table->dropColumn('slug');
-            }
+            $table->dropUnique(['slug']);
+            $table->dropColumn('slug');
         });
     }
 };
