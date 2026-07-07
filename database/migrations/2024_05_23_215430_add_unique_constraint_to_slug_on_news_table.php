@@ -1,21 +1,19 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up()
+    // No-op: the preceding add_slug migration (2024_05_23_215315) now creates
+    // the slug column in its final non-null unique form. This migration owns
+    // no schema changes and is retained only for migration-history continuity.
+
+    public function up(): void
     {
-        Schema::table('news', function (Blueprint $table) {
-            $table->string('slug')->unique()->change();
-        });
+        // intentionally empty
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::table('news', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
-        });
+        // intentionally empty
     }
 };
