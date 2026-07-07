@@ -4,18 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookingDocument extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'booking_id',
-        'uploaded_by_user_id',
-        'name',
+        'document_type',
+        'title',
         'file_path',
-        'file_type',
         'file_size',
+        'uploaded_by',
+        'uploaded_at',
+    ];
+
+    protected $casts = [
+        'uploaded_at' => 'datetime',
     ];
 
     /**
@@ -31,6 +37,14 @@ class BookingDocument extends Model
      */
     public function uploadedBy()
     {
-        return $this->belongsTo(User::class, 'uploaded_by_user_id');
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Виртуальный тип файла на основе расширения
+     */
+    public function getFileTypeAttribute(): string
+    {
+        return strtolower(pathinfo($this->file_path ?? '', PATHINFO_EXTENSION));
     }
 }

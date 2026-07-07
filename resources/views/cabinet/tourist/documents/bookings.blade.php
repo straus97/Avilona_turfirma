@@ -39,15 +39,15 @@
                                 <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: #ef4444;"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <h6 class="mb-1" style="font-weight: 600;">{{ $document->name }}</h6>
+                                <h6 class="mb-1" style="font-weight: 600;">{{ $document->title }}</h6>
                                 <div style="font-size: 0.75rem; color: #6b7280;">
-                                    {{ $document->file_type ?? 'Документ' }}
+                                    {{ $document->file_type ? strtoupper($document->file_type) : 'Документ' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #9ca3af;">
                                     @if($document->file_size)
                                         {{ number_format($document->file_size / 1024, 0) }} КБ •
                                     @endif
-                                    {{ $document->created_at->format('d.m.Y H:i') }}
+                                    {{ ($document->uploaded_at ?? $document->created_at)?->format('d.m.Y H:i') ?? '—' }}
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
