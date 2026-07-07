@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->string('name'); //255 символов
+            $table->string('title')->nullable(); // необязательная тема отзыва
             $table->text('content'); //большой текст
             $table->string('image')->nullable(); //вывод аватарки, записывается url
             $table->boolean('is_published')->default(0); //логическая переменная, выпущен контент или нет. по умолчанию опубликован
