@@ -1,16 +1,23 @@
 @extends('cabinet.layouts.app')
 
-@section('title', 'Управление контентом')
+@section('title', 'Контент')
 
 @section('sidebar')
-    @include('cabinet.components.sidebar.admin')
+    @include('cabinet.components.sidebar.manager')
 @endsection
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Управление контентом</h1>
-    <p class="page-subtitle">Новости, отзывы и модерация</p>
+    <h1 class="page-title">Контент</h1>
+    <p class="page-subtitle">Интересные статьи и модерация отзывов</p>
 </div>
+
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <div class="row mb-4">
     <div class="col-md-4">
@@ -31,7 +38,7 @@
     </div>
     <div class="col-md-4">
         @include('cabinet.components.stat-card', [
-            'title' => 'Ожидают модерации',
+            'title' => 'На модерации',
             'value' => $pendingReviews,
             'icon' => 'bi-clock',
             'color' => 'warning'
@@ -42,7 +49,7 @@
 <div class="card-custom mb-4">
     <div class="card-header-custom d-flex align-items-center justify-content-between">
         <div class="card-title-custom">Интересные статьи</div>
-        <a href="{{ route('cabinet.admin.articles.create') }}" class="btn btn-sm btn-outline-primary">
+        <a href="{{ route('cabinet.manager.articles.create') }}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-plus-circle"></i> Создать статью
         </a>
     </div>
@@ -66,10 +73,10 @@
                             <a href="{{ route('helpful_information.show_interesting_news', $article->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{{ route('cabinet.admin.articles.edit', $article->id) }}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{{ route('cabinet.manager.articles.edit', $article->id) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('cabinet.admin.articles.delete', $article->id) }}" method="POST" onsubmit="return confirm('Удалить статью?')">
+                            <form action="{{ route('cabinet.manager.articles.delete', $article->id) }}" method="POST" onsubmit="return confirm('Удалить статью?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -83,7 +90,7 @@
         </table>
     </div>
     <div class="card-footer">
-        <a href="{{ route('cabinet.admin.articles') }}" class="btn btn-sm btn-outline-secondary">Все статьи</a>
+        <a href="{{ route('cabinet.manager.articles') }}" class="btn btn-sm btn-outline-secondary">Все статьи</a>
     </div>
 </div>
 
@@ -116,7 +123,7 @@
                         </td>
                         <td>{{ $review->created_at ? $review->created_at->format('d.m.Y') : '—' }}</td>
                         <td>
-                            <a href="{{ route('cabinet.admin.reviews.edit', $review->id) }}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{{ route('cabinet.manager.reviews.edit', $review->id) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </td>

@@ -2,7 +2,11 @@
     <div class="menu-section-title">Основное</div>
     <a href="{{ route('cabinet.admin.dashboard') }}" class="menu-item {{ request()->routeIs('cabinet.admin.dashboard') ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i>
-        <span>Dashboard</span>
+        <span>Главная</span>
+    </a>
+    <a href="{{ route('cabinet.admin.profile') }}" class="menu-item {{ request()->routeIs('cabinet.admin.profile*') ? 'active' : '' }}">
+        <i class="bi bi-person-circle"></i>
+        <span>Мой профиль</span>
     </a>
 </div>
 
@@ -16,9 +20,9 @@
         <i class="bi bi-journal-text"></i>
         <span>Все заявки</span>
     </a>
-    <a href="{{ route('cabinet.admin.roles') }}" class="menu-item {{ request()->routeIs('cabinet.admin.roles*') ? 'active' : '' }}">
-        <i class="bi bi-shield-lock"></i>
-        <span>Роли и права</span>
+    <a href="{{ route('cabinet.admin.chats') }}" class="menu-item {{ request()->routeIs('cabinet.admin.chats*') ? 'active' : '' }}">
+        <i class="bi bi-chat-dots"></i>
+        <span>Все чаты</span>
     </a>
     <a href="{{ route('cabinet.admin.content') }}" class="menu-item {{ request()->routeIs('cabinet.admin.content*') ? 'active' : '' }}">
         <i class="bi bi-file-richtext"></i>

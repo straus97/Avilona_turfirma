@@ -15,6 +15,12 @@ class PasswordChangeController extends Controller
      */
     public function show()
     {
+        $user = Auth::user();
+
+        if (!$user || !$user->password_change_required) {
+            return redirect()->route('cabinet.dashboard');
+        }
+
         return view('auth.change-password');
     }
     
@@ -23,6 +29,12 @@ class PasswordChangeController extends Controller
      */
     public function update(Request $request)
     {
+        $user = Auth::user();
+
+        if (!$user || !$user->password_change_required) {
+            return redirect()->route('cabinet.dashboard');
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::defaults()],
@@ -32,8 +44,6 @@ class PasswordChangeController extends Controller
             'password.required' => 'Введите новый пароль',
             'password.confirmed' => 'Пароли не совпадают',
         ]);
-        
-        $user = Auth::user();
         
         // Обновляем пароль
         $user->password = Hash::make($request->password);
@@ -47,7 +57,7 @@ class PasswordChangeController extends Controller
         
         $user->save();
         
-        return redirect()->route('profile.dashboard')
+        return redirect()->route('cabinet.dashboard')
             ->with('success', 'Пароль успешно изменен! Ваш email подтвержден. Добро пожаловать!');
     }
 }

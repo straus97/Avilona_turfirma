@@ -1,8 +1,13 @@
+@php
+    $layout = auth()->check() ? 'cabinet.layouts.app' : 'layouts.main';
+@endphp
+
+@extends($layout)
+
+@section('title', auth()->check() ? 'Создать заявку' : 'Создать заявку - Авилона')
+@section('meta_description', 'Создание заявки на тур')
+
 @auth
-    @extends('cabinet.layouts.app')
-    
-    @section('title', 'Создать заявку')
-    
     @section('sidebar')
         @if(Auth::user()->isTourist())
             @include('cabinet.components.sidebar.tourist')
@@ -12,13 +17,15 @@
             @include('cabinet.components.sidebar.admin')
         @endif
     @endsection
-    
-    @section('content')
+@endauth
+
+@section('content')
+    @auth
         <div class="page-header">
             <h1 class="page-title">Создать заявку на тур</h1>
             <p class="page-subtitle">Заполните форму ниже</p>
         </div>
-        
+
         <div class="card-custom">
             @if($tour)
                 <div class="alert alert-info border-left-info mb-4">
@@ -31,27 +38,22 @@
                 @csrf
 
                 @if($tour)
-                                <input type="hidden" name="tour_id" value="{{ $tour->id }}">
-                            @endif
+                    <input type="hidden" name="tour_id" value="{{ $tour->id }}">
+                @endif
 
-                            <!-- Информация о клиенте (только для менеджеров и админов) -->
-                            @if(Auth::user()->hasAnyRole(['manager', 'admin']))
-                            <div class="@auth card-custom @else card @endauth mb-4">
-                                @auth
-                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-person-circle"></i> Информация о клиенте</h5>
-                                @else
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="bi bi-person-circle"></i> Информация о клиенте</h5>
-                                    </div>
-                                    <div class="card-body">
-                                @endauth
+                <!-- Информация о клиенте (только для менеджеров и админов) -->
+                @if(Auth::user()->hasAnyRole(['manager', 'admin']))
+                <div class="card-custom mb-4">
+                    <div class="card-header-custom">
+                        <div class="card-title-custom"><i class="bi bi-person-circle"></i> Информация о клиенте</div>
+                    </div>
                                     <div class="form-check mb-3">
                                         <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
                                         <label class="form-check-label" for="isNewClient">
                                             <strong>Новый клиент</strong> (клиента нет в базе)
                                         </label>
                                     </div>
-                                    
+
                                     @error('client_email')
                                         <div class="alert alert-danger">
                                             <i class="bi bi-exclamation-triangle"></i>
@@ -63,8 +65,8 @@
                                         <label for="client_id" class="form-label">
                                             Выберите клиента <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-select @error('client_id') is-invalid @enderror" 
-                                                id="client_id" 
+                                        <select class="form-select @error('client_id') is-invalid @enderror"
+                                                id="client_id"
                                                 name="client_id">
                                             <option value="">-- Выберите клиента --</option>
                                             @foreach($clients as $client)
@@ -83,26 +85,26 @@
                                             <label for="client_name" class="form-label">
                                                 ФИО нового клиента <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" 
-                                                   class="form-control @error('client_name') is-invalid @enderror" 
-                                                   id="client_name" 
-                                                   name="client_name" 
-                                                   value="{{ old('client_name') }}" 
+                                            <input type="text"
+                                                   class="form-control @error('client_name') is-invalid @enderror"
+                                                   id="client_name"
+                                                   name="client_name"
+                                                   value="{{ old('client_name') }}"
                                                    placeholder="Иванов Иван Иванович">
                                             @error('client_name')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        
+
                                         <div class="mb-3">
                                             <label for="client_email" class="form-label">
                                                 Email клиента (опционально)
                                             </label>
-                                            <input type="email" 
-                                                   class="form-control @error('client_email') is-invalid @enderror" 
-                                                   id="client_email" 
-                                                   name="client_email" 
-                                                   value="{{ old('client_email') }}" 
+                                            <input type="email"
+                                                   class="form-control @error('client_email') is-invalid @enderror"
+                                                   id="client_email"
+                                                   name="client_email"
+                                                   value="{{ old('client_email') }}"
                                                    placeholder="client@example.com">
                                             @error('client_email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -112,32 +114,24 @@
                                             </small>
                                         </div>
                                     </div>
-                                @guest
-                                    </div>
-                                @endguest
-                            </div>
-                            @endif
+            </div>
+            @endif
 
-                            <!-- Направление -->
-                            <div class="@auth card-custom @else card @endauth mb-4">
-                                @auth
-                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
-                                @else
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
-                                    </div>
-                                    <div class="card-body">
-                                @endauth
+            <!-- Направление -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <div class="card-title-custom"><i class="bi bi-geo-alt-fill"></i> Направление</div>
+                </div>
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label for="departure_city" class="form-label">
                                                 Город вылета <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" 
-                                                   class="form-control @error('departure_city') is-invalid @enderror" 
-                                                   id="departure_city" 
-                                                   name="departure_city" 
-                                                   value="{{ old('departure_city', $tour->departure_city ?? 'Москва') }}" 
+                                            <input type="text"
+                                                   class="form-control @error('departure_city') is-invalid @enderror"
+                                                   id="departure_city"
+                                                   name="departure_city"
+                                                   value="{{ old('departure_city', $tour->departure_city ?? 'Санкт-Петербург') }}"
                                                    list="departureCitiesList"
                                                    required>
                                             <datalist id="departureCitiesList">
@@ -154,11 +148,11 @@
                                             <label for="destination_country" class="form-label">
                                                 Страна <span class="text-danger">*</span>
                                             </label>
-                                            <input type="text" 
-                                                   class="form-control @error('destination_country') is-invalid @enderror" 
-                                                   id="destination_country" 
-                                                   name="destination_country" 
-                                                   value="{{ old('destination_country', $tour->destination_country ?? '') }}" 
+                                            <input type="text"
+                                                   class="form-control @error('destination_country') is-invalid @enderror"
+                                                   id="destination_country"
+                                                   name="destination_country"
+                                                   value="{{ old('destination_country', $tour->destination_country ?? '') }}"
                                                    list="destinationCountriesList"
                                                    required>
                                             <datalist id="destinationCountriesList">
@@ -175,10 +169,10 @@
                                             <label for="destination_city" class="form-label">
                                                 Курорт/Город
                                             </label>
-                                            <input type="text" 
-                                                   class="form-control @error('destination_city') is-invalid @enderror" 
-                                                   id="destination_city" 
-                                                   name="destination_city" 
+                                            <input type="text"
+                                                   class="form-control @error('destination_city') is-invalid @enderror"
+                                                   id="destination_city"
+                                                   name="destination_city"
                                                    value="{{ old('destination_city', $tour->destination_city ?? '') }}"
                                                    list="destinationCitiesList"
                                                    placeholder="Сначала выберите страну">
@@ -193,31 +187,23 @@
                                             </small>
                                         </div>
                                     </div>
-                                @guest
-                                    </div>
-                                @endguest
-                            </div>
+            </div>
 
-                            <!-- Даты и ночи -->
-                            <div class="@auth card-custom @else card @endauth mb-4">
-                                @auth
-                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
-                                @else
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
-                                    </div>
-                                    <div class="card-body">
-                                @endauth
+            <!-- Даты и ночи -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <div class="card-title-custom"><i class="bi bi-calendar-event-fill"></i> Даты поездки</div>
+                </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="start_date" class="form-label">
                                                 Дата вылета (с) <span class="text-danger">*</span>
                                             </label>
-                                            <input type="date" 
-                                                   class="form-control @error('start_date') is-invalid @enderror" 
-                                                   id="start_date" 
-                                                   name="start_date" 
-                                                   value="{{ old('start_date', $tour->start_date ?? '') }}" 
+                                            <input type="date"
+                                                   class="form-control @error('start_date') is-invalid @enderror"
+                                                   id="start_date"
+                                                   name="start_date"
+                                                   value="{{ old('start_date', $tour->start_date ?? '') }}"
                                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                                    required>
                                             @error('start_date')
@@ -232,11 +218,11 @@
                                             <label for="start_date_end" class="form-label">
                                                 Дата вылета (по)
                                             </label>
-                                            <input type="date" 
-                                                   class="form-control @error('start_date_end') is-invalid @enderror" 
-                                                   id="start_date_end" 
-                                                   name="start_date_end" 
-                                                   value="{{ old('start_date_end') }}" 
+                                            <input type="date"
+                                                   class="form-control @error('start_date_end') is-invalid @enderror"
+                                                   id="start_date_end"
+                                                   name="start_date_end"
+                                                   value="{{ old('start_date_end') }}"
                                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                             @error('start_date_end')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -250,13 +236,13 @@
                                             <label for="nights" class="form-label">
                                                 Количество ночей (от) <span class="text-danger">*</span>
                                             </label>
-                                            <input type="number" 
-                                                   class="form-control @error('nights') is-invalid @enderror" 
-                                                   id="nights" 
-                                                   name="nights" 
-                                                   value="{{ old('nights', $tour->nights ?? 7) }}" 
-                                                   min="1" 
-                                                   max="30" 
+                                            <input type="number"
+                                                   class="form-control @error('nights') is-invalid @enderror"
+                                                   id="nights"
+                                                   name="nights"
+                                                   value="{{ old('nights', $tour->nights ?? 7) }}"
+                                                   min="1"
+                                                   max="30"
                                                    required>
                                             @error('nights')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -270,12 +256,12 @@
                                             <label for="nights_max" class="form-label">
                                                 Количество ночей (до)
                                             </label>
-                                            <input type="number" 
-                                                   class="form-control @error('nights_max') is-invalid @enderror" 
-                                                   id="nights_max" 
-                                                   name="nights_max" 
-                                                   value="{{ old('nights_max') }}" 
-                                                   min="1" 
+                                            <input type="number"
+                                                   class="form-control @error('nights_max') is-invalid @enderror"
+                                                   id="nights_max"
+                                                   name="nights_max"
+                                                   value="{{ old('nights_max') }}"
+                                                   min="1"
                                                    max="30">
                                             @error('nights_max')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -285,33 +271,25 @@
                                             </small>
                                         </div>
                                     </div>
-                                @guest
-                                    </div>
-                                @endguest
-                            </div>
+            </div>
 
-                            <!-- Туристы -->
-                            <div class="@auth card-custom @else card @endauth mb-4">
-                                @auth
-                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-people-fill"></i> Количество туристов</h5>
-                                @else
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="bi bi-people-fill"></i> Количество туристов</h5>
-                                    </div>
-                                    <div class="card-body">
-                                @endauth
+            <!-- Туристы -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <div class="card-title-custom"><i class="bi bi-people-fill"></i> Количество туристов</div>
+                </div>
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label for="adults" class="form-label">
                                                 Взрослых <span class="text-danger">*</span>
                                             </label>
-                                            <input type="number" 
-                                                   class="form-control @error('adults') is-invalid @enderror" 
-                                                   id="adults" 
-                                                   name="adults" 
-                                                   value="{{ old('adults', 2) }}" 
-                                                   min="1" 
-                                                   max="10" 
+                                            <input type="number"
+                                                   class="form-control @error('adults') is-invalid @enderror"
+                                                   id="adults"
+                                                   name="adults"
+                                                   value="{{ old('adults', 2) }}"
+                                                   min="1"
+                                                   max="10"
                                                    required>
                                             @error('adults')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -322,8 +300,8 @@
                                             <label for="children_count" class="form-label">
                                                 Детей
                                             </label>
-                                            <select class="form-select @error('children') is-invalid @enderror" 
-                                                    id="children_count" 
+                                            <select class="form-select @error('children') is-invalid @enderror"
+                                                    id="children_count"
                                                     name="children">
                                                 @for($i = 0; $i <= 5; $i++)
                                                     <option value="{{ $i }}" {{ old('children', 0) == $i ? 'selected' : '' }}>
@@ -342,37 +320,25 @@
                                         <label class="form-label">Возраст детей на момент окончания поездки</label>
                                         <div id="childrenAgesContainer" class="row"></div>
                                     </div>
-                                </div>
-                                @guest
-                                    </div>
-                                @endguest
-                            </div>
+            </div>
 
-                            <!-- Дополнительные пожелания -->
-                            <div class="@auth card-custom @else card @endauth mb-4">
-                                @auth
-                                    <h5 class="mb-3" style="font-weight: 600; color: #1f2937;"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
-                                @else
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
-                                    </div>
-                                    <div class="card-body">
-                                @endauth
+            <!-- Дополнительные пожелания -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom">
+                    <div class="card-title-custom"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</div>
+                </div>
                                     <label for="notes" class="form-label">
                                         Пожелания и комментарии
                                     </label>
-                                    <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                              id="notes" 
-                                              name="notes" 
-                                              rows="4" 
+                                    <textarea class="form-control @error('notes') is-invalid @enderror"
+                                              id="notes"
+                                              name="notes"
+                                              rows="4"
                                               placeholder="Укажите ваши пожелания по отелю, питанию, расположению, трансферу и другие важные детали...">{{ old('notes') }}</textarea>
                                     @error('notes')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                @guest
-                                    </div>
-                                @endguest
-                            </div>
+            </div>
 
                             <!-- Информация -->
                             <div class="alert alert-info border-left-info">
@@ -391,14 +357,9 @@
                             </div>
             </form>
         </div>
-    @endsection
-@else
-    @extends('layouts.main')
-    
-    @section('title', 'Создать заявку - Авилона')
-    @section('meta_description', 'Создание заявки на тур')
-    
-    @section('content')
+    @endauth
+
+    @guest
         <main>
             <div class="container mt-5 mb-5">
                 <div class="row justify-content-center">
@@ -433,7 +394,7 @@
                                             <div class="row mb-3">
                                                 <div class="col-md-4">
                                                     <label for="departure_city_guest" class="form-label">Город вылета <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control @error('departure_city') is-invalid @enderror" id="departure_city_guest" name="departure_city" value="{{ old('departure_city', $tour->departure_city ?? 'Москва') }}" list="departureCitiesListGuest" required>
+                                                    <input type="text" class="form-control @error('departure_city') is-invalid @enderror" id="departure_city_guest" name="departure_city" value="{{ old('departure_city', $tour->departure_city ?? 'Санкт-Петербург') }}" list="departureCitiesListGuest" required>
                                                     <datalist id="departureCitiesListGuest">
                                                         @foreach($departureCities as $city)
                                                             <option value="{{ $city }}">
@@ -548,8 +509,8 @@
                 </div>
             </div>
         </main>
-    @endsection
-@endauth
+    @endguest
+@endsection
 
 @push('styles')
 <style>
@@ -588,18 +549,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing form scripts...');
-    
+
     // Переключение между существующим и новым клиентом
     const isNewClientCheckbox = document.getElementById('isNewClient');
     console.log('isNewClientCheckbox found:', isNewClientCheckbox);
-    
+
     if (isNewClientCheckbox) {
         const existingClientBlock = document.getElementById('existingClientBlock');
         const newClientBlock = document.getElementById('newClientBlock');
         const clientIdSelect = document.getElementById('client_id');
         const clientNameInput = document.getElementById('client_name');
         const clientEmailInput = document.getElementById('client_email');
-        
+
         console.log('All elements found:', {
             existingClientBlock,
             newClientBlock,
@@ -628,65 +589,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        
+
         // Триггерим событие при загрузке, если чекбокс был отмечен (после ошибки валидации)
         if (isNewClientCheckbox.checked) {
             isNewClientCheckbox.dispatchEvent(new Event('change'));
         }
-        
+
         console.log('Event listener attached successfully');
     } else {
         console.log('isNewClientCheckbox not found - user is probably a tourist');
     }
 
     // Управление возрастом детей
-    const childrenCountSelect = document.getElementById('children_count');
-    const childrenAgesBlock = document.getElementById('childrenAgesBlock');
-    const childrenAgesContainer = document.getElementById('childrenAgesContainer');
+    function initChildrenAges(selectId, blockId, containerId) {
+        const childrenCountSelect = document.getElementById(selectId);
+        const childrenAgesBlock = document.getElementById(blockId);
+        const childrenAgesContainer = document.getElementById(containerId);
 
-    function updateChildrenAges() {
-        const count = parseInt(childrenCountSelect.value);
-        childrenAgesContainer.innerHTML = '';
-        
-        if (count > 0) {
-            childrenAgesBlock.style.display = 'block';
-            const oldAges = @json(old('children_ages', []));
-            
-            for (let i = 0; i < count; i++) {
-                const col = document.createElement('div');
-                col.className = 'col-md-4 mb-3';
-                const selectedAge = oldAges[i] || '';
-                
-                let optionsHtml = '<option value="">Выберите возраст</option>';
-                for (let j = 0; j < 18; j++) {
-                    const selected = selectedAge == j ? 'selected' : '';
-                    optionsHtml += `<option value="${j}" ${selected}>${j} ${getYearWord(j)}</option>`;
+        if (!childrenCountSelect || !childrenAgesBlock || !childrenAgesContainer) {
+            return;
+        }
+
+        function updateChildrenAges() {
+            const count = parseInt(childrenCountSelect.value);
+            childrenAgesContainer.innerHTML = '';
+
+            if (count > 0) {
+                childrenAgesBlock.style.display = 'block';
+                const oldAges = @json(old('children_ages', []));
+
+                for (let i = 0; i < count; i++) {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4 mb-3';
+                    const selectedAge = oldAges[i] || '';
+
+                    let optionsHtml = '<option value="">Выберите возраст</option>';
+                    for (let j = 0; j < 18; j++) {
+                        const selected = selectedAge == j ? 'selected' : '';
+                        optionsHtml += `<option value="${j}" ${selected}>${j} ${getYearWord(j)}</option>`;
+                    }
+
+                    col.innerHTML = `
+                        <label class="form-label">Ребенок ${i + 1}</label>
+                        <select class="form-select" name="children_ages[]" required>
+                            ${optionsHtml}
+                        </select>
+                    `;
+                    childrenAgesContainer.appendChild(col);
                 }
-                
-                col.innerHTML = `
-                    <label class="form-label">Ребенок ${i + 1}</label>
-                    <select class="form-select" name="children_ages[]" required>
-                        ${optionsHtml}
-                    </select>
-                `;
-                childrenAgesContainer.appendChild(col);
+            } else {
+                childrenAgesBlock.style.display = 'none';
             }
-        } else {
-            childrenAgesBlock.style.display = 'none';
+        }
+
+        childrenCountSelect.addEventListener('change', updateChildrenAges);
+
+        if (parseInt(childrenCountSelect.value) > 0) {
+            updateChildrenAges();
         }
     }
-    
-    childrenCountSelect.addEventListener('change', updateChildrenAges);
 
-    // Инициализация при загрузке страницы
-    if (parseInt(childrenCountSelect.value) > 0) {
-        updateChildrenAges();
-    }
+    initChildrenAges('children_count', 'childrenAgesBlock', 'childrenAgesContainer');
+    initChildrenAges('children_count_guest', 'childrenAgesBlockGuest', 'childrenAgesContainerGuest');
 
     function getYearWord(age) {
         const lastDigit = age % 10;
         const lastTwoDigits = age % 100;
-        
+
         if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
             return 'лет';
         }
@@ -700,46 +669,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Фильтрация курортов по выбранной стране
-    const destinationCountryInput = document.getElementById('destination_country');
-    const destinationCityInput = document.getElementById('destination_city');
-    const destinationCitiesList = document.getElementById('destinationCitiesList');
+    function initDestinationFilter(countryId, cityId, listId) {
+        const destinationCountryInput = document.getElementById(countryId);
+        const destinationCityInput = document.getElementById(cityId);
+        const destinationCitiesList = document.getElementById(listId);
 
-    destinationCountryInput.addEventListener('change', function() {
-        const country = this.value.trim();
-        
-        if (!country) {
-            destinationCitiesList.innerHTML = '';
-            destinationCityInput.placeholder = 'Сначала выберите страну';
+        if (!destinationCountryInput || !destinationCityInput || !destinationCitiesList) {
             return;
         }
 
-        // Загружаем курорты для выбранной страны
-        fetch(`{{ route('api.destination-cities') }}?country=${encodeURIComponent(country)}`)
-            .then(response => response.json())
-            .then(cities => {
-                destinationCitiesList.innerHTML = '';
-                
-                if (cities.length > 0) {
-                    cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city;
-                        destinationCitiesList.appendChild(option);
-                    });
-                    destinationCityInput.placeholder = 'Выберите курорт или введите свой';
-                } else {
-                    destinationCityInput.placeholder = 'Введите название курорта';
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки курортов:', error);
-                destinationCityInput.placeholder = 'Введите название курорта';
-            });
-    });
+        destinationCountryInput.addEventListener('change', function() {
+            const country = this.value.trim();
 
-    // Триггерим событие при загрузке, если страна уже выбрана
-    if (destinationCountryInput.value.trim()) {
-        destinationCountryInput.dispatchEvent(new Event('change'));
+            if (!country) {
+                destinationCitiesList.innerHTML = '';
+                destinationCityInput.placeholder = 'Сначала выберите страну';
+                return;
+            }
+
+            fetch(`{{ route('api.destination-cities') }}?country=${encodeURIComponent(country)}`)
+                .then(response => response.json())
+                .then(cities => {
+                    destinationCitiesList.innerHTML = '';
+
+                    if (cities.length > 0) {
+                        cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city;
+                            destinationCitiesList.appendChild(option);
+                        });
+                        destinationCityInput.placeholder = 'Выберите курорт или введите свой';
+                    } else {
+                        destinationCityInput.placeholder = 'Введите название курорта';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки курортов:', error);
+                    destinationCityInput.placeholder = 'Введите название курорта';
+                });
+        });
+
+        if (destinationCountryInput.value.trim()) {
+            destinationCountryInput.dispatchEvent(new Event('change'));
+        }
     }
+
+    initDestinationFilter('destination_country', 'destination_city', 'destinationCitiesList');
+    initDestinationFilter('destination_country_guest', 'destination_city_guest', 'destinationCitiesListGuest');
 });
 </script>
 @endpush

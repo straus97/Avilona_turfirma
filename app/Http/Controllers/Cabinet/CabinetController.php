@@ -17,10 +17,34 @@ use Illuminate\Http\RedirectResponse;
 
 class CabinetController extends Controller
 {
+    protected function redirectIfNotTourist(?string $section = null, array $params = []): ?RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($user->hasAnyRole(['manager'])) {
+            return match ($section) {
+                'bookings' => redirect()->route('cabinet.manager.bookings'),
+                'chat' => redirect()->route('cabinet.manager.chat', $params),
+                'profile' => redirect()->route('cabinet.manager.profile'),
+                'settings' => redirect()->route('cabinet.manager.settings'),
+                default => redirect()->route('cabinet.manager.dashboard'),
+            };
+        }
+
+        if ($user->hasAnyRole(['admin'])) {
+            return match ($section) {
+                'bookings' => redirect()->route('cabinet.admin.bookings'),
+                'settings' => redirect()->route('cabinet.admin.settings'),
+                default => redirect()->route('cabinet.admin.dashboard'),
+            };
+        }
+
+        return null;
+    }
     /**
      * Dashboard (главная страница кабинета)
      */
-    public function dashboard(): View
+    public function dashboard(): View|RedirectResponse
     {
         $user = Auth::user();
         
@@ -82,51 +106,29 @@ class CabinetController extends Controller
     /**
      * Dashboard менеджера
      */
-    protected function managerDashboard(): View
+    protected function managerDashboard(): RedirectResponse
     {
-        $user = Auth::user();
-        
-        // Статистика
-        $totalBookings = Booking::where('manager_id', $user->id)->count();
-        $newBookings = Booking::where('manager_id', $user->id)
-            ->where('status', Booking::STATUS_NEW)
-            ->count();
-        $activeBookings = Booking::where('manager_id', $user->id)
-            ->where('status', Booking::STATUS_PROGRESS)
-            ->count();
-        
-        return view('cabinet.manager.dashboard', compact(
-            'totalBookings',
-            'newBookings',
-            'activeBookings'
-        ));
+        return redirect()->route('cabinet.manager.dashboard');
     }
     
     /**
      * Dashboard админа
      */
-    protected function adminDashboard(): View
+    protected function adminDashboard(): RedirectResponse
     {
-        // Общая статистика
-        $totalUsers = \App\Models\User::count();
-        $totalBookings = Booking::count();
-        $newBookings = Booking::where('status', Booking::STATUS_NEW)->count();
-        $activeBookings = Booking::where('status', Booking::STATUS_PROGRESS)->count();
-        
-        return view('cabinet.admin.dashboard', compact(
-            'totalUsers',
-            'totalBookings',
-            'newBookings',
-            'activeBookings'
-        ));
+        return redirect()->route('cabinet.admin.dashboard');
     }
     
     /**
      * Список заявок
      */
-    public function bookings(Request $request): View
+    public function bookings(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
+
+        if ($redirect = $this->redirectIfNotTourist('bookings')) {
+            return $redirect;
+        }
         
         $query = Booking::query();
         
@@ -169,9 +171,13 @@ class CabinetController extends Controller
     /**
      * Чат
      */
-    public function chat(Request $request, $bookingId = null): View
+    public function chat(Request $request, $bookingId = null): View|RedirectResponse
     {
         $user = $request->user();
+
+        if ($redirect = $this->redirectIfNotTourist('chat', ['bookingId' => $bookingId])) {
+            return $redirect;
+        }
         
         // Получаем заявки с менеджерами и считаем непрочитанные для каждой
         $bookings = Booking::where('user_id', $user->id)
@@ -208,8 +214,12 @@ class CabinetController extends Controller
     /**
      * Личные документы
      */
-    public function personalDocuments(): View
+    public function personalDocuments(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $type = request('type', 'all');
         
@@ -226,8 +236,12 @@ class CabinetController extends Controller
     /**
      * Документы по заявкам
      */
-    public function bookingDocuments(): View
+    public function bookingDocuments(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $bookingsWithDocuments = Booking::where('user_id', $user->id)
             ->whereHas('bookingDocuments')
@@ -240,8 +254,12 @@ class CabinetController extends Controller
     /**
      * Бонусная программа
      */
-    public function bonusProgram(): View
+    public function bonusProgram(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $bonusAccount = BonusAccount::firstOrCreate(
             ['user_id' => $user->id],
@@ -262,8 +280,12 @@ class CabinetController extends Controller
     /**
      * Избранное
      */
-    public function wishlist(): View
+    public function wishlist(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $wishlistItems = collect(); // TODO: реализовать wishlist
         return view('cabinet.tourist.wishlist.index', compact('wishlistItems'));
@@ -272,8 +294,12 @@ class CabinetController extends Controller
     /**
      * Профиль
      */
-    public function profile(): View
+    public function profile(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('profile')) {
+            return $redirect;
+        }
+
         return view('cabinet.tourist.profile.edit');
     }
     
@@ -282,6 +308,10 @@ class CabinetController extends Controller
      */
     public function updateProfile(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('profile')) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . Auth::id(),
@@ -292,22 +322,43 @@ class CabinetController extends Controller
         ]);
         
         $user = Auth::user();
+        $emailChanged = $validated['email'] !== $user->email;
+
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->phone = $validated['phone'] ?? null;
         $user->birth_date = $validated['birth_date'] ?? null;
         $user->gender = $validated['gender'] ?? null;
         $user->address = $validated['address'] ?? null;
+
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
+
         $user->save();
-        
+
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Email изменен. Подтвердите новый адрес и войдите снова.');
+        }
+
         return redirect()->route('cabinet.profile')->with('status', 'Профиль успешно обновлен!');
     }
     
     /**
      * Настройки
      */
-    public function settings(): View
+    public function settings(): View|RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('settings')) {
+            return $redirect;
+        }
+
         return view('cabinet.tourist.settings.index');
     }
     
@@ -316,6 +367,10 @@ class CabinetController extends Controller
      */
     public function updatePassport(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('profile')) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'passport_number' => 'nullable|string|max:50',
             'passport_issued_date' => 'nullable|date',
@@ -336,11 +391,21 @@ class CabinetController extends Controller
      */
     public function uploadAvatar(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('profile')) {
+            return $redirect;
+        }
+
         $request->validate([
             'avatar' => 'required|image|max:2048',
         ]);
-        
-        // TODO: реализовать загрузку аватара
+
+        $file = $request->file('avatar');
+        $path = $file->store('avatars', 'public');
+
+        $user = Auth::user();
+        $user->avatar_path = $path;
+        $user->save();
+
         return redirect()->route('cabinet.profile')->with('status', 'Аватар загружен!');
     }
     
@@ -349,6 +414,10 @@ class CabinetController extends Controller
      */
     public function updateNotifications(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist('settings')) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         
         // Сохраняем настройки в JSON
@@ -371,6 +440,10 @@ class CabinetController extends Controller
      */
     public function uploadPersonalDocument(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'document_type' => 'nullable|in:passport,foreign_passport,visa,birth_certificate,other',
@@ -415,6 +488,10 @@ class CabinetController extends Controller
      */
     public function deletePersonalDocument(UserDocument $document): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         // Проверка прав доступа
         if ($document->user_id !== Auth::id()) {
             abort(403);
@@ -434,6 +511,10 @@ class CabinetController extends Controller
      */
     public function destroyAccount(Request $request): RedirectResponse
     {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
         $request->validate([
             'password' => 'required|current_password',
         ]);

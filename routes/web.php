@@ -58,21 +58,63 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/bookings', [\App\Http\Controllers\Manager\ManagerController::class, 'bookings'])->name('bookings');
         Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Manager\ManagerController::class, 'chat'])->name('chat');
         Route::get('/statistics', [\App\Http\Controllers\Manager\ManagerController::class, 'statistics'])->name('statistics');
-        Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('finance'); // TODO
-        Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('knowledge'); // TODO
+        Route::get('/profile', [\App\Http\Controllers\Manager\ManagerController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [\App\Http\Controllers\Manager\ManagerController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/avatar', [\App\Http\Controllers\Manager\ManagerController::class, 'uploadAvatar'])->name('profile.avatar');
+        Route::get('/settings', [\App\Http\Controllers\Manager\ManagerController::class, 'settings'])->name('settings');
+        Route::post('/settings/password', [\App\Http\Controllers\Manager\ManagerController::class, 'updatePassword'])->name('settings.password');
+        Route::post('/settings/notifications', [\App\Http\Controllers\Manager\ManagerController::class, 'updateNotifications'])->name('settings.notifications');
+        Route::delete('/settings/account', [\App\Http\Controllers\Manager\ManagerController::class, 'destroyAccount'])->name('destroy-account');
+        Route::get('/documents', [\App\Http\Controllers\Manager\ManagerController::class, 'documents'])->name('documents');
+        Route::post('/documents/upload', [\App\Http\Controllers\Manager\ManagerController::class, 'uploadDocument'])->name('documents.upload');
+        Route::delete('/documents/{document}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteDocument'])->name('documents.delete');
+        Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'finance'])->name('finance');
+        Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'knowledge'])->name('knowledge');
+        Route::get('/content', [\App\Http\Controllers\Manager\ManagerController::class, 'content'])->name('content');
+        Route::get('/articles', [\App\Http\Controllers\Manager\ManagerController::class, 'articles'])->name('articles');
+        Route::get('/articles/create', [\App\Http\Controllers\Manager\ManagerController::class, 'createArticle'])->name('articles.create');
+        Route::post('/articles', [\App\Http\Controllers\Manager\ManagerController::class, 'storeArticle'])->name('articles.store');
+        Route::get('/articles/{article}/edit', [\App\Http\Controllers\Manager\ManagerController::class, 'editArticle'])->name('articles.edit');
+        Route::put('/articles/{article}', [\App\Http\Controllers\Manager\ManagerController::class, 'updateArticle'])->name('articles.update');
+        Route::delete('/articles/{article}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteArticle'])->name('articles.delete');
+        Route::get('/reviews/{review}/edit', [\App\Http\Controllers\Manager\ManagerController::class, 'editReview'])->name('reviews.edit');
+        Route::put('/reviews/{review}', [\App\Http\Controllers\Manager\ManagerController::class, 'updateReview'])->name('reviews.update');
     });
     
     // Админ
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile', [\App\Http\Controllers\Admin\AdminController::class, 'profile'])->name('profile');
+        Route::patch('/profile', [\App\Http\Controllers\Admin\AdminController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/avatar', [\App\Http\Controllers\Admin\AdminController::class, 'uploadAvatar'])->name('profile.avatar');
+
         Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users');
+        Route::get('/users/{user}/roles', [\App\Http\Controllers\Admin\AdminController::class, 'userRoles'])->name('user-roles');
+        Route::post('/users/{user}/assign-role', [\App\Http\Controllers\Admin\AdminController::class, 'assignRole'])->name('assign-role');
+        Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\Admin\AdminController::class, 'removeRole'])->name('remove-role');
+        Route::post('/users/{user}/update-role', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserRole'])->name('user-update-role');
+        Route::get('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'userShow'])->name('user-show');
+        Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('delete-user');
         Route::get('/bookings', [\App\Http\Controllers\Admin\AdminController::class, 'bookings'])->name('bookings');
         Route::get('/roles', [\App\Http\Controllers\Admin\AdminController::class, 'roles'])->name('roles');
+        Route::get('/chats/{bookingId?}', [\App\Http\Controllers\Admin\AdminController::class, 'chats'])->name('chats');
         Route::get('/content', [\App\Http\Controllers\Admin\AdminController::class, 'content'])->name('content');
-        Route::get('/finance', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('finance'); // TODO
-        Route::get('/bonus', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('bonus'); // TODO
+        Route::get('/articles', [\App\Http\Controllers\Admin\AdminController::class, 'articles'])->name('articles');
+        Route::get('/articles/create', [\App\Http\Controllers\Admin\AdminController::class, 'createArticle'])->name('articles.create');
+        Route::post('/articles', [\App\Http\Controllers\Admin\AdminController::class, 'storeArticle'])->name('articles.store');
+        Route::get('/articles/{article}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editArticle'])->name('articles.edit');
+        Route::put('/articles/{article}', [\App\Http\Controllers\Admin\AdminController::class, 'updateArticle'])->name('articles.update');
+        Route::delete('/articles/{article}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteArticle'])->name('articles.delete');
+        Route::get('/reviews/{review}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editReview'])->name('reviews.edit');
+        Route::put('/reviews/{review}', [\App\Http\Controllers\Admin\AdminController::class, 'updateReview'])->name('reviews.update');
+        Route::get('/finance', [\App\Http\Controllers\Admin\AdminController::class, 'finance'])->name('finance');
+        Route::get('/bonus', [\App\Http\Controllers\Admin\AdminController::class, 'bonus'])->name('bonus');
         Route::get('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('settings');
-        Route::get('/logs', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('logs'); // TODO
+        Route::post('/settings/password', [\App\Http\Controllers\Admin\AdminController::class, 'updatePassword'])->name('settings.password');
+        Route::post('/settings/notifications', [\App\Http\Controllers\Admin\AdminController::class, 'updateNotifications'])->name('settings.notifications');
+        Route::post('/settings/clear-cache', [\App\Http\Controllers\Admin\AdminController::class, 'clearCache'])->name('clear-cache');
+        Route::get('/logs', [\App\Http\Controllers\Admin\AdminController::class, 'logs'])->name('logs');
+        Route::delete('/profile/account', [\App\Http\Controllers\Admin\AdminController::class, 'destroyAccount'])->name('destroy-account');
     });
 });
 
@@ -200,20 +242,27 @@ Route::middleware(['auth'])->group(function () {
 
 // Маршруты только для менеджеров и администраторов
 Route::middleware(['auth', 'password.change', 'role:manager,admin'])->prefix('manager')->name('manager.')->group(function () {
-    // Главная страница панели менеджера
-    Route::get('/dashboard', [\App\Http\Controllers\Manager\ManagerController::class, 'dashboard'])->name('dashboard');
-    
-    // Список клиентов
-    Route::get('/clients', [\App\Http\Controllers\Manager\ManagerController::class, 'clients'])->name('clients');
-    
-    // Управление заявками
-    Route::get('/bookings', [\App\Http\Controllers\Manager\ManagerController::class, 'bookings'])->name('bookings');
-    
-    // Чат с клиентами
-    Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Manager\ManagerController::class, 'chat'])->name('chat');
-    
-    // Статистика
-    Route::get('/statistics', [\App\Http\Controllers\Manager\ManagerController::class, 'statistics'])->name('statistics');
+    Route::get('/dashboard', function () {
+        return redirect()->route('cabinet.manager.dashboard');
+    })->name('dashboard');
+    Route::get('/clients', function () {
+        return redirect()->route('cabinet.manager.clients');
+    })->name('clients');
+    Route::get('/bookings', function () {
+        return redirect()->route('cabinet.manager.bookings');
+    })->name('bookings');
+    Route::get('/chat/{bookingId?}', function ($bookingId = null) {
+        return redirect()->route('cabinet.manager.chat', ['bookingId' => $bookingId]);
+    })->name('chat');
+    Route::get('/statistics', function () {
+        return redirect()->route('cabinet.manager.statistics');
+    })->name('statistics');
+    Route::get('/finance', function () {
+        return redirect()->route('cabinet.manager.finance');
+    })->name('finance');
+    Route::get('/knowledge', function () {
+        return redirect()->route('cabinet.manager.knowledge');
+    })->name('knowledge');
 });
 
 // Маршруты только для администраторов

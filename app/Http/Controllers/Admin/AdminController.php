@@ -5,14 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Message;
-use App\Models\News;
-use App\Models\Review;
+use App\Models\Article;
+use App\Models\BonusAccount;
+use App\Models\BonusTransaction;
+use App\Models\Reviews;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\UserDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -41,8 +46,8 @@ class AdminController extends Controller
         
         // Статистика контента
         $contentStats = [
-            'news' => News::count(),
-            'reviews' => Review::count(),
+            'articles' => Article::count(),
+            'reviews' => Reviews::count(),
         ];
         
         // Последние пользователи
@@ -127,7 +132,7 @@ class AdminController extends Controller
     public function assignRole(Request $request, $userId): RedirectResponse
     {
         $request->validate([
-            'role' => 'required|exists:roles,role',
+            'role' => 'required|exists:roles,name',
         ]);
         
         $user = User::findOrFail($userId);
@@ -144,7 +149,7 @@ class AdminController extends Controller
         $user = User::findOrFail($userId);
         $role = Role::findOrFail($roleId);
         
-        $user->removeRole($role->role);
+        $user->removeRole($role->name);
         
         return back()->with('success', 'Роль успешно удалена');
     }
@@ -175,7 +180,8 @@ class AdminController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('tour_name', 'like', "%{$search}%")
-                    ->orWhere('destination', 'like', "%{$search}%")
+                    ->orWhere('destination_country', 'like', "%{$search}%")
+                    ->orWhere('destination_city', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($userQuery) use ($search) {
                         $userQuery->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
@@ -202,30 +208,157 @@ class AdminController extends Controller
         
         return view('admin.bookings', compact('bookings', 'managers', 'statusCounts'));
     }
-    
+
     /**
      * Показать управление контентом
      */
     public function content(Request $request): View
     {
         // Статистика контента
-        $newsCount = News::count();
-        $reviewsCount = Review::count();
-        $pendingReviews = Review::where('status', 'pending')->count();
+        $articlesCount = Article::count();
+        $reviewsCount = Reviews::count();
+        $pendingReviews = Reviews::where('is_published', false)->count();
         
-        // Последние новости
-        $recentNews = News::latest()->limit(10)->get();
+        // Последние статьи
+        $recentArticles = Article::latest()->limit(10)->get();
         
         // Последние отзывы
-        $recentReviews = Review::with('user')->latest()->limit(10)->get();
+        $recentReviews = Reviews::latest()->limit(10)->get();
         
         return view('admin.content', compact(
-            'newsCount',
+            'articlesCount',
             'reviewsCount',
             'pendingReviews',
-            'recentNews',
+            'recentArticles',
             'recentReviews'
         ));
+    }
+
+    /**
+     * Список статей (интересные статьи)
+     */
+    public function articles(Request $request): View
+    {
+        $articles = Article::latest()->paginate(20);
+
+        return view('admin.articles.index', compact('articles'));
+    }
+
+    /**
+     * Создание статьи
+     */
+    public function createArticle(Request $request): View
+    {
+        return view('admin.articles.create');
+    }
+
+    /**
+     * Сохранение статьи
+     */
+    public function storeArticle(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image' => 'nullable|url',
+            'slug' => 'nullable|string|max:255|unique:articles,slug',
+        ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = \Illuminate\Support\Str::slug($validated['title']);
+        }
+
+        Article::create($validated);
+
+        return redirect()->route('cabinet.admin.articles')
+            ->with('success', 'Статья создана');
+    }
+
+    /**
+     * Редактирование статьи
+     */
+    public function editArticle(Request $request, Article $article): View
+    {
+        return view('admin.articles.edit', compact('article'));
+    }
+
+    /**
+     * Обновление статьи
+     */
+    public function updateArticle(Request $request, Article $article): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image' => 'nullable|url',
+            'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
+        ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = \Illuminate\Support\Str::slug($validated['title']);
+        }
+
+        $article->update($validated);
+
+        return redirect()->route('cabinet.admin.articles')
+            ->with('success', 'Статья обновлена');
+    }
+
+    /**
+     * Удаление статьи
+     */
+    public function deleteArticle(Request $request, Article $article): RedirectResponse
+    {
+        $article->delete();
+
+        return back()->with('success', 'Статья удалена');
+    }
+
+    /**
+     * Редактирование отзыва
+     */
+    public function editReview(Request $request, Reviews $review): View
+    {
+        return view('admin.reviews.edit', compact('review'));
+    }
+
+    /**
+     * Обновление отзыва
+     */
+    public function updateReview(Request $request, Reviews $review): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
+            'content' => 'required|string',
+            'gender' => 'nullable|in:boy,girl',
+            'is_published' => 'nullable|boolean',
+        ]);
+
+        $validated['is_published'] = $request->boolean('is_published');
+
+        $gender = $validated['gender'] ?? null;
+        if (!$gender) {
+            $gender = str_contains((string) $review->image, 'user-girl') ? 'girl' : 'boy';
+        }
+
+        $validated['image'] = $gender === 'girl'
+            ? url('/img/user-girl.png')
+            : url('/img/user-boy.png');
+
+        $validated['title'] = $validated['title'] ? trim($validated['title']) : '';
+
+        unset($validated['gender']);
+
+        $review->update($validated);
+
+        Cache::forget('home_reviews');
+        for ($page = 1; $page <= 10; $page++) {
+            Cache::forget('reviews_page_' . $page);
+        }
+
+        return redirect()->route('cabinet.admin.content')
+            ->with('success', 'Отзыв обновлен');
     }
     
     /**
@@ -261,6 +394,323 @@ class AdminController extends Controller
         Cache::flush();
         
         return back()->with('success', 'Кэш успешно очищен');
+    }
+
+    /**
+     * Обновление уведомлений администратора
+     */
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $settings = [
+            'email_notifications' => $request->has('email_notifications'),
+            'booking_updates' => $request->has('booking_updates'),
+            'new_messages' => $request->has('new_messages'),
+        ];
+
+        $user->notification_settings = json_encode($settings);
+        $user->save();
+
+        return redirect()->route('cabinet.admin.settings')->with('success', 'Настройки уведомлений обновлены.');
+    }
+
+    /**
+     * Смена пароля администратора
+     */
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ], [
+            'current_password.required' => 'Введите текущий пароль',
+            'current_password.current_password' => 'Текущий пароль неверен',
+            'password.required' => 'Введите новый пароль',
+            'password.confirmed' => 'Пароли не совпадают',
+        ]);
+
+        $user = $request->user();
+        $user->password = Hash::make($request->password);
+        $user->password_change_required = false;
+        $user->temp_password = null;
+        $user->save();
+
+        return redirect()->route('cabinet.admin.settings')->with('success', 'Пароль успешно изменен.');
+    }
+
+    /**
+     * Профиль администратора
+     */
+    public function profile(Request $request): View
+    {
+        return view('admin.profile');
+    }
+
+    /**
+     * Обновление профиля администратора
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+            'phone' => 'nullable|string|max:20',
+            'birth_date' => 'nullable|date',
+            'passport_number' => 'nullable|string|max:50',
+            'passport_issued_date' => 'nullable|date',
+            'passport_issued_by' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+        $emailChanged = $validated['email'] !== $user->email;
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->phone = $validated['phone'] ?? null;
+        $user->birth_date = $validated['birth_date'] ?? null;
+        $user->passport_number = $validated['passport_number'] ?? null;
+        $user->passport_issued_date = $validated['passport_issued_date'] ?? null;
+        $user->passport_issued_by = $validated['passport_issued_by'] ?? null;
+
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Email изменен. Подтвердите новый адрес и войдите снова.');
+        }
+
+        return redirect()->route('cabinet.admin.profile')->with('status', 'Профиль обновлен.');
+    }
+
+    /**
+     * Загрузка аватара администратора
+     */
+    public function uploadAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => 'required|image|max:2048',
+        ]);
+
+        $file = $request->file('avatar');
+        $path = $file->store('avatars', 'public');
+
+        $user = $request->user();
+        $user->avatar_path = $path;
+        $user->save();
+
+        return redirect()->route('cabinet.admin.profile')->with('status', 'Аватар загружен.');
+    }
+
+    /**
+     * Удаление аккаунта администратора
+     */
+    public function destroyAccount(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => 'required|current_password',
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $user->delete();
+
+        return redirect()->route('home.index')->with('status', 'Аккаунт удален.');
+    }
+
+    /**
+     * Карточка пользователя
+     */
+    public function userShow(Request $request, $userId): View
+    {
+        $user = User::with(['roles', 'userDocuments', 'bookings'])->findOrFail($userId);
+        $roles = Role::all();
+
+        return view('admin.user-show', compact('user', 'roles'));
+    }
+
+    /**
+     * Все чаты по заявкам
+     */
+    public function chats(Request $request, $bookingId = null): View
+    {
+        $bookings = Booking::with(['user', 'manager'])
+            ->latest()
+            ->get();
+
+        $currentBooking = null;
+        $messages = collect();
+
+        if ($bookingId) {
+            $currentBooking = Booking::with(['user', 'manager', 'messages.sender'])
+                ->where('id', $bookingId)
+                ->firstOrFail();
+
+            $messages = $currentBooking->messages()
+                ->with(['sender', 'receiver'])
+                ->orderBy('created_at', 'asc')
+                ->get();
+        }
+
+        $unreadByBooking = [];
+        foreach ($bookings as $booking) {
+            $managerUnread = 0;
+            $touristUnread = 0;
+
+            if ($booking->manager_id) {
+                $managerUnread = Message::where('booking_id', $booking->id)
+                    ->where('receiver_id', $booking->manager_id)
+                    ->where('is_read', false)
+                    ->count();
+            }
+
+            $touristUnread = Message::where('booking_id', $booking->id)
+                ->where('receiver_id', $booking->user_id)
+                ->where('is_read', false)
+                ->count();
+
+            $unreadByBooking[$booking->id] = [
+                'manager' => $managerUnread,
+                'tourist' => $touristUnread,
+            ];
+        }
+
+        return view('admin.chats', compact('bookings', 'currentBooking', 'messages', 'unreadByBooking'));
+    }
+
+    /**
+     * Быстрая смена роли пользователя (одна основная роль)
+     */
+    public function updateUserRole(Request $request, $userId): RedirectResponse
+    {
+        $request->validate([
+            'role' => 'required|exists:roles,name',
+        ]);
+
+        $user = User::findOrFail($userId);
+        $role = Role::where('name', $request->role)->firstOrFail();
+        $user->roles()->sync([$role->id]);
+
+        return back()->with('success', 'Роль пользователя обновлена');
+    }
+
+    /**
+     * Роли и права (раздел объединен с пользователями)
+     */
+    public function roles(Request $request): RedirectResponse
+    {
+        return redirect()->route('cabinet.admin.users');
+    }
+
+    /**
+     * Финансы
+     */
+    public function finance(): View
+    {
+        $completedRevenue = Booking::where('status', Booking::STATUS_COMPLETED)->sum('total_price');
+        $totalPaid = Booking::sum('paid_amount');
+        $totalOutstanding = Booking::sum('total_price') - $totalPaid;
+
+        $monthlyStats = Booking::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count, SUM(total_price) as revenue, SUM(paid_amount) as paid")
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->limit(6)
+            ->get()
+            ->reverse();
+
+        $managerStats = User::whereHas('roles', function ($q) {
+            $q->where('name', 'manager');
+        })->withCount(['managedBookings as completed_bookings_count' => function ($q) {
+            $q->where('status', Booking::STATUS_COMPLETED);
+        }])->get()->map(function ($manager) {
+            $manager->completed_revenue = Booking::where('manager_id', $manager->id)
+                ->where('status', Booking::STATUS_COMPLETED)
+                ->sum('total_price');
+            return $manager;
+        });
+
+        $recentBookings = Booking::with(['user', 'manager'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('admin.finance', compact(
+            'completedRevenue',
+            'totalPaid',
+            'totalOutstanding',
+            'monthlyStats',
+            'managerStats',
+            'recentBookings'
+        ));
+    }
+
+    /**
+     * Бонусная программа
+     */
+    public function bonus(): View
+    {
+        $accounts = BonusAccount::with('user')
+            ->latest()
+            ->paginate(20);
+
+        $transactions = BonusTransaction::with(['bonusAccount.user', 'booking'])
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        $totalBalance = BonusAccount::sum('balance');
+        $totalEarned = BonusAccount::sum('total_earned');
+        $totalSpent = BonusAccount::sum('total_spent');
+
+        return view('admin.bonus', compact('accounts', 'transactions', 'totalBalance', 'totalEarned', 'totalSpent'));
+    }
+
+    /**
+     * Логи
+     */
+    public function logs(): View
+    {
+        $path = storage_path('logs/laravel.log');
+        $lines = [];
+        $maxLines = 200;
+        $tailBytes = 512 * 1024; // 512 KB
+
+        if (file_exists($path)) {
+            try {
+                $size = filesize($path);
+                $start = max(0, $size - $tailBytes);
+
+                $handle = fopen($path, 'rb');
+                if ($handle) {
+                    fseek($handle, $start);
+                    $chunk = stream_get_contents($handle);
+                    fclose($handle);
+
+                    $allLines = preg_split("/\r\n|\r|\n/", (string) $chunk);
+                    if ($start > 0 && isset($allLines[0])) {
+                        array_shift($allLines);
+                    }
+                    $lines = array_slice($allLines, -$maxLines);
+                }
+            } catch (\Throwable $e) {
+                $lines = ["Не удалось прочитать лог: " . $e->getMessage()];
+            }
+        }
+
+        return view('admin.logs', compact('lines', 'path'));
     }
     
     /**

@@ -55,7 +55,7 @@ class MessageController extends Controller
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:5000',
+            'message' => 'required_without:attachment|string|max:5000',
             'attachment' => 'nullable|file|max:10240', // 10MB
         ]);
 
@@ -73,10 +73,14 @@ class MessageController extends Controller
         $message = Message::create($validated);
         $message->load(['sender', 'receiver']);
         
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ]);
+        }
+
+        return back();
     }
 
     /**

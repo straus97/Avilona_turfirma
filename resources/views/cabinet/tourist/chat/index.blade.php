@@ -42,6 +42,15 @@
                                         <span class="badge bg-danger rounded-pill">{{ $booking->unread_count }}</span>
                                     @endif
                                 </div>
+                                @if($booking->manager)
+                                    <div style="font-size: 0.75rem; opacity: 0.7;" class="mb-1">
+                                        {{ $booking->manager->name }}
+                                    </div>
+                                @else
+                                    <div style="font-size: 0.75rem; opacity: 0.7; font-style: italic;" class="mb-1">
+                                        Менеджер не назначен
+                                    </div>
+                                @endif
                                 <div style="font-size: 0.75rem; opacity: 0.8;">
                                     {{ $booking->destination_country }}
                                     @if($booking->destination_city)
@@ -50,15 +59,6 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-1">
                                     @include('cabinet.components.status-badge', ['status' => $booking->status])
-                                    @if($booking->manager)
-                                        <div style="font-size: 0.75rem; opacity: 0.7;">
-                                            {{ $booking->manager->name }}
-                                        </div>
-                                    @else
-                                        <div style="font-size: 0.75rem; opacity: 0.7; font-style: italic;">
-                                            Менеджер не назначен
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -108,14 +108,16 @@
                 <!-- Сообщения -->
                 <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1.5rem 0;">
                     @if($messages->count() > 0)
-                        @foreach($messages->reverse() as $message)
-                            <div class="mb-3 d-flex {{ $message->sender_id == Auth::id() ? 'justify-content-end' : 'justify-content-start' }}">
+                        @foreach($messages as $message)
+                            <div class="mb-3 d-flex {{ $message->sender_id == Auth::id() ? 'justify-content-end' : 'justify-content-start' }}" data-message-id="{{ $message->id }}">
                                 <div style="max-width: 70%;">
                                     <div class="p-3 rounded {{ $message->sender_id == Auth::id() ? 'bg-primary text-white' : 'bg-light' }}">
-                                        <div style="font-size: 0.875rem;">{{ $message->message }}</div>
+                                        @if($message->message)
+                                            <div style="font-size: 0.875rem;">{{ $message->message }}</div>
+                                        @endif
                                         @if($message->attachment_url)
                                             <div class="mt-2">
-                                                <a href="{{ Storage::url($message->attachment_url) }}" target="_blank" class="text-decoration-underline">
+                                                <a href="{{ Storage::url($message->attachment_url) }}" target="_blank" rel="noopener" class="text-decoration-underline {{ $message->sender_id == Auth::id() ? 'text-white' : 'text-primary' }}">
                                                     <i class="bi bi-paperclip"></i> Вложение
                                                 </a>
                                             </div>
@@ -145,7 +147,7 @@
                             <input type="hidden" name="receiver_id" value="{{ $currentBooking->manager_id }}">
                             
                             <div class="d-flex gap-2">
-                                <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." required id="messageInput">
+                                <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." id="messageInput">
                                 <label class="btn btn-outline-secondary" style="cursor: pointer;" title="Прикрепить файл">
                                     <i class="bi bi-paperclip"></i>
                                     <input type="file" name="attachment" style="display: none;" id="attachmentInput" 
@@ -185,6 +187,100 @@
     if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+
+    const chatConfig = {
+        bookingId: @json($currentBooking?->id),
+        currentUserId: @json(Auth::id()),
+        messagesUrl: @json(route('messages.index')),
+        storageBaseUrl: @json(rtrim(Storage::url(''), '/') . '/'),
+    };
+
+    function isNearBottom(container) {
+        return container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    }
+
+    function renderMessage(message) {
+        const isMine = message.sender_id === chatConfig.currentUserId;
+        const wrapper = document.createElement('div');
+        wrapper.className = `mb-3 d-flex ${isMine ? 'justify-content-end' : 'justify-content-start'}`;
+        wrapper.setAttribute('data-message-id', message.id);
+
+        const inner = document.createElement('div');
+        inner.style.maxWidth = '70%';
+
+        const bubble = document.createElement('div');
+        bubble.className = `p-3 rounded ${isMine ? 'bg-primary text-white' : 'bg-light'}`;
+
+        if (message.message) {
+            const text = document.createElement('div');
+            text.style.fontSize = '0.875rem';
+            text.textContent = message.message;
+            bubble.appendChild(text);
+        }
+
+        if (message.attachment_url) {
+            const attWrap = document.createElement('div');
+            attWrap.className = 'mt-2';
+            const link = document.createElement('a');
+            link.href = chatConfig.storageBaseUrl + message.attachment_url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.className = `text-decoration-underline ${isMine ? 'text-white' : 'text-primary'}`;
+            link.innerHTML = '<i class="bi bi-paperclip"></i> Вложение';
+            attWrap.appendChild(link);
+            bubble.appendChild(attWrap);
+        }
+
+        const time = document.createElement('div');
+        time.style.fontSize = '0.75rem';
+        time.style.color = '#9ca3af';
+        time.style.marginTop = '0.25rem';
+        if (isMine) time.className = 'text-end';
+        time.textContent = new Date(message.created_at).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        inner.appendChild(bubble);
+        inner.appendChild(time);
+        wrapper.appendChild(inner);
+
+        return wrapper;
+    }
+
+    async function pollMessages() {
+        if (!chatConfig.bookingId || !chatMessages) return;
+
+        try {
+            const res = await fetch(`${chatConfig.messagesUrl}?booking_id=${chatConfig.bookingId}`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const lastNode = chatMessages.querySelector('[data-message-id]:last-child');
+            const lastId = lastNode ? Number(lastNode.getAttribute('data-message-id')) : 0;
+            const newItems = data.filter(m => m.id > lastId);
+            if (newItems.length === 0) return;
+
+            const shouldScroll = isNearBottom(chatMessages);
+            if (!lastNode) {
+                chatMessages.innerHTML = '';
+            }
+            newItems.forEach(m => chatMessages.appendChild(renderMessage(m)));
+            if (shouldScroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    if (chatConfig.bookingId) {
+        setInterval(pollMessages, 5000);
+    }
     
     // Функция для отображения имени файла
     function updateFileName(input) {
@@ -206,12 +302,6 @@
         attachmentName.style.display = 'none';
     }
     
-    // Автообновление чата каждые 10 секунд
-    @if($currentBooking)
-    setInterval(() => {
-        window.location.reload();
-    }, 10000);
-    @endif
 </script>
 @endpush
 @endsection

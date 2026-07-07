@@ -2,7 +2,7 @@
     <div class="menu-section-title">Основное</div>
     <a href="{{ route('cabinet.manager.dashboard') }}" class="menu-item {{ request()->routeIs('cabinet.manager.dashboard') ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i>
-        <span>Dashboard</span>
+        <span>Главная</span>
     </a>
     <a href="{{ route('cabinet.manager.clients') }}" class="menu-item {{ request()->routeIs('cabinet.manager.clients*') ? 'active' : '' }}">
         <i class="bi bi-people"></i>
@@ -25,6 +25,14 @@
 </div>
 
 <div class="menu-section">
+    <div class="menu-section-title">Документы</div>
+    <a href="{{ route('cabinet.manager.documents') }}" class="menu-item {{ request()->routeIs('cabinet.manager.documents*') ? 'active' : '' }}">
+        <i class="bi bi-file-earmark-text"></i>
+        <span>Мои документы</span>
+    </a>
+</div>
+
+<div class="menu-section">
     <div class="menu-section-title">Аналитика</div>
     <a href="{{ route('cabinet.manager.statistics') }}" class="menu-item {{ request()->routeIs('cabinet.manager.statistics') ? 'active' : '' }}">
         <i class="bi bi-graph-up"></i>
@@ -38,19 +46,19 @@
 
 <div class="menu-section">
     <div class="menu-section-title">Инструменты</div>
-    <a href="{{ route('cabinet.manager.knowledge') }}" class="menu-item {{ request()->routeIs('cabinet.manager.knowledge') ? 'active' : '' }}">
-        <i class="bi bi-book"></i>
-        <span>База знаний</span>
+    <a href="{{ route('cabinet.manager.content') }}" class="menu-item {{ request()->routeIs('cabinet.manager.content*') || request()->routeIs('cabinet.manager.articles*') || request()->routeIs('cabinet.manager.reviews*') ? 'active' : '' }}">
+        <i class="bi bi-file-richtext"></i>
+        <span>Контент</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Настройки</div>
-    <a href="{{ route('cabinet.profile') }}" class="menu-item {{ request()->routeIs('cabinet.profile') ? 'active' : '' }}">
+    <a href="{{ route('cabinet.manager.profile') }}" class="menu-item {{ request()->routeIs('cabinet.manager.profile') ? 'active' : '' }}">
         <i class="bi bi-person"></i>
         <span>Мой профиль</span>
     </a>
-    <a href="{{ route('cabinet.settings') }}" class="menu-item {{ request()->routeIs('cabinet.settings') ? 'active' : '' }}">
+    <a href="{{ route('cabinet.manager.settings') }}" class="menu-item {{ request()->routeIs('cabinet.manager.settings') ? 'active' : '' }}">
         <i class="bi bi-gear"></i>
         <span>Настройки</span>
     </a>

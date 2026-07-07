@@ -1,8 +1,13 @@
+@php
+    $layout = auth()->check() ? 'cabinet.layouts.app' : 'layouts.main';
+@endphp
+
+@extends($layout)
+
+@section('title', auth()->check() ? 'Заявка #' . $booking->id : 'Заявка #' . $booking->id . ' - Авилона')
+@section('meta_description', 'Детали заявки на тур')
+
 @auth
-    @extends('cabinet.layouts.app')
-    
-    @section('title', 'Заявка #' . $booking->id)
-    
     @section('sidebar')
         @if(Auth::user()->isTourist())
             @include('cabinet.components.sidebar.tourist')
@@ -12,39 +17,48 @@
             @include('cabinet.components.sidebar.admin')
         @endif
     @endsection
-    
-    @section('content')
+@endauth
+
+@section('content')
+    @auth
         <div class="page-header">
             <h1 class="page-title">Заявка #{{ $booking->id }}</h1>
             <p class="page-subtitle">{{ $booking->destination_country }}@if($booking->destination_city), {{ $booking->destination_city }}@endif</p>
         </div>
         
         <div class="row">
-@else
-    @extends('layouts.main')
-    
-    @section('title', 'Заявка #' . $booking->id . ' - Авилона')
-    @section('meta_description', 'Детали заявки на тур')
-    
-    @section('content')
+    @endauth
+
+    @guest
         <main>
             <div class="container mt-5">
                 <div class="row">
-@endauth
+    @endguest
             <div class="col-md-8">
                 <!-- Основная информация о заявке -->
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
-                    <div class="card-header bg-{{ $booking->status_color }} text-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0">
+                    @auth
+                        <div class="card-header-custom">
+                            <div class="card-title-custom">
                                 <i class="bi bi-bookmark-fill"></i> Заявка #{{ $booking->id }}
-                            </h3>
-                            <span class="badge bg-white text-{{ $booking->status_color }} fs-6">
+                            </div>
+                            <span class="badge bg-{{ $booking->status_color }} text-white">
                                 {{ $booking->status_label }}
                             </span>
                         </div>
-                    </div>
-                    <div class="card-body">
+                    @else
+                        <div class="card-header bg-{{ $booking->status_color }} text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="mb-0">
+                                    <i class="bi bi-bookmark-fill"></i> Заявка #{{ $booking->id }}
+                                </h3>
+                                <span class="badge bg-white text-{{ $booking->status_color }} fs-6">
+                                    {{ $booking->status_label }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                    @endauth
                         @if(session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 {{ session('success') }}
@@ -208,20 +222,29 @@
                                 <p class="mb-1"><strong>Email:</strong> {{ $booking->manager->email }}</p>
                             </div>
                         @endif
-                    </div>
-                    <div class="card-footer bg-light">
-                        <small class="text-muted">
+                    @auth
+                        <div class="mt-3 text-muted small">
                             Создано: {{ $booking->created_at->format('d.m.Y H:i') }}
                             @if($booking->updated_at->ne($booking->created_at))
                                 | Обновлено: {{ $booking->updated_at->format('d.m.Y H:i') }}
                             @endif
-                        </small>
-                    </div>
+                        </div>
+                    @else
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small class="text-muted">
+                                Создано: {{ $booking->created_at->format('d.m.Y H:i') }}
+                                @if($booking->updated_at->ne($booking->created_at))
+                                    | Обновлено: {{ $booking->updated_at->format('d.m.Y H:i') }}
+                                @endif
+                            </small>
+                        </div>
+                    @endauth
                 </div>
 
                 <!-- Кнопки действий -->
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
-                    <div class="card-body">
+                    @auth
                         <div class="d-flex flex-wrap gap-2 justify-content-between">
                             <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> К списку заявок
@@ -251,7 +274,11 @@
 
                                 <!-- Кнопки для менеджера/админа -->
                                 @if(auth()->user()->isManager() || auth()->user()->isAdmin())
-                                    @if($booking->status !== App\Models\Booking::STATUS_CANCELLED)
+                                    @php
+                                        $isManager = auth()->user()->isManager();
+                                        $managerCanEdit = !$isManager || !in_array($booking->status, [App\Models\Booking::STATUS_CANCELLED, App\Models\Booking::STATUS_COMPLETED]);
+                                    @endphp
+                                    @if($managerCanEdit)
                                         <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">
                                             <i class="bi bi-pencil"></i> Редактировать
                                         </a>
@@ -295,21 +322,109 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between">
+                                <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> К списку заявок
+                                </a>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <!-- Кнопки для туриста -->
+                                    @if(auth()->user()->isTourist())
+                                        @can('cancel', $booking)
+                                            <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-x-circle"></i> Отменить заявку
+                                                </button>
+                                            </form>
+                                        @endcan
+                                        @if($booking->status === App\Models\Booking::STATUS_NEW && !$booking->manager_id)
+                                            <small class="text-muted align-self-center">
+                                                <i class="bi bi-info-circle"></i> Вы можете отменить заявку до назначения менеджера
+                                            </small>
+                                        @elseif($booking->manager_id)
+                                            <small class="text-muted align-self-center">
+                                                <i class="bi bi-info-circle"></i> Заявка взята в работу менеджером. Для отмены свяжитесь с менеджером.
+                                            </small>
+                                        @endif
+                                    @endif
+
+                                    <!-- Кнопки для менеджера/админа -->
+                                    @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                        @php
+                                            $isManager = auth()->user()->isManager();
+                                            $managerCanEdit = !$isManager || !in_array($booking->status, [App\Models\Booking::STATUS_CANCELLED, App\Models\Booking::STATUS_COMPLETED]);
+                                        @endphp
+                                        @if($managerCanEdit)
+                                            <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">
+                                                <i class="bi bi-pencil"></i> Редактировать
+                                            </a>
+
+                                            @if($booking->status === App\Models\Booking::STATUS_PROGRESS)
+                                                <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="bi bi-check-circle"></i> Подтвердить
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if($booking->status === App\Models\Booking::STATUS_CONFIRMED)
+                                                <form action="{{ route('bookings.complete', $booking) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-check-all"></i> Завершить
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-x-circle"></i> Отменить
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endif
+
+                                    <!-- Удаление для админа -->
+                                    @if(auth()->user()->isAdmin())
+                                        <form action="{{ route('bookings.destroy', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить заявку? Это действие необратимо!')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-dark">
+                                                <i class="bi bi-trash"></i> Удалить
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endauth
                 </div>
             </div>
 
             <!-- Боковая панель -->
             <div class="col-md-4">
                 <!-- Назначение менеджера (для админа) -->
-                @if(auth()->user()->isAdmin() && !$booking->manager)
+                @if(auth()->user()->isAdmin())
                     <div class="@auth card-custom @else card shadow @endauth mb-4">
-                        <div class="card-header bg-warning text-dark">
-                            <h5 class="mb-0">
-                                <i class="bi bi-person-plus"></i> Назначить менеджера
-                            </h5>
-                        </div>
-                        <div class="card-body">
+                        @auth
+                            <div class="card-header-custom">
+                                <div class="card-title-custom">
+                                    <i class="bi bi-person-plus"></i> Назначить менеджера
+                                </div>
+                            </div>
+                        @else
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-person-plus"></i> Назначить менеджера
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                        @endauth
                             <form action="{{ route('bookings.assign-manager', $booking) }}" method="POST">
                                 @csrf
                                 <div class="mb-3">
@@ -317,26 +432,39 @@
                                     <select name="manager_id" id="manager_id" class="form-select" required>
                                         <option value="">-- Выберите --</option>
                                         @foreach(\App\Models\User::whereHas('roles', function($q) { $q->where('name', 'manager'); })->get() as $manager)
-                                            <option value="{{ $manager->id }}">{{ $manager->name }}</option>
+                                            <option value="{{ $manager->id }}" {{ $booking->manager_id == $manager->id ? 'selected' : '' }}>
+                                                {{ $manager->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-warning w-100">
-                                    Назначить
+                                    {{ $booking->manager ? 'Сменить менеджера' : 'Назначить' }}
                                 </button>
                             </form>
-                        </div>
+                        @auth
+                        @else
+                            </div>
+                        @endauth
                     </div>
                 @endif
 
                 <!-- История статусов -->
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history"></i> Статус заявки
-                        </h5>
-                    </div>
-                    <div class="card-body">
+                    @auth
+                        <div class="card-header-custom">
+                            <div class="card-title-custom">
+                                <i class="bi bi-clock-history"></i> Статус заявки
+                            </div>
+                        </div>
+                    @else
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Статус заявки
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                    @endauth
                         <div class="list-group list-group-flush">
                             <div class="list-group-item">
                                 <span class="badge bg-{{ $booking->status_color }} float-end">Текущий</span>
@@ -345,35 +473,50 @@
                                 <small class="text-muted">{{ $booking->updated_at->diffForHumans() }}</small>
                             </div>
                         </div>
-                    </div>
+                    @auth
+                    @else
+                        </div>
+                    @endauth
                 </div>
 
                 <!-- Информация -->
                 <div class="@auth card-custom @else card shadow @endauth">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-info-circle"></i> Информация
-                        </h5>
-                    </div>
-                    <div class="card-body">
+                    @auth
+                        <div class="card-header-custom">
+                            <div class="card-title-custom">
+                                <i class="bi bi-info-circle"></i> Информация
+                            </div>
+                        </div>
+                    @else
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle"></i> Информация
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                    @endauth
                         <p class="small text-muted mb-2">
                             После подтверждения заявки менеджер свяжется с вами для уточнения деталей и оформления документов.
                         </p>
                         <p class="small text-muted mb-0">
                             При возникновении вопросов, обратитесь к своему менеджеру или в службу поддержки.
                         </p>
-                    </div>
+                    @auth
+                    @else
+                        </div>
+                    @endauth
                 </div>
             </div>
-@auth
+    @auth
         </div>
-    @endsection
-@else
+    @endauth
+
+    @guest
                 </div>
             </div>
         </main>
-    @endsection
-@endauth
+    @endguest
+@endsection
 
 @push('styles')
 <style>

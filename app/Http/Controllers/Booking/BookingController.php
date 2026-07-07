@@ -240,7 +240,11 @@ class BookingController extends Controller
             'manager_id' => 'required|exists:users,id',
         ]);
         
-        $booking->assignManager($request->manager_id);
+        if ($booking->status === Booking::STATUS_NEW) {
+            $booking->assignManager($request->manager_id);
+        } else {
+            $booking->update(['manager_id' => $request->manager_id]);
+        }
         
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Менеджер назначен');

@@ -124,9 +124,13 @@
         <!-- Аватар -->
         <div class="card-custom mb-4">
             <div class="text-center">
-                <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                </div>
+                @if(Auth::user()->avatar_path)
+                    <img src="{{ Storage::url(Auth::user()->avatar_path) }}" alt="avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                @else
+                    <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
+                @endif
                 <h5>{{ Auth::user()->name }}</h5>
                 <div class="text-muted small mb-3">{{ Auth::user()->email }}</div>
                 

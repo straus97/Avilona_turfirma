@@ -1,20 +1,53 @@
-@extends('layouts.main')
+@php
+    $layout = auth()->check() ? 'cabinet.layouts.app' : 'layouts.main';
+@endphp
 
-@section('title', 'Редактировать заявку #' . $booking->id . ' - Авилона')
+@extends($layout)
+
+@section('title', auth()->check() ? 'Редактировать заявку #' . $booking->id : 'Редактировать заявку #' . $booking->id . ' - Авилона')
 @section('meta_description', 'Редактирование заявки на тур')
 
+@auth
+    @section('sidebar')
+        @if(Auth::user()->isTourist())
+            @include('cabinet.components.sidebar.tourist')
+        @elseif(Auth::user()->isManager())
+            @include('cabinet.components.sidebar.manager')
+        @elseif(Auth::user()->isAdmin())
+            @include('cabinet.components.sidebar.admin')
+        @endif
+    @endsection
+@endauth
+
 @section('content')
+@auth
+    <div class="page-header">
+        <h1 class="page-title">Редактировать заявку #{{ $booking->id }}</h1>
+        <p class="page-subtitle">Обновление статуса и служебной информации</p>
+    </div>
+@endauth
+
+@guest
 <main>
     <div class="container mt-5">
         <div class="row justify-content-center">
+@endguest
             <div class="col-md-8">
-                <div class="card shadow">
-                    <div class="card-header bg-warning text-dark">
-                        <h3 class="mb-0">
-                            <i class="bi bi-pencil"></i> Редактировать заявку #{{ $booking->id }}
-                        </h3>
-                    </div>
-                    <div class="card-body">
+                <div class="@auth card-custom @else card shadow @endauth">
+                    @auth
+                        <div class="card-header-custom">
+                            <div class="card-title-custom">
+                                <i class="bi bi-pencil"></i> Редактировать заявку #{{ $booking->id }}
+                            </div>
+                        </div>
+                    @else
+                        <div class="card-header bg-warning text-dark">
+                            <h3 class="mb-0">
+                                <i class="bi bi-pencil"></i> Редактировать заявку #{{ $booking->id }}
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                    @endauth
                         <form action="{{ route('bookings.update', $booking) }}" method="POST">
                             @csrf
                             @method('PUT')
@@ -142,10 +175,15 @@
                                 </button>
                             </div>
                         </form>
-                    </div>
+                    @auth
+                    @else
+                        </div>
+                    @endauth
                 </div>
             </div>
+@guest
         </div>
     </div>
 </main>
+@endguest
 @endsection
