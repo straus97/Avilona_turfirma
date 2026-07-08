@@ -43,11 +43,16 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Назначить пользователю роль «user» по умолчанию
-        $adminRole = Role::where('role', 'user')->first();
-        $user->roles()->attach($adminRole);
+        // Назначить пользователю роль туриста по умолчанию
+        $touristRole = Role::firstOrCreate(
+            ['name' => Role::TOURIST],
+            ['description' => Role::availableRoles()[Role::TOURIST]]
+        );
+        $user->roles()->attach($touristRole->id);
 
         event(new Registered($user));
+
+        Auth::login($user);
 
         return redirect(RouteServiceProvider::HOME);
     }
