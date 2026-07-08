@@ -3174,8 +3174,8 @@ class ImportLegacyDataToV4 extends Command
                 'id'          => (int) $r['id'],
                 'name'        => (string) $r['name'],
                 'description' => $r['description'] !== null ? (string) $r['description'] : null,
-                'created_at'  => (string) $r['created_at'],
-                'updated_at'  => (string) $r['updated_at'],
+                'created_at'  => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'  => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'  => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'users' => array_map(static fn($r) => [
@@ -3198,14 +3198,14 @@ class ImportLegacyDataToV4 extends Command
                 'notification_settings'    => $r['notification_settings'],
                 'avatar_path'              => $r['avatar_path'],
                 'last_login_at'            => $r['last_login_at'],
-                'created_at'               => (string) $r['created_at'],
-                'updated_at'               => (string) $r['updated_at'],
+                'created_at'               => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'               => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
             ], $rows),
             'role_user' => array_map(static fn($r) => [
                 'user_id'    => (int) $r['user_id'],
                 'role_id'    => (int) $r['role_id'],
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'reviews' => array_map(static fn($r) => [
@@ -3215,8 +3215,8 @@ class ImportLegacyDataToV4 extends Command
                 'content'      => $r['content'] !== null ? (string) $r['content'] : null,
                 'image'        => $r['image'],
                 'is_published' => (int) (bool) $r['is_published'],
-                'created_at'   => (string) $r['created_at'],
-                'updated_at'   => (string) $r['updated_at'],
+                'created_at'   => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'   => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'   => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'best_offers' => array_map(static fn($r) => [
@@ -3224,16 +3224,16 @@ class ImportLegacyDataToV4 extends Command
                 'title'      => (string) $r['title'],
                 'content'    => $r['content'] !== null ? (string) $r['content'] : null,
                 'image'      => $r['image'],
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'partners' => array_map(static fn($r) => [
                 'id'           => (int) $r['id'],
                 'name_partner' => (string) $r['name_partner'],
                 'logo_partner' => $r['logo_partner'],
-                'created_at'   => (string) $r['created_at'],
-                'updated_at'   => (string) $r['updated_at'],
+                'created_at'   => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'   => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'   => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'countries_images' => array_map(static fn($r) => [
@@ -3245,8 +3245,8 @@ class ImportLegacyDataToV4 extends Command
                 'image_small'   => $r['image_small'],
                 'image_large'   => $r['image_large'],
                 'documents_url' => $r['documents_url'],
-                'created_at'    => (string) $r['created_at'],
-                'updated_at'    => (string) $r['updated_at'],
+                'created_at'    => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'    => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'    => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'destination_images' => array_map(static fn($r) => [
@@ -3256,8 +3256,8 @@ class ImportLegacyDataToV4 extends Command
                 'description' => $r['description'] !== null ? (string) $r['description'] : null,
                 'image_small' => $r['image_small'],
                 'image_large' => $r['image_large'],
-                'created_at'  => (string) $r['created_at'],
-                'updated_at'  => (string) $r['updated_at'],
+                'created_at'  => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'  => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'  => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'employees' => array_map(static fn($r) => [
@@ -3269,16 +3269,16 @@ class ImportLegacyDataToV4 extends Command
                 'whatsapp'   => $r['whatsapp'] !== null ? (string) $r['whatsapp'] : null,
                 'vk'         => $r['vk']       !== null ? (string) $r['vk']       : null,
                 'image'      => $r['image'],
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'awards' => array_map(static fn($r) => [
                 'id'         => (int) $r['id'],
                 'image'      => $r['image'],
                 'category'   => $r['category'] !== null ? (string) $r['category'] : null,
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'articles' => array_map(static fn($r) => [
@@ -3287,8 +3287,8 @@ class ImportLegacyDataToV4 extends Command
                 'slug'       => (string) $r['slug'],
                 'content'    => $r['content'] !== null ? (string) $r['content'] : null,
                 'image'      => $r['image'],
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'news' => array_map(static fn($r) => [
@@ -3299,8 +3299,8 @@ class ImportLegacyDataToV4 extends Command
                 'description' => $r['description'] !== null ? (string) $r['description'] : null,
                 'image'       => $r['image'],
                 'pub_date'    => $r['pub_date'] !== null ? (string) $r['pub_date'] : null,
-                'created_at'  => (string) $r['created_at'],
-                'updated_at'  => (string) $r['updated_at'],
+                'created_at'  => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at'  => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at'  => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             'our_clients' => array_map(static fn($r) => [
@@ -3309,8 +3309,8 @@ class ImportLegacyDataToV4 extends Command
                 'slug'       => (string) $r['slug'],
                 'content'    => $r['content'] !== null ? (string) $r['content'] : null,
                 'image'      => $r['image'],
-                'created_at' => (string) $r['created_at'],
-                'updated_at' => (string) $r['updated_at'],
+                'created_at' => $r['created_at'] !== null ? (string) $r['created_at'] : null,
+                'updated_at' => $r['updated_at'] !== null ? (string) $r['updated_at'] : null,
                 'deleted_at' => $r['deleted_at'] !== null ? (string) $r['deleted_at'] : null,
             ], $rows),
             default => $rows,
@@ -3483,7 +3483,8 @@ class ImportLegacyDataToV4 extends Command
 
     /**
      * Verify target state inside the transaction (after inserts, before commit).
-     * Uses buildTargetSnapshot + verifyTargetSnapshotAgainstSource plus AUTO_INCREMENT.
+     * AUTO_INCREMENT metadata is intentionally checked only after commit because
+     * information_schema may not expose the future counter for uncommitted rows.
      * Throws \RuntimeException on any failure.
      */
     private function verifyInsertedTarget(array $checkpointA): void
@@ -3493,23 +3494,6 @@ class ImportLegacyDataToV4 extends Command
         $targetSnap = $this->buildTargetSnapshot();
         $ok         = $this->verifyTargetSnapshotAgainstSource($targetSnap, $checkpointA, 'verify-target');
 
-        // AUTO_INCREMENT > MAX(id) for id-based tables
-        foreach (array_diff(self::IMPORT_TARGET_TABLES, ['role_user']) as $table) {
-            $maxId = (int) DB::connection(self::TARGET_CONN)->table($table)->max('id');
-            $aiRow = DB::connection(self::TARGET_CONN)->selectOne(
-                'SELECT AUTO_INCREMENT AS auto_increment FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
-                [self::TARGET_DB, $table]
-            );
-            $aiRow         = array_change_key_case((array) ($aiRow ?? []), CASE_LOWER);
-            $autoIncrement = (int) ($aiRow['auto_increment'] ?? 0);
-
-            if ($autoIncrement <= $maxId) {
-                $this->error("[verify-target] FAIL: {$table} AUTO_INCREMENT ({$autoIncrement}) not > MAX(id) ({$maxId}).");
-                $ok = false;
-            } else {
-                $this->line("[verify-target] OK AUTO_INCREMENT > MAX(id): {$table}");
-            }
-        }
 
         if (!$ok) {
             throw new \RuntimeException('[verify-target] Target verification failed after inserts.');
@@ -3559,20 +3543,52 @@ class ImportLegacyDataToV4 extends Command
             }
         }
 
-        // AUTO_INCREMENT > MAX(id)
+        // AUTO_INCREMENT > MAX(id), but only for tables whose id column
+        // is actually declared AUTO_INCREMENT. This metadata check is
+        // intentionally post-commit.
         foreach (array_diff(self::IMPORT_TARGET_TABLES, ['role_user']) as $table) {
+            $columnRow = DB::connection(self::TARGET_CONN)->selectOne(
+                'SELECT EXTRA AS extra
+                 FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = ?
+                   AND TABLE_NAME = ?
+                   AND COLUMN_NAME = ?',
+                [self::TARGET_DB, $table, 'id']
+            );
+            $columnRow = array_change_key_case((array) ($columnRow ?? []), CASE_LOWER);
+            $extra     = strtolower((string) ($columnRow['extra'] ?? ''));
+
+            if (!str_contains($extra, 'auto_increment')) {
+                $this->line(
+                    "[post-commit-verify] SKIP AUTO_INCREMENT (not declared): {$table}"
+                );
+                continue;
+            }
+
             $maxId = (int) DB::connection(self::TARGET_CONN)->table($table)->max('id');
             $aiRow = DB::connection(self::TARGET_CONN)->selectOne(
-                'SELECT AUTO_INCREMENT AS auto_increment FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
+                'SELECT AUTO_INCREMENT AS auto_increment
+                 FROM information_schema.TABLES
+                 WHERE TABLE_SCHEMA = ?
+                   AND TABLE_NAME = ?',
                 [self::TARGET_DB, $table]
             );
             $aiRow         = array_change_key_case((array) ($aiRow ?? []), CASE_LOWER);
-            $autoIncrement = (int) ($aiRow['auto_increment'] ?? 0);
-            if ($autoIncrement <= $maxId) {
+            $autoIncrement = $aiRow['auto_increment'] === null
+                ? null
+                : (int) $aiRow['auto_increment'];
+
+            if ($autoIncrement === null || $autoIncrement <= $maxId) {
+                $displayValue = $autoIncrement === null ? 'NULL' : (string) $autoIncrement;
                 $this->error(
-                    "[post-commit-verify] FAIL: {$table} AUTO_INCREMENT ({$autoIncrement}) not > MAX(id) ({$maxId})."
+                    "[post-commit-verify] FAIL: {$table} AUTO_INCREMENT " .
+                    "({$displayValue}) not > MAX(id) ({$maxId})."
                 );
                 $ok = false;
+            } else {
+                $this->line(
+                    "[post-commit-verify] OK AUTO_INCREMENT > MAX(id): {$table}"
+                );
             }
         }
 
