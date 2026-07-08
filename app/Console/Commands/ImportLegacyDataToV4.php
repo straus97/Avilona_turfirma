@@ -420,6 +420,9 @@ class ImportLegacyDataToV4 extends Command
                         $this->transactionCommitted = true;
                         $this->line('[commit] Transaction committed successfully.');
 
+                        $currentStage = 'auto-increment-repair';
+                        $this->synchronizeTargetAutoIncrementCounters();
+
                     } catch (\Throwable $te) {
                         $this->error("[{$currentStage}] Failed: " . get_class($te));
 
@@ -3503,6 +3506,64 @@ class ImportLegacyDataToV4 extends Command
     }
 
     /**
+     * Set every real AUTO_INCREMENT counter to MAX(id) + 1 after the import
+     * transaction has committed. Some MySQL configurations do not advance the
+     * counter when explicit IDs are inserted inside the transaction.
+     */
+    private function synchronizeTargetAutoIncrementCounters(): void
+    {
+        foreach (array_diff(self::IMPORT_TARGET_TABLES, ['role_user']) as $table) {
+            $columnRow = DB::connection(self::TARGET_CONN)->selectOne(
+                'SELECT EXTRA AS extra
+                 FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = ?
+                   AND TABLE_NAME = ?
+                   AND COLUMN_NAME = ?',
+                [self::TARGET_DB, $table, 'id']
+            );
+            $columnRow = array_change_key_case((array) ($columnRow ?? []), CASE_LOWER);
+            $extra     = strtolower((string) ($columnRow['extra'] ?? ''));
+
+            if (!str_contains($extra, 'auto_increment')) {
+                $this->line(
+                    "[auto-increment-repair] SKIP (not declared): {$table}"
+                );
+                continue;
+            }
+
+            $maxId  = (int) DB::connection(self::TARGET_CONN)->table($table)->max('id');
+            $nextId = max(1, $maxId + 1);
+
+            DB::connection(self::TARGET_CONN)->statement(
+                "ALTER TABLE `{$table}` AUTO_INCREMENT = {$nextId}"
+            );
+
+            $this->line(
+                "[auto-increment-repair] Set {$table} AUTO_INCREMENT={$nextId}."
+            );
+        }
+    }
+
+    /**
+     * Read the current AUTO_INCREMENT counter from SHOW CREATE TABLE.
+     * This avoids stale INFORMATION_SCHEMA table statistics.
+     */
+    private function readTargetAutoIncrementFromShowCreate(string $table): ?int
+    {
+        $row = DB::connection(self::TARGET_CONN)->selectOne(
+            "SHOW CREATE TABLE `{$table}`"
+        );
+        $values    = array_values((array) ($row ?? []));
+        $createSql = (string) ($values[1] ?? '');
+
+        if (preg_match('/AUTO_INCREMENT=(\d+)/i', $createSql, $matches) !== 1) {
+            return null;
+        }
+
+        return (int) $matches[1];
+    }
+
+    /**
      * Post-commit verification using the shared buildTargetSnapshot + verifyTargetSnapshotAgainstSource helpers.
      * Also verifies role_user referential integrity, slug uniqueness, and AUTO_INCREMENT values.
      */
@@ -3565,18 +3626,8 @@ class ImportLegacyDataToV4 extends Command
                 continue;
             }
 
-            $maxId = (int) DB::connection(self::TARGET_CONN)->table($table)->max('id');
-            $aiRow = DB::connection(self::TARGET_CONN)->selectOne(
-                'SELECT AUTO_INCREMENT AS auto_increment
-                 FROM information_schema.TABLES
-                 WHERE TABLE_SCHEMA = ?
-                   AND TABLE_NAME = ?',
-                [self::TARGET_DB, $table]
-            );
-            $aiRow         = array_change_key_case((array) ($aiRow ?? []), CASE_LOWER);
-            $autoIncrement = $aiRow['auto_increment'] === null
-                ? null
-                : (int) $aiRow['auto_increment'];
+            $maxId         = (int) DB::connection(self::TARGET_CONN)->table($table)->max('id');
+            $autoIncrement = $this->readTargetAutoIncrementFromShowCreate($table);
 
             if ($autoIncrement === null || $autoIncrement <= $maxId) {
                 $displayValue = $autoIncrement === null ? 'NULL' : (string) $autoIncrement;
