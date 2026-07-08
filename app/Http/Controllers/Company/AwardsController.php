@@ -11,10 +11,11 @@ class AwardsController extends Controller
     public function __invoke()
     {
         $awards = Cache::remember('awards_all', 3600, function () {
-            return Award::select('id', 'name', 'year', 'image')
-                ->orderBy('year', 'desc')
+            return Award::select('id', 'image', 'category')
+                ->orderBy('id')
                 ->get();
         });
+
         return view('company.awards', compact('awards'));
     }
 }
