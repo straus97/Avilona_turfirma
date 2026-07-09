@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingDocument;
 use App\Models\Tour;
 use App\Models\User;
 use App\Models\DestinationCity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BookingController extends Controller
 {
@@ -310,6 +315,159 @@ class BookingController extends Controller
         
         return redirect()->route('bookings.index')
             ->with('success', 'Заявка удалена');
+    }
+
+    /**
+     * Загрузка документа к заявке (только менеджер/админ)
+     */
+    public function storeDocument(Request $request, Booking $booking): RedirectResponse
+    {
+        $this->authorizeBooking($booking);
+
+        $validated = $request->validate([
+            'title'         => 'required|string|max:255',
+            'document_type' => 'required|in:contract,voucher,tickets,insurance,instructions,other',
+            'file'          => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+        ]);
+
+        $path = null;
+
+        try {
+            $file = $request->file('file');
+
+            if (!$file->isValid()) {
+                throw new \RuntimeException('Uploaded file is not valid');
+            }
+
+            $path = $file->store("documents/bookings/{$booking->id}", 'local');
+
+            if (!$path) {
+                throw new \RuntimeException('File could not be stored on disk');
+            }
+
+            BookingDocument::create([
+                'booking_id'    => $booking->id,
+                'document_type' => $validated['document_type'],
+                'title'         => $validated['title'],
+                'file_path'     => $path,
+                'file_size'     => $file->getSize(),
+                'uploaded_by'   => Auth::id(),
+                'uploaded_at'   => now(),
+            ]);
+        } catch (\Throwable $e) {
+            if (is_string($path) && $path !== '') {
+                Storage::disk('local')->delete($path);
+            }
+
+            Log::error('BookingDocument store failed', [
+                'booking_id'  => $booking->id,
+                'uploader_id' => Auth::id(),
+                'exception'   => get_class($e),
+            ]);
+
+            return redirect()->route('bookings.show', $booking)
+                ->with('error', 'Не удалось сохранить документ. Попробуйте ещё раз.');
+        }
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('success', 'Документ успешно загружен.');
+    }
+
+    /**
+     * Скачивание документа по заявке (только менеджер/админ)
+     */
+    public function downloadDocument(Booking $booking, BookingDocument $document): StreamedResponse
+    {
+        $this->authorizeBooking($booking);
+
+        if ($document->booking_id !== $booking->id) {
+            abort(404);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $this->buildDocumentDownloadName($document)
+        );
+    }
+
+    /**
+     * Удаление документа по заявке (только менеджер/админ)
+     */
+    public function destroyDocument(Booking $booking, BookingDocument $document): RedirectResponse
+    {
+        $this->authorizeBooking($booking);
+
+        if ($document->booking_id !== $booking->id) {
+            abort(404);
+        }
+
+        $filePath = $document->file_path;
+
+        // Soft-delete the row first; only then remove the physical file.
+        // This ensures a DB failure cannot leave an active record pointing to a deleted file.
+        $document->delete();
+
+        Storage::disk('local')->delete($filePath);
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('success', 'Документ удалён.');
+    }
+
+    /**
+     * Сформировать безопасное имя файла для скачивания.
+     *
+     * Extension is derived from the stored file_path, never from user-supplied input.
+     */
+    private function buildDocumentDownloadName(BookingDocument $document): string
+    {
+        // Real extension comes from the stored path, not the title
+        $ext = strtolower(pathinfo((string) $document->file_path, PATHINFO_EXTENSION));
+
+        // Base name from the document title
+        $name = (string) $document->title;
+
+        // Strip ASCII control characters (CR, LF, tab, null, etc.)
+        $name = (string) preg_replace('/[\x00-\x1F\x7F]+/', '', $name);
+
+        // Replace path separators and Windows-invalid filename characters
+        $name = (string) preg_replace('/[\/\\\\:*?"<>|]+/', '-', $name);
+
+        // Collapse repeated whitespace to a single space
+        $name = (string) preg_replace('/\s+/', ' ', $name);
+
+        // Trim leading/trailing spaces and dots
+        $name = trim($name, " \t\n\r\0\x0B.");
+
+        // Fallback when sanitized title is empty
+        if ($name === '') {
+            $name = 'booking-document';
+        }
+
+        // Limit the base name to ~180 characters
+        $name = Str::limit($name, 180, '');
+        $name = rtrim($name, " .");
+
+        if ($name === '') {
+            $name = 'booking-document';
+        }
+
+        // Append actual extension from file_path when not already present
+        if ($ext !== '' && !str_ends_with(strtolower($name), '.' . $ext)) {
+            $name .= '.' . $ext;
+        }
+
+        // Final safety: remove any CR, LF, null byte, slash, or backslash that may remain
+        $name = (string) preg_replace('/[\x00\x0A\x0D\/\\\\]+/', '', $name);
+
+        if ($name === '' || $name === '.' . $ext) {
+            $name = 'booking-document' . ($ext !== '' ? '.' . $ext : '');
+        }
+
+        return $name;
     }
 
     /**

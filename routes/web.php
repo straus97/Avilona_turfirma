@@ -152,6 +152,13 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::post('messages/{message}/read', [\App\Http\Controllers\Message\MessageController::class, 'markAsRead'])->name('messages.read');
     Route::get('messages/unread-count', [\App\Http\Controllers\Message\MessageController::class, 'unreadCount'])->name('messages.unread-count');
     Route::delete('messages/{message}', [\App\Http\Controllers\Message\MessageController::class, 'destroy'])->name('messages.destroy');
+
+    // Управление документами по заявкам (только менеджер/админ)
+    Route::middleware('role:manager,admin')->group(function () {
+        Route::post('bookings/{booking}/documents', [\App\Http\Controllers\Booking\BookingController::class, 'storeDocument'])->name('bookings.documents.store');
+        Route::get('bookings/{booking}/documents/{document}/download', [\App\Http\Controllers\Booking\BookingController::class, 'downloadDocument'])->name('bookings.documents.download');
+        Route::delete('bookings/{booking}/documents/{document}', [\App\Http\Controllers\Booking\BookingController::class, 'destroyDocument'])->name('bookings.documents.destroy');
+    });
 });
 
 Route::group(['namespace' => 'Company'], function () {
