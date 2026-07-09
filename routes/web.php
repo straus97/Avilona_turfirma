@@ -35,6 +35,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Cabinet\CabinetController::class, 'chat'])->name('chat');
         Route::get('/documents/personal', [\App\Http\Controllers\Cabinet\CabinetController::class, 'personalDocuments'])->name('documents.personal');
         Route::get('/documents/bookings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bookingDocuments'])->name('documents.bookings');
+        Route::get('/documents/bookings/{booking}/{document}/download', [\App\Http\Controllers\Cabinet\CabinetController::class, 'downloadBookingDocument'])->name('documents.bookings.download');
         Route::get('/bonus', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bonusProgram'])->name('bonus');
         Route::get('/wishlist', [\App\Http\Controllers\Cabinet\CabinetController::class, 'wishlist'])->name('wishlist');
         Route::get('/profile', [\App\Http\Controllers\Cabinet\CabinetController::class, 'profile'])->name('profile');

@@ -249,7 +249,69 @@ class CabinetController extends Controller
             ->with('bookingDocuments')
             ->latest()
             ->get();
+
         return view('cabinet.tourist.documents.bookings', compact('bookingsWithDocuments'));
+    }
+
+    /**
+     * Защищённая загрузка документа по заявке
+     */
+    public function downloadBookingDocument(
+        Booking $booking,
+        BookingDocument $document
+    ): StreamedResponse|RedirectResponse {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($document->booking_id !== $booking->id) {
+            abort(404);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $this->bookingDocumentDownloadName($document)
+        );
+    }
+
+    private function bookingDocumentDownloadName(
+        BookingDocument $document
+    ): string {
+        $downloadName = trim((string) $document->title)
+            ?: 'booking-document';
+
+        $downloadName = preg_replace(
+            '/[\/\\\\]+/',
+            '-',
+            $downloadName
+        ) ?: 'booking-document';
+
+        $extension = strtolower(
+            (string) $document->file_type
+        );
+
+        if ($extension !== '') {
+            $extension = '.' . ltrim($extension, '.');
+
+            if (
+                !str_ends_with(
+                    strtolower($downloadName),
+                    $extension
+                )
+            ) {
+                $downloadName .= $extension;
+            }
+        }
+
+        return $downloadName;
     }
     
     /**

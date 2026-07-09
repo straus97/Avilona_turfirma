@@ -51,10 +51,10 @@
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
-                                <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ route('cabinet.documents.bookings.download', [$booking, $document]) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ Storage::url($document->file_path) }}" download class="btn btn-sm btn-outline-secondary">
+                                <a href="{{ route('cabinet.documents.bookings.download', [$booking, $document]) }}" download class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-download"></i>
                                 </a>
                             </div>
