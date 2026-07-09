@@ -132,7 +132,7 @@
                                     <td>{{ $document->document_type }}</td>
                                     <td>{{ number_format($document->file_size / 1024, 1, '.', ' ') }} KB</td>
                                     <td>
-                                        <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" rel="noopener">
+                                        <a href="{{ route('cabinet.admin.user-document.download', [$user, $document]) }}" target="_blank" class="btn btn-sm btn-outline-primary" rel="noopener">
                                             <i class="bi bi-paperclip"></i>
                                         </a>
                                     </td>

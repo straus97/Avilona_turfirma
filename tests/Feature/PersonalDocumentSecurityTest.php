@@ -146,6 +146,103 @@ class PersonalDocumentSecurityTest extends TestCase
             ->assertHeader('content-disposition');
     }
 
+    public function test_admin_can_download_a_users_private_personal_document(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->createUserWithRole(Role::ADMIN);
+        $owner = $this->createUserWithRole(Role::TOURIST);
+
+        Storage::disk('local')->put(
+            'documents/personal/admin-download.pdf',
+            'private-document'
+        );
+
+        $document = UserDocument::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Admin Download',
+            'document_type' => 'passport',
+            'file_path' => 'documents/personal/admin-download.pdf',
+            'file_type' => 'pdf',
+            'file_size' => 16,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->get(
+                route(
+                    'cabinet.admin.user-document.download',
+                    [$owner, $document]
+                )
+            )
+            ->assertOk()
+            ->assertHeader('content-disposition');
+    }
+
+    public function test_admin_document_download_rejects_mismatched_user_and_document(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->createUserWithRole(Role::ADMIN);
+        $owner = $this->createUserWithRole(Role::TOURIST);
+        $otherUser = $this->createUserWithRole(Role::TOURIST);
+
+        Storage::disk('local')->put(
+            'documents/personal/mismatched.pdf',
+            'private-document'
+        );
+
+        $document = UserDocument::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Mismatched Document',
+            'document_type' => 'other',
+            'file_path' => 'documents/personal/mismatched.pdf',
+            'file_type' => 'pdf',
+            'file_size' => 16,
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->get(
+                route(
+                    'cabinet.admin.user-document.download',
+                    [$otherUser, $document]
+                )
+            )
+            ->assertNotFound();
+    }
+
+    public function test_non_admin_cannot_use_admin_personal_document_download_route(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->createUserWithRole(Role::TOURIST);
+        $otherTourist = $this->createUserWithRole(Role::TOURIST);
+
+        Storage::disk('local')->put(
+            'documents/personal/admin-only.pdf',
+            'private-document'
+        );
+
+        $document = UserDocument::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Admin Only',
+            'document_type' => 'other',
+            'file_path' => 'documents/personal/admin-only.pdf',
+            'file_type' => 'pdf',
+            'file_size' => 16,
+        ]);
+
+        $this
+            ->actingAs($otherTourist)
+            ->get(
+                route(
+                    'cabinet.admin.user-document.download',
+                    [$owner, $document]
+                )
+            )
+            ->assertForbidden();
+    }
     public function test_personal_document_upload_rejects_unsupported_file_types(): void
     {
         Storage::fake('local');

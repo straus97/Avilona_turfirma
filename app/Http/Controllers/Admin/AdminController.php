@@ -17,8 +17,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -540,6 +542,45 @@ class AdminController extends Controller
         $roles = Role::all();
 
         return view('admin.user-show', compact('user', 'roles'));
+    }
+
+    /**
+     * Защищённая загрузка личного документа пользователя
+     */
+    public function downloadUserDocument(
+        User $user,
+        UserDocument $document
+    ): StreamedResponse {
+        if ($document->user_id !== $user->id) {
+            abort(404);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $this->documentDownloadName($document)
+        );
+    }
+
+    private function documentDownloadName(UserDocument $document): string
+    {
+        $downloadName = trim((string) $document->name) ?: 'document';
+        $downloadName = preg_replace('/[\/\\\\]+/', '-', $downloadName) ?: 'document';
+
+        $extension = strtolower((string) $document->file_type);
+
+        if ($extension !== '') {
+            $extension = '.' . ltrim($extension, '.');
+
+            if (!str_ends_with(strtolower($downloadName), $extension)) {
+                $downloadName .= $extension;
+            }
+        }
+
+        return $downloadName;
     }
 
     /**

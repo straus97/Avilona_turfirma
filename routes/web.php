@@ -95,6 +95,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::post('/users/{user}/assign-role', [\App\Http\Controllers\Admin\AdminController::class, 'assignRole'])->name('assign-role');
         Route::delete('/users/{user}/roles/{role}', [\App\Http\Controllers\Admin\AdminController::class, 'removeRole'])->name('remove-role');
         Route::post('/users/{user}/update-role', [\App\Http\Controllers\Admin\AdminController::class, 'updateUserRole'])->name('user-update-role');
+        Route::get('/users/{user}/documents/{document}/download', [\App\Http\Controllers\Admin\AdminController::class, 'downloadUserDocument'])->name('user-document.download');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'userShow'])->name('user-show');
         Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('delete-user');
         Route::get('/bookings', [\App\Http\Controllers\Admin\AdminController::class, 'bookings'])->name('bookings');
