@@ -404,6 +404,149 @@
                         </div>
                     @endauth
                 </div>
+
+                @auth
+                {{-- ========== Документы по заявке ========== --}}
+                @php
+                    $docTypeLabels = [
+                        'contract'     => 'Договор',
+                        'voucher'      => 'Ваучер',
+                        'tickets'      => 'Билеты',
+                        'insurance'    => 'Страховка',
+                        'instructions' => 'Инструкция',
+                        'other'        => 'Другое',
+                    ];
+                @endphp
+                <div class="card-custom mb-4">
+                    <div class="card-header-custom">
+                        <div class="card-title-custom">
+                            <i class="bi bi-file-earmark-text"></i> Документы по заявке
+                        </div>
+                    </div>
+
+                    @if($booking->bookingDocuments->isEmpty())
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-inbox"></i> Документы по этой заявке пока не загружены.
+                        </p>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Название</th>
+                                        <th>Тип</th>
+                                        <th>Размер</th>
+                                        <th>Дата загрузки</th>
+                                        @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                            <th>Загрузил</th>
+                                        @endif
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($booking->bookingDocuments as $document)
+                                        @php
+                                            $uploadDate = $document->uploaded_at ?? $document->created_at;
+                                            $sizeBytes  = (int)($document->file_size ?? 0);
+                                            if ($sizeBytes >= 1048576) {
+                                                $sizeLabel = number_format($sizeBytes / 1048576, 1) . ' МБ';
+                                            } elseif ($sizeBytes > 0) {
+                                                $sizeLabel = ceil($sizeBytes / 1024) . ' КБ';
+                                            } else {
+                                                $sizeLabel = '—';
+                                            }
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                {{ $document->title }}
+                                                @if($document->file_type)
+                                                    <span class="badge bg-secondary ms-1">{{ strtoupper($document->file_type) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $docTypeLabels[$document->document_type] ?? $document->document_type }}</td>
+                                            <td>{{ $sizeLabel }}</td>
+                                            <td>{{ $uploadDate ? $uploadDate->format('d.m.Y H:i') : '—' }}</td>
+                                            @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                                <td>{{ $document->uploadedBy?->name ?? 'Не указан' }}</td>
+                                            @endif
+                                            <td class="text-end text-nowrap">
+                                                @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                                    <a href="{{ route('bookings.documents.download', [$booking, $document]) }}"
+                                                       class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                    <form action="{{ route('bookings.documents.destroy', [$booking, $document]) }}"
+                                                          method="POST" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @elseif(auth()->user()->isTourist())
+                                                    <a href="{{ route('cabinet.documents.bookings.download', [$booking, $document]) }}"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                    @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                        <hr class="mt-3">
+                        <h6 class="mb-3">Загрузить документ</h6>
+                        <form action="{{ route('bookings.documents.store', $booking) }}"
+                              method="POST"
+                              enctype="multipart/form-data">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="doc_title" class="form-label">Название</label>
+                                <input type="text" name="title" id="doc_title"
+                                       class="form-control @error('title') is-invalid @enderror"
+                                       value="{{ old('title') }}"
+                                       placeholder="Введите название документа">
+                                @error('title')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="doc_type" class="form-label">Тип документа</label>
+                                <select name="document_type" id="doc_type"
+                                        class="form-select @error('document_type') is-invalid @enderror">
+                                    <option value="">— Выберите тип —</option>
+                                    <option value="contract"     {{ old('document_type') === 'contract'     ? 'selected' : '' }}>Договор</option>
+                                    <option value="voucher"      {{ old('document_type') === 'voucher'      ? 'selected' : '' }}>Ваучер</option>
+                                    <option value="tickets"      {{ old('document_type') === 'tickets'      ? 'selected' : '' }}>Билеты</option>
+                                    <option value="insurance"    {{ old('document_type') === 'insurance'    ? 'selected' : '' }}>Страховка</option>
+                                    <option value="instructions" {{ old('document_type') === 'instructions' ? 'selected' : '' }}>Инструкция</option>
+                                    <option value="other"        {{ old('document_type') === 'other'        ? 'selected' : '' }}>Другое</option>
+                                </select>
+                                @error('document_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="doc_file" class="form-label">Файл</label>
+                                <input type="file" name="file" id="doc_file"
+                                       class="form-control @error('file') is-invalid @enderror"
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <div class="form-text">Форматы: PDF, DOC, DOCX, JPG, JPEG, PNG. Максимальный размер: 10 МБ.</div>
+                                @error('file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Загрузить
+                            </button>
+                        </form>
+                    @endif
+                </div>
+                @endauth
             </div>
 
             <!-- Боковая панель -->

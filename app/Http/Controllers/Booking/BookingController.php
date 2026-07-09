@@ -185,7 +185,7 @@ class BookingController extends Controller
     {
         $this->authorizeBooking($booking);
         
-        $booking->load(['user', 'tour', 'manager', 'messages.sender', 'messages.receiver']);
+        $booking->load(['user', 'tour', 'manager', 'messages.sender', 'messages.receiver', 'bookingDocuments.uploadedBy']);
         
         return view('bookings.show', compact('booking'));
     }
