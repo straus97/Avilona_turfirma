@@ -7,11 +7,58 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Пути документов, которые нужно удалить после успешного удаления пользователя.
+     *
+     * @var array<int, string>
+     */
+    private array $documentPathsPendingDeletion = [];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user): void {
+            $personalDocumentPaths = $user
+                ->userDocuments()
+                ->pluck('file_path');
+
+            $bookingIds = Booking::withTrashed()
+                ->where('user_id', $user->id)
+                ->pluck('id');
+
+            $bookingDocumentPaths = BookingDocument::withTrashed()
+                ->whereIn('booking_id', $bookingIds)
+                ->pluck('file_path');
+
+            $user->documentPathsPendingDeletion = $personalDocumentPaths
+                ->merge($bookingDocumentPaths)
+                ->filter(
+                    fn ($path): bool =>
+                        is_string($path)
+                        && trim($path) !== ''
+                )
+                ->unique()
+                ->values()
+                ->all();
+        });
+
+        static::deleted(function (User $user): void {
+            foreach (
+                $user->documentPathsPendingDeletion
+                as $path
+            ) {
+                Storage::disk('local')->delete($path);
+            }
+
+            $user->documentPathsPendingDeletion = [];
+        });
+    }
 
     // Константы для ролей
     const ROLE_ADMIN = 'admin';
