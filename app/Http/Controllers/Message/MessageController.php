@@ -8,6 +8,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class MessageController extends Controller
 {
@@ -61,9 +62,24 @@ class MessageController extends Controller
 
         $booking = Booking::findOrFail($validated['booking_id']);
         $this->authorizeBooking($booking);
-        
+
+        // Validate that receiver_id is an actual booking participant (not the sender)
+        $senderId = (int) Auth::id();
+        $participants = [(int) $booking->user_id];
+        if ($booking->manager_id !== null) {
+            $participants[] = (int) $booking->manager_id;
+        }
+        $allowedReceiverIds = array_values(
+            array_filter($participants, fn (int $id): bool => $id !== $senderId)
+        );
+        if (! in_array((int) $validated['receiver_id'], $allowedReceiverIds, true)) {
+            throw ValidationException::withMessages([
+                'receiver_id' => ['The selected receiver is not a participant in this booking.'],
+            ]);
+        }
+
         $validated['sender_id'] = Auth::id();
-        
+
         // Загрузка файла
         if ($request->hasFile('attachment')) {
             $path = $request->file('attachment')->store('messages', 'public');
