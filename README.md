@@ -1,66 +1,93 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Avilona_turfirma
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Веб-сайт и внутренняя система бронирования туристического агентства «Авилона».
+Приложение построено на Laravel 10 и обслуживает три основные роли: **турист**, **менеджер**, **администратор**.
 
-## About Laravel
+## Текущее состояние
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Последний функциональный checkpoint перед текущим documentation-only slice:
+  `570291de` — `feat: add booking document management UI`
+- На момент начала documentation-only slice этот checkpoint был синхронизирован с origin/db-rebuild-stage3.
+- Канонический статус: реализован и протестирован базовый функциональный слой (этапы 0–3 завершены)
+- Продуктовая готовность: не подтверждена в целом — применяйте только как характеристику отдельных функций
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Основные возможности
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Подтверждённые реализованные области:
 
-## Learning Laravel
+- Аутентификация и роли (admin / manager / tourist)
+- Подписанная верификация email
+- Бронирования: создание, просмотр, привязка к менеджеру
+- Назначение менеджера администратором
+- Сообщения / базовый чат между туристом и менеджером
+- Личные документы в приватном хранилище с защитой по роли
+- Документы бронирования (BookingDocument) в приватном хранилище
+- Защищённые пути скачивания с проверкой владельца и роли
+- UI управления BookingDocument для менеджера и администратора
+- Доступ туриста к документам бронирования (только чтение, через отдельный маршрут)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Технологический стек
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| Слой | Технология |
+|---|---|
+| PHP | 8.3.32 |
+| Фреймворк | Laravel 10.48.10 |
+| Зависимости PHP | Composer 2.8.3 |
+| Node.js | 22.11.0 |
+| npm | 11.12.1 |
+| Сборка фронтенда | Vite 4.x |
+| UI-слой | Blade + Bootstrap 5 (основной) |
+| База данных | MySQL, канонический экземпляр `turfirma_rebuild_v4` |
+| Тесты | PHPUnit 10, SQLite `:memory:` |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+> TailwindCSS и Alpine.js присутствуют в `package.json`, но их фактическое использование в текущем коде нужно проверять в каждом новом слое.
 
-## Laravel Sponsors
+## Локальная разработка
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```bash
+composer install
+npm ci
+```
 
-### Premium Partners
+Создайте и настройте локальный `.env` в соответствии с параметрами текущего окружения.
+**Не вставляйте в `.env` данные продакшн-сервера и не публикуйте этот файл.**
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+npm run dev        # режим разработки с HMR
+# или
+npm run build      # сборка для продакшн
+```
 
-## Contributing
+> **Важно:** не запускайте команды записи в базу данных (миграции, импорты, сидеры) без отдельного проверенного плана. Канонические данные `turfirma_rebuild_v4` уже в полностью согласованном состоянии (52 миграции, 0 ожидающих).
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Безопасность данных
 
-## Code of Conduct
+- Не публикуйте `.env`, SQL-дампы, токены, куки и личные документы пользователей.
+- Приватные файлы хранятся вне `public/` и отдаются только через авторизованные маршруты.
+- Не добавляйте `vendor/` и `node_modules/` в репозиторий.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Тестирование
 
-## Security Vulnerabilities
+PHPUnit использует SQLite `:memory:` — **не должен** подключаться к MySQL и к канонической базе `turfirma_rebuild_v4`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Текущий baseline: **67 тестов, 226 утверждений**.
 
-## License
+```bash
+php artisan test --no-ansi
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Известное предупреждение: устаревшая XML-схема в `phpunit.xml` — не является новой ошибкой, исправляется в отдельном слое.
+
+## Документация
+
+- [docs/README.md](docs/README.md) — индекс документации и руководство по источникам истины
+- [docs/roadmap.md](docs/roadmap.md) — дорожная карта проекта
+
+Файлы в папке `docs/` могут содержать устаревшие утверждения о статусе задач, дедлайнах и командах.
+Актуальное состояние определяет `docs/README.md`.
+
+## Текущий приоритет
+
+Этап 4 (текущий): актуализация README и roadmap.
+Следующий функциональный слой: read-only аудит полного жизненного цикла заявки.
