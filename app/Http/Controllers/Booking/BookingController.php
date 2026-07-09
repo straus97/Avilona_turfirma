@@ -11,6 +11,7 @@ use App\Models\DestinationCity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -206,28 +207,40 @@ class BookingController extends Controller
     public function update(Request $request, Booking $booking)
     {
         $this->authorize('update', $booking);
-        
+
         $user = Auth::user();
-        
+
+        $allowedStatuses = $booking->allowedStatusesForUpdate();
+
         // Валидация зависит от роли
         $rules = [
-            'status' => 'required|in:' . implode(',', array_keys(Booking::availableStatuses())),
+            'status' => ['required', Rule::in($allowedStatuses)],
         ];
-        
+
         if ($user->isManager() || $user->isAdmin()) {
             $rules['manager_notes'] = 'nullable|string';
             $rules['total_price'] = 'nullable|numeric|min:0';
         }
-        
+
         if ($user->isTourist() && $booking->status === Booking::STATUS_NEW) {
             $rules['notes'] = 'nullable|string';
             $rules['tourists_data'] = 'nullable|array';
         }
-        
+
         $validated = $request->validate($rules);
-        
-        $booking->update($validated);
-        
+
+        $newStatus = $validated['status'];
+        unset($validated['status']);
+
+        if ($newStatus !== $booking->status) {
+            // Real transition: validate and fire event via the model method.
+            $booking->transitionTo($newStatus);
+        }
+
+        if (!empty($validated)) {
+            $booking->update($validated);
+        }
+
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка обновлена');
     }
@@ -266,9 +279,13 @@ class BookingController extends Controller
     public function cancel(Booking $booking)
     {
         $this->authorize('cancel', $booking);
-        
-        $booking->cancel();
-        
+
+        if (!$booking->canTransitionTo(Booking::STATUS_CANCELLED)) {
+            return back()->withErrors(['status' => 'Невозможно отменить заявку в текущем статусе.']);
+        }
+
+        $booking->transitionTo(Booking::STATUS_CANCELLED);
+
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка отменена');
     }
@@ -279,9 +296,13 @@ class BookingController extends Controller
     public function confirm(Booking $booking)
     {
         $this->authorize('confirm', $booking);
-        
-        $booking->confirm();
-        
+
+        if (!$booking->canTransitionTo(Booking::STATUS_CONFIRMED)) {
+            return back()->withErrors(['status' => 'Нельзя подтвердить заявку в текущем статусе.']);
+        }
+
+        $booking->transitionTo(Booking::STATUS_CONFIRMED);
+
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка подтверждена');
     }
@@ -292,9 +313,13 @@ class BookingController extends Controller
     public function complete(Booking $booking)
     {
         $this->authorize('complete', $booking);
-        
-        $booking->complete();
-        
+
+        if (!$booking->canTransitionTo(Booking::STATUS_COMPLETED)) {
+            return back()->withErrors(['status' => 'Нельзя завершить заявку в текущем статусе.']);
+        }
+
+        $booking->transitionTo(Booking::STATUS_COMPLETED);
+
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка завершена');
     }

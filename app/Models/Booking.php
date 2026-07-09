@@ -170,6 +170,106 @@ class Booking extends Model
         };
     }
 
+    // -----------------------------------------------------------------------
+    // Transition matrix
+    // -----------------------------------------------------------------------
+
+    /**
+     * Authoritative status transition map.
+     * key   = current status
+     * value = list of reachable target statuses
+     */
+    public static function transitionMap(): array
+    {
+        return [
+            self::STATUS_NEW       => [self::STATUS_PROGRESS, self::STATUS_CANCELLED],
+            self::STATUS_PROGRESS  => [self::STATUS_CONFIRMED, self::STATUS_CANCELLED],
+            self::STATUS_CONFIRMED => [self::STATUS_COMPLETED, self::STATUS_CANCELLED],
+            self::STATUS_CANCELLED => [],
+            self::STATUS_COMPLETED => [],
+        ];
+    }
+
+    /**
+     * Whether this booking can transition to the given status.
+     * Checks the transition matrix plus the PROGRESS invariant
+     * (manager_id must be set before moving into PROGRESS).
+     */
+    public function canTransitionTo(string $targetStatus): bool
+    {
+        // Same status is never a real transition.
+        if ($targetStatus === $this->status) {
+            return false;
+        }
+
+        $allowed = self::transitionMap()[$this->status] ?? [];
+
+        if (!in_array($targetStatus, $allowed, true)) {
+            return false;
+        }
+
+        // PROGRESS requires an assigned manager.
+        if ($targetStatus === self::STATUS_PROGRESS && !$this->manager_id) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Status values that may be submitted via the generic update endpoint:
+     * the current status (no-op) plus every reachable transition.
+     *
+     * @return string[]
+     */
+    public function allowedStatusesForUpdate(): array
+    {
+        $transitions = array_filter(
+            self::transitionMap()[$this->status] ?? [],
+            fn (string $s): bool => $this->canTransitionTo($s)
+        );
+
+        return array_values(array_unique(array_merge([$this->status], $transitions)));
+    }
+
+    /**
+     * Perform a validated status transition.
+     *
+     * Dispatches BookingStatusChanged after a successful change.
+     * For cancellation, restores tour seats before firing the event.
+     *
+     * Side-effect order for a successful transition:
+     *   1. validate transition;
+     *   2. capture old status;
+     *   3. update booking status;
+     *   4. if target is CANCELLED and tour is set, restore seats;
+     *   5. dispatch BookingStatusChanged.
+     *
+     * @throws \DomainException when the transition is not allowed.
+     */
+    public function transitionTo(string $targetStatus): void
+    {
+        if (!$this->canTransitionTo($targetStatus)) {
+            throw new \DomainException(
+                "Invalid booking status transition from '{$this->status}' to '{$targetStatus}'."
+            );
+        }
+
+        $oldStatus = $this->status;
+
+        $this->update(['status' => $targetStatus]);
+
+        if ($targetStatus === self::STATUS_CANCELLED && $this->tour) {
+            $this->tour->increaseAvailableSeats($this->total_tourists);
+        }
+
+        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+    }
+
+    // -----------------------------------------------------------------------
+    // Методы
+    // -----------------------------------------------------------------------
+
     /**
      * Методы
      */
@@ -197,33 +297,16 @@ class Booking extends Model
 
     public function confirm(): void
     {
-        $oldStatus = $this->status;
-        $this->update(['status' => self::STATUS_CONFIRMED]);
-        
-        // Отправляем событие об изменении статуса
-        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+        $this->transitionTo(self::STATUS_CONFIRMED);
     }
 
     public function cancel(): void
     {
-        $oldStatus = $this->status;
-        $this->update(['status' => self::STATUS_CANCELLED]);
-        
-        // Возвращаем места в тур
-        if ($this->tour) {
-            $this->tour->increaseAvailableSeats($this->total_tourists);
-        }
-        
-        // Отправляем событие об изменении статуса
-        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+        $this->transitionTo(self::STATUS_CANCELLED);
     }
 
     public function complete(): void
     {
-        $oldStatus = $this->status;
-        $this->update(['status' => self::STATUS_COMPLETED]);
-        
-        // Отправляем событие об изменении статуса
-        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+        $this->transitionTo(self::STATUS_COMPLETED);
     }
 }
