@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ManagerController extends Controller
 {
@@ -431,22 +432,84 @@ class ManagerController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'document_type' => 'nullable|in:passport,foreign_passport,visa,birth_certificate,other',
-            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip,rar|max:10240',
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ]);
 
-        $file = $request->file('file');
-        $path = $file->store('documents/personal', 'public');
+        $path = null;
 
-        UserDocument::create([
-            'user_id' => Auth::id(),
-            'name' => $validated['name'],
-            'document_type' => $validated['document_type'] ?? 'other',
-            'file_path' => $path,
-            'file_type' => $file->getClientOriginalExtension(),
-            'file_size' => $file->getSize(),
-        ]);
+        try {
+            $file = $request->file('file');
 
-        return redirect()->route('cabinet.manager.documents')->with('status', 'Документ загружен.');
+            if (!$file || !$file->isValid()) {
+                return redirect()->route('cabinet.manager.documents')
+                    ->with('error', 'Ошибка загрузки файла. Попробуйте еще раз.');
+            }
+
+            $path = $file->store('documents/personal', 'local');
+
+            if (!$path) {
+                return redirect()->route('cabinet.manager.documents')
+                    ->with('error', 'Не удалось сохранить файл.');
+            }
+
+            UserDocument::create([
+                'user_id' => Auth::id(),
+                'name' => $validated['name'],
+                'document_type' => $validated['document_type'] ?? 'other',
+                'file_path' => $path,
+                'file_type' => $file->getClientOriginalExtension(),
+                'file_size' => $file->getSize(),
+            ]);
+
+            return redirect()->route('cabinet.manager.documents')
+                ->with('status', 'Документ загружен.');
+        } catch (\Throwable $e) {
+            if ($path) {
+                Storage::disk('local')->delete($path);
+            }
+
+            \Log::error('Ошибка загрузки документа менеджера: ' . $e->getMessage());
+
+            return redirect()->route('cabinet.manager.documents')
+                ->with('error', 'Ошибка загрузки документа. Попробуйте еще раз.');
+        }
+    }
+
+    /**
+     * Защищённая загрузка документа менеджера
+     */
+    public function downloadDocument(UserDocument $document): StreamedResponse
+    {
+        if ($document->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $this->documentDownloadName($document)
+        );
+    }
+
+    private function documentDownloadName(UserDocument $document): string
+    {
+        $downloadName = trim((string) $document->name) ?: 'document';
+        $downloadName = preg_replace('/[\/\\\\]+/', '-', $downloadName) ?: 'document';
+
+        $extension = strtolower((string) $document->file_type);
+
+        if ($extension !== '') {
+            $extension = '.' . ltrim($extension, '.');
+
+            if (!str_ends_with(strtolower($downloadName), $extension)) {
+                $downloadName .= $extension;
+            }
+        }
+
+        return $downloadName;
     }
 
     /**
@@ -458,7 +521,7 @@ class ManagerController extends Controller
             abort(403);
         }
 
-        Storage::disk('public')->delete($document->file_path);
+        Storage::disk('local')->delete($document->file_path);
         $document->delete();
 
         return redirect()->route('cabinet.manager.documents')->with('status', 'Документ удален.');
@@ -478,7 +541,7 @@ class ManagerController extends Controller
         Booking::where('manager_id', $user->id)->update(['manager_id' => null]);
         $documents = UserDocument::where('user_id', $user->id)->get();
         foreach ($documents as $document) {
-            Storage::disk('public')->delete($document->file_path);
+            Storage::disk('local')->delete($document->file_path);
             $document->delete();
         }
 

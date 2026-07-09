@@ -88,10 +88,10 @@
                             <td>{{ $document->created_at->format('d.m.Y') }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ Storage::url($document->file_path) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-primary" target="_blank">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ Storage::url($document->file_path) }}" class="btn btn-sm btn-outline-secondary" download>
+                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-secondary" download>
                                         <i class="bi bi-download"></i>
                                     </a>
                                     <form method="POST" action="{{ route('cabinet.manager.documents.delete', $document) }}">

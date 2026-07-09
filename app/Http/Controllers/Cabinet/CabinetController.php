@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CabinetController extends Controller
 {
@@ -447,24 +448,26 @@ class CabinetController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'document_type' => 'nullable|in:passport,foreign_passport,visa,birth_certificate,other',
-            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip,rar|max:10240', // 10MB
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB
         ]);
-        
+
+        $path = null;
+
         try {
             $file = $request->file('file');
-            
+
             if (!$file || !$file->isValid()) {
                 return redirect()->route('cabinet.documents.personal')
                     ->with('error', 'Ошибка загрузки файла. Попробуйте еще раз.');
             }
-            
-            $path = $file->store('documents/personal', 'public');
-            
+
+            $path = $file->store('documents/personal', 'local');
+
             if (!$path) {
                 return redirect()->route('cabinet.documents.personal')
-                    ->with('error', 'Не удалось сохранить файл. Проверьте права доступа к storage.');
+                    ->with('error', 'Не удалось сохранить файл.');
             }
-            
+
             UserDocument::create([
                 'user_id' => Auth::id(),
                 'name' => $validated['name'],
@@ -473,14 +476,60 @@ class CabinetController extends Controller
                 'file_type' => $file->getClientOriginalExtension(),
                 'file_size' => $file->getSize(),
             ]);
-            
+
             return redirect()->route('cabinet.documents.personal')
                 ->with('status', 'Документ успешно загружен!');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            if ($path) {
+                Storage::disk('local')->delete($path);
+            }
+
             \Log::error('Ошибка загрузки документа: ' . $e->getMessage());
+
             return redirect()->route('cabinet.documents.personal')
-                ->with('error', 'Ошибка загрузки: ' . $e->getMessage());
+                ->with('error', 'Ошибка загрузки документа. Попробуйте еще раз.');
         }
+    }
+
+    /**
+     * Защищённая загрузка личного документа
+     */
+    public function downloadPersonalDocument(UserDocument $document): StreamedResponse|RedirectResponse
+    {
+        if ($redirect = $this->redirectIfNotTourist()) {
+            return $redirect;
+        }
+
+        if ($document->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            $document->file_path,
+            $this->documentDownloadName($document)
+        );
+    }
+
+    private function documentDownloadName(UserDocument $document): string
+    {
+        $downloadName = trim((string) $document->name) ?: 'document';
+        $downloadName = preg_replace('/[\/\\\\]+/', '-', $downloadName) ?: 'document';
+
+        $extension = strtolower((string) $document->file_type);
+
+        if ($extension !== '') {
+            $extension = '.' . ltrim($extension, '.');
+
+            if (!str_ends_with(strtolower($downloadName), $extension)) {
+                $downloadName .= $extension;
+            }
+        }
+
+        return $downloadName;
     }
     
     /**
@@ -498,7 +547,7 @@ class CabinetController extends Controller
         }
         
         // Удаление файла
-        Storage::disk('public')->delete($document->file_path);
+        Storage::disk('local')->delete($document->file_path);
         
         // Удаление записи
         $document->delete();

@@ -77,10 +77,10 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mt-3">
-                        <a href="{{ Storage::disk('public')->url($document->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
+                        <a href="{{ route('cabinet.documents.personal.download', $document) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-fill">
                             <i class="bi bi-eye"></i> Просмотр
                         </a>
-                        <a href="{{ Storage::disk('public')->url($document->file_path) }}" download class="btn btn-sm btn-outline-secondary flex-fill">
+                        <a href="{{ route('cabinet.documents.personal.download', $document) }}" download class="btn btn-sm btn-outline-secondary flex-fill">
                             <i class="bi bi-download"></i> Скачать
                         </a>
                         <form action="{{ route('cabinet.documents.personal.delete', $document->id) }}" method="POST" onsubmit="return confirm('Удалить документ?');">

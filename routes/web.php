@@ -48,6 +48,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         
         // Документы
         Route::post('/documents/personal/upload', [\App\Http\Controllers\Cabinet\CabinetController::class, 'uploadPersonalDocument'])->name('documents.personal.upload');
+        Route::get('/documents/personal/{document}/download', [\App\Http\Controllers\Cabinet\CabinetController::class, 'downloadPersonalDocument'])->name('documents.personal.download');
         Route::delete('/documents/personal/{document}', [\App\Http\Controllers\Cabinet\CabinetController::class, 'deletePersonalDocument'])->name('documents.personal.delete');
     });
     
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::delete('/settings/account', [\App\Http\Controllers\Manager\ManagerController::class, 'destroyAccount'])->name('destroy-account');
         Route::get('/documents', [\App\Http\Controllers\Manager\ManagerController::class, 'documents'])->name('documents');
         Route::post('/documents/upload', [\App\Http\Controllers\Manager\ManagerController::class, 'uploadDocument'])->name('documents.upload');
+        Route::get('/documents/{document}/download', [\App\Http\Controllers\Manager\ManagerController::class, 'downloadDocument'])->name('documents.download');
         Route::delete('/documents/{document}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteDocument'])->name('documents.delete');
         Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'finance'])->name('finance');
         Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'knowledge'])->name('knowledge');
