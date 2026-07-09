@@ -183,7 +183,7 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
-        $this->authorizeBooking($booking);
+        $this->authorize('view', $booking);
         
         $booking->load(['user', 'tour', 'manager', 'messages.sender', 'messages.receiver', 'bookingDocuments.uploadedBy']);
         
@@ -195,7 +195,7 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        $this->authorizeBooking($booking);
+        $this->authorize('update', $booking);
         
         return view('bookings.edit', compact('booking'));
     }
@@ -205,7 +205,7 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        $this->authorizeBooking($booking);
+        $this->authorize('update', $booking);
         
         $user = Auth::user();
         
@@ -237,13 +237,18 @@ class BookingController extends Controller
      */
     public function assignManager(Request $request, Booking $booking)
     {
-        if (!Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('assignManager', $booking);
         
         $request->validate([
             'manager_id' => 'required|exists:users,id',
         ]);
+
+        $managerUser = User::findOrFail($request->manager_id);
+        if (!$managerUser->hasRole('manager')) {
+            return back()->withErrors([
+                'manager_id' => 'Выбранный пользователь не является менеджером.',
+            ])->withInput();
+        }
         
         if ($booking->status === Booking::STATUS_NEW) {
             $booking->assignManager($request->manager_id);
@@ -260,7 +265,7 @@ class BookingController extends Controller
      */
     public function cancel(Booking $booking)
     {
-        $this->authorizeBooking($booking);
+        $this->authorize('cancel', $booking);
         
         $booking->cancel();
         
@@ -273,11 +278,7 @@ class BookingController extends Controller
      */
     public function confirm(Booking $booking)
     {
-        $user = Auth::user();
-        
-        if (!$user->isManager() && !$user->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('confirm', $booking);
         
         $booking->confirm();
         
@@ -290,11 +291,7 @@ class BookingController extends Controller
      */
     public function complete(Booking $booking)
     {
-        $user = Auth::user();
-        
-        if (!$user->isManager() && !$user->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('complete', $booking);
         
         $booking->complete();
         
@@ -307,13 +304,11 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking)
     {
-        if (!Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $this->authorize('delete', $booking);
         
         $booking->delete();
         
-        return redirect()->route('bookings.index')
+        return redirect()->route('cabinet.admin.bookings')
             ->with('success', 'Заявка удалена');
     }
 
