@@ -53,6 +53,11 @@
                             @method('PUT')
 
                             <!-- Статус -->
+                            @php
+                                $allowedStatuses = $booking->allowedStatusesForUpdate();
+                                $allStatusLabels = \App\Models\Booking::availableStatuses();
+                                $selectedStatus = in_array(old('status'), $allowedStatuses) ? old('status') : $booking->status;
+                            @endphp
                             <div class="mb-3">
                                 <label for="status" class="form-label">
                                     Статус заявки <span class="text-danger">*</span>
@@ -60,21 +65,17 @@
                                 <select class="form-select @error('status') is-invalid @enderror" 
                                         id="status" 
                                         name="status" 
-                                        required
-                                        @if(auth()->user()->isTourist() && $booking->status !== \App\Models\Booking::STATUS_NEW) disabled @endif>
-                                    @foreach(\App\Models\Booking::availableStatuses() as $statusKey => $statusLabel)
+                                        required>
+                                    @foreach($allowedStatuses as $statusKey)
                                         <option value="{{ $statusKey }}" 
-                                                {{ old('status', $booking->status) === $statusKey ? 'selected' : '' }}>
-                                            {{ $statusLabel }}
+                                                {{ $selectedStatus === $statusKey ? 'selected' : '' }}>
+                                            {{ $allStatusLabels[$statusKey] ?? $statusKey }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                @if(auth()->user()->isTourist() && $booking->status !== \App\Models\Booking::STATUS_NEW)
-                                    <small class="text-muted">Статус нельзя изменить после начала обработки заявки</small>
-                                @endif
                             </div>
 
                             <!-- Для менеджера и админа -->

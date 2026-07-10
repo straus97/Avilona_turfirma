@@ -65,6 +65,12 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
+                        @if($errors->has('status'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ $errors->first('status') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
 
                         <!-- Направление -->
                         <div class="mb-4">
@@ -253,19 +259,21 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <!-- Кнопки для туриста -->
                                 @if(auth()->user()->isTourist())
-                                    @can('cancel', $booking)
-                                        <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-danger">
-                                                <i class="bi bi-x-circle"></i> Отменить заявку
-                                            </button>
-                                        </form>
-                                    @endcan
+                                    @if($booking->canTransitionTo(\App\Models\Booking::STATUS_CANCELLED))
+                                        @can('cancel', $booking)
+                                            <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-x-circle"></i> Отменить заявку
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    @endif
                                     @if($booking->status === App\Models\Booking::STATUS_NEW && !$booking->manager_id)
                                         <small class="text-muted align-self-center">
                                             <i class="bi bi-info-circle"></i> Вы можете отменить заявку до назначения менеджера
                                         </small>
-                                    @elseif($booking->manager_id)
+                                    @elseif($booking->manager_id && in_array($booking->status, [App\Models\Booking::STATUS_PROGRESS, App\Models\Booking::STATUS_CONFIRMED]))
                                         <small class="text-muted align-self-center">
                                             <i class="bi bi-info-circle"></i> Заявка взята в работу менеджером. Для отмены свяжитесь с менеджером.
                                         </small>
@@ -282,25 +290,27 @@
                                         <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">
                                             <i class="bi bi-pencil"></i> Редактировать
                                         </a>
+                                    @endif
 
-                                        @if($booking->status === App\Models\Booking::STATUS_PROGRESS)
-                                            <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-success">
-                                                    <i class="bi bi-check-circle"></i> Подтвердить
-                                                </button>
-                                            </form>
-                                        @endif
+                                    @if($booking->canTransitionTo(\App\Models\Booking::STATUS_CONFIRMED))
+                                        <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-check-circle"></i> Подтвердить
+                                            </button>
+                                        </form>
+                                    @endif
 
-                                        @if($booking->status === App\Models\Booking::STATUS_CONFIRMED)
-                                            <form action="{{ route('bookings.complete', $booking) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="bi bi-check-all"></i> Завершить
-                                                </button>
-                                            </form>
-                                        @endif
+                                    @if($booking->canTransitionTo(\App\Models\Booking::STATUS_COMPLETED))
+                                        <form action="{{ route('bookings.complete', $booking) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-all"></i> Завершить
+                                            </button>
+                                        </form>
+                                    @endif
 
+                                    @if($booking->canTransitionTo(\App\Models\Booking::STATUS_CANCELLED))
                                         <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
                                             @csrf
                                             <button type="submit" class="btn btn-danger">
