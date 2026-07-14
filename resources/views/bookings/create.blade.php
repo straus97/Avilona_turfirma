@@ -569,31 +569,39 @@ document.addEventListener('DOMContentLoaded', function() {
             clientEmailInput
         });
 
-        // Обработчик изменения чекбокса
-        isNewClientCheckbox.addEventListener('change', function() {
-            console.log('Checkbox changed:', this.checked);
-            if (this.checked) {
+        // Синхронизация режима клиента. clearValues=false при первичной загрузке,
+        // иначе значения old() затирались бы после ошибки валидации.
+        function syncClientMode(clearValues) {
+            if (isNewClientCheckbox.checked) {
                 existingClientBlock.style.display = 'none';
                 newClientBlock.style.display = 'block';
                 clientIdSelect.removeAttribute('required');
-                clientIdSelect.value = '';
                 clientNameInput.setAttribute('required', 'required');
+
+                if (clearValues) {
+                    clientIdSelect.value = '';
+                }
             } else {
                 existingClientBlock.style.display = 'block';
                 newClientBlock.style.display = 'none';
                 clientIdSelect.setAttribute('required', 'required');
                 clientNameInput.removeAttribute('required');
-                clientNameInput.value = '';
-                if (clientEmailInput) {
-                    clientEmailInput.value = '';
+
+                if (clearValues) {
+                    clientNameInput.value = '';
+                    if (clientEmailInput) {
+                        clientEmailInput.value = '';
+                    }
                 }
             }
+        }
+
+        isNewClientCheckbox.addEventListener('change', function() {
+            syncClientMode(true);
         });
 
-        // Триггерим событие при загрузке, если чекбокс был отмечен (после ошибки валидации)
-        if (isNewClientCheckbox.checked) {
-            isNewClientCheckbox.dispatchEvent(new Event('change'));
-        }
+        // Первичная синхронизация выполняется всегда, в обоих режимах.
+        syncClientMode(false);
 
         console.log('Event listener attached successfully');
     } else {

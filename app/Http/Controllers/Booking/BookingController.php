@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Booking;
 
 use App\Http\Controllers\Controller;
+use App\Events\BookingCreated;
 use App\Models\Booking;
 use App\Models\BookingDocument;
+use App\Models\Role;
 use App\Models\Tour;
 use App\Models\User;
 use App\Models\DestinationCity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -70,12 +74,10 @@ class BookingController extends Controller
         // Получаем список клиентов (только для менеджеров и админов)
         $clients = collect();
         if (Auth::user()->hasAnyRole(['manager', 'admin'])) {
-            $clients = User::whereHas('roles', function($query) {
-                $query->where('name', 'tourist');
-            })
-            ->select('id', 'name', 'email')
-            ->orderBy('name')
-            ->get();
+            $clients = $this->touristClientQuery()
+                ->select('id', 'name', 'email')
+                ->orderBy('name')
+                ->get();
         }
         
         return view('bookings.create', compact('tour', 'departureCities', 'destinationCountries', 'clients'));
@@ -83,13 +85,27 @@ class BookingController extends Controller
 
     /**
      * Сохранение заявки
+     *
+     * Владелец заявки, назначенный менеджер и начальный статус выводятся только
+     * из аутентифицированного пользователя, а не из данных запроса.
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        
-        // Базовая валидация
-        $validated = $request->validate([
+        $actor = Auth::user();
+
+        // Роль определяется на сервере. Маршрут защищён только auth,
+        // поэтому пользователь без известной роли не может создать заявку.
+        $isAdmin   = $actor->isAdmin();
+        $isManager = !$isAdmin && $actor->isManager();
+        $isTourist = !$isAdmin && !$isManager && $actor->isTourist();
+
+        if (!$isAdmin && !$isManager && !$isTourist) {
+            abort(403, 'У вас нет прав на создание заявки');
+        }
+
+        $isStaff = $isAdmin || $isManager;
+
+        $rules = [
             'tour_id' => 'nullable|exists:tours,id',
             'departure_city' => 'required|string|max:255',
             'destination_country' => 'required|string|max:255',
@@ -104,79 +120,173 @@ class BookingController extends Controller
             'children_ages.*' => 'nullable|integer|min:0|max:17',
             'tourists_data' => 'nullable|array',
             'notes' => 'nullable|string',
-            'is_new_client' => 'nullable|boolean',
-            'client_id' => 'nullable|exists:users,id',
-            'client_name' => 'nullable|string|max:255',
-            'client_email' => 'nullable|email|max:255',
-        ]);
+        ];
 
-        // Определяем user_id для заявки
-        if ($user->hasAnyRole(['manager', 'admin'])) {
-            // Если менеджер/админ создает заявку
-            if ($request->is_new_client) {
-                // Проверяем, существует ли email в базе
-                $existingUser = User::where('email', $request->client_email)->first();
-                if ($existingUser) {
-                    return back()->withErrors([
-                        'client_email' => 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.'
-                    ])->withInput();
-                }
-                
-                // Генерируем читаемый временный пароль
-                $tempPassword = 'AV' . rand(1000, 9999) . strtoupper(substr(md5(time()), 0, 4));
-                
-                // Создаем нового пользователя-туриста
-                $newTourist = User::create([
-                    'name' => $request->client_name,
-                    'email' => $request->client_email ?? 'temp_' . time() . '@avilona.ru',
-                    'password' => bcrypt($tempPassword),
-                    'password_change_required' => true,
-                    'temp_password' => $tempPassword, // Сохраняем временный пароль в БД
-                    'email_verified_at' => null,
-                ]);
-                
-                // Назначаем роль "tourist"
-                $touristRole = \App\Models\Role::where('name', 'tourist')->first();
-                if ($touristRole) {
-                    $newTourist->roles()->attach($touristRole->id);
-                }
-                
-                // Привязываем заявку к новому туристу
-                $validated['user_id'] = $newTourist->id;
-                
-                // Добавляем пометку в notes
-                $validated['notes'] = ($validated['notes'] ?? '') . "\n\n⚠️ Клиент создан автоматически. Отправлены данные для входа на email: {$request->client_email}";
-            } else {
-                // Выбран существующий клиент
-                $validated['user_id'] = $request->client_id;
-            }
-        } else {
-            // Турист создает заявку для себя
-            $validated['user_id'] = $user->id;
+        if ($isStaff) {
+            $rules['is_new_client'] = 'nullable|boolean';
         }
 
-        $validated['status'] = Booking::STATUS_NEW;
+        $validated = $request->validate($rules);
+
+        // Данные клиента валидируются только для менеджера/админа и только
+        // в том режиме, который подтверждён валидированным is_new_client.
+        $isNewClient = $isStaff && (bool) ($validated['is_new_client'] ?? false);
+        $clientData  = [];
+
+        if ($isStaff && $isNewClient) {
+            $clientData = $request->validate([
+                'client_name'  => 'required|string|max:255',
+                'client_email' => 'nullable|email|max:255|unique:users,email',
+            ], [
+                'client_email.unique' => 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.',
+            ]);
+        } elseif ($isStaff) {
+            $clientData = $request->validate([
+                'client_id' => [
+                    'required',
+                    'integer',
+                    function (string $attribute, $value, \Closure $fail): void {
+                        if (!$this->touristClientQuery()->whereKey($value)->exists()) {
+                            $fail('Выберите клиента из списка активных туристов.');
+                        }
+                    },
+                ],
+            ]);
+        }
+
+        // Поля клиента никогда не попадают в заявку напрямую.
+        unset($validated['is_new_client']);
+
+        $validated['manager_id'] = $isManager ? $actor->id : null;
+        $validated['status']     = $isManager ? Booking::STATUS_PROGRESS : Booking::STATUS_NEW;
 
         // Если указан тур, берем цену из него
-        if ($request->tour_id) {
-            $tour = Tour::find($request->tour_id);
+        if (!empty($validated['tour_id'])) {
+            $tour = Tour::find($validated['tour_id']);
             if ($tour) {
                 $validated['total_price'] = $tour->price * ($validated['adults'] + ($validated['children'] ?? 0));
             }
         }
 
-        $booking = Booking::create($validated);
+        try {
+            $booking = DB::transaction(function () use ($actor, $validated, $clientData, $isTourist, $isNewClient): Booking {
+                $data = $validated;
 
-        // Автоматически добавляем курорт/город в БД если его нет
-        if (!empty($validated['destination_country']) && !empty($validated['destination_city'])) {
-            DestinationCity::addCityIfNotExists(
-                $validated['destination_country'],
-                $validated['destination_city']
-            );
+                if ($isTourist) {
+                    $data['user_id'] = $actor->id;
+                } elseif ($isNewClient) {
+                    $clientEmail = $clientData['client_email'] ?? null;
+
+                    $newTourist = $this->createTouristClient($clientData['client_name'], $clientEmail);
+
+                    $data['user_id'] = $newTourist->id;
+                    $data['notes']   = $this->appendNewClientNote($data['notes'] ?? null, $clientEmail);
+                } else {
+                    // Владелец перечитывается по тому же ограничению активного туриста.
+                    $owner = $this->touristClientQuery()
+                        ->lockForUpdate()
+                        ->findOrFail($clientData['client_id']);
+
+                    $data['user_id'] = $owner->id;
+                }
+
+                // Событие BookingCreated отправляется только после коммита.
+                $booking = Booking::withoutEvents(fn (): Booking => Booking::create($data));
+
+                if (!empty($data['destination_country']) && !empty($data['destination_city'])) {
+                    DestinationCity::addCityIfNotExists(
+                        $data['destination_country'],
+                        $data['destination_city']
+                    );
+                }
+
+                return $booking;
+            });
+        } catch (\Throwable $e) {
+            Log::error('Booking creation failed', [
+                'actor_id'  => $actor->id,
+                'exception' => get_class($e),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['booking' => 'Не удалось создать заявку. Попробуйте ещё раз.']);
+        }
+
+        // Заявка уже зафиксирована в БД: сбой уведомления не должен её откатывать
+        // или возвращать пользователю ошибку создания.
+        try {
+            event(new BookingCreated($booking));
+        } catch (\Throwable $e) {
+            Log::error('BookingCreated dispatch failed', [
+                'booking_id' => $booking->id,
+                'exception'  => get_class($e),
+            ]);
         }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка успешно создана! Наш менеджер свяжется с вами в ближайшее время.');
+    }
+
+    /**
+     * Пользователи, которых менеджер/админ вправе выбрать владельцем заявки:
+     * только активные туристы. Используется и в форме, и в валидации.
+     */
+    private function touristClientQuery(): Builder
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereHas('roles', fn (Builder $query) => $query->where('name', Role::TOURIST));
+    }
+
+    /**
+     * Создание нового клиента-туриста внутри транзакции.
+     * Отсутствие роли "tourist" приводит к исключению и откату всей транзакции.
+     */
+    private function createTouristClient(string $name, ?string $email): User
+    {
+        $tempPassword = Str::password(12, true, true, false, false);
+
+        $newTourist = User::create([
+            'name'                     => $name,
+            'email'                    => $email ?: $this->generateTechnicalEmail(),
+            'password'                 => bcrypt($tempPassword),
+            'password_change_required' => true,
+            'temp_password'            => $tempPassword,
+            'email_verified_at'        => null,
+        ]);
+
+        // firstOrFail: роль обязательна, молча пропустить назначение нельзя.
+        $newTourist->assignRole(Role::TOURIST);
+
+        return $newTourist;
+    }
+
+    /**
+     * Технический адрес для клиента без email: недоставляемый домен + UUID.
+     */
+    private function generateTechnicalEmail(): string
+    {
+        do {
+            $email = 'temp_' . Str::uuid() . '@' . User::TECHNICAL_EMAIL_DOMAIN;
+        } while (User::where('email', $email)->exists());
+
+        return $email;
+    }
+
+    /**
+     * Пометка о созданном клиенте. Факт доставки письма не утверждается:
+     * почта только ставится в очередь и может не дойти.
+     */
+    private function appendNewClientNote(?string $notes, ?string $clientEmail): string
+    {
+        $note = $clientEmail
+            ? "Клиент создан автоматически. Email для отправки данных для входа: {$clientEmail}."
+            : 'Клиент создан автоматически. Email не указан. Данные для входа автоматически не отправлялись.';
+
+        $notes = trim((string) $notes);
+
+        return $notes === '' ? $note : $notes . "\n\n" . $note;
     }
 
     /**

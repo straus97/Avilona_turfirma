@@ -66,6 +66,12 @@ class User extends Authenticatable implements MustVerifyEmail
     const ROLE_TOURIST = 'tourist';
 
     /**
+     * Домен технических (недоставляемых) адресов, генерируемых при создании
+     * клиента без email. RFC 2606: домен .invalid не маршрутизируется.
+     */
+    const TECHNICAL_EMAIL_DOMAIN = 'no-email.avilona.invalid';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -222,6 +228,31 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->whereHas('roles', function ($q) use ($role) {
             $q->where('name', $role);
         });
+    }
+
+    /**
+     * Является ли email техническим (сгенерированным системой), а не реальным
+     * адресом клиента.
+     *
+     * Технические форматы:
+     *   - текущий:  temp_<uuid>@no-email.avilona.invalid
+     *   - legacy:   temp_<timestamp>@avilona.ru (генерировался прежним кодом)
+     *
+     * Обычные адреса на @avilona.ru техническими не считаются.
+     */
+    public function hasTechnicalEmail(): bool
+    {
+        $email = strtolower(trim((string) $this->email));
+
+        if ($email === '') {
+            return false;
+        }
+
+        if (str_ends_with($email, '@' . self::TECHNICAL_EMAIL_DOMAIN)) {
+            return true;
+        }
+
+        return (bool) preg_match('/^temp_\d+@avilona\.ru$/', $email);
     }
 
     /**

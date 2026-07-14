@@ -16,8 +16,11 @@ class SendBookingCreatedNotification
     {
         $booking = $event->booking;
 
-        // Отправляем письмо клиенту (туристу)
-        Mail::to($booking->user->email)->queue(new BookingCreatedMail($booking));
+        // Письмо клиенту содержит временный пароль, поэтому оно не отправляется
+        // на технический (сгенерированный) адрес — такого почтового ящика нет.
+        if (!$booking->user->hasTechnicalEmail()) {
+            Mail::to($booking->user->email)->queue(new BookingCreatedMail($booking));
+        }
 
         // Отправляем отдельное письмо всем администраторам
         $admins = User::whereHas('roles', function($query) {
