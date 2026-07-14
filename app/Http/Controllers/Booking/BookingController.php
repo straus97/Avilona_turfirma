@@ -295,10 +295,17 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $this->authorize('view', $booking);
-        
+
         $booking->load(['user', 'tour', 'manager', 'messages.sender', 'messages.receiver', 'bookingDocuments.uploadedBy']);
-        
-        return view('bookings.show', compact('booking'));
+
+        // Список кандидатов на роль ответственного нужен только админу (форма назначения
+        // доступна только ему). Для остальных ролей отдаём пустую коллекцию, чтобы не
+        // выполнять лишний запрос.
+        $assignableEmployees = Auth::user()->isAdmin()
+            ? User::assignableToBookings()->orderBy('name')->get()
+            : collect();
+
+        return view('bookings.show', compact('booking', 'assignableEmployees'));
     }
 
     /**
@@ -366,21 +373,23 @@ class BookingController extends Controller
             'manager_id' => 'required|exists:users,id',
         ]);
 
-        $managerUser = User::findOrFail($request->manager_id);
-        if (!$managerUser->hasRole('manager')) {
+        // Ответственным может быть только активный менеджер или администратор.
+        // Единое правило берётся из User::assignableToBookings(), поэтому UI и сервер
+        // применяют одну и ту же бизнес-логику.
+        if (! User::assignableToBookings()->whereKey($request->manager_id)->exists()) {
             return back()->withErrors([
-                'manager_id' => 'Выбранный пользователь не является менеджером.',
+                'manager_id' => 'Выбранного сотрудника нельзя назначить ответственным по заявке.',
             ])->withInput();
         }
-        
+
         if ($booking->status === Booking::STATUS_NEW) {
             $booking->assignManager($request->manager_id);
         } else {
             $booking->update(['manager_id' => $request->manager_id]);
         }
-        
+
         return redirect()->route('bookings.show', $booking)
-            ->with('success', 'Менеджер назначен');
+            ->with('success', 'Ответственный назначен');
     }
 
     /**

@@ -231,6 +231,19 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Активные пользователи, которых можно назначить ответственным сотрудником
+     * по заявке: менеджеры и администраторы (админ может вести заявку лично).
+     * Единый источник правды для валидации назначения и списка в UI.
+     */
+    public function scopeAssignableToBookings($query)
+    {
+        return $query->active()
+            ->whereHas('roles', function ($q) {
+                $q->whereIn('name', [self::ROLE_MANAGER, self::ROLE_ADMIN]);
+            });
+    }
+
+    /**
      * Является ли email техническим (сгенерированным системой), а не реальным
      * адресом клиента.
      *

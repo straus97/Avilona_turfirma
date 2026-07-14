@@ -222,7 +222,7 @@
                         @if($booking->manager)
                             <div class="mb-4">
                                 <h5 class="text-primary">
-                                    <i class="bi bi-person-badge"></i> Ваш менеджер
+                                    <i class="bi bi-person-badge"></i> Ответственный сотрудник
                                 </h5>
                                 <p class="mb-1"><strong>Имя:</strong> {{ $booking->manager->name }}</p>
                                 <p class="mb-1"><strong>Email:</strong> {{ $booking->manager->email }}</p>
@@ -567,13 +567,13 @@
                         @auth
                             <div class="card-header-custom">
                                 <div class="card-title-custom">
-                                    <i class="bi bi-person-plus"></i> Назначить менеджера
+                                    <i class="bi bi-person-plus"></i> Назначить ответственного
                                 </div>
                             </div>
                         @else
                             <div class="card-header bg-warning text-dark">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-person-plus"></i> Назначить менеджера
+                                    <i class="bi bi-person-plus"></i> Назначить ответственного
                                 </h5>
                             </div>
                             <div class="card-body">
@@ -581,18 +581,18 @@
                             <form action="{{ route('bookings.assign-manager', $booking) }}" method="POST">
                                 @csrf
                                 <div class="mb-3">
-                                    <label for="manager_id" class="form-label">Выберите менеджера</label>
+                                    <label for="manager_id" class="form-label">Выберите ответственного сотрудника</label>
                                     <select name="manager_id" id="manager_id" class="form-select" required>
                                         <option value="">-- Выберите --</option>
-                                        @foreach(\App\Models\User::whereHas('roles', function($q) { $q->where('name', 'manager'); })->get() as $manager)
-                                            <option value="{{ $manager->id }}" {{ $booking->manager_id == $manager->id ? 'selected' : '' }}>
-                                                {{ $manager->name }}
+                                        @foreach($assignableEmployees as $employee)
+                                            <option value="{{ $employee->id }}" {{ $booking->manager_id == $employee->id ? 'selected' : '' }}>
+                                                {{ $employee->name }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-warning w-100">
-                                    {{ $booking->manager ? 'Сменить менеджера' : 'Назначить' }}
+                                    {{ $booking->manager ? 'Сменить ответственного' : 'Назначить' }}
                                 </button>
                             </form>
                         @auth

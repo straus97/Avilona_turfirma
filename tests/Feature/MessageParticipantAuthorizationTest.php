@@ -331,6 +331,49 @@ class MessageParticipantAuthorizationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 15. Assigned admin as booking handler (admin stored in manager_id)
+    // -----------------------------------------------------------------------
+
+    public function test_owner_can_send_to_assigned_admin(): void
+    {
+        $owner = $this->makeUser(Role::TOURIST);
+        $admin = $this->makeUser(Role::ADMIN);
+        // Администратор лично ведёт заявку: он и есть manager_id.
+        $booking = $this->makeBookingFor($owner, $admin->id, Booking::STATUS_PROGRESS);
+
+        $this->actingAs($owner)->postJson(route('messages.store'), [
+            'booking_id'  => $booking->id,
+            'receiver_id' => $admin->id,
+            'message'     => 'Hello responsible admin',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('messages', [
+            'booking_id'  => $booking->id,
+            'sender_id'   => $owner->id,
+            'receiver_id' => $admin->id,
+        ]);
+    }
+
+    public function test_assigned_admin_can_send_to_booking_owner(): void
+    {
+        $owner = $this->makeUser(Role::TOURIST);
+        $admin = $this->makeUser(Role::ADMIN);
+        $booking = $this->makeBookingFor($owner, $admin->id, Booking::STATUS_PROGRESS);
+
+        $this->actingAs($admin)->postJson(route('messages.store'), [
+            'booking_id'  => $booking->id,
+            'receiver_id' => $owner->id,
+            'message'     => 'Hello tourist',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('messages', [
+            'booking_id'  => $booking->id,
+            'sender_id'   => $admin->id,
+            'receiver_id' => $owner->id,
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
