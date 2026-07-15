@@ -383,26 +383,37 @@ class BookingController extends Controller
         }
 
         if ($booking->status === Booking::STATUS_NEW) {
-            // Первичное назначение: модель переводит заявку в PROGRESS и сама
-            // отправляет ManagerAssigned (поведение не меняется).
+            // Первичное назначение: модель переводит заявку в PROGRESS. Событие
+            // отправляется тем же защищённым путём, что и при переназначении.
             $booking->assignManager($request->manager_id);
+            $this->dispatchManagerAssigned($booking);
         } elseif ($booking->reassignManager((int) $request->manager_id)) {
             // Переназначение зафиксировано и ответственный действительно сменился.
-            // Заявка уже сохранена: сбой уведомления не должен превращать успешное
-            // переназначение в HTTP-ошибку и откатывать manager_id.
-            try {
-                event(new \App\Events\ManagerAssigned($booking));
-            } catch (\Throwable $e) {
-                Log::error('ManagerAssigned dispatch failed on reassignment', [
-                    'booking_id' => $booking->id,
-                    'exception'  => get_class($e),
-                ]);
-            }
+            $this->dispatchManagerAssigned($booking);
         }
         // Тот же ответственный на не-NEW заявке → reassignManager() вернул false → no-op.
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Ответственный назначен');
+    }
+
+    /**
+     * Отправить ManagerAssigned для уже сохранённой заявки.
+     *
+     * Заявка уже зафиксирована в БД (первичное назначение или переназначение):
+     * сбой уведомления не должен превращать успешное (пере)назначение в HTTP-ошибку
+     * или откатывать manager_id. Поэтому исключение логируется и проглатывается.
+     */
+    private function dispatchManagerAssigned(Booking $booking): void
+    {
+        try {
+            event(new \App\Events\ManagerAssigned($booking));
+        } catch (\Throwable $e) {
+            Log::error('ManagerAssigned dispatch failed', [
+                'booking_id' => $booking->id,
+                'exception'  => get_class($e),
+            ]);
+        }
     }
 
     /**

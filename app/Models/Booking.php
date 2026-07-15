@@ -284,15 +284,20 @@ class Booking extends Model
         ];
     }
 
+    /**
+     * Первичное назначение ответственного: переводит НОВУЮ заявку в PROGRESS.
+     *
+     * Метод отвечает только за персистентность (симметрично reassignManager()).
+     * Диспетчеризацию события ManagerAssigned выполняет вызывающий код, чтобы сбой
+     * уведомления после успешной записи не мог откатить назначение или превратить
+     * его в HTTP-ошибку.
+     */
     public function assignManager(int $managerId): void
     {
         $this->update([
             'manager_id' => $managerId,
             'status' => self::STATUS_PROGRESS,
         ]);
-
-        // Отправляем событие о назначении менеджера
-        event(new \App\Events\ManagerAssigned($this));
     }
 
     /**

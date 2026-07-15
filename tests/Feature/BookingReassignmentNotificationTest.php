@@ -191,6 +191,40 @@ class BookingReassignmentNotificationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 7. Сбой уведомления при ПЕРВИЧНОМ назначении не откатывает его
+    // -----------------------------------------------------------------------
+
+    public function test_notification_failure_on_initial_assignment_persists_manager_id_and_status_and_returns_success(): void
+    {
+        $owner    = $this->makeUser(Role::TOURIST);
+        $admin    = $this->makeUser(Role::ADMIN);
+        $managerA = $this->makeUser(Role::MANAGER);
+        // НОВАЯ заявка без ответственного → путь первичного назначения (NEW → PROGRESS).
+        $booking  = $this->makeBookingFor($owner);
+
+        // Настоящий путь события/слушателя (ManagerAssigned НЕ подменяется).
+        // Незачереденный SendManagerAssignedNotification первым делом вызывает
+        // Mail::to(...), поэтому детерминированный throw на первом вызове доказывает,
+        // что реальный слушатель был достигнут после успешной записи назначения.
+        Mail::shouldReceive('to')
+            ->once()
+            ->andThrow(new \RuntimeException('mail down'));
+
+        $this->actingAs($admin)
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id])
+            ->assertRedirect(route('bookings.show', $booking))
+            ->assertSessionHasNoErrors();
+
+        // Первичное назначение (manager_id + перевод в PROGRESS) пережило
+        // проглоченный сбой уведомления.
+        $this->assertDatabaseHas('bookings', [
+            'id'         => $booking->id,
+            'manager_id' => $managerA->id,
+            'status'     => Booking::STATUS_PROGRESS,
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
