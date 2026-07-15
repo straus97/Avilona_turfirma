@@ -383,10 +383,23 @@ class BookingController extends Controller
         }
 
         if ($booking->status === Booking::STATUS_NEW) {
+            // Первичное назначение: модель переводит заявку в PROGRESS и сама
+            // отправляет ManagerAssigned (поведение не меняется).
             $booking->assignManager($request->manager_id);
-        } else {
-            $booking->update(['manager_id' => $request->manager_id]);
+        } elseif ($booking->reassignManager((int) $request->manager_id)) {
+            // Переназначение зафиксировано и ответственный действительно сменился.
+            // Заявка уже сохранена: сбой уведомления не должен превращать успешное
+            // переназначение в HTTP-ошибку и откатывать manager_id.
+            try {
+                event(new \App\Events\ManagerAssigned($booking));
+            } catch (\Throwable $e) {
+                Log::error('ManagerAssigned dispatch failed on reassignment', [
+                    'booking_id' => $booking->id,
+                    'exception'  => get_class($e),
+                ]);
+            }
         }
+        // Тот же ответственный на не-NEW заявке → reassignManager() вернул false → no-op.
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Ответственный назначен');

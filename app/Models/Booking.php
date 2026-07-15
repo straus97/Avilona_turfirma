@@ -290,9 +290,32 @@ class Booking extends Model
             'manager_id' => $managerId,
             'status' => self::STATUS_PROGRESS,
         ]);
-        
+
         // Отправляем событие о назначении менеджера
         event(new \App\Events\ManagerAssigned($this));
+    }
+
+    /**
+     * Переназначить ответственного по уже обрабатываемой заявке.
+     *
+     * Статус намеренно не меняется (в PROGRESS переводит только первичное
+     * назначение). Метод отвечает только за персистентность и владеет
+     * инвариантом реального изменения: при попытке назначить того же
+     * ответственного он ничего не пишет и возвращает false, поэтому не может
+     * породить ложное уведомление даже при прямом вызове. Диспетчеризацию
+     * события ManagerAssigned выполняет вызывающий код на основе результата.
+     *
+     * @return bool true, если manager_id действительно изменился; false — no-op.
+     */
+    public function reassignManager(int $managerId): bool
+    {
+        if ((int) $this->manager_id === $managerId) {
+            return false;
+        }
+
+        $this->update(['manager_id' => $managerId]);
+
+        return true;
     }
 
     public function confirm(): void
