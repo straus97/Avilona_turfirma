@@ -151,6 +151,7 @@ Route::middleware(['auth', 'password.change'])->group(function () {
     Route::post('messages', [\App\Http\Controllers\Message\MessageController::class, 'store'])->name('messages.store');
     Route::post('messages/{message}/read', [\App\Http\Controllers\Message\MessageController::class, 'markAsRead'])->name('messages.read');
     Route::get('messages/unread-count', [\App\Http\Controllers\Message\MessageController::class, 'unreadCount'])->name('messages.unread-count');
+    Route::get('messages/{message}/attachment', [\App\Http\Controllers\Message\MessageController::class, 'downloadAttachment'])->name('messages.attachment');
     Route::delete('messages/{message}', [\App\Http\Controllers\Message\MessageController::class, 'destroy'])->name('messages.destroy');
 
     // Управление документами по заявкам (только менеджер/админ)

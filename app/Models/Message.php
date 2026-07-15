@@ -26,6 +26,14 @@ class Message extends Model
     ];
 
     /**
+     * Скрываем внутренний путь вложения из любой сериализации,
+     * чтобы приватный путь в хранилище не попадал в JSON/клиент.
+     */
+    protected $hidden = [
+        'attachment_url',
+    ];
+
+    /**
      * Отношения
      */
     public function booking(): BelongsTo
@@ -80,5 +88,19 @@ class Message extends Model
     public function hasAttachment(): bool
     {
         return !empty($this->attachment_url);
+    }
+
+    /**
+     * Защищённый URL для скачивания вложения.
+     *
+     * Не входит в $appends: добавляется точечно через ->append(...) только
+     * в тех JSON-ответах, где он нужен (см. MessageController::index/store),
+     * чтобы не генерировать маршрут при любой сериализации Message.
+     */
+    public function getAttachmentDownloadUrlAttribute(): ?string
+    {
+        return $this->hasAttachment()
+            ? route('messages.attachment', $this)
+            : null;
     }
 }

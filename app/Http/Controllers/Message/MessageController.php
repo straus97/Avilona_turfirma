@@ -7,8 +7,10 @@ use App\Models\Message;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MessageController extends Controller
 {
@@ -44,7 +46,10 @@ class MessageController extends Controller
                 'is_read' => true,
                 'read_at' => now(),
             ]);
-        
+
+        // Точечно добавляем защищённую ссылку на вложение только в этот JSON-ответ.
+        $messages->append('attachment_download_url');
+
         return response()->json($messages);
     }
 
@@ -57,7 +62,7 @@ class MessageController extends Controller
             'booking_id' => 'required|exists:bookings,id',
             'receiver_id' => 'required|exists:users,id',
             'message' => 'required_without:attachment|string|max:5000',
-            'attachment' => 'nullable|file|max:10240', // 10MB
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,bmp,webp|max:10240', // 10MB
         ]);
 
         $booking = Booking::findOrFail($validated['booking_id']);
@@ -80,16 +85,52 @@ class MessageController extends Controller
 
         $validated['sender_id'] = Auth::id();
 
-        // Загрузка файла
-        if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('messages', 'public');
-            $validated['attachment_url'] = $path;
+        // messages.message — NOT NULL без значения по умолчанию; при отправке
+        // только вложения текст отсутствует, поэтому нормализуем его в пустую строку.
+        $validated['message'] = $validated['message'] ?? '';
+
+        $storedPath = null;
+
+        try {
+            // Загрузка файла на приватный диск (не публичный /storage).
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+
+                if (! $file->isValid()) {
+                    throw new \RuntimeException('Uploaded attachment is not valid');
+                }
+
+                $storedPath = $file->store('messages', 'local');
+
+                if (! $storedPath) {
+                    throw new \RuntimeException('Attachment could not be stored on disk');
+                }
+
+                $validated['attachment_url'] = $storedPath;
+            }
+
+            $message = Message::create($validated);
+        } catch (\Throwable $e) {
+            // Убираем осиротевший приватный файл, если сообщение не сохранилось.
+            if (is_string($storedPath) && $storedPath !== '') {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            Log::error('Message store failed', [
+                'booking_id' => $validated['booking_id'],
+                'sender_id'  => Auth::id(),
+                'exception'  => get_class($e),
+            ]);
+
+            throw $e;
         }
-        
-        $message = Message::create($validated);
+
         $message->load(['sender', 'receiver']);
-        
+
         if ($request->expectsJson()) {
+            // Точечно добавляем защищённую ссылку на вложение только в этот JSON-ответ.
+            $message->append('attachment_download_url');
+
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -135,15 +176,46 @@ class MessageController extends Controller
         if ($message->sender_id !== $user->id && !$user->isAdmin()) {
             abort(403);
         }
-        
-        // Удаляем файл если есть
-        if ($message->hasAttachment()) {
-            Storage::disk('public')->delete($message->attachment_url);
-        }
-        
+
+        $attachmentPath = $message->hasAttachment() ? $message->attachment_url : null;
+
+        // Сначала удаляем запись, затем физический файл: сбой БД не должен
+        // оставить активную запись с уже удалённым вложением.
         $message->delete();
-        
+
+        if ($attachmentPath !== null) {
+            Storage::disk('local')->delete($attachmentPath);
+        }
+
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Скачать вложение сообщения (только участники переписки по заявке)
+     */
+    public function downloadAttachment(Message $message): StreamedResponse
+    {
+        $booking = $message->booking;
+
+        if ($booking === null) {
+            abort(404);
+        }
+
+        $this->authorizeBooking($booking);
+
+        if (! $message->hasAttachment()) {
+            abort(404);
+        }
+
+        if (! Storage::disk('local')->exists($message->attachment_url)) {
+            abort(404);
+        }
+
+        $extension = pathinfo($message->attachment_url, PATHINFO_EXTENSION);
+        $downloadName = 'attachment-' . $message->id
+            . ($extension !== '' ? '.' . $extension : '');
+
+        return Storage::disk('local')->download($message->attachment_url, $downloadName);
     }
 
     /**

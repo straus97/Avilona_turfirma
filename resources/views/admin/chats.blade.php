@@ -96,9 +96,9 @@
                                         @if($message->message)
                                             <div style="font-size: 0.875rem;">{{ $message->message }}</div>
                                         @endif
-                                        @if($message->attachment_url)
+                                        @if($message->hasAttachment())
                                             <div class="mt-2">
-                                                <a href="{{ Storage::url($message->attachment_url) }}" target="_blank" rel="noopener" class="text-decoration-underline {{ $message->sender_id == $currentBooking->user_id ? 'text-primary' : 'text-white' }}">
+                                                <a href="{{ route('messages.attachment', $message) }}" target="_blank" rel="noopener" class="text-decoration-underline {{ $message->sender_id == $currentBooking->user_id ? 'text-primary' : 'text-white' }}">
                                                     <i class="bi bi-paperclip"></i> Вложение
                                                 </a>
                                             </div>

@@ -95,9 +95,9 @@
                                         @if($message->message)
                                             <div style="font-size: 0.875rem;">{{ $message->message }}</div>
                                         @endif
-                                        @if($message->attachment_url)
+                                        @if($message->hasAttachment())
                                             <div class="mt-2">
-                                                <a href="{{ Storage::url($message->attachment_url) }}" target="_blank" rel="noopener" class="text-decoration-underline {{ $message->sender_id == $manager->id ? 'text-white' : 'text-primary' }}">
+                                                <a href="{{ route('messages.attachment', $message) }}" target="_blank" rel="noopener" class="text-decoration-underline {{ $message->sender_id == $manager->id ? 'text-white' : 'text-primary' }}">
                                                     <i class="bi bi-paperclip"></i> Вложение
                                                 </a>
                                             </div>
@@ -128,7 +128,9 @@
                             <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." id="messageInput">
                             <label class="btn btn-outline-secondary" style="cursor: pointer;" title="Прикрепить файл">
                                 <i class="bi bi-paperclip"></i>
-                                <input type="file" name="attachment" style="display: none;" id="attachmentInput" onchange="updateFileName(this)">
+                                <input type="file" name="attachment" style="display: none;" id="attachmentInput"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                                       onchange="updateFileName(this)">
                             </label>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i>
@@ -167,7 +169,6 @@
         bookingId: @json($currentBooking?->id),
         currentUserId: @json($manager->id ?? null),
         messagesUrl: @json(route('messages.index')),
-        storageBaseUrl: @json(rtrim(Storage::url(''), '/') . '/'),
     };
 
     function isNearBottom(container) {
@@ -193,11 +194,11 @@
             bubble.appendChild(text);
         }
 
-        if (message.attachment_url) {
+        if (message.attachment_download_url) {
             const attWrap = document.createElement('div');
             attWrap.className = 'mt-2';
             const link = document.createElement('a');
-            link.href = chatConfig.storageBaseUrl + message.attachment_url;
+            link.href = message.attachment_download_url;
             link.target = '_blank';
             link.rel = 'noopener';
             link.className = `text-decoration-underline ${isMine ? 'text-white' : 'text-primary'}`;

@@ -307,7 +307,7 @@ class MessageParticipantAuthorizationTest extends TestCase
 
     public function test_receiver_validation_occurs_before_attachment_storage(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         $owner   = $this->makeUser(Role::TOURIST);
         $manager = $this->makeUser(Role::MANAGER);
@@ -325,7 +325,7 @@ class MessageParticipantAuthorizationTest extends TestCase
 
         $this->assertDatabaseCount('messages', 0);
         $this->assertEmpty(
-            Storage::disk('public')->allFiles('messages'),
+            Storage::disk('local')->allFiles('messages'),
             'No attachment should have been stored when receiver validation fails.'
         );
     }
