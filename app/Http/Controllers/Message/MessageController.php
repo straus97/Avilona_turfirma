@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Message;
 
+use App\Events\NewMessageReceived;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Booking;
@@ -126,6 +127,17 @@ class MessageController extends Controller
         }
 
         $message->load(['sender', 'receiver']);
+
+        // Сообщение уже сохранено: сбой уведомления не должен откатывать запись,
+        // удалять вложение или возвращать пользователю ошибку отправки.
+        try {
+            event(new NewMessageReceived($message));
+        } catch (\Throwable $e) {
+            Log::error('NewMessageReceived dispatch failed', [
+                'message_id' => $message->id,
+                'exception'  => get_class($e),
+            ]);
+        }
 
         if ($request->expectsJson()) {
             // Точечно добавляем защищённую ссылку на вложение только в этот JSON-ответ.
