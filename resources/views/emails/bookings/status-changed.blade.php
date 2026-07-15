@@ -49,7 +49,7 @@
     @if($booking->manager)
     <p>Ваш менеджер: <strong>{{ $booking->manager->name }}</strong></p>
     <p>
-        <a href="{{ route('profile.chat', $booking->id) }}">Написать в чат</a>
+        <a href="{{ $chatUrl }}">Написать в чат</a>
     </p>
     @endif
     

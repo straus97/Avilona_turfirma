@@ -309,4 +309,27 @@ class Booking extends Model
     {
         $this->transitionTo(self::STATUS_COMPLETED);
     }
+
+    /**
+     * Активный маршрут чата по заявке для конкретного получателя письма.
+     *
+     * Владелец заявки (турист) → личный чат кабинета; текущий ответственный
+     * (менеджер ИЛИ администратор в manager_id) → чат менеджера. Любой другой
+     * пользователь (в т.ч. прежний ответственный) отклоняется — ссылка из
+     * письма не должна вести неучастника в чужой чат.
+     */
+    public function chatRouteFor(User $recipient): string
+    {
+        if ($recipient->id === $this->user_id) {
+            return route('cabinet.chat', $this->id);
+        }
+
+        if ($recipient->id === $this->manager_id) {
+            return route('cabinet.manager.chat', ['bookingId' => $this->id]);
+        }
+
+        throw new \LogicException(
+            "User {$recipient->id} is neither the owner nor the current assignee of booking {$this->id}."
+        );
+    }
 }

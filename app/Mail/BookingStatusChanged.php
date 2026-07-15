@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -15,14 +16,16 @@ class BookingStatusChanged extends Mailable
 
     public Booking $booking;
     public string $oldStatus;
+    public User $recipient;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Booking $booking, string $oldStatus)
+    public function __construct(Booking $booking, string $oldStatus, User $recipient)
     {
         $this->booking = $booking;
         $this->oldStatus = $oldStatus;
+        $this->recipient = $recipient;
     }
 
     /**
@@ -50,6 +53,9 @@ class BookingStatusChanged extends Mailable
     {
         return new Content(
             view: 'emails.bookings.status-changed',
+            with: [
+                'chatUrl' => $this->booking->chatRouteFor($this->recipient),
+            ],
         );
     }
 

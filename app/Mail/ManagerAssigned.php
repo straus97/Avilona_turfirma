@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,13 +15,15 @@ class ManagerAssigned extends Mailable
     use Queueable, SerializesModels;
 
     public Booking $booking;
+    public User $recipient;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Booking $booking)
+    public function __construct(Booking $booking, User $recipient)
     {
         $this->booking = $booking;
+        $this->recipient = $recipient;
     }
 
     /**
@@ -40,6 +43,9 @@ class ManagerAssigned extends Mailable
     {
         return new Content(
             view: 'emails.bookings.manager-assigned',
+            with: [
+                'chatUrl' => $this->booking->chatRouteFor($this->recipient),
+            ],
         );
     }
 

@@ -66,7 +66,7 @@
     </ul>
     
     <p style="text-align: center;">
-        <a href="{{ route('profile.documents', $booking->id) }}" class="button">
+        <a href="{{ route('cabinet.documents.personal') }}" class="button">
             Мои документы
         </a>
     </p>
@@ -80,7 +80,7 @@
     @if($booking->manager)
     <p>Если у вас возникнут вопросы, ваш менеджер <strong>{{ $booking->manager->name }}</strong> всегда на связи!</p>
     <p style="text-align: center;">
-        <a href="{{ route('profile.chat', $booking->id) }}">Написать менеджеру</a>
+        <a href="{{ route('cabinet.chat', $booking->id) }}">Написать менеджеру</a>
     </p>
     @endif
     

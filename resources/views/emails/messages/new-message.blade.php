@@ -5,35 +5,35 @@
 @section('content')
     <h2>💬 Новое сообщение в чате</h2>
     
-    <p>Здравствуйте, <strong>{{ $message->receiver->name }}</strong>!</p>
-    
-    <p>Вы получили новое сообщение от <strong>{{ $message->sender->name }}</strong> по заявке #{{ $message->booking_id }}.</p>
-    
+    <p>Здравствуйте, <strong>{{ $chatMessage->receiver->name }}</strong>!</p>
+
+    <p>Вы получили новое сообщение от <strong>{{ $chatMessage->sender->name }}</strong> по заявке #{{ $chatMessage->booking_id }}.</p>
+
     <div class="info-box">
-        <p><strong>От кого:</strong> {{ $message->sender->name }}</p>
-        <p><strong>Заявка:</strong> #{{ $message->booking_id }}</p>
-        <p><strong>Город вылета:</strong> {{ $message->booking->departure_city }}</p>
-        <p><strong>Направление:</strong> {{ $message->booking->destination_country }}</p>
-        <p><strong>Дата:</strong> {{ $message->created_at->format('d.m.Y H:i') }}</p>
+        <p><strong>От кого:</strong> {{ $chatMessage->sender->name }}</p>
+        <p><strong>Заявка:</strong> #{{ $chatMessage->booking_id }}</p>
+        <p><strong>Город вылета:</strong> {{ $chatMessage->booking->departure_city }}</p>
+        <p><strong>Направление:</strong> {{ $chatMessage->booking->destination_country }}</p>
+        <p><strong>Дата:</strong> {{ $chatMessage->created_at->format('d.m.Y H:i') }}</p>
     </div>
-    
+
     <div class="info-box" style="background-color: #fff; border-left-color: #764ba2;">
         <p><strong>Сообщение:</strong></p>
-        <p>{{ Str::limit($message->message, 200) }}</p>
+        <p>{{ Str::limit($chatMessage->message, 200) }}</p>
     </div>
-    
-    @if($message->attachment_url)
+
+    @if($chatMessage->attachment_url)
     <p><strong>📎 К сообщению прикреплен файл</strong></p>
     @endif
     
     <p style="text-align: center;">
-        <a href="{{ route('profile.chat', $message->booking_id) }}" class="button">
+        <a href="{{ $chatUrl }}" class="button">
             Открыть чат и ответить
         </a>
     </p>
     
     <p style="text-align: center;">
-        <a href="{{ route('bookings.show', $message->booking_id) }}" class="button">
+        <a href="{{ route('bookings.show', $chatMessage->booking_id) }}" class="button">
             Посмотреть заявку
         </a>
     </p>

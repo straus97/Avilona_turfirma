@@ -18,13 +18,13 @@ class SendBookingStatusChangedNotification
 
         // Отправляем письмо клиенту о изменении статуса
         Mail::to($booking->user->email)->queue(
-            new BookingStatusChangedMail($booking, $oldStatus)
+            new BookingStatusChangedMail($booking, $oldStatus, $booking->user)
         );
 
         // Если есть назначенный менеджер, отправляем ему тоже
         if ($booking->manager) {
             Mail::to($booking->manager->email)->queue(
-                new BookingStatusChangedMail($booking, $oldStatus)
+                new BookingStatusChangedMail($booking, $oldStatus, $booking->manager)
             );
         }
     }

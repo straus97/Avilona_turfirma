@@ -40,6 +40,13 @@ class NewMessageReceived extends Mailable
     {
         return new Content(
             view: 'emails.messages.new-message',
+            with: [
+                // Модель передаётся под именем chatMessage: переменная $message
+                // зарезервирована мейлером (Illuminate\Mail\Message) и в шаблоне
+                // затирает публичное свойство.
+                'chatMessage' => $this->message,
+                'chatUrl' => $this->message->booking->chatRouteFor($this->message->receiver),
+            ],
         );
     }
 

@@ -16,12 +16,12 @@ class SendManagerAssignedNotification
         $booking = $event->booking;
 
         // Отправляем письмо клиенту о назначении менеджера
-        Mail::to($booking->user->email)->queue(new ManagerAssignedMail($booking));
+        Mail::to($booking->user->email)->queue(new ManagerAssignedMail($booking, $booking->user));
 
         // Отправляем уведомление менеджеру о новой заявке
         if ($booking->manager) {
             // Можно создать отдельный шаблон для менеджера, пока используем тот же
-            Mail::to($booking->manager->email)->queue(new ManagerAssignedMail($booking));
+            Mail::to($booking->manager->email)->queue(new ManagerAssignedMail($booking, $booking->manager));
         }
     }
 }

@@ -31,7 +31,7 @@
     </ul>
     
     <p style="text-align: center;">
-        <a href="{{ route('profile.chat', $booking->id) }}" class="button">
+        <a href="{{ $chatUrl }}" class="button">
             Написать менеджеру
         </a>
     </p>

@@ -63,7 +63,7 @@ class TestEmailNotifications extends Command
         // 2. Тест изменения статуса
         try {
             $this->info('2. Отправка уведомления об изменении статуса...');
-            Mail::to($email)->send(new BookingStatusChanged($booking, 'new'));
+            Mail::to($email)->send(new BookingStatusChanged($booking, 'new', $booking->user));
             $this->info('   ✓ Успешно отправлено');
         } catch (\Exception $e) {
             $this->error('   ✗ Ошибка: ' . $e->getMessage());
@@ -74,7 +74,7 @@ class TestEmailNotifications extends Command
         if ($booking->manager) {
             try {
                 $this->info('3. Отправка уведомления о назначении менеджера...');
-                Mail::to($email)->send(new ManagerAssigned($booking));
+                Mail::to($email)->send(new ManagerAssigned($booking, $booking->user));
                 $this->info('   ✓ Успешно отправлено');
             } catch (\Exception $e) {
                 $this->error('   ✗ Ошибка: ' . $e->getMessage());
