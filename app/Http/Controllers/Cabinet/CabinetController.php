@@ -22,6 +22,17 @@ class CabinetController extends Controller
     {
         $user = Auth::user();
 
+        // Приоритет ролей единый с dashboard(): admin > manager > tourist.
+        if ($user->hasAnyRole(['admin'])) {
+            return match ($section) {
+                'bookings' => redirect()->route('cabinet.admin.bookings'),
+                'chat' => redirect()->route('cabinet.admin.chats', $params),
+                'profile' => redirect()->route('cabinet.admin.profile'),
+                'settings' => redirect()->route('cabinet.admin.settings'),
+                default => redirect()->route('cabinet.admin.dashboard'),
+            };
+        }
+
         if ($user->hasAnyRole(['manager'])) {
             return match ($section) {
                 'bookings' => redirect()->route('cabinet.manager.bookings'),
@@ -29,14 +40,6 @@ class CabinetController extends Controller
                 'profile' => redirect()->route('cabinet.manager.profile'),
                 'settings' => redirect()->route('cabinet.manager.settings'),
                 default => redirect()->route('cabinet.manager.dashboard'),
-            };
-        }
-
-        if ($user->hasAnyRole(['admin'])) {
-            return match ($section) {
-                'bookings' => redirect()->route('cabinet.admin.bookings'),
-                'settings' => redirect()->route('cabinet.admin.settings'),
-                default => redirect()->route('cabinet.admin.dashboard'),
             };
         }
 
