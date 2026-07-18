@@ -1,137 +1,117 @@
 # Документация Avilona_turfirma
 
-## Базовая точка текущего documentation-only slice
+## Текущий checkpoint
 
 | Параметр | Значение |
 |---|---|
 | Ветка | `db-rebuild-stage3` |
-| Функциональный checkpoint, на основе которого актуализирована документация | `61975e0d` — `test: cover message polling isolation` |
-| Предыдущий документационный коммит | `e70722ba` — `docs: refresh project state and roadmap` (база: `ddad32d9`) |
-| Фактический текущий HEAD | всегда определяется Git (`git rev-parse HEAD`), а не значением, зафиксированным в этом файле |
+| Функциональный checkpoint | `9ba1b1293571ab30675919373c7480764cf0b61d` |
+| Commit | `fix: align cabinet shared-route role redirects` |
+| Предыдущий maintenance commit | `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f` |
+| PHPUnit baseline | 295 tests / 951 assertions |
+| PHPUnit DB | SQLite `:memory:` |
+| Canonical schema | `turfirma_rebuild_v4` |
+| Canonical migrations | 52 Ran / 0 Pending |
+| Recovery | COMPLETE |
 
-После предыдущего документационного коммита `e70722ba` было выполнено семь коммитов, полностью завершивших Этап 5 (жизненный цикл заявки) и Этап 6 (чат туриста и менеджера): `9d4f8e3f`, `15e7e996`, `bd202d0b`, `5fbe2bef`, `e9603e7e`, `e71d8cda`, `61975e0d`. Текущий slice приводит документацию в соответствие с этими изменениями и с завершёнными ранее коммитами Этапов 5–6 (`70c7d44d`, `d8ac1a1d`, `cb5d8744`, `ddad32d9`, `8879139b`).
-
-Эта версия документации описывает состояние на функциональном checkpoint `61975e0d`. Документационный HEAD, содержащий эту версию, определяется по истории Git; ни один хеш, записанный в этом файле, не заменяет `git rev-parse HEAD`.
+Эта документация описывает функциональное состояние на checkpoint `9ba1b129`.
+Документационный HEAD, содержащий текущую версию файлов, всегда определяется Git.
 
 ## Источники истины
 
-Приоритет по убыванию:
+Приоритет:
 
-1. **Текущий HEAD Git и исходный код** — единственный строгий источник того, что реально реализовано.
-2. **`roadmap.md`** — актуальная дорожная карта, обновлена в этом слое.
-3. **Последние отчёты PHPUnit и статус миграций** — подтверждают тестовый и DB-baseline.
-4. **Актуальный внешний handoff / source archive** — создаётся для конкретного HEAD; действителен только для этой точки.
-5. **Исторические документы в `docs/`** — только справочный материал; могут содержать устаревшие данные.
+1. Текущий HEAD Git и исходный код.
+2. Этот файл и [`roadmap.md`](roadmap.md).
+3. Последние проверенные PHPUnit, migration и recovery evidence.
+4. Актуальные внешний handoff, roadmap и source archive для конкретного pushed HEAD.
+5. Исторические документы и старые Project Sources.
 
-> Старый summary или handoff не отменяет более свежий код или более новый handoff для того же HEAD.
+Старые recovery-файлы со статусом `R5 pending` являются историческими и не должны определять текущее состояние.
 
 ## Подтверждённый стек
 
-| Компонент | Версия / значение |
+| Компонент | Значение |
 |---|---|
 | PHP CLI | 8.3.32 |
-| Laravel Framework | 10.48.10 |
+| Laravel | 10.48.10 |
 | Composer | 2.8.3 |
 | Node.js | 22.11.0 |
 | npm | 11.12.1 |
-| Канонический MySQL | `turfirma_rebuild_v4` |
-| UI-слой | Blade + Bootstrap 5 (основной) |
-| Сборка | Vite 4.x |
-| Тесты | PHPUnit 10.5.20, SQLite `:memory:` |
+| PHPUnit | 10.5.20 |
+| PHPUnit DB | SQLite `:memory:` |
+| Canonical MySQL | 9.7.1, `turfirma_rebuild_v4`, port 3308 |
+| UI | Blade + Bootstrap 5 |
+| Build | Vite 4.x |
 
-TailwindCSS и Alpine.js объявлены в `package.json`. Их реальное применение в текущем коде нужно подтверждать в каждом новом слое; они не являются основной UI-архитектурой.
+## Recovery checkpoint
+
+Аварийное восстановление завершено.
+
+Подтверждено:
+
+- canonical DB promoted и проверена;
+- application fingerprint:
+  `fc449488f3d115713cfa0ee97b62a933dfa11393cdbc89c391816aa25d174784`;
+- final canonical manifest:
+  `78AD452573B4305897E20465F3B599F44C1E4C2636DE2DB321E695E4B70DB4B1`;
+- promoted logical dump:
+  `BDFAF8679622322495F47AE869AEFCE8614282227A49CA5BCD3BB28DCD1D8FA4`;
+- 52 migrations Ran / 0 Pending;
+- public smoke 15/15;
+- protected unauthenticated smoke 14/14;
+- R6D application validation:
+  `PASS_WITH_KNOWN_PREEXISTING_RSS_DEFECT`;
+- RSS-дефект после этого исправлен commit `49fe6fbf`;
+- canonical fingerprint до/после live validation не изменился.
+
+Recovery/rollback artifacts не удалять до отдельного retention-решения.
+
+## Последние функциональные checkpoint
+
+### RSS maintenance — `49fe6fbf`
+
+- `GET /helpful_information/news` стал read-only.
+- Внешний RSS-запрос и DB-write удалены из публичного GET.
+- Добавлены `RssNewsSyncService` и команда `news:sync-rss`.
+- Безопасный libxml, fakeable HTTP, транзакция, idempotency, SoftDeletes и slug collision handling.
+- Команда не запускалась против canonical MySQL.
+- Отдельный backlog: `/helpful_information/news/rss` затенён маршрутом `/{slug}`.
+
+### Stage 7 slice — `9ba1b129`
+
+Завершён slice `Cabinet shared-route role redirect consistency`:
+
+- единый приоритет ролей `admin > manager > tourist`;
+- корректные ролевые редиректы общих маршрутов;
+- targeted coverage: 8 tests / 43 assertions;
+- commit содержит только controller и focused test.
+
+Этот commit не закрывает весь Stage 7.
 
 ## Правила безопасной работы
 
-- **Один маленький семантический слой за раз.**
-- Перед патчем — read-only preflight: `git branch --show-current`, `git rev-parse HEAD`, `git status --short`.
-- Чётко определённый список разрешённых файлов перед началом слоя.
-- Claude Code используется в VS Code.
-- Новый функциональный слой начинается с read-only Plan-шага.
-- Manual mode: правки применяются только после одобрения плана пользователем.
-- Claude Code не коммитит и не пушит без отдельного одобрения.
-- Ревью точного `git diff` перед коммитом.
-- PHP lint для всех изменённых PHP-файлов.
-- Целевые тесты изменённых компонентов.
-- Полный прогон PHPUnit.
-- `git diff --check` (без лишних пробелов/конфликтов).
-- Read-only проверка канонической DB до и после тестов.
-- Убедиться, что изменились только ожидаемые файлы.
-- PHPUnit **всегда на SQLite `:memory:`** — никогда на MySQL и не на `turfirma_rebuild_v4`.
-- Не публиковать `.env`, SQL-дампы, токены, куки, личные документы, аватары, `vendor/`, `node_modules/`.
-- Не запускать команды миграции, импорта или обновления зависимостей без отдельного проверенного слоя.
+- Один маленький семантический slice за раз.
+- Перед правками — branch/HEAD/origin/status guards.
+- Отдельный read-only Plan для нового функционального slice.
+- Claude Code использовать для анализа/правок, когда он действительно нужен.
+- Ручные Git, lint, tests, staging, commit и push — точными проверяемыми командами.
+- Всегда проверять точный список changed/staged/committed paths.
+- PHPUnit — только SQLite `:memory:`.
+- Не смешивать functional, docs, dependency и DB maintenance изменения.
+- Не публиковать `.env`, SQL, cookies, токены и приватные файлы.
 
 ## Карта документации
 
-### Актуальные документы
-
-Три файла, обновлённые в этом слое и являющиеся основными ориентирами:
-
-| Файл | Роль |
+| Файл | Назначение |
 |---|---|
-| [`../README.md`](../README.md) | Точка входа в проект |
-| [`README.md`](README.md) | Индекс документации и правила работы |
-| [`roadmap.md`](roadmap.md) | Дорожная карта |
+| [`../README.md`](../README.md) | Точка входа |
+| [`README.md`](README.md) | Источники истины и правила работы |
+| [`roadmap.md`](roadmap.md) | Актуальные этапы и backlog |
 
-### Исторические и справочные документы
+Остальные документы в `docs/` могут быть историческими и требуют сверки с текущим кодом.
 
-Перечисленные ниже файлы **не удаляются** и сохраняются как исторический/справочный материал.
-Они могут содержать устаревшие версии статусов, даты, приоритеты, команды или заявления о завершении задач.
-Не рассматривайте их как текущие источники истины без сверки с актуальным кодом.
+## Следующий шаг
 
-**Среда и Git:**
-`development-setup.md`, `git-workflow.md`, `github-setup.md`, `HOW-TO-EDIT-ENV.md`
-
-**Устаревшие аудиты:**
-`code-audit-report.md`, `performance-audit.md`, `performance-optimization-plan.md`
-
-**Требования и дизайн кабинетов:**
-`CABINET-ADDITIONAL-REQUIREMENTS.md`, `PERSONAL-CABINETS-REDESIGN.md`, `REDESIGN-PLAN.md`,
-`tourist-cabinet-summary.md`, `TOURIST-CABINET-COMPLETED.md`, `manager-cabinet-summary.md`
-
-**Email:**
-`email-notifications-guide.md`, `email-setup-instructions.md`, `EMAIL-SETUP-STEP-BY-STEP.md`
-
-**Интеграция туроператоров:**
-`sletat-integration.md`, `sletat-setup-guide.md`, `tour-operators-integration.md`, `tour-widget-specification.md`
-
-**Резервное копирование и тестирование:**
-`DATABASE-BACKUP-GUIDE.md`, `testing-guide.md`, `testing-plan.md`
-
-**Старые планы, приоритеты и сводки:**
-`MASTER-PLAN.md`, `NEXT-STEPS.md`, `NEXT-PRIORITIES.md`, `UPDATED-PRIORITIES.md`,
-`CRITICAL-TASKS.md`, `FINAL-SUMMARY.md`, `DOCUMENTS-BOOKING-EXPLANATION.md`,
-`auth-and-roles-setup.md`
-
-## Тестовый baseline
-
-| Параметр | Значение |
-|---|---|
-| Полный baseline | 270 тестов, 836 утверждений |
-| MessagePollingIsolationTest (целевые, `61975e0d`) | 16 тестов, 44 утверждения |
-| Регрессия чата Этапа 6 (целевые) | 66 тестов, 185 утверждений |
-| BookingDocument UI (целевые) | 7 тестов, 34 утверждения |
-| Booking creation ownership/atomicity (целевые, `ddad32d9`) | 25 тестов, 97 утверждений |
-| Движок | PHPUnit 10.5.20, SQLite `:memory:` |
-
-Известное предупреждение: устаревшая XML-схема в `phpunit.xml` — не является сбоем, исправляется в отдельном слое.
-
-## База данных
-
-| Параметр | Значение |
-|---|---|
-| Канонический экземпляр | `turfirma_rebuild_v4` |
-| Fingerprint | `eb01d9e5c53685a4f4506660b5ca4cf53e0564ef3de1da33854206ede858dc8b` |
-| Строк в таблице миграций | 52 |
-| Ожидающих миграций | 0 |
-| Выборочный импорт | 375 строк, завершён; **повторный запуск запрещён** |
-
-Старые базы данных не являются целью текущего приложения. Учётные данные подключения не публикуются.
-
-## Следующий этап
-
-Этап 5 (жизненный цикл заявки) — ✅ завершён на checkpoint `e71d8cda`.
-Этап 6 (чат туриста и менеджера) — ✅ завершён на checkpoint `61975e0d`.
-`61975e0d` — общий функциональный checkpoint, лежащий в основе полной актуализации документации.
-
-Текущий slice — актуализация документации под это состояние. Этап 7 начнётся только после того, как этот документационный коммит будет запушен и подтверждён на реальном GitHub HEAD, и для него будут созданы свежий внешний handoff и sanitized source archive.
+После documentation/source refresh — read-only аудит следующего маленького Stage 7 slice.
+До аудита не предлагать широкий UI-refactor и не начинать Stage 8–13.
