@@ -78,8 +78,13 @@
                                 @enderror
                             </div>
 
+                            @php
+                                // Эффективная роль: admin > manager > tourist, как и в BookingController::update().
+                                $isStaffEditor = auth()->user()->isAdmin() || auth()->user()->isManager();
+                            @endphp
+
                             <!-- Для менеджера и админа -->
-                            @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                            @if($isStaffEditor)
                                 <div class="mb-3">
                                     <label for="total_price" class="form-label">
                                         Стоимость, ₽
@@ -111,8 +116,8 @@
                                 </div>
                             @endif
 
-                            <!-- Для туриста (только если статус NEW) -->
-                            @if(auth()->user()->isTourist() && $booking->status === \App\Models\Booking::STATUS_NEW)
+                            <!-- Для туриста (только если статус NEW и нет старшей роли) -->
+                            @if(!$isStaffEditor && auth()->user()->isTourist() && $booking->status === \App\Models\Booking::STATUS_NEW)
                                 <div class="mb-3">
                                     <label for="notes" class="form-label">
                                         Дополнительные пожелания
@@ -159,7 +164,7 @@
                                 </small>
                             </div>
 
-                            @if(auth()->user()->isTourist())
+                            @if(!$isStaffEditor && auth()->user()->isTourist())
                                 <div class="alert alert-warning">
                                     <i class="bi bi-exclamation-triangle"></i>
                                     <strong>Обратите внимание:</strong> После начала обработки заявки менеджером, редактирование будет недоступно.

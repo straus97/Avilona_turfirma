@@ -329,17 +329,22 @@ class BookingController extends Controller
 
         $allowedStatuses = $booking->allowedStatusesForUpdate();
 
-        // Валидация зависит от роли
+        // Эффективная роль определяется единым приоритетом: admin > manager > tourist.
+        // Пользователь с несколькими ролями получает поля самой старшей из них,
+        // а не объединение полей всех ролей, которыми он обладает.
+        $isStaff = $user->isAdmin() || $user->isManager();
+
+        // Валидация зависит от эффективной роли
         $rules = [
             'status' => ['required', Rule::in($allowedStatuses)],
         ];
 
-        if ($user->isManager() || $user->isAdmin()) {
+        if ($isStaff) {
             $rules['manager_notes'] = 'nullable|string';
             $rules['total_price'] = 'nullable|numeric|min:0';
         }
 
-        if ($user->isTourist() && $booking->status === Booking::STATUS_NEW) {
+        if (!$isStaff && $user->isTourist() && $booking->status === Booking::STATUS_NEW) {
             $rules['notes'] = 'nullable|string';
             $rules['tourists_data'] = 'nullable|array';
         }
