@@ -99,17 +99,7 @@
                                 <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
-                                @if(Auth::user()->isManager())
-                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.bookings') }}">
-                                        <i class="bi bi-bookmark"></i> Мои заявки
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.dashboard') }}">
-                                        <i class="bi bi-house-door"></i> Личный кабинет
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.settings') }}">
-                                        <i class="bi bi-gear"></i> Настройки
-                                    </a></li>
-                                @elseif(Auth::user()->isAdmin())
+                                @if(Auth::user()->isAdmin())
                                     <li><a class="dropdown-item" href="{{ route('cabinet.admin.bookings') }}">
                                         <i class="bi bi-bookmark"></i> Заявки
                                     </a></li>
@@ -117,6 +107,16 @@
                                         <i class="bi bi-house-door"></i> Админ панель
                                     </a></li>
                                     <li><a class="dropdown-item" href="{{ route('cabinet.admin.settings') }}">
+                                        <i class="bi bi-gear"></i> Настройки
+                                    </a></li>
+                                @elseif(Auth::user()->isManager())
+                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.bookings') }}">
+                                        <i class="bi bi-bookmark"></i> Мои заявки
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.dashboard') }}">
+                                        <i class="bi bi-house-door"></i> Личный кабинет
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('cabinet.manager.settings') }}">
                                         <i class="bi bi-gear"></i> Настройки
                                     </a></li>
                                 @else
