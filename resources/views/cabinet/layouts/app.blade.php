@@ -428,11 +428,23 @@
                     </div>
                     <i class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
                 </div>
+                @php
+                    if (Auth::user()->hasAnyRole(['admin'])) {
+                        $headerProfileRoute = 'cabinet.admin.profile';
+                        $headerSettingsRoute = 'cabinet.admin.settings';
+                    } elseif (Auth::user()->hasAnyRole(['manager'])) {
+                        $headerProfileRoute = 'cabinet.manager.profile';
+                        $headerSettingsRoute = 'cabinet.manager.settings';
+                    } else {
+                        $headerProfileRoute = 'cabinet.profile';
+                        $headerSettingsRoute = 'cabinet.settings';
+                    }
+                @endphp
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{{ route('cabinet.profile') }}">
+                    <li><a class="dropdown-item" href="{{ route($headerProfileRoute) }}">
                         <i class="bi bi-person me-2"></i> Мой профиль
                     </a></li>
-                    <li><a class="dropdown-item" href="{{ route('cabinet.settings') }}">
+                    <li><a class="dropdown-item" href="{{ route($headerSettingsRoute) }}">
                         <i class="bi bi-gear me-2"></i> Настройки
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
