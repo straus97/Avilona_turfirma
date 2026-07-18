@@ -9,12 +9,12 @@
 
 @auth
     @section('sidebar')
-        @if(Auth::user()->isTourist())
-            @include('cabinet.components.sidebar.tourist')
+        @if(Auth::user()->isAdmin())
+            @include('cabinet.components.sidebar.admin')
         @elseif(Auth::user()->isManager())
             @include('cabinet.components.sidebar.manager')
-        @elseif(Auth::user()->isAdmin())
-            @include('cabinet.components.sidebar.admin')
+        @elseif(Auth::user()->isTourist())
+            @include('cabinet.components.sidebar.tourist')
         @endif
     @endsection
 @endauth
