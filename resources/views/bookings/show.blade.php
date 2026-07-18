@@ -251,6 +251,12 @@
                 <!-- Кнопки действий -->
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
                     @auth
+                        @php
+                            $isEffectiveAdmin = auth()->user()->isAdmin();
+                            $isEffectiveManager = !$isEffectiveAdmin && auth()->user()->isManager();
+                            $isEffectiveStaff = $isEffectiveAdmin || $isEffectiveManager;
+                            $isEffectiveTourist = !$isEffectiveStaff && auth()->user()->isTourist();
+                        @endphp
                         <div class="d-flex flex-wrap gap-2 justify-content-between">
                             <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> К списку заявок
@@ -258,7 +264,7 @@
 
                             <div class="d-flex flex-wrap gap-2">
                                 <!-- Кнопки для туриста -->
-                                @if(auth()->user()->isTourist())
+                                @if($isEffectiveTourist)
                                     @if($booking->canTransitionTo(\App\Models\Booking::STATUS_CANCELLED))
                                         @can('cancel', $booking)
                                             <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите отменить заявку?')">
@@ -281,10 +287,9 @@
                                 @endif
 
                                 <!-- Кнопки для менеджера/админа -->
-                                @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                @if($isEffectiveStaff)
                                     @php
-                                        $isManager = auth()->user()->isManager();
-                                        $managerCanEdit = !$isManager || !in_array($booking->status, [App\Models\Booking::STATUS_CANCELLED, App\Models\Booking::STATUS_COMPLETED]);
+                                        $managerCanEdit = !$isEffectiveManager || !in_array($booking->status, [App\Models\Booking::STATUS_CANCELLED, App\Models\Booking::STATUS_COMPLETED]);
                                     @endphp
                                     @if($managerCanEdit)
                                         <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-warning">
@@ -321,7 +326,7 @@
                                 @endif
 
                                 <!-- Удаление для админа -->
-                                @if(auth()->user()->isAdmin())
+                                @if($isEffectiveAdmin)
                                     <form action="{{ route('bookings.destroy', $booking) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить заявку? Это действие необратимо!')">
                                         @csrf
                                         @method('DELETE')
