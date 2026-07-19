@@ -639,24 +639,30 @@ class BookingController extends Controller
     }
 
     /**
-     * Проверка прав доступа к заявке
+     * Проверка прав доступа к заявке для staff-only маршрутов документов
+     * (маршрут уже защищён role:manager,admin).
+     *
+     * Эффективная роль определяется единым приоритетом: admin > manager > tourist.
+     * Пользователь с несколькими ролями проверяется только по правилам самой
+     * старшей из них — менеджер с дополнительной ролью tourist не должен
+     * получать доступ к чужой (неназначенной) заявке через ветку tourist,
+     * ведь на этих маршрутах эффективная роль для него — manager.
      */
     private function authorizeBooking(Booking $booking)
     {
         $user = Auth::user();
-        
-        if ($user->isAdmin()) {
+
+        $isAdmin   = $user->isAdmin();
+        $isManager = !$isAdmin && $user->isManager();
+
+        if ($isAdmin) {
             return;
         }
-        
-        if ($user->isManager() && $booking->manager_id === $user->id) {
+
+        if ($isManager && $booking->manager_id === $user->id) {
             return;
         }
-        
-        if ($user->isTourist() && $booking->user_id === $user->id) {
-            return;
-        }
-        
+
         abort(403, 'У вас нет доступа к этой заявке');
     }
 }
