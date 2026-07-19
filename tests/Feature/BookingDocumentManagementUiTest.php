@@ -208,20 +208,143 @@ class BookingDocumentManagementUiTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 8. Manager + tourist owner, not assigned: owner-facing experience only
+    // -----------------------------------------------------------------------
+
+    public function test_manager_tourist_owner_not_assigned_gets_owner_facing_document_experience(): void
+    {
+        $multiRoleOwner = $this->makeUser(Role::TOURIST);
+        $this->attachRole($multiRoleOwner, Role::MANAGER);
+        $assignedManager = $this->makeUser(Role::MANAGER);
+        $uploader = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($multiRoleOwner, $assignedManager->id);
+        $booking->update(['manager_notes' => 'Unique Manager Notes Marker XQ42']);
+        $document = $this->makeDocument($booking, $uploader->id);
+
+        $response = $this->actingAs($multiRoleOwner)
+            ->get(route('bookings.show', $booking));
+
+        $response->assertOk();
+
+        // No manager notes
+        $response->assertDontSee('Unique Manager Notes Marker XQ42', false);
+
+        // No uploader identity
+        $response->assertDontSee($uploader->name, false);
+
+        // No staff document download route
+        $response->assertDontSee(
+            route('bookings.documents.download', [$booking, $document]),
+            false
+        );
+
+        // No delete controls
+        $response->assertDontSee(
+            route('bookings.documents.destroy', [$booking, $document]),
+            false
+        );
+
+        // No staff upload form
+        $response->assertDontSee(route('bookings.documents.store', $booking), false);
+
+        // Owner-facing cabinet route rendered
+        $response->assertSee(
+            route('cabinet.documents.bookings.download', [$booking, $document]),
+            false
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // 9. Admin + tourist owner, not assigned: remains staff-facing
+    // -----------------------------------------------------------------------
+
+    public function test_admin_tourist_owner_not_assigned_remains_staff_facing(): void
+    {
+        $adminOwner = $this->makeUser(Role::TOURIST);
+        $this->attachRole($adminOwner, Role::ADMIN);
+        $assignedManager = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($adminOwner, $assignedManager->id);
+        $booking->update(['manager_notes' => 'Unique Admin Staff Notes Marker ZK77']);
+        $document = $this->makeDocument($booking, $assignedManager->id);
+
+        $response = $this->actingAs($adminOwner)
+            ->get(route('bookings.show', $booking));
+
+        $response->assertOk();
+
+        $response->assertSee('Unique Admin Staff Notes Marker ZK77', false);
+
+        $response->assertSee(
+            route('bookings.documents.download', [$booking, $document]),
+            false
+        );
+        $response->assertSee(
+            route('bookings.documents.destroy', [$booking, $document]),
+            false
+        );
+        $response->assertSee(route('bookings.documents.store', $booking), false);
+
+        $response->assertDontSee(
+            route('cabinet.documents.bookings.download', [$booking, $document]),
+            false
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // 10. Manager + tourist owner AND assigned manager: remains staff-facing
+    // -----------------------------------------------------------------------
+
+    public function test_manager_tourist_owner_and_assigned_remains_staff_facing(): void
+    {
+        $ownerManager = $this->makeUser(Role::TOURIST);
+        $this->attachRole($ownerManager, Role::MANAGER);
+        $booking = $this->makeBookingFor($ownerManager, $ownerManager->id);
+        $booking->update(['manager_notes' => 'Unique Owner Assigned Notes Marker QW19']);
+        $document = $this->makeDocument($booking, $ownerManager->id);
+
+        $response = $this->actingAs($ownerManager)
+            ->get(route('bookings.show', $booking));
+
+        $response->assertOk();
+
+        $response->assertSee('Unique Owner Assigned Notes Marker QW19', false);
+
+        $response->assertSee(
+            route('bookings.documents.download', [$booking, $document]),
+            false
+        );
+        $response->assertSee(
+            route('bookings.documents.destroy', [$booking, $document]),
+            false
+        );
+        $response->assertSee(route('bookings.documents.store', $booking), false);
+
+        $response->assertDontSee(
+            route('cabinet.documents.bookings.download', [$booking, $document]),
+            false
+        );
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
     private function makeUser(string $roleName): User
+    {
+        $user = User::factory()->create();
+        $this->attachRole($user, $roleName);
+
+        return $user;
+    }
+
+    private function attachRole(User $user, string $roleName): void
     {
         $role = Role::query()->firstOrCreate(
             ['name' => $roleName],
             ['description' => Role::availableRoles()[$roleName] ?? $roleName]
         );
 
-        $user = User::factory()->create();
-        $user->roles()->attach($role->id);
-
-        return $user;
+        $user->roles()->syncWithoutDetaching([$role->id]);
     }
 
     private function makeBookingFor(User $owner, ?int $managerId = null): Booking

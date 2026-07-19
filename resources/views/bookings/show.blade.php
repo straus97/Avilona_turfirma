@@ -21,6 +21,18 @@
 
 @section('content')
     @auth
+        @php
+            // Полномочия рассчитываются для конкретной заявки, а не глобально:
+            // менеджер без назначения на эту заявку не должен получать
+            // staff-права только из-за глобальной роли manager.
+            $isBookingAdmin = auth()->user()->isAdmin();
+            $isBookingAssignedManager = !$isBookingAdmin
+                && auth()->user()->isManager()
+                && $booking->manager_id === auth()->id();
+            $isBookingStaff = $isBookingAdmin || $isBookingAssignedManager;
+            $isBookingOwner = $booking->user_id === auth()->id();
+            $isBookingOwnerFacing = auth()->user()->isTourist() && $isBookingOwner && !$isBookingStaff;
+        @endphp
         <div class="page-header">
             <h1 class="page-title">Заявка #{{ $booking->id }}</h1>
             <p class="page-subtitle">{{ $booking->destination_country }}@if($booking->destination_city), {{ $booking->destination_city }}@endif</p>
@@ -196,7 +208,7 @@
                         @endif
 
                         <!-- Заметки менеджера -->
-                        @if($booking->manager_notes && (auth()->user()->isManager() || auth()->user()->isAdmin()))
+                        @if($booking->manager_notes && $isBookingStaff)
                             <div class="mb-4">
                                 <h5 class="text-warning">
                                     <i class="bi bi-clipboard-check"></i> Заметки менеджера
@@ -207,7 +219,7 @@
                         @endif
 
                         <!-- Информация о клиенте (для менеджера/админа) -->
-                        @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                        @if($isBookingStaff)
                             <div class="mb-4">
                                 <h5 class="text-primary">
                                     <i class="bi bi-person"></i> Клиент
@@ -252,10 +264,10 @@
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
                     @auth
                         @php
-                            $isEffectiveAdmin = auth()->user()->isAdmin();
-                            $isEffectiveManager = !$isEffectiveAdmin && auth()->user()->isManager();
-                            $isEffectiveStaff = $isEffectiveAdmin || $isEffectiveManager;
-                            $isEffectiveTourist = !$isEffectiveStaff && auth()->user()->isTourist();
+                            $isEffectiveAdmin = $isBookingAdmin;
+                            $isEffectiveManager = $isBookingAssignedManager;
+                            $isEffectiveStaff = $isBookingStaff;
+                            $isEffectiveTourist = $isBookingOwnerFacing;
                         @endphp
                         <div class="d-flex flex-wrap gap-2 justify-content-between">
                             <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary">
@@ -452,7 +464,7 @@
                                         <th>Тип</th>
                                         <th>Размер</th>
                                         <th>Дата загрузки</th>
-                                        @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                        @if($isBookingStaff)
                                             <th>Загрузил</th>
                                         @endif
                                         <th></th>
@@ -481,11 +493,11 @@
                                             <td>{{ $docTypeLabels[$document->document_type] ?? $document->document_type }}</td>
                                             <td>{{ $sizeLabel }}</td>
                                             <td>{{ $uploadDate ? $uploadDate->format('d.m.Y H:i') : '—' }}</td>
-                                            @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                            @if($isBookingStaff)
                                                 <td>{{ $document->uploadedBy?->name ?? 'Не указан' }}</td>
                                             @endif
                                             <td class="text-end text-nowrap">
-                                                @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                                                @if($isBookingStaff)
                                                     <a href="{{ route('bookings.documents.download', [$booking, $document]) }}"
                                                        class="btn btn-sm btn-outline-primary me-1">
                                                         <i class="bi bi-download"></i>
@@ -498,7 +510,7 @@
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
-                                                @elseif(auth()->user()->isTourist())
+                                                @elseif($isBookingOwnerFacing)
                                                     <a href="{{ route('cabinet.documents.bookings.download', [$booking, $document]) }}"
                                                        class="btn btn-sm btn-outline-primary">
                                                         <i class="bi bi-download"></i>
@@ -512,7 +524,7 @@
                         </div>
                     @endif
 
-                    @if(auth()->user()->isManager() || auth()->user()->isAdmin())
+                    @if($isBookingStaff)
                         <hr class="mt-3">
                         <h6 class="mb-3">Загрузить документ</h6>
                         <form action="{{ route('bookings.documents.store', $booking) }}"

@@ -271,7 +271,19 @@ class CabinetController extends Controller
         Booking $booking,
         BookingDocument $document
     ): StreamedResponse|RedirectResponse {
-        if ($redirect = $this->redirectIfNotTourist()) {
+        $user = Auth::user();
+
+        // Узкое исключение: реальный владелец заявки с ролью tourist, который
+        // не является ни админом, ни назначенным по этой заявке менеджером,
+        // должен пользоваться этим owner-facing маршрутом даже если у него
+        // есть также глобальная роль manager. Админ и назначенный менеджер
+        // остаются staff-facing и по-прежнему уходят через общий редирект.
+        $isOwnerNotStaffForThisBooking = $user->hasRole('tourist')
+            && $booking->user_id === $user->id
+            && !$user->isAdmin()
+            && $booking->manager_id !== $user->id;
+
+        if (!$isOwnerNotStaffForThisBooking && $redirect = $this->redirectIfNotTourist()) {
             return $redirect;
         }
 

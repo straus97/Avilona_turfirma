@@ -49,6 +49,81 @@ class BookingDocumentSecurityTest extends TestCase
             ->assertHeader('content-disposition');
     }
 
+    public function test_manager_tourist_owner_not_assigned_can_download_own_booking_document(): void
+    {
+        Storage::fake('local');
+
+        $multiRoleOwner = $this->createUserWithRole(Role::TOURIST);
+        $this->attachRole($multiRoleOwner, Role::MANAGER);
+        $assignedManager = $this->createUserWithRole(Role::MANAGER);
+        $booking = $this->createBookingFor($multiRoleOwner);
+        $booking->update(['manager_id' => $assignedManager->id]);
+
+        Storage::disk('local')->put(
+            'documents/bookings/owner-not-assigned-voucher.pdf',
+            'private-booking-document'
+        );
+
+        $document = BookingDocument::query()->create([
+            'booking_id' => $booking->id,
+            'document_type' => 'voucher',
+            'title' => 'Owner Not Assigned Voucher',
+            'file_path' =>
+                'documents/bookings/owner-not-assigned-voucher.pdf',
+            'file_size' => 24,
+            'uploaded_by' => $assignedManager->id,
+        ]);
+
+        $this
+            ->actingAs($multiRoleOwner)
+            ->get(
+                route(
+                    'cabinet.documents.bookings.download',
+                    [$booking, $document]
+                )
+            )
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        Storage::disk('local')->assertExists(
+            'documents/bookings/owner-not-assigned-voucher.pdf'
+        );
+    }
+
+    public function test_admin_tourist_owner_remains_redirected_by_owner_facing_route(): void
+    {
+        Storage::fake('local');
+
+        $adminOwner = $this->createUserWithRole(Role::TOURIST);
+        $this->attachRole($adminOwner, Role::ADMIN);
+        $booking = $this->createBookingFor($adminOwner);
+
+        Storage::disk('local')->put(
+            'documents/bookings/admin-owner-voucher.pdf',
+            'private-booking-document'
+        );
+
+        $document = BookingDocument::query()->create([
+            'booking_id' => $booking->id,
+            'document_type' => 'voucher',
+            'title' => 'Admin Owner Voucher',
+            'file_path' =>
+                'documents/bookings/admin-owner-voucher.pdf',
+            'file_size' => 24,
+            'uploaded_by' => $adminOwner->id,
+        ]);
+
+        $this
+            ->actingAs($adminOwner)
+            ->get(
+                route(
+                    'cabinet.documents.bookings.download',
+                    [$booking, $document]
+                )
+            )
+            ->assertRedirect(route('cabinet.admin.dashboard'));
+    }
+
     public function test_other_tourist_cannot_download_booking_document(): void
     {
         Storage::fake('local');
@@ -164,6 +239,15 @@ class BookingDocumentSecurityTest extends TestCase
 
     private function createUserWithRole(string $roleName): User
     {
+        $user = User::factory()->create();
+
+        $this->attachRole($user, $roleName);
+
+        return $user;
+    }
+
+    private function attachRole(User $user, string $roleName): void
+    {
         $role = Role::query()->firstOrCreate(
             ['name' => $roleName],
             [
@@ -173,10 +257,6 @@ class BookingDocumentSecurityTest extends TestCase
             ]
         );
 
-        $user = User::factory()->create();
-
-        $user->roles()->attach($role->id);
-
-        return $user;
+        $user->roles()->syncWithoutDetaching([$role->id]);
     }
 }

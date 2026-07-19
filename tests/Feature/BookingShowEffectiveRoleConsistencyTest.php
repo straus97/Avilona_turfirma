@@ -121,6 +121,24 @@ class BookingShowEffectiveRoleConsistencyTest extends TestCase
         $this->assertStringNotContainsString(self::GUIDANCE_MANAGER_ASSIGNED, $html);
     }
 
+    public function test_manager_tourist_owner_not_assigned_progress_booking_sees_only_owner_facing_state(): void
+    {
+        $ownerNotAssigned = $this->makeUser([Role::MANAGER, Role::TOURIST]);
+        $assignedManager  = $this->makeUser([Role::MANAGER]);
+        $booking = $this->makeBooking($ownerNotAssigned, $assignedManager->id, Booking::STATUS_PROGRESS);
+
+        $html = $this->getShowHtml($ownerNotAssigned, $booking);
+
+        $this->assertStringNotContainsString('href="' . route('bookings.edit', $booking) . '"', $html);
+        $this->assertStringNotContainsString('action="' . route('bookings.confirm', $booking) . '"', $html);
+        $this->assertStringNotContainsString('action="' . route('bookings.complete', $booking) . '"', $html);
+        $this->assertStringNotContainsString('action="' . route('bookings.destroy', $booking) . '"', $html);
+        $this->assertStringNotContainsString(self::TOURIST_CANCEL_TEXT, $html);
+
+        // Same non-staff guidance a pure tourist owner sees once a manager has taken the booking into work.
+        $this->assertStringContainsString(self::GUIDANCE_MANAGER_ASSIGNED, $html);
+    }
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
