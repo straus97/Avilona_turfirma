@@ -18,8 +18,8 @@ class IndexController extends Controller
         $query = Tour::query()
             ->active()
             ->select([
-                'id', 'title', 'departure_city', 'destination_country', 
-                'destination_city', 'start_date', 'nights', 'price', 
+                'id', 'title', 'departure_city', 'destination_country',
+                'destination_city', 'start_date', 'end_date', 'nights', 'price',
                 'hotel_name', 'hotel_stars', 'meal_type', 'image_url',
                 'is_hot_deal', 'adults', 'children', 'created_at'
             ]);
