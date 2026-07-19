@@ -59,17 +59,17 @@ class BookingPolicy
             return true;
         }
         
+        // Менеджер может отменить свою заявку
+        if ($user->hasRole('manager') && $booking->manager_id === $user->id) {
+            return true;
+        }
+
         // Турист может отменить ТОЛЬКО если заявка еще не взята в работу
         if ($user->hasRole('tourist') && $booking->user_id === $user->id) {
             // Можно отменить только если статус "новая" и нет назначенного менеджера
             return $booking->status === Booking::STATUS_NEW && !$booking->manager_id;
         }
-        
-        // Менеджер может отменить свою заявку
-        if ($user->hasRole('manager') && $booking->manager_id === $user->id) {
-            return true;
-        }
-        
+
         return false;
     }
     
