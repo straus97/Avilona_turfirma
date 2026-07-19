@@ -6,16 +6,15 @@
 ## Текущее состояние
 
 - Активная ветка: `db-rebuild-stage3`.
-- Функциональный checkpoint этой документации:
-  `9ba1b1293571ab30675919373c7480764cf0b61d`
-  — `fix: align cabinet shared-route role redirects`.
+- Функциональный checkpoint:
+  `973975d6c01e4b22544defaa9c9ff67ffccbd4b3`
+  — `fix: align booking show per-booking authorization`.
 - Предыдущий maintenance checkpoint:
   `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f`
   — `fix: move news RSS sync out of public request`.
-- Фактический текущий HEAD всегда определяется Git (`git rev-parse HEAD`), а не только значением в документации.
-- Этапы 5 и 6 завершены.
-- В Этапе 7 завершён первый изолированный slice — согласованность редиректов общих маршрутов кабинета. Широкий UX-аудит кабинетов продолжается отдельными небольшими slice.
+- Этапы 5, 6 и 7 завершены.
 - Аварийное восстановление canonical MySQL завершено и проверено.
+- Документационный commit, содержащий эту версию файлов, всегда определяется Git.
 
 ## Подтверждённые возможности
 
@@ -26,7 +25,14 @@
 - Приватные пользовательские документы и документы бронирования.
 - Защищённый чат участников бронирования и приватные вложения.
 - Post-persistence уведомления с изоляцией ошибок доставки.
-- Согласованные ролевые редиректы общих маршрутов кабинета.
+- Единый role precedence: `admin > manager > tourist`.
+- Согласованные ролевые переходы кабинета, header/sidebar links и booking UI.
+- Booking-scoped staff authority:
+  - admin всегда остаётся staff-facing;
+  - manager получает staff-facing доступ только к назначенной ему заявке;
+  - manager+tourist, владелец, но не назначенный менеджер, остаётся owner-facing;
+  - owner-facing скачивание документа не открывает staff-only маршрут.
+- Dual-role участники сохраняют корректный доступ к чату своей заявки.
 - Публичная страница новостей работает только на чтение:
   - не выполняет внешний RSS-запрос;
   - не изменяет базу данных;
@@ -40,7 +46,7 @@
 
 | Слой | Технология |
 |---|---|
-| PHP CLI | 8.3.32 |
+| PHP CLI проекта | 8.3.32 |
 | Фреймворк | Laravel 10.48.10 |
 | Composer | 2.8.3 |
 | Node.js | 22.11.0 |
@@ -49,6 +55,13 @@
 | UI | Blade + Bootstrap 5 |
 | Canonical DB | MySQL 9.7.1, `turfirma_rebuild_v4`, port 3308 |
 | Тесты | PHPUnit 10.5.20, SQLite `:memory:` |
+
+Глобальная команда `php` в текущей Windows-среде может указывать на PHP 8.4.13.
+Для проекта использовать точный executable:
+
+```text
+C:\wamp\bin\php\php8.3.32\php.exe
+```
 
 ## Canonical DB
 
@@ -60,11 +73,17 @@
 - 28 таблиц InnoDB;
 - users=7, role_user=7, roles=3;
 - распределение ролей: admin=1, manager=0, tourist=6;
-- application fingerprint:
+- bookings/messages/booking_documents/user_documents=0;
+- recovery application fingerprint:
   `fc449488f3d115713cfa0ee97b62a933dfa11393cdbc89c391816aa25d174784`;
-- public smoke: 15/15;
-- protected unauthenticated smoke: 14/14;
-- fingerprint до и после HTTP-проверок не изменился.
+- Stage 7 read-only session fingerprint:
+  `afb2cd19ce0401e82c8bc29f0446785906afd9cc31197f81cc573adb19f06cca`;
+- Stage 7 browser-smoke fixtures полностью удалены;
+- read-only session fingerprint после cleanup восстановлен без изменений;
+- Apache service lifecycle probe: HTTP 200;
+- canonical MySQL lifecycle probe: PASS.
+
+Эти два fingerprint получены разными алгоритмами и не должны сравниваться друг с другом.
 
 Старый rollback/physical backup и recovery evidence пока не удалять без отдельного retention-решения.
 
@@ -77,7 +96,6 @@ npm ci
 
 Настройте локальный `.env`. Не публикуйте `.env`, SQL-дампы, токены, cookies и приватные документы.
 
-Обычный локальный запуск допускается только после отдельной проверки текущего operational state.
 Не запускайте команды записи в canonical DB без утверждённого плана.
 
 ## Тестирование
@@ -92,12 +110,16 @@ DB_DATABASE=:memory:
 Текущий baseline:
 
 ```text
-295 tests
-951 assertions
+352 tests
+1183 assertions
 ```
 
-```bash
-php artisan test --no-ansi
+Запускать через PHP 8.3.32:
+
+```powershell
+& 'C:\wamp\bin\php\php8.3.32\php.exe' `
+    'vendor\bin\phpunit' `
+    --colors=never
 ```
 
 Известное неблокирующее предупреждение: `phpunit.xml` использует устаревшую XML schema.
@@ -121,5 +143,8 @@ php artisan test --no-ansi
 
 ## Текущий приоритет
 
-Следующий функциональный шаг — **read-only аудит следующего небольшого slice Этапа 7**.
-Не начинать широкий рефакторинг кабинетов целиком и не смешивать его с backlog-дефектами RSS/CMS.
+Stage 7 закрыт. Следующий функциональный шаг — **read-only discovery для Stage 8**
+по каталогу, поиску туров и feasibility внешних интеграций.
+
+До выбора точного scope не начинать массовую реализацию каталога, не выполнять внешние
+интеграционные запросы и не смешивать Stage 8 с RSS/CMS backlog.

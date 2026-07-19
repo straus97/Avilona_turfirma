@@ -5,16 +5,19 @@
 | Параметр | Значение |
 |---|---|
 | Ветка | `db-rebuild-stage3` |
-| Функциональный checkpoint | `9ba1b1293571ab30675919373c7480764cf0b61d` |
-| Commit | `fix: align cabinet shared-route role redirects` |
+| Функциональный checkpoint | `973975d6c01e4b22544defaa9c9ff67ffccbd4b3` |
+| Commit | `fix: align booking show per-booking authorization` |
 | Предыдущий maintenance commit | `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f` |
-| PHPUnit baseline | 295 tests / 951 assertions |
+| PHPUnit baseline | 352 tests / 1183 assertions |
 | PHPUnit DB | SQLite `:memory:` |
 | Canonical schema | `turfirma_rebuild_v4` |
 | Canonical migrations | 52 Ran / 0 Pending |
 | Recovery | COMPLETE |
+| Stage 5 | COMPLETE |
+| Stage 6 | COMPLETE |
+| Stage 7 | COMPLETE |
 
-Эта документация описывает функциональное состояние на checkpoint `9ba1b129`.
+Эта документация описывает функциональное состояние на checkpoint `973975d6`.
 Документационный HEAD, содержащий текущую версию файлов, всегда определяется Git.
 
 ## Источники истины
@@ -23,17 +26,18 @@
 
 1. Текущий HEAD Git и исходный код.
 2. Этот файл и [`roadmap.md`](roadmap.md).
-3. Последние проверенные PHPUnit, migration и recovery evidence.
+3. Последние проверенные PHPUnit, migration, recovery и browser-smoke evidence.
 4. Актуальные внешний handoff, roadmap и source archive для конкретного pushed HEAD.
 5. Исторические документы и старые Project Sources.
 
-Старые recovery-файлы со статусом `R5 pending` являются историческими и не должны определять текущее состояние.
+Старые recovery-файлы со статусом `R5 pending` и Project Sources на `4b568d69`
+являются историческими после завершения нового documentation/source refresh.
 
 ## Подтверждённый стек
 
 | Компонент | Значение |
 |---|---|
-| PHP CLI | 8.3.32 |
+| PHP CLI проекта | 8.3.32 |
 | Laravel | 10.48.10 |
 | Composer | 2.8.3 |
 | Node.js | 22.11.0 |
@@ -44,6 +48,9 @@
 | UI | Blade + Bootstrap 5 |
 | Build | Vite 4.x |
 
+Глобальный `php` может указывать на PHP 8.4.13. Скрипты и PHPUnit проекта должны
+использовать `C:\wamp\bin\php\php8.3.32\php.exe`.
+
 ## Recovery checkpoint
 
 Аварийное восстановление завершено.
@@ -51,7 +58,7 @@
 Подтверждено:
 
 - canonical DB promoted и проверена;
-- application fingerprint:
+- recovery application fingerprint:
   `fc449488f3d115713cfa0ee97b62a933dfa11393cdbc89c391816aa25d174784`;
 - final canonical manifest:
   `78AD452573B4305897E20465F3B599F44C1E4C2636DE2DB321E695E4B70DB4B1`;
@@ -63,31 +70,65 @@
 - R6D application validation:
   `PASS_WITH_KNOWN_PREEXISTING_RSS_DEFECT`;
 - RSS-дефект после этого исправлен commit `49fe6fbf`;
-- canonical fingerprint до/после live validation не изменился.
+- canonical fingerprint до/после recovery live validation не изменился.
 
 Recovery/rollback artifacts не удалять до отдельного retention-решения.
 
-## Последние функциональные checkpoint
+## Stage 7 — COMPLETE
 
-### RSS maintenance — `49fe6fbf`
+Role precedence для общих и booking-scoped потоков:
 
-- `GET /helpful_information/news` стал read-only.
-- Внешний RSS-запрос и DB-write удалены из публичного GET.
-- Добавлены `RssNewsSyncService` и команда `news:sync-rss`.
-- Безопасный libxml, fakeable HTTP, транзакция, idempotency, SoftDeletes и slug collision handling.
-- Команда не запускалась против canonical MySQL.
-- Отдельный backlog: `/helpful_information/news/rss` затенён маршрутом `/{slug}`.
+```text
+admin > assigned manager > owner-facing tourist
+```
 
-### Stage 7 slice — `9ba1b129`
+Завершённые Stage 7 checkpoint:
 
-Завершён slice `Cabinet shared-route role redirect consistency`:
+- `9ba1b129` — cabinet shared-route role redirects.
+- `73ea7ed4` — public cabinet menu role precedence.
+- `47507b85` — cabinet header role links.
+- `7cf9381a` — booking view sidebar role precedence.
+- `2ba8f22d` — booking edit effective role.
+- `842e0603` — booking show effective role.
+- `271ca168` — booking cancel effective role.
+- `6d23812d` — cabinet dashboard role guard.
+- `1bc2c9ea` — booking document effective role.
+- `34a03ee9` — dual-role message participant coverage.
+- `973975d6` — booking show per-booking authorization.
 
-- единый приоритет ролей `admin > manager > tourist`;
-- корректные ролевые редиректы общих маршрутов;
-- targeted coverage: 8 tests / 43 assertions;
-- commit содержит только controller и focused test.
+Подтверждённые правила:
 
-Этот commit не закрывает весь Stage 7.
+- admin+tourist остаётся staff-facing;
+- manager+tourist owner+assigned остаётся staff-facing;
+- manager+tourist owner-not-assigned становится owner-facing;
+- owner-facing пользователь не видит manager notes, uploader identity,
+  staff download/delete/upload и staff lifecycle controls;
+- owner-facing document route работает только для реального владельца без
+  booking-scoped staff authority;
+- staff-only document route для owner-not-assigned возвращает 403;
+- shared message routes сохраняют owner-based participant access.
+
+## Stage 7 closure evidence
+
+Финальное подтверждение:
+
+- PHP 8.3.32;
+- PHPUnit SQLite `:memory:`;
+- focused booking-show/document regression: 79 tests / 267 assertions;
+- full PHPUnit at committed HEAD: 352 tests / 1183 assertions;
+- Apache syntax, service lifecycle и HTTP 200: PASS;
+- canonical MySQL 9.7.1, port 3308, 28 InnoDB tables: PASS;
+- Stage 7 read-only session fingerprint:
+  `afb2cd19ce0401e82c8bc29f0446785906afd9cc31197f81cc573adb19f06cca`;
+- browser smoke для трёх mixed-role сценариев: PASS;
+- временные fixtures и документы удалены;
+- fingerprint после cleanup восстановлен;
+- local/origin HEAD совпадают;
+- working tree clean;
+- `STAGE7_FINAL_CLOSURE_VERIFICATION=PASS`.
+
+Stage 7 session fingerprint не является заменой recovery application fingerprint:
+алгоритмы различаются.
 
 ## Правила безопасной работы
 
@@ -113,5 +154,11 @@ Recovery/rollback artifacts не удалять до отдельного retent
 
 ## Следующий шаг
 
-После documentation/source refresh — read-only аудит следующего маленького Stage 7 slice.
-До аудита не предлагать широкий UI-refactor и не начинать Stage 8–13.
+После documentation/source refresh — read-only discovery для Stage 8:
+
+1. инвентаризировать текущие tour/catalog/search routes, models, views и tests;
+2. проверить фактическую структуру canonical schema без изменений БД;
+3. отдельно оценить feasibility внешних интеграций без реальных запросов;
+4. выбрать один маленький первый Stage 8 slice и exact allowed paths.
+
+До утверждения плана не начинать широкий каталог или интеграционную реализацию.

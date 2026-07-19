@@ -1,12 +1,12 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-07-18**
+Дата checkpoint: **2026-07-19**
 
 Функциональный checkpoint:
 
 ```text
-9ba1b1293571ab30675919373c7480764cf0b61d
-fix: align cabinet shared-route role redirects
+973975d6c01e4b22544defaa9c9ff67ffccbd4b3
+fix: align booking show per-booking authorization
 ```
 
 Предыдущий maintenance checkpoint:
@@ -19,8 +19,8 @@ fix: move news RSS sync out of public request
 Текущий тестовый baseline:
 
 ```text
-295 tests
-951 assertions
+352 tests
+1183 assertions
 PHPUnit 10.5.20
 SQLite :memory:
 ```
@@ -32,7 +32,7 @@ SQLite :memory:
 - Stage 6 — ✅ COMPLETE
 - Emergency DB Recovery R0–R6D — ✅ COMPLETE
 - RSS maintenance slice — ✅ COMPLETE
-- Stage 7 — 🔄 IN PROGRESS
+- Stage 7 — ✅ COMPLETE
 - Stage 8–13 — 📋 PLANNED
 
 ---
@@ -45,21 +45,19 @@ SQLite :memory:
 
 - 52 migrations Ran / 0 Pending;
 - 28 таблиц InnoDB;
-- 376 application rows;
 - users=7, role_user=7, roles=3;
 - admin=1, manager=0, tourist=6;
+- bookings/messages/booking_documents/user_documents=0;
 - all row-count, index, FK, CHECK TABLE и AUTO_INCREMENT проверки PASS;
 - final canonical manifest:
   `78AD452573B4305897E20465F3B599F44C1E4C2636DE2DB321E695E4B70DB4B1`;
 - promoted logical dump:
   `BDFAF8679622322495F47AE869AEFCE8614282227A49CA5BCD3BB28DCD1D8FA4`;
-- application fingerprint:
+- recovery application fingerprint:
   `fc449488f3d115713cfa0ee97b62a933dfa11393cdbc89c391816aa25d174784`;
 - public smoke 15/15;
 - protected unauthenticated smoke 14/14;
-- admin/tourist credentials checked without login POST и без DB-write;
-- fingerprint unchanged after live validation;
-- SQLite gate: 278 tests / 879 assertions до RSS slice.
+- fingerprint unchanged after recovery live validation.
 
 Старый rollback/physical backup и каталоги `D:\Avilona_recovery\20260716`
 пока сохраняются.
@@ -118,7 +116,7 @@ Commit:
 - миграции не создавались;
 - учтены SoftDeletes, slug collisions, duplicate links и rollback;
 - targeted 17 tests / 72 assertions;
-- full suite после RSS и Stage 7 worktree: 295 / 951.
+- реальный sync против canonical MySQL не выполнялся.
 
 Backlog:
 
@@ -126,32 +124,55 @@ Backlog:
 2. Автоматическое расписание `news:sync-rss` не настроено.
 3. Реальный sync против canonical MySQL до отдельного operational plan не выполнять.
 
-## Stage 7. Личные кабинеты и единый UX — 🔄 IN PROGRESS
+## Stage 7. Личные кабинеты и единый UX — ✅ COMPLETE
 
-### Завершённый slice
+Завершённые checkpoint:
 
-`9ba1b129` — `fix: align cabinet shared-route role redirects`
+- `9ba1b129` — shared-route role redirects.
+- `73ea7ed4` — public cabinet menu precedence.
+- `47507b85` — cabinet header role links.
+- `7cf9381a` — booking sidebar precedence.
+- `2ba8f22d` — booking edit effective role.
+- `842e0603` — booking show effective role.
+- `271ca168` — booking cancel effective role.
+- `6d23812d` — cabinet dashboard role guard.
+- `1bc2c9ea` — booking document effective role.
+- `34a03ee9` — dual-role message participant coverage.
+- `973975d6` — booking show per-booking authorization.
 
-- общий role precedence: admin > manager > tourist;
-- корректные переходы на bookings/chats/profile/settings;
-- focused test: 8 tests / 43 assertions;
-- commit содержит ровно два файла.
+Итоговое правило:
 
-### Следующий порядок работы
+```text
+admin > assigned manager > owner-facing tourist
+```
 
-1. Read-only аудит текущих кабинетов и ролевых потоков.
-2. Выбрать один маленький UX/authorization slice.
-3. Зафиксировать exact allowed paths.
-4. Plan → manual edits → lint → targeted tests → full SQLite suite.
-5. Отдельный commit/push.
+Closure verification:
 
-Не начинать массовый редизайн кабинетов одним большим slice.
+- full PHPUnit: 352 tests / 1183 assertions;
+- Apache service lifecycle and HTTP 200: PASS;
+- canonical MySQL lifecycle: PASS;
+- Stage 7 read-only session fingerprint:
+  `afb2cd19ce0401e82c8bc29f0446785906afd9cc31197f81cc573adb19f06cca`;
+- mixed-role browser smoke: PASS;
+- temporary fixtures removed;
+- session fingerprint restored after cleanup;
+- local/origin HEAD equal;
+- working tree clean;
+- `STAGE7_FINAL_CLOSURE_VERIFICATION=PASS`.
 
-## Stage 8. Каталог и поиск туров — 📋
+## Stage 8. Каталог и поиск туров — 📋 NEXT
 
-- публичный каталог;
-- фильтрация и поиск;
-- отдельный feasibility-анализ внешних интеграций.
+Первый шаг — только read-only discovery:
+
+1. инвентаризировать существующие tour/catalog/search routes, controllers,
+   models, migrations, views и tests;
+2. сверить фактическую canonical schema и наличие данных без migrations/import;
+3. определить минимальный read-only catalog/search vertical slice;
+4. отдельно провести feasibility-анализ внешних интеграций;
+5. не выполнять реальные внешние запросы и не хранить новые credentials;
+6. зафиксировать exact allowed paths до изменений.
+
+Не начинать массовый каталог, интеграцию туроператоров и CMS одним slice.
 
 ## Stage 9. Публичный контент и CMS — 📋
 
@@ -197,9 +218,12 @@ Backlog:
 
 - shadowed route `/helpful_information/news/rss`;
 - расписание для `news:sync-rss`;
-- manager live login smoke: сейчас в canonical нет manager account;
+- постоянный manager live account отсутствует; изолированная временная smoke-стратегия проверена;
 - deprecated PHPUnit XML schema;
-- recovery artifact retention policy.
+- recovery artifact retention policy;
+- единый E2E lifecycle scenario;
+- история и аудит заявки;
+- WebSocket/unread counters для чата.
 
 ## Жёсткие ограничения
 
@@ -212,12 +236,13 @@ Backlog:
 - `legacy:import-v4 --execute`;
 - PHPUnit против canonical MySQL;
 - реальный `news:sync-rss` против canonical MySQL;
-- удаление recovery/rollback artifacts.
+- удаление recovery/rollback artifacts;
+- реальные внешние Stage 8 интеграционные запросы до feasibility-плана.
 
-## Ближайший следующий slice
+## Ближайший следующий шаг
 
-После docs-only refresh и обновления Project Sources:
+После docs-only commit/push и обновления Project Sources:
 
-**read-only аудит следующего небольшого Stage 7 slice**.
+**read-only discovery и Plan для первого небольшого Stage 8 slice**.
 
 Никаких изменений кода до выбора точного scope.
