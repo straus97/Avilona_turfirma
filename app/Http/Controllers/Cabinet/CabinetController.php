@@ -51,7 +51,15 @@ class CabinetController extends Controller
     public function dashboard(): View|RedirectResponse
     {
         $user = Auth::user();
-        
+
+        // '/cabinet' не входит в группу с middleware('role:tourist,manager,admin'),
+        // которая защищает остальные общие маршруты кабинета — проверяем роль
+        // здесь же, чтобы пользователь без ролей получал тот же 403, что и на
+        // /cabinet/bookings, /cabinet/profile и т.д., а не туристический дашборд.
+        if (!$user->hasAnyRole(['admin', 'manager', 'tourist'])) {
+            abort(403, 'У вас нет доступа к этой странице');
+        }
+
         // Определяем роль и перенаправляем на соответствующий dashboard
         if ($user->hasAnyRole(['admin'])) {
             return $this->adminDashboard();
