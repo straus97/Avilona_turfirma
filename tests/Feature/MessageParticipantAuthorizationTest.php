@@ -374,6 +374,32 @@ class MessageParticipantAuthorizationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 16. Dual-role (manager+tourist) booking owner can send to the different
+    //     assigned manager via ownership, not staff role (Stage 7 slice)
+    // -----------------------------------------------------------------------
+
+    public function test_dual_role_booking_owner_can_send_to_assigned_manager(): void
+    {
+        $dualRoleOwner = $this->makeUser(Role::MANAGER);
+        $this->addRole($dualRoleOwner, Role::TOURIST);
+
+        $assignedManager = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($dualRoleOwner, $assignedManager->id);
+
+        $this->actingAs($dualRoleOwner)->postJson(route('messages.store'), [
+            'booking_id'  => $booking->id,
+            'receiver_id' => $assignedManager->id,
+            'message'     => 'Hello from dual-role owner',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('messages', [
+            'booking_id'  => $booking->id,
+            'sender_id'   => $dualRoleOwner->id,
+            'receiver_id' => $assignedManager->id,
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -388,6 +414,16 @@ class MessageParticipantAuthorizationTest extends TestCase
         $user->roles()->attach($role->id);
 
         return $user;
+    }
+
+    private function addRole(User $user, string $roleName): void
+    {
+        $role = Role::query()->firstOrCreate(
+            ['name' => $roleName],
+            ['description' => Role::availableRoles()[$roleName] ?? $roleName]
+        );
+
+        $user->roles()->syncWithoutDetaching([$role->id]);
     }
 
     private function makeBookingFor(

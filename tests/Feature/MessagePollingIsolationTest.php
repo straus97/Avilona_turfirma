@@ -338,6 +338,32 @@ class MessagePollingIsolationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // Dual-role (manager+tourist) booking owner can poll their own booking
+    // via ownership, not staff role (Stage 7 slice)
+    // -----------------------------------------------------------------------
+
+    public function test_dual_role_booking_owner_can_poll_own_booking_messages(): void
+    {
+        $dualRoleOwner = $this->makeUser(Role::MANAGER);
+        $this->addRole($dualRoleOwner, Role::TOURIST);
+
+        $assignedManager = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($dualRoleOwner, $assignedManager->id);
+        $message = $this->makeMessage($booking, $assignedManager->id, $dualRoleOwner->id);
+
+        $otherBooking = $this->makeBookingFor($dualRoleOwner, $assignedManager->id);
+        $unrelated = $this->makeMessage($otherBooking, $assignedManager->id, $dualRoleOwner->id);
+
+        $response = $this->actingAs($dualRoleOwner)
+            ->getJson(route('messages.index', ['booking_id' => $booking->id]))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $message->id]);
+
+        $ids = collect($response->json())->pluck('id')->all();
+        $this->assertNotContains($unrelated->id, $ids);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -352,6 +378,16 @@ class MessagePollingIsolationTest extends TestCase
         $user->roles()->attach($role->id);
 
         return $user;
+    }
+
+    private function addRole(User $user, string $roleName): void
+    {
+        $role = Role::query()->firstOrCreate(
+            ['name' => $roleName],
+            ['description' => Role::availableRoles()[$roleName] ?? $roleName]
+        );
+
+        $user->roles()->syncWithoutDetaching([$role->id]);
     }
 
     private function makeBookingFor(

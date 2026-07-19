@@ -376,6 +376,31 @@ class MessageAttachmentSecurityTest extends TestCase
     }
 
     // =======================================================================
+    // Dual-role (manager+tourist) booking owner — ownership-based access,
+    // not staff role (Stage 7 slice)
+    // =======================================================================
+
+    public function test_dual_role_booking_owner_can_download_own_booking_attachment(): void
+    {
+        Storage::fake('local');
+
+        $dualRoleOwner = $this->makeUser(Role::MANAGER);
+        $this->addRole($dualRoleOwner, Role::TOURIST);
+
+        $assignedManager = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($dualRoleOwner, $assignedManager->id);
+        $message = $this->makeMessageWithAttachment($booking, $assignedManager->id, $dualRoleOwner->id);
+        $path = $message->attachment_url;
+
+        $this->actingAs($dualRoleOwner)
+            ->get(route('messages.attachment', $message))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        Storage::disk('local')->assertExists($path);
+    }
+
+    // =======================================================================
     // Polling / JSON
     // =======================================================================
 
@@ -557,6 +582,16 @@ class MessageAttachmentSecurityTest extends TestCase
         $user->roles()->attach($role->id);
 
         return $user;
+    }
+
+    private function addRole(User $user, string $roleName): void
+    {
+        $role = Role::query()->firstOrCreate(
+            ['name' => $roleName],
+            ['description' => Role::availableRoles()[$roleName] ?? $roleName]
+        );
+
+        $user->roles()->syncWithoutDetaching([$role->id]);
     }
 
     private function makeBookingFor(
