@@ -58,6 +58,10 @@ class TourSearchController extends Controller
             $searchFilters['hotel_rating'] = $validated['rating'];
         }
 
+        if (isset($validated['charter'])) {
+            $searchFilters['is_charter'] = $validated['charter'];
+        }
+
         $query->search($searchFilters);
         
         // Сортировка

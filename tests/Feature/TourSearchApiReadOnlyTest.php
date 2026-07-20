@@ -238,4 +238,71 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $filters);
         $this->assertArrayNotHasKey('tour_operators', $filters);
     }
+
+    public function test_charter_parameter_filters_true_and_false_values_and_preserves_public_contract(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Charter Search Hotel 4★',
+            'hotel_name' => 'Charter Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'is_charter' => true,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Scheduled Search Hotel 4★',
+            'hotel_name' => 'Scheduled Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'is_charter' => false,
+        ]);
+
+        $charterResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'charter' => 1,
+        ]));
+
+        $charterResponse->assertOk();
+        $charterNames = collect($charterResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($charterNames->contains('Charter Search Hotel'));
+        $this->assertFalse($charterNames->contains('Scheduled Search Hotel'));
+        $charterResponse->assertJsonPath('meta.total', 1);
+        $charterResponse->assertJsonPath('filters.charter', '1');
+
+        $charterFilters = $charterResponse->json('filters');
+        $this->assertArrayNotHasKey('is_charter', $charterFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $charterFilters);
+        $this->assertArrayNotHasKey('nights_min', $charterFilters);
+        $this->assertArrayNotHasKey('nights_max', $charterFilters);
+        $this->assertArrayNotHasKey('tour_operators', $charterFilters);
+
+        $scheduledResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'charter' => 0,
+        ]));
+
+        $scheduledResponse->assertOk();
+        $scheduledNames = collect($scheduledResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($scheduledNames->contains('Scheduled Search Hotel'));
+        $this->assertFalse($scheduledNames->contains('Charter Search Hotel'));
+        $scheduledResponse->assertJsonPath('meta.total', 1);
+        $scheduledResponse->assertJsonPath('filters.charter', '0');
+
+        $scheduledFilters = $scheduledResponse->json('filters');
+        $this->assertArrayNotHasKey('is_charter', $scheduledFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $scheduledFilters);
+        $this->assertArrayNotHasKey('nights_min', $scheduledFilters);
+        $this->assertArrayNotHasKey('nights_max', $scheduledFilters);
+        $this->assertArrayNotHasKey('tour_operators', $scheduledFilters);
+    }
 }
