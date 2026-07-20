@@ -210,6 +210,9 @@ class Tour extends Model
             ->when($filters['hotel_stars'] ?? null, function ($q, $stars) {
                 $q->where('hotel_stars', $stars);
             })
+            ->when($filters['hotel_name'] ?? null, function ($q, $hotelName) {
+                $q->where('hotel_name', 'like', '%' . $hotelName . '%');
+            })
             ->when($filters['hotel_rating'] ?? null, function ($q, $rating) {
                 $q->where('hotel_rating', '>=', $rating);
             })

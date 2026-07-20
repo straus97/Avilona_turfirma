@@ -490,4 +490,64 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $filters);
         $this->assertArrayNotHasKey('tour_operators', $filters);
     }
+
+    public function test_hotel_name_parameter_performs_partial_match_and_preserves_public_contract(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Sunrise Grand Resort Search',
+            'hotel_name' => 'Sunrise Grand Resort',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Sunset Grand Palace Search',
+            'hotel_name' => 'Sunset Grand Palace',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Azure Coast Hotel Search',
+            'hotel_name' => 'Azure Coast Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Sunmar',
+        ]);
+
+        $response = $this->getJson('/api/tours/search?' . http_build_query([
+            'hotel_name' => 'Grand',
+        ]));
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($names->contains('Sunrise Grand Resort'));
+        $this->assertTrue($names->contains('Sunset Grand Palace'));
+        $this->assertFalse($names->contains('Azure Coast Hotel'));
+        $response->assertJsonPath('meta.total', 2);
+        $response->assertJsonPath('filters.hotel_name', 'Grand');
+
+        $filters = $response->json('filters');
+        $this->assertArrayNotHasKey('hotel_rating', $filters);
+        $this->assertArrayNotHasKey('is_direct', $filters);
+        $this->assertArrayNotHasKey('is_charter', $filters);
+        $this->assertArrayNotHasKey('nights_min', $filters);
+        $this->assertArrayNotHasKey('nights_max', $filters);
+        $this->assertArrayNotHasKey('tour_operators', $filters);
+    }
 }
