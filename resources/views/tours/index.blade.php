@@ -907,7 +907,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="h4 mb-0 text-primary">Найдено туров: <span class="fw-bold">{{ $tours->total() }}</span></h2>
             <select class="form-select w-auto" onchange="updateSort(this.value)">
-                <option value="popularity" {{ request('sort_by', 'popularity') == 'popularity' ? 'selected' : '' }}>По популярности</option>
+                <option value="popular" {{ request('sort_by', 'popular') == 'popular' ? 'selected' : '' }}>По популярности</option>
                 <option value="price_asc" {{ request('sort_by') == 'price_asc' ? 'selected' : '' }}>По цене (сначала дешевые)</option>
                 <option value="price_desc" {{ request('sort_by') == 'price_desc' ? 'selected' : '' }}>По цене (сначала дорогие)</option>
                 <option value="rating" {{ request('sort_by') == 'rating' ? 'selected' : '' }}>По рейтингу</option>

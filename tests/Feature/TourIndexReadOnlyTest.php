@@ -456,4 +456,17 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertSee('Public Charter Flight Hotel');
         $response->assertDontSee('Public Scheduled Flight Hotel');
     }
+
+    public function test_sort_form_uses_canonical_popular_value(): void
+    {
+        $response = $this->get(route('tours.index', [
+            'sort_by' => 'popular',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('value="popular"', false);
+        $response->assertSee('value="popular" selected', false);
+        $response->assertDontSee('value="popularity"', false);
+    }
 }
