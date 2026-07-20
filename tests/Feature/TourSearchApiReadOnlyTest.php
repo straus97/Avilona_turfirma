@@ -191,4 +191,51 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $filters);
         $this->assertArrayNotHasKey('tour_operators', $filters);
     }
+
+    public function test_rating_parameter_filters_by_minimum_hotel_rating_and_preserves_public_contract(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - High Rating Search Hotel 5★',
+            'hotel_name' => 'High Rating Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'hotel_rating' => 4.8,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Lower Rating Search Hotel 4★',
+            'hotel_name' => 'Lower Rating Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'hotel_rating' => 4.2,
+        ]);
+
+        $response = $this->getJson('/api/tours/search?' . http_build_query([
+            'rating' => 4.5,
+        ]));
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($names->contains('High Rating Search Hotel'));
+        $this->assertFalse($names->contains('Lower Rating Search Hotel'));
+        $response->assertJsonPath('meta.total', 1);
+        $response->assertJsonPath('filters.rating', '4.5');
+
+        $filters = $response->json('filters');
+        $this->assertArrayNotHasKey('hotel_rating', $filters);
+        $this->assertArrayNotHasKey('nights_min', $filters);
+        $this->assertArrayNotHasKey('nights_max', $filters);
+        $this->assertArrayNotHasKey('tour_operators', $filters);
+    }
 }
