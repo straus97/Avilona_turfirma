@@ -330,4 +330,44 @@ class TourIndexReadOnlyTest extends TestCase
             'Public Lower Rating Higher Stars Hotel',
         ]);
     }
+
+    public function test_hotel_rating_filter_shows_only_tours_meeting_minimum_rating(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Rating Threshold Match Hotel',
+            'hotel_name' => 'Public Rating Threshold Match Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'hotel_rating' => 8.4,
+            'hotel_stars' => 3,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Rating Threshold Below Hotel',
+            'hotel_name' => 'Public Rating Threshold Below Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'hotel_rating' => 7.9,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->get(route('tours.index', [
+            'hotel_rating' => 8,
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('Public Rating Threshold Match Hotel');
+        $response->assertDontSee('Public Rating Threshold Below Hotel');
+    }
 }

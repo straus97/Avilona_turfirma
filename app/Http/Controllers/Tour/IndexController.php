@@ -75,7 +75,11 @@ class IndexController extends Controller
         if ($request->filled('hotel_stars')) {
             $query->where('hotel_stars', $request->hotel_stars);
         }
-        
+
+        if ($request->filled('hotel_rating')) {
+            $query->where('hotel_rating', '>=', $request->hotel_rating);
+        }
+
         if ($request->filled('meal_type')) {
             $query->where('meal_type', $request->meal_type);
         }
