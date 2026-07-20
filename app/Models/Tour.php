@@ -227,8 +227,8 @@ class Tour extends Model
             ->when(isset($filters['is_charter']), function ($q) use ($filters) {
                 $q->where('is_charter', $filters['is_charter']);
             })
-            ->when($filters['is_direct'] ?? null, function ($q, $direct) {
-                $q->where('is_direct', $direct);
+            ->when(isset($filters['is_direct']), function ($q) use ($filters) {
+                $q->where('is_direct', $filters['is_direct']);
             });
     }
 

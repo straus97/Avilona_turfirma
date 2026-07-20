@@ -305,4 +305,73 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $scheduledFilters);
         $this->assertArrayNotHasKey('tour_operators', $scheduledFilters);
     }
+
+    public function test_direct_flight_parameter_filters_true_and_false_values_and_preserves_public_contract(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Direct Flight Search Hotel 4★',
+            'hotel_name' => 'Direct Flight Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'is_direct' => true,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Connecting Flight Search Hotel 4★',
+            'hotel_name' => 'Connecting Flight Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'is_direct' => false,
+        ]);
+
+        $directResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'direct_flight' => 1,
+        ]));
+
+        $directResponse->assertOk();
+        $directNames = collect($directResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($directNames->contains('Direct Flight Search Hotel'));
+        $this->assertFalse($directNames->contains('Connecting Flight Search Hotel'));
+        $directResponse->assertJsonPath('meta.total', 1);
+        $directResponse->assertJsonPath('filters.direct_flight', '1');
+
+        $directFilters = $directResponse->json('filters');
+        $this->assertArrayNotHasKey('is_direct', $directFilters);
+        $this->assertArrayNotHasKey('is_charter', $directFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $directFilters);
+        $this->assertArrayNotHasKey('nights_min', $directFilters);
+        $this->assertArrayNotHasKey('nights_max', $directFilters);
+        $this->assertArrayNotHasKey('tour_operators', $directFilters);
+
+        $connectingResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'direct_flight' => 0,
+        ]));
+
+        $connectingResponse->assertOk();
+        $connectingNames = collect($connectingResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($connectingNames->contains('Connecting Flight Search Hotel'));
+        $this->assertFalse($connectingNames->contains('Direct Flight Search Hotel'));
+        $connectingResponse->assertJsonPath('meta.total', 1);
+        $connectingResponse->assertJsonPath('filters.direct_flight', '0');
+
+        $connectingFilters = $connectingResponse->json('filters');
+        $this->assertArrayNotHasKey('is_direct', $connectingFilters);
+        $this->assertArrayNotHasKey('is_charter', $connectingFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $connectingFilters);
+        $this->assertArrayNotHasKey('nights_min', $connectingFilters);
+        $this->assertArrayNotHasKey('nights_max', $connectingFilters);
+        $this->assertArrayNotHasKey('tour_operators', $connectingFilters);
+    }
 }

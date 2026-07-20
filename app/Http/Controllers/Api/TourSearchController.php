@@ -62,6 +62,10 @@ class TourSearchController extends Controller
             $searchFilters['is_charter'] = $validated['charter'];
         }
 
+        if (isset($validated['direct_flight'])) {
+            $searchFilters['is_direct'] = $validated['direct_flight'];
+        }
+
         $query->search($searchFilters);
         
         // Сортировка
