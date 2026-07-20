@@ -34,7 +34,6 @@ class TourSearchController extends Controller
             'tour_operator' => 'nullable|string',
             'charter' => 'nullable|boolean',
             'direct_flight' => 'nullable|boolean',
-            'instant_confirmation' => 'nullable|boolean',
             'sort_by' => 'nullable|string|in:popular,price_asc,price_desc,rating',
             'page' => 'nullable|integer|min:1',
         ]);

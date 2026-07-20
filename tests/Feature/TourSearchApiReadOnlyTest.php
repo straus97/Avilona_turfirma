@@ -374,4 +374,71 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $connectingFilters);
         $this->assertArrayNotHasKey('tour_operators', $connectingFilters);
     }
+
+    public function test_unsupported_instant_confirmation_parameter_is_not_exposed_or_applied(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Instant Parameter Control Hotel A',
+            'hotel_name' => 'Instant Parameter Control Hotel A',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Instant Parameter Control Hotel B',
+            'hotel_name' => 'Instant Parameter Control Hotel B',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+        ]);
+
+        $enabledResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'instant_confirmation' => 1,
+        ]));
+
+        $enabledResponse->assertOk();
+        $enabledNames = collect($enabledResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($enabledNames->contains('Instant Parameter Control Hotel A'));
+        $this->assertTrue($enabledNames->contains('Instant Parameter Control Hotel B'));
+        $enabledResponse->assertJsonPath('meta.total', 2);
+
+        $enabledFilters = $enabledResponse->json('filters');
+        $this->assertArrayNotHasKey('instant_confirmation', $enabledFilters);
+        $this->assertArrayNotHasKey('is_direct', $enabledFilters);
+        $this->assertArrayNotHasKey('is_charter', $enabledFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $enabledFilters);
+        $this->assertArrayNotHasKey('nights_min', $enabledFilters);
+        $this->assertArrayNotHasKey('nights_max', $enabledFilters);
+        $this->assertArrayNotHasKey('tour_operators', $enabledFilters);
+
+        $disabledResponse = $this->getJson('/api/tours/search?' . http_build_query([
+            'instant_confirmation' => 0,
+        ]));
+
+        $disabledResponse->assertOk();
+        $disabledNames = collect($disabledResponse->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($disabledNames->contains('Instant Parameter Control Hotel A'));
+        $this->assertTrue($disabledNames->contains('Instant Parameter Control Hotel B'));
+        $disabledResponse->assertJsonPath('meta.total', 2);
+
+        $disabledFilters = $disabledResponse->json('filters');
+        $this->assertArrayNotHasKey('instant_confirmation', $disabledFilters);
+        $this->assertArrayNotHasKey('is_direct', $disabledFilters);
+        $this->assertArrayNotHasKey('is_charter', $disabledFilters);
+        $this->assertArrayNotHasKey('hotel_rating', $disabledFilters);
+        $this->assertArrayNotHasKey('nights_min', $disabledFilters);
+        $this->assertArrayNotHasKey('nights_max', $disabledFilters);
+        $this->assertArrayNotHasKey('tour_operators', $disabledFilters);
+    }
 }
