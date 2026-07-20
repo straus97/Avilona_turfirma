@@ -100,7 +100,11 @@ class IndexController extends Controller
         if ($request->filled('tour_operators')) {
             $query->whereIn('tour_operator', $request->tour_operators);
         }
-        
+
+        if ($request->filled('charter')) {
+            $query->where('is_charter', true);
+        }
+
         // Сортировка
         $sortBy = $request->get('sort_by', 'popular');
         

@@ -412,4 +412,48 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertSee('Public First Beach Line Hotel');
         $response->assertDontSee('Public Second Beach Line Hotel');
     }
+
+    public function test_charter_checkbox_shows_only_charter_tours(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Charter Flight Hotel',
+            'hotel_name' => 'Public Charter Flight Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'is_charter' => true,
+            'is_direct' => false,
+            'hotel_rating' => 7.5,
+            'hotel_stars' => 3,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Scheduled Flight Hotel',
+            'hotel_name' => 'Public Scheduled Flight Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'is_charter' => false,
+            'is_direct' => true,
+            'hotel_rating' => 9.2,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->get(route('tours.index', [
+            'charter' => 'on',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('Public Charter Flight Hotel');
+        $response->assertDontSee('Public Scheduled Flight Hotel');
+    }
 }
