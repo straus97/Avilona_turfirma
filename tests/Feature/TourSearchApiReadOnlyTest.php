@@ -145,4 +145,50 @@ class TourSearchApiReadOnlyTest extends TestCase
 
         $response->assertOk();
     }
+
+    public function test_exact_nights_parameter_filters_tours_and_preserves_public_contract(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Seven Nights Search Hotel 4★',
+            'hotel_name' => 'Seven Nights Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'nights' => 7,
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Ten Nights Search Hotel 4★',
+            'hotel_name' => 'Ten Nights Search Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-20',
+            'nights' => 10,
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+        ]);
+
+        $response = $this->getJson('/api/tours/search?' . http_build_query([
+            'nights' => 7,
+        ]));
+
+        $response->assertOk();
+        $names = collect($response->json('data'))->pluck('hotel_name');
+
+        $this->assertTrue($names->contains('Seven Nights Search Hotel'));
+        $this->assertFalse($names->contains('Ten Nights Search Hotel'));
+        $response->assertJsonPath('meta.total', 1);
+        $response->assertJsonPath('filters.nights', '7');
+
+        $filters = $response->json('filters');
+        $this->assertArrayNotHasKey('nights_min', $filters);
+        $this->assertArrayNotHasKey('nights_max', $filters);
+        $this->assertArrayNotHasKey('tour_operators', $filters);
+    }
 }

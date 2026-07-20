@@ -49,6 +49,11 @@ class TourSearchController extends Controller
             $searchFilters['tour_operators'] = [$validated['tour_operator']];
         }
 
+        if (isset($validated['nights'])) {
+            $searchFilters['nights_min'] = $validated['nights'];
+            $searchFilters['nights_max'] = $validated['nights'];
+        }
+
         $query->search($searchFilters);
         
         // Сортировка
