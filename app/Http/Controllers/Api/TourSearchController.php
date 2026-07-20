@@ -43,7 +43,13 @@ class TourSearchController extends Controller
         $query = Tour::query()->active();
         
         // Применяем фильтры через scope
-        $query->search($validated);
+        $searchFilters = $validated;
+
+        if (! empty($validated['tour_operator'])) {
+            $searchFilters['tour_operators'] = [$validated['tour_operator']];
+        }
+
+        $query->search($searchFilters);
         
         // Сортировка
         $sortBy = $request->get('sort_by', 'popular');
