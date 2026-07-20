@@ -104,7 +104,7 @@ class IndexController extends Controller
                 $query->orderBy('price', 'desc');
                 break;
             case 'rating':
-                $query->orderBy('hotel_stars', 'desc');
+                $query->orderBy('hotel_rating', 'desc');
                 break;
             case 'popular':
             default:

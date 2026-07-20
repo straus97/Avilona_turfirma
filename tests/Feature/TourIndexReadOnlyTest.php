@@ -286,4 +286,48 @@ class TourIndexReadOnlyTest extends TestCase
 
         $response->assertOk();
     }
+
+    public function test_rating_sort_orders_public_catalog_by_hotel_rating_not_hotel_stars(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Higher Rating Lower Stars Hotel',
+            'hotel_name' => 'Public Higher Rating Lower Stars Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'hotel_rating' => 4.9,
+            'hotel_stars' => 3,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Lower Rating Higher Stars Hotel',
+            'hotel_name' => 'Public Lower Rating Higher Stars Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'hotel_rating' => 4.1,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->get(route('tours.index', [
+            'sort_by' => 'rating',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('Public Higher Rating Lower Stars Hotel');
+        $response->assertSee('Public Lower Rating Higher Stars Hotel');
+        $response->assertSeeInOrder([
+            'Public Higher Rating Lower Stars Hotel',
+            'Public Lower Rating Higher Stars Hotel',
+        ]);
+    }
 }
