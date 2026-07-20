@@ -370,4 +370,46 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertSee('Public Rating Threshold Match Hotel');
         $response->assertDontSee('Public Rating Threshold Below Hotel');
     }
+
+    public function test_beach_line_filter_shows_only_matching_tours(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public First Beach Line Hotel',
+            'hotel_name' => 'Public First Beach Line Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'beach_line' => 1,
+            'hotel_rating' => 7.5,
+            'hotel_stars' => 4,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Second Beach Line Hotel',
+            'hotel_name' => 'Public Second Beach Line Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'beach_line' => 2,
+            'hotel_rating' => 9.0,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->get(route('tours.index', [
+            'beach_line' => 1,
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('Public First Beach Line Hotel');
+        $response->assertDontSee('Public Second Beach Line Hotel');
+    }
 }

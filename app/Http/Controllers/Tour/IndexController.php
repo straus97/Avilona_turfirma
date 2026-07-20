@@ -83,7 +83,11 @@ class IndexController extends Controller
         if ($request->filled('meal_type')) {
             $query->where('meal_type', $request->meal_type);
         }
-        
+
+        if ($request->filled('beach_line')) {
+            $query->where('beach_line', $request->beach_line);
+        }
+
         if ($request->filled('price_min')) {
             $query->where('price', '>=', $request->price_min);
         }
