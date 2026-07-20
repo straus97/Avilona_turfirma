@@ -756,83 +756,83 @@
                             <label class="form-label text-white fw-bold mb-2">Туроператоры</label>
                             <div id="tourOperatorsContainer" class="border rounded p-3" style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.95);">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ambotis" id="ambotis" {{ in_array('ambotis', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Ambotis" id="ambotis" {{ in_array('Ambotis', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="ambotis">Ambotis</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="anex" id="anex" {{ in_array('anex', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Anex Tour" id="anex" {{ in_array('Anex Tour', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="anex">Anex Tour</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="biblio_globus" id="biblio_globus" {{ in_array('biblio_globus', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Biblio Globus" id="biblio_globus" {{ in_array('Biblio Globus', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="biblio_globus">Библио Глобус</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="bon_tour" id="bon_tour" {{ in_array('bon_tour', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Bon Tour" id="bon_tour" {{ in_array('Bon Tour', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="bon_tour">Bon Tour</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="bsi_group" id="bsi_group" {{ in_array('bsi_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="BSI Group" id="bsi_group" {{ in_array('BSI Group', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="bsi_group">BSI Group</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="coral_travel" id="coral_travel" {{ in_array('coral_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Coral Travel" id="coral_travel" {{ in_array('Coral Travel', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="coral_travel">Coral Travel</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="delfin" id="delfin" {{ in_array('delfin', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Delfin" id="delfin" {{ in_array('Delfin', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="delfin">Delfin</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="express_tours" id="express_tours" {{ in_array('express_tours', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Express Tours" id="express_tours" {{ in_array('Express Tours', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="express_tours">Express Tours</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="good_time" id="good_time" {{ in_array('good_time', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Good Time" id="good_time" {{ in_array('Good Time', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="good_time">Good Time</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ics" id="ics" {{ in_array('ics', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ICS" id="ics" {{ in_array('ICS', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="ics">ICS Travel Group</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="intourist" id="intourist" {{ in_array('intourist', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Intourist" id="intourist" {{ in_array('Intourist', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="intourist">Интурист</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="itm_group" id="itm_group" {{ in_array('itm_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="ITM Group" id="itm_group" {{ in_array('ITM Group', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="itm_group">ITM Group</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="mouzenidis_travel" id="mouzenidis_travel" {{ in_array('mouzenidis_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Mouzenidis Travel" id="mouzenidis_travel" {{ in_array('Mouzenidis Travel', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="mouzenidis_travel">Mouzenidis Travel</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="pac_group" id="pac_group" {{ in_array('pac_group', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="PAC Group" id="pac_group" {{ in_array('PAC Group', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="pac_group">PAC Group</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="pegas" id="pegas" {{ in_array('pegas', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Pegas" id="pegas" {{ in_array('Pegas', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="pegas">Pegas Touristik</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="russian_express" id="russian_express" {{ in_array('russian_express', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Russian Express" id="russian_express" {{ in_array('Russian Express', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="russian_express">Russian Express</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="sunmar" id="sunmar" {{ in_array('sunmar', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Sunmar" id="sunmar" {{ in_array('Sunmar', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="sunmar">Sunmar</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="tez_tour" id="tez_tour" {{ in_array('tez_tour', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="Tez Tour" id="tez_tour" {{ in_array('Tez Tour', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="tez_tour">Tez Tour</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="tui" id="tui" {{ in_array('tui', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="TUI" id="tui" {{ in_array('TUI', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="tui">TUI</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="west_travel" id="west_travel" {{ in_array('west_travel', request('tour_operators', [])) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="tour_operators[]" value="West Travel" id="west_travel" {{ in_array('West Travel', request('tour_operators', [])) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="west_travel">West Travel</label>
                                 </div>
                             </div>
