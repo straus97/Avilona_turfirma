@@ -441,4 +441,53 @@ class TourSearchApiReadOnlyTest extends TestCase
         $this->assertArrayNotHasKey('nights_max', $disabledFilters);
         $this->assertArrayNotHasKey('tour_operators', $disabledFilters);
     }
+
+    public function test_rating_sort_orders_by_hotel_rating_not_hotel_stars(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Higher Rating Lower Stars Hotel',
+            'hotel_name' => 'Higher Rating Lower Stars Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'hotel_rating' => 4.9,
+            'hotel_stars' => 3,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Lower Rating Higher Stars Hotel',
+            'hotel_name' => 'Lower Rating Higher Stars Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'hotel_rating' => 4.1,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->getJson('/api/tours/search?' . http_build_query([
+            'sort_by' => 'rating',
+        ]));
+
+        $response->assertOk();
+        $response->assertJsonPath('meta.total', 2);
+        $response->assertJsonPath('data.0.hotel_name', 'Higher Rating Lower Stars Hotel');
+        $response->assertJsonPath('data.1.hotel_name', 'Lower Rating Higher Stars Hotel');
+        $response->assertJsonPath('filters.sort_by', 'rating');
+
+        $filters = $response->json('filters');
+        $this->assertArrayNotHasKey('hotel_rating', $filters);
+        $this->assertArrayNotHasKey('is_direct', $filters);
+        $this->assertArrayNotHasKey('is_charter', $filters);
+        $this->assertArrayNotHasKey('nights_min', $filters);
+        $this->assertArrayNotHasKey('nights_max', $filters);
+        $this->assertArrayNotHasKey('tour_operators', $filters);
+    }
 }
