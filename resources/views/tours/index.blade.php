@@ -849,10 +849,6 @@
                                     <input class="form-check-input" type="checkbox" name="direct" id="direct" {{ request('direct') ? 'checked' : '' }}>
                                     <label class="form-check-label text-white" for="direct">Прямые</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="nonstop" id="nonstop" {{ request('nonstop') ? 'checked' : '' }}>
-                                    <label class="form-check-label text-white" for="nonstop">Без стопов</label>
-                                </div>
                             </div>
                         </div>
                         

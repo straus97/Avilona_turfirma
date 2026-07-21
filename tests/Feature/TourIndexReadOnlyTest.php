@@ -513,4 +513,20 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertSee('Public Direct Flight Hotel');
         $response->assertDontSee('Public Connecting Flight Hotel');
     }
+
+    public function test_search_form_does_not_expose_unsupported_nonstop_filter(): void
+    {
+        $response = $this->get(route('tours.index', [
+            'nonstop' => 'on',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertDontSee('name="nonstop"', false);
+        $response->assertDontSee('id="nonstop"', false);
+        $response->assertDontSee('for="nonstop"', false);
+        $response->assertDontSee('Без стопов');
+        $response->assertSee('name="charter"', false);
+        $response->assertSee('name="direct"', false);
+    }
 }
