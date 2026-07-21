@@ -105,6 +105,10 @@ class IndexController extends Controller
             $query->where('is_charter', true);
         }
 
+        if ($request->filled('direct')) {
+            $query->where('is_direct', true);
+        }
+
         // Сортировка
         $sortBy = $request->get('sort_by', 'popular');
         

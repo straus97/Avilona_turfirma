@@ -469,4 +469,48 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertSee('value="popular" selected', false);
         $response->assertDontSee('value="popularity"', false);
     }
+
+    public function test_direct_checkbox_shows_only_direct_flight_tours(): void
+    {
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Direct Flight Hotel',
+            'hotel_name' => 'Public Direct Flight Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Coral Travel',
+            'is_direct' => true,
+            'is_charter' => false,
+            'hotel_rating' => 7.4,
+            'hotel_stars' => 3,
+        ]);
+
+        Tour::factory()->create([
+            'title' => 'Турция, Анталия - Public Connecting Flight Hotel',
+            'hotel_name' => 'Public Connecting Flight Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+            'tour_operator' => 'Anex Tour',
+            'is_direct' => false,
+            'is_charter' => true,
+            'hotel_rating' => 9.3,
+            'hotel_stars' => 5,
+        ]);
+
+        $response = $this->get(route('tours.index', [
+            'direct' => 'on',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewIs('tours.index');
+        $response->assertSee('Public Direct Flight Hotel');
+        $response->assertDontSee('Public Connecting Flight Hotel');
+    }
 }
