@@ -5,10 +5,10 @@
 | Параметр | Значение |
 |---|---|
 | Ветка | `db-rebuild-stage3` |
-| Функциональный checkpoint | `973975d6c01e4b22544defaa9c9ff67ffccbd4b3` |
-| Commit | `fix: align booking show per-booking authorization` |
+| Функциональный checkpoint | `bae264802a17bac3c796481da7f10096acfc3cb2` |
+| Commit | `fix: remove unsupported public nonstop filter` |
 | Предыдущий maintenance commit | `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f` |
-| PHPUnit baseline | 352 tests / 1183 assertions |
+| PHPUnit baseline | 382 tests / 1389 assertions |
 | PHPUnit DB | SQLite `:memory:` |
 | Canonical schema | `turfirma_rebuild_v4` |
 | Canonical migrations | 52 Ran / 0 Pending |
@@ -16,8 +16,9 @@
 | Stage 5 | COMPLETE |
 | Stage 6 | COMPLETE |
 | Stage 7 | COMPLETE |
+| Stage 8 | COMPLETE |
 
-Эта документация описывает функциональное состояние на checkpoint `973975d6`.
+Эта документация описывает функциональное состояние на checkpoint `bae26480`.
 Документационный HEAD, содержащий текущую версию файлов, всегда определяется Git.
 
 ## Источники истины
@@ -130,6 +131,78 @@ admin > assigned manager > owner-facing tourist
 Stage 7 session fingerprint не является заменой recovery application fingerprint:
 алгоритмы различаются.
 
+## Stage 8 — COMPLETE
+
+Завершённые commit (17), сгруппированные по локальному API и публичному каталогу.
+
+Локальный JSON tour-search API:
+
+- `0cabcda8` — baseline локального tour index.
+- `fcacf2fe` — выравнивание значений фильтра оператора.
+- `8b4ee060` — выравнивание фильтра оператора в поиске.
+- `495c4cb2` — выравнивание фильтра ночей.
+- `ca683837` — выравнивание фильтра рейтинга.
+- `7ba16072` — выравнивание фильтра charter.
+- `38abdbb2` — выравнивание фильтра прямого рейса.
+- `6bd36434` — удаление неподдерживаемого фильтра instant confirmation.
+- `2599ff83` — выравнивание сортировки по рейтингу.
+- `975a2879` — добавление фильтра по названию отеля.
+
+Публичный каталог туров:
+
+- `9ba1b070` — выравнивание сортировки по рейтингу.
+- `a3c9ce23` — добавление фильтра рейтинга.
+- `7a09a2b6` — добавление фильтра линии пляжа.
+- `c53febfe` — добавление фильтра charter.
+- `459aa7dd` — выравнивание значения сортировки popular.
+- `4f9eb366` — добавление фильтра прямого рейса.
+- `bae26480` — удаление неподдерживаемого фильтра nonstop.
+
+Подтверждённые гарантии:
+
+- публичный каталог read-only, не изменяет базу данных и не выполняет
+  внешние HTTP-запросы;
+- отображаются только активные и не удалённые туры;
+- выровненные контракты фильтров между публичной формой и внутренним
+  JSON tour-search API: tour_operator (один или несколько), nights
+  (точное значение → nights_min/nights_max), rating (минимальный порог
+  по `hotel_rating`), charter (`is_charter`), direct (`is_direct`),
+  hotel_name (частичное совпадение);
+- сортировка по рейтингу использует `hotel_rating`, а не `hotel_stars`;
+- канонический sort-value `popular`;
+- публичная форма не обязана выставлять каждый API-only параметр;
+- внутренние имена фильтров не протекают в публичный контракт ответа;
+- неподдерживаемые `nonstop` и `instant_confirmation` удалены, а не
+  реализованы с придуманным backend-поведением.
+
+External integration assessment (только статическая read-only
+инвентаризация):
+
+- поверхности: `routes/api.php` (Sletat routes),
+  `App\Http\Controllers\Api\SletatController`,
+  `App\Services\Sletat\SletatApiService`,
+  `App\Console\Commands\TestSletatConnectionCommand`,
+  `App\Console\Commands\SyncToursCommand`,
+  `App\Services\TourOperators\BaseTourOperatorService`,
+  `App\Services\TourOperators\CoralTravelService`,
+  хранение `api_key` в `TourOperator` и placeholder seed-значения;
+- ни один реальный запрос к Sletat, Coral Travel или другому туроператору
+  не выполнялся;
+- ни один реальный credential не добавлялся, не выводился, не проверялся
+  и не сохранялся;
+- существующий интеграционный код не подтверждён как рабочий;
+- операционная интеграция, обработка credentials, проверка контракта
+  провайдера, retries, rate limits, observability, безопасность
+  синхронизации и canonical-импорт данных остаются отложенными и
+  требуют отдельного guarded feasibility/operational плана.
+
+Closure verification:
+
+- focused public catalog suite: 18 tests / 82 assertions;
+- full PHPUnit at committed HEAD: 382 tests / 1389 assertions;
+- local/origin HEAD равны на `bae26480`;
+- working tree clean, staged path count 0.
+
 ## Правила безопасной работы
 
 - Один маленький семантический slice за раз.
@@ -154,11 +227,17 @@ Stage 7 session fingerprint не является заменой recovery applic
 
 ## Следующий шаг
 
-После documentation/source refresh — read-only discovery для Stage 8:
+Stage 8 закрыт. После documentation/source refresh — read-only discovery
+для Stage 9 (публичный контент и CMS):
 
-1. инвентаризировать текущие tour/catalog/search routes, models, views и tests;
-2. проверить фактическую структуру canonical schema без изменений БД;
-3. отдельно оценить feasibility внешних интеграций без реальных запросов;
-4. выбрать один маленький первый Stage 8 slice и exact allowed paths.
+1. инвентаризировать текущие public-content/CMS/news/article/review/SEO
+   routes, controllers, models, migrations, views, assets и tests;
+2. отдельно сравнить историческую документацию и фактическую текущую
+   реализацию;
+3. включить в backlog-инвентаризацию затенённый route
+   `/helpful_information/news/rss` и отсутствие операционного расписания
+   для `news:sync-rss`;
+4. выбрать один маленький семантический Stage 9 slice и exact allowed
+   paths до начала правок.
 
-До утверждения плана не начинать широкий каталог или интеграционную реализацию.
+До выбора scope не начинать широкую реализацию CMS или SEO.

@@ -1,12 +1,12 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-07-19**
+Дата checkpoint: **2026-07-21**
 
 Функциональный checkpoint:
 
 ```text
-973975d6c01e4b22544defaa9c9ff67ffccbd4b3
-fix: align booking show per-booking authorization
+bae264802a17bac3c796481da7f10096acfc3cb2
+fix: remove unsupported public nonstop filter
 ```
 
 Предыдущий maintenance checkpoint:
@@ -19,8 +19,8 @@ fix: move news RSS sync out of public request
 Текущий тестовый baseline:
 
 ```text
-352 tests
-1183 assertions
+382 tests
+1389 assertions
 PHPUnit 10.5.20
 SQLite :memory:
 ```
@@ -33,7 +33,9 @@ SQLite :memory:
 - Emergency DB Recovery R0–R6D — ✅ COMPLETE
 - RSS maintenance slice — ✅ COMPLETE
 - Stage 7 — ✅ COMPLETE
-- Stage 8–13 — 📋 PLANNED
+- Stage 8 — ✅ COMPLETE
+- Stage 9 — 📋 NEXT
+- Stage 10–13 — 📋 PLANNED / ⏸ DEFERRED
 
 ---
 
@@ -160,28 +162,84 @@ Closure verification:
 - working tree clean;
 - `STAGE7_FINAL_CLOSURE_VERIFICATION=PASS`.
 
-## Stage 8. Каталог и поиск туров — 📋 NEXT
+## Stage 8. Каталог и поиск туров — ✅ COMPLETE
 
-Первый шаг — только read-only discovery:
+Локальный JSON tour-search API:
 
-1. инвентаризировать существующие tour/catalog/search routes, controllers,
-   models, migrations, views и tests;
-2. сверить фактическую canonical schema и наличие данных без migrations/import;
-3. определить минимальный read-only catalog/search vertical slice;
-4. отдельно провести feasibility-анализ внешних интеграций;
-5. не выполнять реальные внешние запросы и не хранить новые credentials;
-6. зафиксировать exact allowed paths до изменений.
+- `0cabcda8` — baseline локального tour index.
+- `fcacf2fe` — выравнивание значений фильтра оператора.
+- `8b4ee060` — выравнивание фильтра оператора в поиске.
+- `495c4cb2` — выравнивание фильтра ночей.
+- `ca683837` — выравнивание фильтра рейтинга.
+- `7ba16072` — выравнивание фильтра charter.
+- `38abdbb2` — выравнивание фильтра прямого рейса.
+- `6bd36434` — удаление неподдерживаемого фильтра instant confirmation.
+- `2599ff83` — выравнивание сортировки по рейтингу.
+- `975a2879` — добавление фильтра по названию отеля.
 
-Не начинать массовый каталог, интеграцию туроператоров и CMS одним slice.
+Публичный каталог туров:
 
-## Stage 9. Публичный контент и CMS — 📋
+- `9ba1b070` — выравнивание сортировки по рейтингу.
+- `a3c9ce23` — добавление фильтра рейтинга.
+- `7a09a2b6` — добавление фильтра линии пляжа.
+- `c53febfe` — добавление фильтра charter.
+- `459aa7dd` — выравнивание значения сортировки popular.
+- `4f9eb366` — добавление фильтра прямого рейса.
+- `bae26480` — удаление неподдерживаемого фильтра nonstop.
+
+Итог:
+
+- публичный каталог read-only, не изменяет базу данных и не выполняет
+  внешние HTTP-запросы;
+- отображаются только активные и не удалённые туры;
+- контракты фильтров выровнены между публичной формой и внутренним
+  JSON tour-search API (tour_operator, nights, rating, charter,
+  direct_flight, hotel_name);
+- сортировка по рейтингу использует `hotel_rating`;
+- канонический sort-value `popular`;
+- неподдерживаемые `nonstop` и `instant_confirmation` удалены, а не
+  реализованы с придуманным поведением.
+
+External integration assessment (только статическая read-only
+инвентаризация):
+
+- поверхности: `routes/api.php` (Sletat routes),
+  `App\Http\Controllers\Api\SletatController`,
+  `App\Services\Sletat\SletatApiService`,
+  `App\Console\Commands\TestSletatConnectionCommand`,
+  `App\Console\Commands\SyncToursCommand`,
+  `App\Services\TourOperators\BaseTourOperatorService`,
+  `App\Services\TourOperators\CoralTravelService`,
+  хранение `api_key` в `TourOperator` и placeholder seed-значения;
+- реальные запросы к Sletat/Coral Travel и другим туроператорам не
+  выполнялись, credentials не добавлялись, не выводились, не
+  проверялись и не сохранялись;
+- существующий интеграционный код не подтверждён как рабочий;
+- операционная интеграция, credentials, provider contract verification,
+  retries, rate limits, observability, safe synchronization и
+  canonical-импорт остаются отдельным guarded operational планом.
+
+Closure verification:
+
+- focused public catalog suite: 18 tests / 82 assertions;
+- full PHPUnit: 382 tests / 1389 assertions;
+- local/origin HEAD равны на `bae26480`, working tree clean.
+
+## Stage 9. Публичный контент и CMS — 📋 NEXT
+
+Read-only discovery перед любой реализацией:
 
 - статические страницы;
 - новости и статьи;
 - отзывы и модерация;
-- SEO;
-- backlog RSS route;
-- operational/scheduled RSS sync.
+- SEO и метаданные;
+- инвентаризация routes/controllers/models/views/tests;
+- сравнение исторической документации и фактической текущей реализации;
+- затенённый route `/helpful_information/news/rss`;
+- операционное расписание для `news:sync-rss`;
+- выбор одного маленького семантического slice до начала правок.
+
+Реализация Stage 9 ещё не начата.
 
 ## Stage 10. Уведомления — 📋
 
@@ -237,12 +295,13 @@ Closure verification:
 - PHPUnit против canonical MySQL;
 - реальный `news:sync-rss` против canonical MySQL;
 - удаление recovery/rollback artifacts;
-- реальные внешние Stage 8 интеграционные запросы до feasibility-плана.
+- реальные внешние интеграционные запросы к туроператорам (Sletat, Coral
+  Travel и др.) до отдельного guarded operational плана.
 
 ## Ближайший следующий шаг
 
 После docs-only commit/push и обновления Project Sources:
 
-**read-only discovery и Plan для первого небольшого Stage 8 slice**.
+**read-only discovery и Plan для первого небольшого Stage 9 slice**.
 
 Никаких изменений кода до выбора точного scope.

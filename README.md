@@ -7,12 +7,12 @@
 
 - Активная ветка: `db-rebuild-stage3`.
 - Функциональный checkpoint:
-  `973975d6c01e4b22544defaa9c9ff67ffccbd4b3`
-  — `fix: align booking show per-booking authorization`.
+  `bae264802a17bac3c796481da7f10096acfc3cb2`
+  — `fix: remove unsupported public nonstop filter`.
 - Предыдущий maintenance checkpoint:
   `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f`
   — `fix: move news RSS sync out of public request`.
-- Этапы 5, 6 и 7 завершены.
+- Этапы 5, 6, 7 и 8 завершены.
 - Аварийное восстановление canonical MySQL завершено и проверено.
 - Документационный commit, содержащий эту версию файлов, всегда определяется Git.
 
@@ -38,6 +38,20 @@
   - не изменяет базу данных;
   - RSS-синхронизация вынесена в явную команду `news:sync-rss`;
   - реальная команда не запускалась против canonical MySQL.
+- Каталог и поиск туров (Stage 8):
+  - публичный каталог туров работает только на чтение, не изменяет базу
+    данных и не выполняет внешние HTTP-запросы;
+  - отображаются только активные и не удалённые туры;
+  - публичные фильтры выровнены с внутренним JSON tour-search API
+    (tour_operator, nights, rating, charter, direct_flight, hotel_name);
+  - сортировка по рейтингу использует `hotel_rating`, а не `hotel_stars`;
+  - канонические значения tour_operator и sort=`popular` используются формой;
+  - неподдерживаемые контролы `nonstop` и `instant_confirmation` удалены,
+    а не реализованы с придуманным поведением;
+  - существующий код интеграции с Sletat/Coral Travel статически
+    инвентаризирован; реальные внешние запросы и credentials не
+    выполнялись и не сохранялись; операционная интеграция остаётся
+    отдельным guarded-планом.
 
 Полный перечень checkpoint и оставшихся этапов приведён в
 [`docs/roadmap.md`](docs/roadmap.md).
@@ -110,8 +124,8 @@ DB_DATABASE=:memory:
 Текущий baseline:
 
 ```text
-352 tests
-1183 assertions
+382 tests
+1389 assertions
 ```
 
 Запускать через PHP 8.3.32:
@@ -143,8 +157,9 @@ DB_DATABASE=:memory:
 
 ## Текущий приоритет
 
-Stage 7 закрыт. Следующий функциональный шаг — **read-only discovery для Stage 8**
-по каталогу, поиску туров и feasibility внешних интеграций.
+Stage 8 закрыт. Следующий функциональный шаг — **read-only discovery для Stage 9**
+(публичный контент, CMS, новости/статьи, отзывы и SEO).
 
-До выбора точного scope не начинать массовую реализацию каталога, не выполнять внешние
-интеграционные запросы и не смешивать Stage 8 с RSS/CMS backlog.
+До выбора одного маленького семантического slice не начинать широкую реализацию
+Stage 9 и не смешивать её с активацией внешних интеграций, обновлением зависимостей
+или DB maintenance.
