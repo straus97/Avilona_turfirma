@@ -207,10 +207,10 @@ Route::group(['namespace' => 'HelpfulInformation'], function () {
     Route::get('/helpful_information/news', "HelpfulNewsController")->name("helpful_news.index")->middleware(
         'cache.response'
     );
+    Route::get('/helpful_information/news/rss', "RssController")->name("news.rss")->middleware('cache.response');
     Route::get('/helpful_information/news/{slug}', "HelpfulNewsIdController")->name(
         "helpful_news_id.index"
     )->middleware('cache.response');
-    Route::get('/helpful_information/news/rss', "RssController")->name("news.rss")->middleware('cache.response');
 
     Route::get('/helpful_information/for_our_clients', "ClientsController")->name("for_our_clients.index")->middleware(
         'cache.response'

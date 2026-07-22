@@ -3,19 +3,24 @@
 namespace App\Http\Controllers\HelpfulInformation;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Cache;
+use App\Models\News;
 use Illuminate\Support\Facades\Response;
 
 class RssController extends Controller
 {
     public function __invoke()
     {
-        $rss = Cache::remember('news.rss', 60, function () {
-            $xmlString = file_get_contents('https://www.turizm.ru/news/rss/yandex/');
-            return $xmlString;
-        });
-        return Response::make($rss, 200, [
-            'Content-Type' => 'application/xml'
+        // Локальная лента: читаем только собственные новости.
+        // SoftDeletes у модели News исключает удалённые записи автоматически.
+        $items = News::query()
+            ->orderByDesc('pub_date')
+            ->orderByDesc('id')
+            ->get(['title', 'link', 'description', 'pub_date']);
+
+        $xml = view('news.rss', ['items' => $items])->render();
+
+        return Response::make($xml, 200, [
+            'Content-Type' => 'application/rss+xml; charset=UTF-8',
         ]);
     }
 }
