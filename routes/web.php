@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Route;
 Route::group(['namespace' => 'Home'], function () {
     //меню сайта
     Route::get('/', "IndexController")->name("home.index")->middleware('cache.response');
-
-    Route::get('/reviews/{id_reviews}', "ReviewsController")->name("reviews.show")->middleware('cache.response');
 });
 
 Route::group(['namespace' => 'Tour'], function () {
