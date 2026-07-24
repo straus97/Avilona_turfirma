@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Review;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Review\CreateRequest;
 use App\Models\Reviews;
-use Illuminate\Support\Facades\Cache;
 
 class CreateController extends Controller
 {
@@ -21,8 +20,6 @@ class CreateController extends Controller
         $review->image = 0;
         $review->is_published = 0;
         $review->save();
-        // Очистка кеша для страницы отзывов
-        Cache::tags(['reviews'])->flush();
         // Перенаправление пользователя на страницу с сообщением об успехе
         return redirect()->route('review.index')->with('success', 'Отзыв успешно отправлен!');
     }

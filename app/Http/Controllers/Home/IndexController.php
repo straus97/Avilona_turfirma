@@ -22,13 +22,11 @@ class IndexController extends Controller
                 ->get();
         });
         
-        $reviews = Cache::remember('home_reviews', $cacheTime, function () {
-            return Reviews::select('id', 'name', 'content', 'image', 'created_at')
-                ->where('is_published', 1)
-                ->orderBy('id', 'desc')
-                ->take(3)
-                ->get();
-        });
+        $reviews = Reviews::select('id', 'name', 'content', 'image', 'created_at')
+            ->where('is_published', 1)
+            ->orderBy('id', 'desc')
+            ->take(3)
+            ->get();
         
         $best_offers = Cache::remember('home_best_offers', $cacheTime, function () {
             return Best_offer::select('id', 'title', 'content', 'image', 'created_at')

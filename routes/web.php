@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Home'], function () {
     //меню сайта
-    Route::get('/', "IndexController")->name("home.index")->middleware('cache.response');
+    Route::get('/', "IndexController")->name("home.index");
 });
 
 Route::group(['namespace' => 'Tour'], function () {
@@ -190,7 +190,7 @@ Route::group(['namespace' => 'Contact'], function () {
 });
 
 Route::group(['namespace' => 'Review'], function () {
-    Route::get('/reviews', "IndexController")->name("review.index")->middleware('cache.response');
+    Route::get('/reviews', "IndexController")->name("review.index");
     Route::post('/reviews/create', "CreateController")->name("review_create.index");
 });
 
