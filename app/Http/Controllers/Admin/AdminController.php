@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -259,16 +261,16 @@ class AdminController extends Controller
      */
     public function storeArticle(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $input = $request->all();
+        $rawSlug = trim((string) ($input['slug'] ?? ''));
+        $input['slug'] = $rawSlug !== '' ? $rawSlug : Str::slug((string) ($input['title'] ?? ''));
+
+        $validated = validator($input, [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'image' => 'nullable|url',
-            'slug' => 'nullable|string|max:255|unique:articles,slug',
-        ]);
-
-        if (empty($validated['slug'])) {
-            $validated['slug'] = \Illuminate\Support\Str::slug($validated['title']);
-        }
+            'slug' => ['required', 'string', 'max:255', Rule::unique('articles', 'slug')],
+        ])->validate();
 
         Article::create($validated);
 
@@ -289,16 +291,16 @@ class AdminController extends Controller
      */
     public function updateArticle(Request $request, Article $article): RedirectResponse
     {
-        $validated = $request->validate([
+        $input = $request->all();
+        $rawSlug = trim((string) ($input['slug'] ?? ''));
+        $input['slug'] = $rawSlug !== '' ? $rawSlug : Str::slug((string) ($input['title'] ?? ''));
+
+        $validated = validator($input, [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'image' => 'nullable|url',
-            'slug' => 'nullable|string|max:255|unique:articles,slug,' . $article->id,
-        ]);
-
-        if (empty($validated['slug'])) {
-            $validated['slug'] = \Illuminate\Support\Str::slug($validated['title']);
-        }
+            'slug' => ['required', 'string', 'max:255', Rule::unique('articles', 'slug')->ignore($article->id)],
+        ])->validate();
 
         $article->update($validated);
 
