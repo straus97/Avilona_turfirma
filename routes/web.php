@@ -197,10 +197,10 @@ Route::group(['namespace' => 'Review'], function () {
 Route::group(['namespace' => 'HelpfulInformation'], function () {
     Route::get('/helpful_information/interesting_articles', "ArticlesController")->name(
         "interesting_articles.index"
-    )->middleware('cache.response');
+    );
     Route::get('/helpful_information/interesting_articles/{slug}', "InterestingNewsController")->name(
         "helpful_information.show_interesting_news"
-    )->middleware('cache.response');
+    );
 
     Route::get('/helpful_information/news', "HelpfulNewsController")->name("helpful_news.index")->middleware(
         'cache.response'
