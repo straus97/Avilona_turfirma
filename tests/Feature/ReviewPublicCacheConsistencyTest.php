@@ -75,7 +75,7 @@ class ReviewPublicCacheConsistencyTest extends TestCase
         $this->assertStringNotContainsString('Illuminate\Support\Facades\Cache', $reviewIndexController);
 
         $this->assertStringNotContainsString("Cache::remember('home_reviews'", $homeController);
-        $this->assertStringContainsString("Cache::remember('home_news'", $homeController);
+        $this->assertStringNotContainsString("Cache::remember('home_news'", $homeController);
         $this->assertStringContainsString("Cache::remember('home_best_offers'", $homeController);
         $this->assertStringContainsString("Cache::remember('home_partners'", $homeController);
 
