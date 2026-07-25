@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="ru">
 <head>
+    @php
+        $pageCanonicalUrl = trim(
+            htmlspecialchars_decode(
+                $__env->yieldContent('canonical_url', url()->current()),
+                ENT_QUOTES
+            )
+        );
+    @endphp
     <!-- Кодировка страницы -->
     <meta charset="UTF-8">
     <!-- Установка viewport для адаптивного дизайна -->
@@ -14,11 +22,13 @@
     <meta name="author" content="Авилона">
     <!-- Разрешение для поисковых систем индексировать и следовать за ссылками -->
     <meta name="robots" content="index, follow">
+    <!-- Канонический URL страницы -->
+    <link rel="canonical" href="{{ $pageCanonicalUrl }}">
     <!-- Open Graph теги для улучшения отображения при расшаривании в социальных сетях -->
     <meta property="og:title"
           content="@yield('og_title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://avilona.ru/">
+    <meta property="og:url" content="{{ $pageCanonicalUrl }}">
     <meta property="og:image" content="https://avilona.ru/img/logo.png">
     <meta property="og:description"
           content="@yield('og_description', 'Туристическая фирма Авилона предлагает лучшие туры и путевки для отдыха в России и за границей. Индивидуальный подход к каждому клиенту, горящие предложения, удобный конструктор туров. Подарите себе незабываемые впечатления и отдых вместе с нами.')">
