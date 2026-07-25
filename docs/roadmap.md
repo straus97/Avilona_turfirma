@@ -1,26 +1,26 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-07-21**
+Дата checkpoint: **2026-07-25**
 
 Функциональный checkpoint:
 
 ```text
-bae264802a17bac3c796481da7f10096acfc3cb2
-fix: remove unsupported public nonstop filter
+4cdb3d727e46d8ffc662ea614c080fd32df4ba05
+fix: align public canonical metadata
 ```
 
-Предыдущий maintenance checkpoint:
+Предыдущий documentation checkpoint:
 
 ```text
-49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f
-fix: move news RSS sync out of public request
+8e7b2f4a905355fa40bb95cc8229d609e8398228
+docs: close stage 8 and plan stage 9
 ```
 
 Текущий тестовый baseline:
 
 ```text
-382 tests
-1389 assertions
+466 tests
+2014 assertions
 PHPUnit 10.5.20
 SQLite :memory:
 ```
@@ -34,8 +34,9 @@ SQLite :memory:
 - RSS maintenance slice — ✅ COMPLETE
 - Stage 7 — ✅ COMPLETE
 - Stage 8 — ✅ COMPLETE
-- Stage 9 — 📋 NEXT
-- Stage 10–13 — 📋 PLANNED / ⏸ DEFERRED
+- Stage 9 — ✅ COMPLETE
+- Stage 10 — 📋 NEXT
+- Stage 11–13 — 📋 PLANNED / ⏸ DEFERRED
 
 ---
 
@@ -122,9 +123,11 @@ Commit:
 
 Backlog:
 
-1. `/helpful_information/news/rss` затенён более ранним `/{slug}`.
-2. Автоматическое расписание `news:sync-rss` не настроено.
-3. Реальный sync против canonical MySQL до отдельного operational plan не выполнять.
+1. Автоматическое расписание `news:sync-rss` не настроено.
+2. Реальный sync против canonical MySQL до отдельного operational plan не выполнять.
+
+Затенение `/helpful_information/news/rss` устранено в Stage 9 commit
+`72c030d5`.
 
 ## Stage 7. Личные кабинеты и единый UX — ✅ COMPLETE
 
@@ -225,27 +228,82 @@ Closure verification:
 - full PHPUnit: 382 tests / 1389 assertions;
 - local/origin HEAD равны на `bae26480`, working tree clean.
 
-## Stage 9. Публичный контент и CMS — 📋 NEXT
+## Stage 9. Публичный контент и CMS — ✅ COMPLETE
 
-Read-only discovery перед любой реализацией:
+Завершённые checkpoint:
 
-- статические страницы;
-- новости и статьи;
-- отзывы и модерация;
-- SEO и метаданные;
-- инвентаризация routes/controllers/models/views/tests;
-- сравнение исторической документации и фактической текущей реализации;
-- затенённый route `/helpful_information/news/rss`;
-- операционное расписание для `news:sync-rss`;
-- выбор одного маленького семантического slice до начала правок.
+- `72c030d5` — локальный публичный RSS 2.0 для новостей и устранение
+  затенения `/helpful_information/news/rss`;
+- `cd15e5c5` — удаление неподдерживаемого публичного detail route отзыва;
+- `fa0cfc7d` — валидация итоговых generated article slug для admin/manager
+  create/update;
+- `02bfa6da` — актуальность публичных страниц статей без устаревшего
+  application cache;
+- `06f6035c` — актуальность публичных news index/detail/RSS;
+- `6bd3db9c` — актуальность публичного списка отзывов и homepage reviews;
+- `136ae5eb` — актуальность блока новостей на главной;
+- `4cdb3d72` — единый query-free canonical URL и `og:url` для публичного
+  layout с безопасным override/escaping.
 
-Реализация Stage 9 ещё не начата.
+Итог:
 
-## Stage 10. Уведомления — 📋
+- публичный RSS формируется локально из `News`, исключает soft-deleted
+  записи и больше не затеняется slug-маршрутом;
+- неподдерживаемая публичная detail-страница отзыва удалена, при этом
+  список, отправка и manager/admin moderation сохранены;
+- generated article slug валидируется до записи, включая пустой/пробельный
+  slug и collision для create/update;
+- публичные статьи, новости, RSS, отзывы и homepage news не зависят от
+  cache entries, которые могли оставаться устаревшими после CMS-изменений;
+- `home_best_offers` и `home_partners` оставлены намеренно: read-only
+  inventory не обнаружила обычных runtime mutation paths, поэтому
+  подтверждённого cache invalidation defect нет;
+- shared public layout содержит ровно один canonical и один `og:url`,
+  использующие одно query-free значение `url()->current()` либо
+  `canonical_url` override;
+- двойное экранирование inline Blade section устранено без raw `{!! !!}`;
+- routes/controllers/models/config/robots/sitemap не менялись в
+  canonical metadata slice.
+
+Read-only SEO inventory зафиксировала отдельный backlog, не включённый в
+широкую реализацию Stage 9:
+
+- статический `sitemap.xml`: 272 URL и все 272 `lastmod` датированы 2024
+  годом;
+- `robots.txt` содержит устаревшие allow-paths, не полностью совпадающие
+  с текущими маршрутами;
+- page-specific title/meta description/Open Graph coverage остаётся
+  неполной;
+- автоматическое расписание `news:sync-rss` не настроено.
+
+Closure verification:
+
+- Stage 9 commits: 8;
+- совокупно изменённых путей: 21;
+- финальный focused canonical suite: 7 tests / 50 assertions;
+- full PHPUnit: 466 tests / 2014 assertions;
+- PHP 8.3.32, SQLite `:memory:`;
+- local/origin HEAD равны на `4cdb3d72`;
+- working tree clean;
+- `STAGE9_PUBLIC_CANONICAL_METADATA_COMMIT_PUSH=PASS`;
+- `STAGE9_CLOSURE_INVENTORY=PASS`.
+
+## Stage 10. Уведомления — 📋 NEXT
+
+Сначала read-only discovery существующей notification architecture:
+
+- Laravel Notifications, mailables, events/listeners, jobs/queues;
+- booking/message notification dispatch и recipient rules;
+- database/mail channels и UI-поверхности кабинета;
+- delivery status, retries, failure handling и тесты;
+- отсутствие/наличие scheduler/queue worker operational contract;
+- выбор одного маленького semantic slice до любых правок.
+
+Предварительный scope после discovery:
 
 - уведомления в кабинете;
 - status-change email;
-- optional Telegram/SMS/WebSocket после feasibility.
+- optional Telegram/SMS/WebSocket только после feasibility.
 
 ## Stage 11. Security, reliability, performance — 📋
 
@@ -274,9 +332,14 @@ Read-only discovery перед любой реализацией:
 
 ## Общий backlog
 
-- shadowed route `/helpful_information/news/rss`;
 - расписание для `news:sync-rss`;
-- постоянный manager live account отсутствует; изолированная временная smoke-стратегия проверена;
+- реальный `news:sync-rss` против canonical MySQL только по отдельному
+  operational plan;
+- статический `sitemap.xml` с 272 устаревшими `lastmod` 2024 года;
+- актуализация route contract в `robots.txt`;
+- расширение page-specific title/meta description/Open Graph coverage;
+- постоянный manager live account отсутствует; изолированная временная
+  smoke-стратегия проверена;
 - deprecated PHPUnit XML schema;
 - recovery artifact retention policy;
 - единый E2E lifecycle scenario;
@@ -300,8 +363,10 @@ Read-only discovery перед любой реализацией:
 
 ## Ближайший следующий шаг
 
-После docs-only commit/push и обновления Project Sources:
-
-**read-only discovery и Plan для первого небольшого Stage 9 slice**.
-
-Никаких изменений кода до выбора точного scope.
+1. Выполнить docs-only commit/push этого Stage 9 closure.
+2. Обновить handoff, roadmap copy, new-chat prompt, source archive и
+   Project Sources manifest для нового documentation HEAD.
+3. После source refresh начать **Stage 10 read-only discovery**
+   существующей notification architecture.
+4. До выбора одного маленького Stage 10 slice и exact allowed paths код
+   не изменять.
