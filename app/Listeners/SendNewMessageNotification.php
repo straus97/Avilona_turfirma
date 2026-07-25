@@ -14,10 +14,16 @@ class SendNewMessageNotification
     public function handle(NewMessageReceived $event): void
     {
         $message = $event->message;
+        $receiver = $message->receiver;
 
-        // Отправляем письмо получателю сообщения
-        if ($message->receiver) {
-            Mail::to($message->receiver->email)->queue(new NewMessageReceivedMail($message));
+        // Отправляем письмо только реальному получателю, у которого нет
+        // технического адреса и который не отключил уведомления о сообщениях.
+        if (
+            $receiver
+            && !$receiver->hasTechnicalEmail()
+            && $receiver->wantsEmailNotification('new_messages')
+        ) {
+            Mail::to($receiver->email)->queue(new NewMessageReceivedMail($message));
         }
     }
 }

@@ -269,6 +269,30 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Разрешена ли отправка email-уведомления по указанному разделу настроек
+     * (например, 'new_messages', 'booking_updates').
+     *
+     * По умолчанию включено: null/пустой JSON, отсутствующие ключи,
+     * а также повреждённый JSON или значение, декодированное не в массив,
+     * трактуются как «включено». Отключить может только явное false —
+     * либо у самого раздела, либо у общего email_notifications.
+     */
+    public function wantsEmailNotification(string $topic): bool
+    {
+        $settings = json_decode((string) $this->notification_settings, true);
+
+        if (!is_array($settings)) {
+            $settings = [];
+        }
+
+        if (($settings['email_notifications'] ?? true) === false) {
+            return false;
+        }
+
+        return ($settings[$topic] ?? true) !== false;
+    }
+
+    /**
      * Проверка, является ли пользователь администратором
      */
     public function isAdmin(): bool
