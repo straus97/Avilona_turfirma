@@ -18,8 +18,13 @@ class SendBookingCreatedNotification
 
         // Письмо клиенту содержит временный пароль, поэтому оно не отправляется
         // на технический (сгенерированный) адрес — такого почтового ящика нет.
-        if (!$booking->user->hasTechnicalEmail()) {
-            Mail::to($booking->user->email)->queue(new BookingCreatedMail($booking));
+        $owner = $booking->user;
+        if (
+            $owner
+            && !$owner->hasTechnicalEmail()
+            && $owner->wantsEmailNotification('booking_updates')
+        ) {
+            Mail::to($owner->email)->queue(new BookingCreatedMail($booking));
         }
 
         // Отправляем отдельное письмо всем администраторам
@@ -28,7 +33,12 @@ class SendBookingCreatedNotification
         })->get();
 
         foreach ($admins as $admin) {
-            Mail::to($admin->email)->queue(new \App\Mail\AdminBookingCreated($booking));
+            if (
+                !$admin->hasTechnicalEmail()
+                && $admin->wantsEmailNotification('booking_updates')
+            ) {
+                Mail::to($admin->email)->queue(new \App\Mail\AdminBookingCreated($booking));
+            }
         }
     }
 }
