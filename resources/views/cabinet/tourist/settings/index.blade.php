@@ -129,7 +129,7 @@
                             Напоминания о поездках
                         </label>
                     </div>
-                    <small class="text-muted ms-4">Напоминание за 7 дней до вылета</small>
+                    <small class="text-muted ms-4">Напоминания за 14 и 7 дней, за 3 дня и за 1 день до вылета</small>
                 </div>
 
                 <div class="mb-3">
