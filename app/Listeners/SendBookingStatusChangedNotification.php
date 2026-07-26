@@ -16,15 +16,29 @@ class SendBookingStatusChangedNotification
         $booking = $event->booking;
         $oldStatus = $event->oldStatus;
 
-        // Отправляем письмо клиенту о изменении статуса
-        Mail::to($booking->user->email)->queue(
-            new BookingStatusChangedMail($booking, $oldStatus, $booking->user)
-        );
+        // Отправляем письмо клиенту о изменении статуса, только если он
+        // не отключил уведомления и не имеет технического email.
+        $owner = $booking->user;
+        if (
+            $owner
+            && !$owner->hasTechnicalEmail()
+            && $owner->wantsEmailNotification('booking_updates')
+        ) {
+            Mail::to($owner->email)->queue(
+                new BookingStatusChangedMail($booking, $oldStatus, $owner)
+            );
+        }
 
-        // Если есть назначенный менеджер, отправляем ему тоже
-        if ($booking->manager) {
-            Mail::to($booking->manager->email)->queue(
-                new BookingStatusChangedMail($booking, $oldStatus, $booking->manager)
+        // Если есть назначенный менеджер, отправляем ему тоже — с тем же
+        // условием доставки.
+        $manager = $booking->manager;
+        if (
+            $manager
+            && !$manager->hasTechnicalEmail()
+            && $manager->wantsEmailNotification('booking_updates')
+        ) {
+            Mail::to($manager->email)->queue(
+                new BookingStatusChangedMail($booking, $oldStatus, $manager)
             );
         }
     }
