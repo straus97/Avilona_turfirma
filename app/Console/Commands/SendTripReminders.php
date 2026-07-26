@@ -44,11 +44,21 @@ class SendTripReminders extends Command
                 ->get();
 
             foreach ($bookings as $booking) {
+                $owner = $booking->user;
+
+                if (
+                    !$owner
+                    || $owner->hasTechnicalEmail()
+                    || !$owner->wantsEmailNotification('trip_reminders')
+                ) {
+                    continue;
+                }
+
                 try {
-                    Mail::to($booking->user->email)->queue(
+                    Mail::to($owner->email)->queue(
                         new TripReminder($booking, $days)
                     );
-                    
+
                     $totalSent++;
                     $this->info("Отправлено напоминание для заявки #{$booking->id} (через {$days} дней)");
                 } catch (\Exception $e) {
