@@ -16,7 +16,11 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // Отправка напоминаний о поездках каждый день в 10:00
-        $schedule->command('bookings:send-trip-reminders')->dailyAt('10:00');
+        // withoutOverlapping is a secondary guard only: the persistent delivery
+        // ledger's unique constraint remains the authoritative duplicate guard.
+        $schedule->command('bookings:send-trip-reminders')
+            ->dailyAt('10:00')
+            ->withoutOverlapping(60);
     }
 
     /**
