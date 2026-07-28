@@ -31,6 +31,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
     Route::middleware('role:tourist,manager,admin')->group(function () {
         Route::get('/bookings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bookings'])->name('bookings');
         Route::get('/chat/{bookingId?}', [\App\Http\Controllers\Cabinet\CabinetController::class, 'chat'])->name('chat');
+        Route::post('/notifications/{notification}/open', [\App\Http\Controllers\Cabinet\NotificationController::class, 'open'])->name('notifications.open');
         Route::get('/documents/personal', [\App\Http\Controllers\Cabinet\CabinetController::class, 'personalDocuments'])->name('documents.personal');
         Route::get('/documents/bookings', [\App\Http\Controllers\Cabinet\CabinetController::class, 'bookingDocuments'])->name('documents.bookings');
         Route::get('/documents/bookings/{booking}/{document}/download', [\App\Http\Controllers\Cabinet\CabinetController::class, 'downloadBookingDocument'])->name('documents.bookings.download');
