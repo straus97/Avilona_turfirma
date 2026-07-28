@@ -1,29 +1,46 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-07-25**
+Дата checkpoint: **2026-07-29**
 
-Функциональный checkpoint:
+Последний функциональный checkpoint:
 
 ```text
-4cdb3d727e46d8ffc662ea614c080fd32df4ba05
-fix: align public canonical metadata
+014470402984eaffd8c9888292ec51a2124de71d
+feat: open new message notifications
+```
+
+Текущий репозиторный/документационный HEAD всегда определяется Git и
+после docs-only commit, фиксирующего эти правки, станет новее указанного
+функционального checkpoint — это не меняет сам функциональный checkpoint
+и его test baseline.
+
+Родительский commit:
+
+```text
+d572b11633e9fcd2ffce848e1633a1a9e8eaa546
 ```
 
 Предыдущий documentation checkpoint:
 
 ```text
-8e7b2f4a905355fa40bb95cc8229d609e8398228
-docs: close stage 8 and plan stage 9
+c1cc52aae63ecde4cec995dbc54cc6616ecbe870
+docs: close stage 9 and plan stage 10
 ```
 
 Текущий тестовый baseline:
 
 ```text
-466 tests
-2014 assertions
+Full:    567 tests / 2391 assertions
+Focused (notification-open slice): 96 tests / 347 assertions
 PHPUnit 10.5.20
-SQLite :memory:
+SQLite :memory: (единственно допустимая БД для PHPUnit)
+Canonical migrations: 53 Ran / 0 Pending (после guarded trip-reminder migration)
+Canonical MySQL: turfirma_rebuild_v4, порт 3308
+PHP: C:\wamp\bin\php\php8.3.32\php.exe (8.3.32)
 ```
+
+Известное non-blocking предупреждение: `phpunit.xml` использует deprecated
+schema — backlog item, не часть текущего semantic slice.
 
 ## Сводный статус
 
@@ -35,7 +52,7 @@ SQLite :memory:
 - Stage 7 — ✅ COMPLETE
 - Stage 8 — ✅ COMPLETE
 - Stage 9 — ✅ COMPLETE
-- Stage 10 — 📋 NEXT
+- Stage 10 — 🚧 IN PROGRESS (9 slices done, next slice not yet selected)
 - Stage 11–13 — 📋 PLANNED / ⏸ DEFERRED
 
 ---
@@ -288,22 +305,93 @@ Closure verification:
 - `STAGE9_PUBLIC_CANONICAL_METADATA_COMMIT_PUSH=PASS`;
 - `STAGE9_CLOSURE_INVENTORY=PASS`.
 
-## Stage 10. Уведомления — 📋 NEXT
+## Stage 10. Уведомления — 🚧 IN PROGRESS
 
-Сначала read-only discovery существующей notification architecture:
+Stage 10 **не завершён**. Всего завершено 9 маленьких semantic slice.
+Последний функциональный commit — `014470402984eaffd8c9888292ec51a2124de71d`;
+его непосредственный родитель — `d572b11633e9fcd2ffce848e1633a1a9e8eaa546`
+(commit слайса 8, а не общий стартовый предок всех девяти слайсов):
 
-- Laravel Notifications, mailables, events/listeners, jobs/queues;
-- booking/message notification dispatch и recipient rules;
-- database/mail channels и UI-поверхности кабинета;
-- delivery status, retries, failure handling и тесты;
-- отсутствие/наличие scheduler/queue worker operational contract;
-- выбор одного маленького semantic slice до любых правок.
+1. `92e49fce` — new-message email preferences.
+2. `4e18ca6d` — booking-status email preferences.
+3. `926b8382` — manager-assignment email preferences.
+4. `a92e1dbe` — booking-created email preferences.
+5. `1180931a` — trip-reminder email preferences.
+6. `d9279a18` — trip-reminder settings copy.
+7. `a9dc356a` — trip-reminder idempotency.
+8. `d572b116` — new-message database notification persistence.
+9. `01447040` — open new-message notifications safely from the cabinet.
 
-Предварительный scope после discovery:
+Trip-reminder слайсы (5–7) добавили guarded migration; canonical baseline
+после неё — 53 Ran / 0 Pending.
 
-- уведомления в кабинете;
-- status-change email;
-- optional Telegram/SMS/WebSocket только после feasibility.
+### Слайс 8 — `d572b116`. Database-персистентность нового сообщения
+
+- `App\Notifications\NewMessageDatabaseNotification` с database-каналом;
+- payload: `type` (всегда `new_message`), `message_id`, `booking_id`,
+  `sender_id`, `sender_name`, `preview`, `has_attachment`;
+- запись в стандартную Laravel-таблицу `notifications`.
+
+### Слайс 9 — `01447040`. Открытие уведомления из кабинета
+
+- POST route `cabinet.notifications.open` внутри authenticated cabinet
+  role middleware (`auth`, `password.change`, `role:tourist,manager,admin`);
+- уведомление ищется строго через связь текущего пользователя — без
+  предварительного глобального разрешения по id;
+- принимается только контракт `NewMessageDatabaseNotification` +
+  `data.type === new_message`;
+- `booking_id` валидируется как строго положительный integer либо
+  числовая строка;
+- заявка загружается до какого-либо изменения `read_at`;
+- effective-role приоритет `admin > manager > tourist`, без отката с
+  manager-ветки на tourist-ветку у мульти-ролевых пользователей;
+- редирект на `cabinet.chat` / `cabinet.manager.chat` / `cabinet.admin.chats`
+  с `bookingId`;
+- уже прочитанное уведомление обрабатывается идемпотентно
+  (`read_at` не переписывается повторно);
+- 404 без пометки прочитанным для: чужого уведомления, случайного
+  несуществующего UUID, неподдерживаемого класса уведомления, `data.type`
+  ≠ `new_message`, отсутствующего/некорректного (0, отрицательного,
+  нечислового) `booking_id`, отсутствующей или мягко удалённой заявки,
+  заявки другого туриста/менеджера, ролевого пользователя без доступа;
+  роль без прав отклоняется `role`-middleware (403) до контроллера;
+- 21 feature-тест в `CabinetNotificationOpenTest`.
+
+Verification для слайса `01447040`:
+
+- focused: 96 tests / 347 assertions;
+- full PHPUnit на `01447040`: 567 tests / 2391 assertions;
+- PHP `C:\wamp\bin\php\php8.3.32\php.exe`, PHPUnit только SQLite `:memory:`;
+- независимая review подтвердила соответствие реализации контракту;
+- `01447040` был закоммичен, запушен и проверен как последний
+  функциональный checkpoint; local/origin HEAD совпадали на `01447040` на
+  момент закрытия этого функционального слайса. Последующий docs-only
+  commit меняет репозиторный HEAD, но не меняет сам функциональный
+  checkpoint `01447040` и не меняет его test baseline.
+
+### Следующий Stage 10 slice — не выбран
+
+Никакая широкая реализация не запланирована заранее. Следующий маленький
+Stage 10 slice выбирается только после отдельного read-only discovery:
+
+- текущие UI-поверхности кабинета для непрочитанных уведомлений (bell,
+  dropdown, список, unread-count) — есть ли они и в каком состоянии;
+- mail/queue delivery, events/listeners, retries и failure handling для
+  остальных типов уведомлений;
+- broadcast-поверхности для admin/manager (все чаты, все заявки);
+- наличие/отсутствие scheduler или queue worker operational contract;
+- сравнение исторической документации (включая архив) и фактической
+  реализации;
+- продуктовые пробелы, не покрытые завершёнными 9 слайсами.
+
+Предварительный (не гарантированный) scope после discovery может включать:
+
+- уведомления в кабинете (bell/dropdown/список/unread-count), если ещё
+  не реализованы;
+- status-change email, если ещё не покрыт;
+- optional Telegram/SMS/WebSocket только после отдельного feasibility.
+
+До выбора scope и exact allowed paths — код не менять.
 
 ## Stage 11. Security, reliability, performance — 📋
 
@@ -350,23 +438,37 @@ Closure verification:
 
 Без отдельного утверждённого плана запрещено:
 
-- `composer update`;
+- широкая реализация нового функционала за пределами одного выбранного
+  маленького semantic slice;
+- `composer update` и другие обновления зависимостей;
 - `npm update`;
 - `npm audit fix`;
 - migrations/seed/import/reset/wipe;
 - `legacy:import-v4 --execute`;
 - PHPUnit против canonical MySQL;
+- любые прямые операции над canonical MySQL вне guarded operational плана;
 - реальный `news:sync-rss` против canonical MySQL;
 - удаление recovery/rollback artifacts;
-- реальные внешние интеграционные запросы к туроператорам (Sletat, Coral
-  Travel и др.) до отдельного guarded operational плана.
+- production-интеграции и реальные внешние запросы к провайдерам (Sletat,
+  Coral Travel, email/SMS/Telegram-провайдеры и др.) до отдельного guarded
+  operational плана;
+- деструктивные операции над данными, ветками или репозиторием без
+  явного запроса пользователя.
 
 ## Ближайший следующий шаг
 
-1. Выполнить docs-only commit/push этого Stage 9 closure.
-2. Обновить handoff, roadmap copy, new-chat prompt, source archive и
-   Project Sources manifest для нового documentation HEAD.
-3. После source refresh начать **Stage 10 read-only discovery**
-   существующей notification architecture.
-4. До выбора одного маленького Stage 10 slice и exact allowed paths код
-   не изменять.
+Stage 10 в процессе. Последний функциональный checkpoint — `01447040`
+(см. раздел Stage 10 выше); он не меняется публикацией текущего docs-only
+checkpoint.
+
+1. После публикации текущего docs-only checkpoint — создать и независимо
+   проверить новый handoff, roadmap copy, new-chat prompt, source archive,
+   manifest и Project Sources set для получившегося документационного
+   HEAD.
+2. Только после этого выполнить отдельный **read-only discovery**
+   оставшейся notification architecture и текущих продуктовых пробелов
+   (см. раздел Stage 10 выше).
+3. Затем выбрать один маленький следующий Stage 10 slice и exact allowed
+   paths до начала любых новых правок.
+4. До этого выбора широкую реализацию, миграции, canonical DB операции,
+   production-интеграции и деструктивные действия не выполнять.

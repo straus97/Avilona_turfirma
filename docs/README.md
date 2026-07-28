@@ -5,34 +5,47 @@
 | Параметр | Значение |
 |---|---|
 | Ветка | `db-rebuild-stage3` |
-| Функциональный checkpoint | `bae264802a17bac3c796481da7f10096acfc3cb2` |
-| Commit | `fix: remove unsupported public nonstop filter` |
-| Предыдущий maintenance commit | `49fe6fbfee72972a274f1b2cd29db5aa2bc0d21f` |
-| PHPUnit baseline | 382 tests / 1389 assertions |
-| PHPUnit DB | SQLite `:memory:` |
-| Canonical schema | `turfirma_rebuild_v4` |
-| Canonical migrations | 52 Ran / 0 Pending |
+| Последний функциональный checkpoint | `014470402984eaffd8c9888292ec51a2124de71d` |
+| Commit | `feat: open new message notifications` |
+| Родительский commit | `d572b11633e9fcd2ffce848e1633a1a9e8eaa546` |
+| PHPUnit full baseline | 567 tests / 2391 assertions |
+| PHPUnit focused baseline (notification-open slice) | 96 tests / 347 assertions |
+| PHPUnit DB | SQLite `:memory:` — единственно допустимая для PHPUnit |
+| Canonical schema | `turfirma_rebuild_v4`, порт 3308 |
+| Canonical migrations | 53 Ran / 0 Pending (после guarded trip-reminder migration) |
 | Recovery | COMPLETE |
 | Stage 5 | COMPLETE |
 | Stage 6 | COMPLETE |
 | Stage 7 | COMPLETE |
 | Stage 8 | COMPLETE |
+| Stage 9 | COMPLETE |
+| Stage 10 | IN PROGRESS |
 
-Эта документация описывает функциональное состояние на checkpoint `bae26480`.
-Документационный HEAD, содержащий текущую версию файлов, всегда определяется Git.
+Эта документация описывает функциональное состояние на момент последнего
+функционального checkpoint `01447040`. Текущий репозиторный/документационный
+HEAD, содержащий актуальную версию файлов, всегда определяется Git и после
+docs-only commit, фиксирующего эти правки, станет новее `01447040` — это не
+меняет сам последний функциональный checkpoint и его test baseline.
+Stage 10 **не завершён** — см. раздел «Stage 10 — IN PROGRESS» ниже и
+[`roadmap.md`](roadmap.md).
 
 ## Источники истины
 
 Приоритет:
 
-1. Текущий HEAD Git и исходный код.
+1. Текущий HEAD Git, исходный код и тесты.
 2. Этот файл и [`roadmap.md`](roadmap.md).
 3. Последние проверенные PHPUnit, migration, recovery и browser-smoke evidence.
-4. Актуальные внешний handoff, roadmap и source archive для конкретного pushed HEAD.
-5. Исторические документы и старые Project Sources.
+4. Актуальный внешний handoff, roadmap и source archive для конкретного pushed HEAD.
+5. Исторические документы, включая [`archive/README.md`](archive/README.md), и старые Project Sources.
 
 Старые recovery-файлы со статусом `R5 pending` и Project Sources на `4b568d69`
 являются историческими после завершения нового documentation/source refresh.
+
+`docs/archive/legacy-pre-rebuild/` содержит исторические pre-rebuild документы.
+Они НЕ являются источником истины и не должны использоваться как
+руководство к действию без сверки с текущим кодом и командами из этого
+файла — подробности и предупреждения см. в [`archive/README.md`](archive/README.md).
 
 ## Подтверждённый стек
 
@@ -203,6 +216,58 @@ Closure verification:
 - local/origin HEAD равны на `bae26480`;
 - working tree clean, staged path count 0.
 
+Stage 9 (публичный контент и CMS) завершён отдельно; полная хронология,
+завершённые checkpoint и read-only SEO backlog — в
+[`roadmap.md`](roadmap.md).
+
+## Stage 10 — IN PROGRESS. Уведомления
+
+Stage 10 **не завершён**. Всего завершено 9 маленьких semantic slice.
+Последний функциональный commit — `014470402984eaffd8c9888292ec51a2124de71d`;
+его непосредственный родитель — `d572b11633e9fcd2ffce848e1633a1a9e8eaa546`
+(commit слайса 8, а не общий стартовый предок всех девяти слайсов):
+
+1. `92e49fce` — new-message email preferences.
+2. `4e18ca6d` — booking-status email preferences.
+3. `926b8382` — manager-assignment email preferences.
+4. `a92e1dbe` — booking-created email preferences.
+5. `1180931a` — trip-reminder email preferences.
+6. `d9279a18` — trip-reminder settings copy.
+7. `a9dc356a` — trip-reminder idempotency.
+8. `d572b116` — new-message database notification persistence.
+9. `01447040` — open new-message notifications safely from the cabinet.
+
+Слайс `01447040` добавляет:
+
+- POST route `cabinet.notifications.open` внутри authenticated cabinet
+  role middleware (`auth`, `password.change`, `role:tourist,manager,admin`);
+- поиск уведомления строго через связь текущего пользователя (без
+  предварительного глобального разрешения по id);
+- строгую проверку типа `NewMessageDatabaseNotification` и
+  `data.type === new_message`;
+- валидацию `booking_id` как положительного integer либо числовой строки;
+- загрузку заявки до какого-либо изменения `read_at`;
+- effective-role приоритет `admin > manager > tourist`, без отката с
+  manager-ветки на tourist-ветку;
+- редирект на соответствующий admin/manager/tourist chat route с
+  `bookingId`;
+- идемпотентную обработку уже прочитанных уведомлений;
+- 404 без пометки прочитанным для чужих, некорректных (payload/тип/data),
+  неподдерживаемых, недоступных по роли, отсутствующих или мягко
+  удалённых заявок;
+- 21 feature-тест в `CabinetNotificationOpenTest`.
+
+Verification для этого слайса:
+
+- focused: 96 tests / 347 assertions;
+- full PHPUnit на `01447040`: 567 tests / 2391 assertions;
+- PHP `C:\wamp\bin\php\php8.3.32\php.exe`, PHPUnit только SQLite `:memory:`.
+
+Следующий Stage 10 slice **заранее не выбран**. Требуется отдельный
+read-only discovery оставшейся notification-архитектуры и текущих
+продуктовых пробелов (см. «Следующий шаг» ниже и `roadmap.md`) до внесения
+новых правок.
+
 ## Правила безопасной работы
 
 - Один маленький семантический slice за раз.
@@ -214,6 +279,17 @@ Closure verification:
 - PHPUnit — только SQLite `:memory:`.
 - Не смешивать functional, docs, dependency и DB maintenance изменения.
 - Не публиковать `.env`, SQL, cookies, токены и приватные файлы.
+- Команды и инструкции из `docs/archive/` не выполнять без сверки с
+  текущим кодом — см. [`archive/README.md`](archive/README.md).
+- Полный список жёстких операционных ограничений (composer/npm update,
+  migrations/seed/reset, canonical MySQL, реальные внешние интеграционные
+  запросы и т.д.) — в [`roadmap.md`](roadmap.md) → «Жёсткие ограничения».
+
+## Известные предупреждения (backlog)
+
+- `phpunit.xml` использует deprecated schema. Предупреждение non-blocking,
+  не относится к текущему семантическому slice и отложено в общий backlog
+  (см. `roadmap.md`).
 
 ## Карта документации
 
@@ -222,22 +298,30 @@ Closure verification:
 | [`../README.md`](../README.md) | Точка входа |
 | [`README.md`](README.md) | Источники истины и правила работы |
 | [`roadmap.md`](roadmap.md) | Актуальные этапы и backlog |
+| [`archive/README.md`](archive/README.md) | Архив: исторические pre-rebuild документы, не источник истины |
 
-Остальные документы в `docs/` могут быть историческими и требуют сверки с текущим кодом.
+Прежние документы верхнего уровня `docs/` перемещены в
+`docs/archive/legacy-pre-rebuild/` и являются историческими.
 
 ## Следующий шаг
 
-Stage 8 закрыт. После documentation/source refresh — read-only discovery
-для Stage 9 (публичный контент и CMS):
+Stage 9 закрыт. Stage 10 (уведомления) **в процессе**: завершено 9
+semantic slice, последний функциональный checkpoint — `01447040` (см.
+«Stage 10 — IN PROGRESS» выше). Публикация текущего docs-only checkpoint
+не меняет ни один из этих фактов.
 
-1. инвентаризировать текущие public-content/CMS/news/article/review/SEO
-   routes, controllers, models, migrations, views, assets и tests;
-2. отдельно сравнить историческую документацию и фактическую текущую
-   реализацию;
-3. включить в backlog-инвентаризацию затенённый route
-   `/helpful_information/news/rss` и отсутствие операционного расписания
-   для `news:sync-rss`;
-4. выбрать один маленький семантический Stage 9 slice и exact allowed
-   paths до начала правок.
+1. После публикации текущего docs-only checkpoint — завершить и
+   независимо проверить новый Project Sources set (и связанные handoff,
+   roadmap copy, new-chat prompt, source archive, manifest) для
+   получившегося документационного HEAD.
+2. Только после этого выполнить отдельный read-only discovery оставшейся
+   notification-архитектуры: UI-поверхности кабинета для непрочитанных
+   уведомлений, mail/queue delivery, admin/manager broadcast, тесты и
+   отсутствующие operational contracts; отдельно сравнить историческую
+   документацию (включая архив) и фактическую текущую реализацию.
+3. Затем выбрать один маленький семантический Stage 10 slice и exact
+   allowed paths до начала правок.
 
-До выбора scope не начинать широкую реализацию CMS или SEO.
+До выбора scope не начинать широкую реализацию notification UI, очередей,
+broadcasting, WebSocket, Telegram/SMS или иных внешних интеграций. Полный
+список жёстких ограничений — в [`roadmap.md`](roadmap.md).
