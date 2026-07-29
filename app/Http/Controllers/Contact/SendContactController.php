@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Contact\SendContactRequest;
 use App\Mail\ContactFormMail;
 use App\Mail\UserFormMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +28,10 @@ class SendContactController extends Controller
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            Log::error('Public contact form mail send failed', [
+                'exception' => get_class($e),
+            ]);
+
             return redirect()->back()->with('error', 'Ошибка отправки сообщения.');
         }
     }
