@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 class Booking extends Model
 {
@@ -263,7 +264,16 @@ class Booking extends Model
             $this->tour->increaseAvailableSeats($this->total_tourists);
         }
 
-        event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+        // Заявка уже зафиксирована в БД: сбой уведомления не должен её откатывать
+        // или превращать успешный переход в HTTP-ошибку.
+        try {
+            event(new \App\Events\BookingStatusChanged($this, $oldStatus));
+        } catch (\Throwable $e) {
+            Log::error('BookingStatusChanged dispatch failed', [
+                'booking_id' => $this->id,
+                'exception'  => get_class($e),
+            ]);
+        }
     }
 
     // -----------------------------------------------------------------------
