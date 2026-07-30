@@ -5,8 +5,8 @@
 Последний функциональный checkpoint:
 
 ```text
-014470402984eaffd8c9888292ec51a2124de71d
-feat: open new message notifications
+9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c
+feat: add cabinet notification bell
 ```
 
 Текущий репозиторный/документационный HEAD всегда определяется Git и
@@ -17,21 +17,21 @@ feat: open new message notifications
 Родительский commit:
 
 ```text
-d572b11633e9fcd2ffce848e1633a1a9e8eaa546
+04c6c41035d9e421944ee1135fc95cd6fe9c2fd4
 ```
 
 Предыдущий documentation checkpoint:
 
 ```text
-c1cc52aae63ecde4cec995dbc54cc6616ecbe870
-docs: close stage 9 and plan stage 10
+f351ae9e86092e7be9bf5215a63477822b097d3a
+docs: archive legacy docs and update stage 10
 ```
 
 Текущий тестовый baseline:
 
 ```text
-Full:    567 tests / 2391 assertions
-Focused (notification-open slice): 96 tests / 347 assertions
+Full:    588 tests / 2486 assertions
+Focused (notification-bell slice): 57 tests / 216 assertions
 PHPUnit 10.5.20
 SQLite :memory: (единственно допустимая БД для PHPUnit)
 Canonical migrations: 53 Ran / 0 Pending (после guarded trip-reminder migration)
@@ -52,8 +52,10 @@ schema — backlog item, не часть текущего semantic slice.
 - Stage 7 — ✅ COMPLETE
 - Stage 8 — ✅ COMPLETE
 - Stage 9 — ✅ COMPLETE
-- Stage 10 — 🚧 IN PROGRESS (9 slices done, next slice not yet selected)
-- Stage 11–13 — 📋 PLANNED / ⏸ DEFERRED
+- Stage 10 — ✅ COMPLETE (12 slices)
+- Stage 11 — 🔜 NEXT (security, reliability, performance)
+- Stage 12 — ⏸ DEFERRED (dependency upgrades)
+- Stage 13 — 📋 PLANNED (production readiness)
 
 ---
 
@@ -305,22 +307,31 @@ Closure verification:
 - `STAGE9_PUBLIC_CANONICAL_METADATA_COMMIT_PUSH=PASS`;
 - `STAGE9_CLOSURE_INVENTORY=PASS`.
 
-## Stage 10. Уведомления — 🚧 IN PROGRESS
+## Stage 10. Уведомления — ✅ COMPLETE
 
-Stage 10 **не завершён**. Всего завершено 9 маленьких semantic slice.
-Последний функциональный commit — `014470402984eaffd8c9888292ec51a2124de71d`;
-его непосредственный родитель — `d572b11633e9fcd2ffce848e1633a1a9e8eaa546`
-(commit слайса 8, а не общий стартовый предок всех девяти слайсов):
+Stage 10 завершён: 12 маленьких semantic slice, один линейный commit chain.
+Последний функциональный checkpoint —
+`9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c` (`feat: add cabinet notification
+bell`); его непосредственный родитель —
+`04c6c41035d9e421944ee1135fc95cd6fe9c2fd4` (слайс 11):
 
-1. `92e49fce` — new-message email preferences.
-2. `4e18ca6d` — booking-status email preferences.
-3. `926b8382` — manager-assignment email preferences.
-4. `a92e1dbe` — booking-created email preferences.
-5. `1180931a` — trip-reminder email preferences.
-6. `d9279a18` — trip-reminder settings copy.
-7. `a9dc356a` — trip-reminder idempotency.
-8. `d572b116` — new-message database notification persistence.
-9. `01447040` — open new-message notifications safely from the cabinet.
+1. `92e49fceb9d6832d2516092ce13c3eccd328a011` — new-message email preferences.
+2. `4e18ca6dfd24bc413f72a61311643d337b5c6de6` — booking-status email preferences.
+3. `926b8382926d5e9b112843d14d4b5e241a02c600` — manager-assignment email preferences.
+4. `a92e1dbe2882e996b43de0f93354a0c0e9e636ba` — booking-created email preferences.
+5. `1180931adfc0e4081281ca9b797920496431c5bd` — trip-reminder email preferences.
+6. `d9279a18b474952a3cacb875a209eb3336263a58` — trip-reminder settings copy.
+7. `a9dc356a4d43b3aded40444532bdf4e1e9d87a29` — trip-reminder idempotency.
+8. `d572b11633e9fcd2ffce848e1633a1a9e8eaa546` — new-message database notification persistence.
+9. `014470402984eaffd8c9888292ec51a2124de71d` — open new-message notifications safely from the cabinet.
+10. `8012e1c236dc13cb304281d704e1e60c30273266` — protect booking-status notification dispatch.
+11. `04c6c41035d9e421944ee1135fc95cd6fe9c2fd4` — log public contact-form mail failures.
+12. `9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c` — add cabinet notification bell.
+
+Между слайсом 9 (`01447040`) и слайсом 10 (`8012e1c2`) в истории есть ровно
+один docs-only commit — `f351ae9e86092e7be9bf5215a63477822b097d3a`
+(`docs: archive legacy docs and update stage 10`). Он документационный, а
+не функциональный, и не входит в счёт 12 слайсов.
 
 Trip-reminder слайсы (5–7) добавили guarded migration; canonical baseline
 после неё — 53 Ran / 0 Pending.
@@ -364,36 +375,105 @@ Verification для слайса `01447040`:
 - PHP `C:\wamp\bin\php\php8.3.32\php.exe`, PHPUnit только SQLite `:memory:`;
 - независимая review подтвердила соответствие реализации контракту;
 - `01447040` был закоммичен, запушен и проверен как последний
-  функциональный checkpoint; local/origin HEAD совпадали на `01447040` на
-  момент закрытия этого функционального слайса. Последующий docs-only
-  commit меняет репозиторный HEAD, но не меняет сам функциональный
-  checkpoint `01447040` и не меняет его test baseline.
+  функциональный checkpoint на момент закрытия этого слайса (позже
+  заменён слайсами 10–12).
 
-### Следующий Stage 10 slice — не выбран
+### Слайс 10 — `8012e1c2`. Защита диспатча BookingStatusChanged
 
-Никакая широкая реализация не запланирована заранее. Следующий маленький
-Stage 10 slice выбирается только после отдельного read-only discovery:
+`Booking::transitionTo()` оборачивает `event(new BookingStatusChanged(...))`
+в try/catch с `Log::error('BookingStatusChanged dispatch failed', [...])`,
+симметрично трём уже защищённым сайтам диспатча (`BookingCreated` в
+`BookingController::store()`, `ManagerAssigned` в
+`BookingController::dispatchManagerAssigned()`, `NewMessageReceived` в
+`MessageController`). Сбой синхронного почтового слушателя (`sync` queue)
+больше не превращает уже успешный переход статуса заявки в HTTP 500.
+Новый тест-файл `tests/Feature/BookingStatusChangeDispatchResilienceTest.php`.
 
-- текущие UI-поверхности кабинета для непрочитанных уведомлений (bell,
-  dropdown, список, unread-count) — есть ли они и в каком состоянии;
-- mail/queue delivery, events/listeners, retries и failure handling для
-  остальных типов уведомлений;
-- broadcast-поверхности для admin/manager (все чаты, все заявки);
-- наличие/отсутствие scheduler или queue worker operational contract;
-- сравнение исторической документации (включая архив) и фактической
-  реализации;
-- продуктовые пробелы, не покрытые завершёнными 9 слайсами.
+### Слайс 11 — `04c6c410`. Логирование сбоев публичной формы обратной связи
 
-Предварительный (не гарантированный) scope после discovery может включать:
+`SendContactController` и `SendHomeController` логируют сбой отправки
+письма (`Log::error('Public contact form mail send failed', ...)` /
+`'Home contact form mail send failed'`) внутри уже существующего
+generic-catch блока — без изменения перехватываемого типа исключения,
+получателей писем или пользовательских сообщений. Новый тест-файл
+`tests/Feature/PublicContactMailFailureLoggingTest.php`.
 
-- уведомления в кабинете (bell/dropdown/список/unread-count), если ещё
-  не реализованы;
-- status-change email, если ещё не покрыт;
-- optional Telegram/SMS/WebSocket только после отдельного feasibility.
+### Слайс 12 — `9ef3c8e9`. Колокольчик уведомлений в кабинете
 
-До выбора scope и exact allowed paths — код не менять.
+Минимальный UI поверх уже существующего backend-контракта (слайсы 8–9),
+без новых маршрутов, контроллеров или моделей:
 
-## Stage 11. Security, reliability, performance — 📋
+- добавлен в `resources/views/cabinet/layouts/app.blade.php`, общий для
+  tourist/manager/admin cabinet-layout;
+- owner-scoped, type-filtered (`NewMessageDatabaseNotification`) bounded
+  запрос: `count()` для бейджа + `latest()->first()` для самого свежего
+  непрочитанного — без запросов к `Booking`/`Message`/`User` из Blade;
+- ровно одно действие — POST-форма на уже существующий
+  `cabinet.notifications.open` с `@csrf`, повторяющая существующий
+  паттерн logout-формы; вся авторизация/валидация остаётся в
+  `NotificationController::open()`, не дублируется;
+- три строки текста действия: жирная метка «Новое сообщение», строка
+  «Отправитель: {имя}» (fallback `Пользователь`), превью с лимитом 60
+  символов (fallback `Новое сообщение`), без raw HTML;
+- zero-state «Нет новых уведомлений» без бейджа и без действия;
+- 13 feature-тестов в `tests/Feature/CabinetHeaderNotificationBellTest.php`
+  (роль-присутствие для всех трёх ролей, owner/type-scoped счётчик,
+  только самое свежее уведомление, целевой URL, POST+CSRF, zero-state,
+  неподдерживаемый тип, некорректный data-payload, мульти-роль, объём
+  уведомлений, длинное превью).
+
+### Итоговая verification Stage 10 (финальный слайс `9ef3c8e9`)
+
+- PHP `C:\wamp\bin\php\php8.3.32\php.exe`, PHPUnit только SQLite `:memory:`;
+- focused notification-bell suite: 57 tests / 216 assertions;
+- full PHPUnit: 588 tests / 2486 assertions;
+- canonical migrations: 53 Ran / 0 Pending;
+- local/origin HEAD равны на `9ef3c8e9`, working tree clean, staged path
+  count 0 (на момент закрытия функционального слайса, до этого docs-only
+  commit);
+- ручное browser QA:
+  - колокольчик виден в хедере для tourist, manager и admin;
+  - бейдж непрочитанных корректно переходит 0 → 1 → 0;
+  - отображается самое свежее уведомление (превью и отправитель);
+  - POST-действие открывает правильный чат по заявке;
+  - открытое уведомление больше не учитывается в счётчике непрочитанных;
+  - длинное превью остаётся ограниченным (concise, не выводится целиком);
+  - zero-state показывает «Нет новых уведомлений»;
+  - локальные QA-фикстуры (тестовый менеджер, тестовая заявка,
+    browser-QA сообщения и database-уведомления) не являются состоянием
+    репозитория, не закоммичены и не входят в changed-path inventory;
+    QA-пароль в документации не фиксируется.
+
+### Пере-оценённые находки прошлого discovery — закрытие Stage 10
+
+- **Мёртвые/несовпадающие счётчики sidebar** (`$pendingBookingsCount`
+  нигде не устанавливается; manager-сайдбар проверяет
+  `$unreadMessagesCount`, а `ManagerController::dashboard()` передаёт
+  `$unreadMessages`/`$pendingBookings` — другие имена) — не связаны с
+  таблицей `notifications`, предшествуют Stage 10 и не регрессировали от
+  него. Классификация: code-hygiene backlog (см. «Общий backlog» ниже),
+  не Stage 10 blocker. Рабочее поведение туриста (`unreadMessagesCount`
+  на его dashboard) не трогать ради симметрии.
+- **Разница в ключах notification preferences у manager/admin**
+  (`ManagerController::updateNotifications()` и
+  `AdminController::updateNotifications()` сохраняют 3 ключа против 5 у
+  туриста, без `trip_reminders`/`promotions`) — не дефект: trip-reminder
+  письма (`SendTripReminders.php`) отправляются только владельцу заявки,
+  manager/admin никогда не являются получателями; `promotions` не
+  проверяется вообще нигде в `app/` ни для одной роли. Отсутствующие
+  контролы не могут ничем управлять — UI для несуществующих у этих ролей
+  типов уведомлений не требуется.
+- **Очередь и scheduler** (`QUEUE_CONNECTION=sync`, отсутствие
+  Supervisor/cron/Task Scheduler wiring) — Stage 13 production readiness,
+  не Stage 10 функциональный blocker; runtime queue-конфигурация не
+  менялась.
+- **WebSocket/Echo, Telegram/SMS, полноценный notification center,
+  mark-all-read** — явно отложенный backlog (см. ниже), не блокируют
+  закрытие Stage 10.
+
+Следующий этап — **Stage 11. Security, reliability, performance**.
+
+## Stage 11. Security, reliability, performance — 🔜 NEXT
 
 - rate limiting;
 - security logging;
@@ -428,11 +508,26 @@ Stage 10 slice выбирается только после отдельного
 - расширение page-specific title/meta description/Open Graph coverage;
 - постоянный manager live account отсутствует; изолированная временная
   smoke-стратегия проверена;
-- deprecated PHPUnit XML schema;
+- deprecated PHPUnit XML schema (non-blocking, не менялось в Stage 10);
 - recovery artifact retention policy;
 - единый E2E lifecycle scenario;
 - история и аудит заявки;
-- WebSocket/unread counters для чата.
+- WebSocket/unread counters для чата;
+- WebSocket/Echo real-time delivery для уведомлений;
+- полноценный notification center (список/пагинация всех уведомлений);
+- mark-all-read действие;
+- Telegram/SMS-доставка уведомлений;
+- queue-worker deployment configuration (Supervisor/systemd) — сейчас
+  `QUEUE_CONNECTION=sync`, отдельный operational plan до Stage 13;
+- scheduler operational wiring (production cron / Windows Task Scheduler
+  для `schedule:run`) — команда `bookings:send-trip-reminders` уже
+  реализована и запланирована в `app/Console/Kernel.php`, но не привязана
+  к реальному cron/Task Scheduler в этом окружении;
+- мёртвые/несовпадающие счётчики sidebar (`$pendingBookingsCount` нигде
+  не устанавливается; manager sidebar проверяет `$unreadMessagesCount`,
+  контроллер передаёт другие имена переменных) — code-hygiene cleanup,
+  не связано с таблицей `notifications`, рабочее поведение туриста не
+  трогать.
 
 ## Жёсткие ограничения
 
@@ -457,18 +552,17 @@ Stage 10 slice выбирается только после отдельного
 
 ## Ближайший следующий шаг
 
-Stage 10 в процессе. Последний функциональный checkpoint — `01447040`
-(см. раздел Stage 10 выше); он не меняется публикацией текущего docs-only
-checkpoint.
+Stage 10 закрыт. Последний функциональный checkpoint —
+`9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c` (см. раздел Stage 10 выше); он
+не меняется публикацией текущего docs-only checkpoint.
 
-1. После публикации текущего docs-only checkpoint — создать и независимо
-   проверить новый handoff, roadmap copy, new-chat prompt, source archive,
-   manifest и Project Sources set для получившегося документационного
-   HEAD.
-2. Только после этого выполнить отдельный **read-only discovery**
-   оставшейся notification architecture и текущих продуктовых пробелов
-   (см. раздел Stage 10 выше).
-3. Затем выбрать один маленький следующий Stage 10 slice и exact allowed
-   paths до начала любых новых правок.
-4. До этого выбора широкую реализацию, миграции, canonical DB операции,
-   production-интеграции и деструктивные действия не выполнять.
+1. Следующий этап — **Stage 11. Security, reliability, performance**
+   (rate limiting, security logging, caching, image/page-performance
+   optimization).
+2. Как и для каждого предыдущего этапа — отдельный read-only Plan и exact
+   allowed paths требуются до начала любых новых правок для первого
+   Stage 11 slice.
+3. До выбора scope Stage 11 не начинать широкую реализацию rate limiting,
+   security logging, caching или иных Stage 11 механизмов; миграции,
+   canonical DB операции, production-интеграции и деструктивные действия
+   выполнять только по отдельному guarded плану.
