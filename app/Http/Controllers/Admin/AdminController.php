@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -762,15 +763,28 @@ class AdminController extends Controller
     public function deleteUser(Request $request, $userId): RedirectResponse
     {
         $user = User::findOrFail($userId);
-        
+
         // Защита от удаления собственного аккаунта
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'Вы не можете удалить свой собственный аккаунт');
         }
-        
+
+        $actorId = $request->user()->id;
+        $targetUserId = $user->id;
+        $targetUserRoles = $user->roles()
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
         // Удаление пользователя (каскадное удаление заявок и сообщений через модель)
         $user->delete();
-        
+
+        Log::warning('Admin deleted user account', [
+            'actor_id' => $actorId,
+            'target_user_id' => $targetUserId,
+            'target_user_roles' => $targetUserRoles,
+        ]);
+
         return back()->with('success', 'Пользователь успешно удален');
     }
 }
