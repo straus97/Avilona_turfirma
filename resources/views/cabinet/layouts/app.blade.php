@@ -408,6 +408,53 @@
 
         <div class="header-actions">
 
+            <!-- Notifications -->
+            @php
+                $__unreadNotificationCount = Auth::user()->unreadNotifications()
+                    ->where('type', \App\Notifications\NewMessageDatabaseNotification::class)
+                    ->count();
+
+                $__latestUnreadNotification = Auth::user()->unreadNotifications()
+                    ->where('type', \App\Notifications\NewMessageDatabaseNotification::class)
+                    ->latest()
+                    ->first();
+            @endphp
+            <div class="dropdown header-notifications">
+                <button type="button"
+                        class="btn btn-link p-0 text-decoration-none"
+                        data-bs-toggle="dropdown"
+                        aria-label="Уведомления"
+                        title="Уведомления">
+                    <i class="bi bi-bell" style="font-size: 1.25rem; color: #4b5563;"></i>
+                    @if($__unreadNotificationCount > 0)
+                        <span class="notification-badge">{{ $__unreadNotificationCount }}</span>
+                    @endif
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @if($__latestUnreadNotification)
+                        @php
+                            $__latestNotificationData = is_array($__latestUnreadNotification->data)
+                                ? $__latestUnreadNotification->data
+                                : [];
+                            $__latestNotificationSenderName = $__latestNotificationData['sender_name'] ?? 'Пользователь';
+                            $__latestNotificationPreview = $__latestNotificationData['preview'] ?? 'Новое сообщение';
+                        @endphp
+                        <li>
+                            <form method="POST" action="{{ route('cabinet.notifications.open', ['notification' => $__latestUnreadNotification->id]) }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <div style="font-weight: 700; font-size: 0.8125rem;">Новое сообщение</div>
+                                    <div style="font-size: 0.75rem; color: #6b7280;">Отправитель: {{ $__latestNotificationSenderName }}</div>
+                                    <div style="font-size: 0.75rem; color: #6b7280;">{{ \Illuminate\Support\Str::limit($__latestNotificationPreview, 60) }}</div>
+                                </button>
+                            </form>
+                        </li>
+                    @else
+                        <li><span class="dropdown-item-text text-muted">Нет новых уведомлений</span></li>
+                    @endif
+                </ul>
+            </div>
+
             <!-- User Menu -->
             <div class="dropdown">
                 <div class="header-user" data-bs-toggle="dropdown">
