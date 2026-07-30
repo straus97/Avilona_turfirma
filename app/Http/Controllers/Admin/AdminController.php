@@ -153,9 +153,21 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($userId);
         $role = Role::findOrFail($roleId);
-        
-        $user->removeRole($role->name);
-        
+
+        $actorId = $request->user()->id;
+        $targetUserId = $user->id;
+        $removedRole = $role->name;
+
+        $detachCount = $user->roles()->detach($role->id);
+
+        if ($detachCount > 0) {
+            Log::warning('Admin removed user role', [
+                'actor_id' => $actorId,
+                'target_user_id' => $targetUserId,
+                'removed_role' => $removedRole,
+            ]);
+        }
+
         return back()->with('success', 'Роль успешно удалена');
     }
     
