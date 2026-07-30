@@ -119,28 +119,45 @@ class ManagerController extends Controller
         $clientIds = Booking::where('manager_id', $manager->id)
             ->distinct()
             ->pluck('user_id');
-        
+
+        // Коррелированный подзапрос: id самой свежей (по created_at) заявки
+        // этого менеджера по каждому клиенту. Строится через Eloquent-модель
+        // Booking, поэтому глобальный scope SoftDeletes остаётся активным.
+        $latestBookingIdSubquery = Booking::query()
+            ->select('bookings.id')
+            ->whereColumn('bookings.user_id', 'users.id')
+            ->where('bookings.manager_id', $manager->id)
+            ->orderByDesc('bookings.created_at')
+            ->limit(1);
+
         $clients = User::whereIn('id', $clientIds)
             ->withCount([
                 'bookings' => function ($query) use ($manager) {
                     $query->where('manager_id', $manager->id);
-                }
+                },
+                'bookings as active_bookings' => function ($query) use ($manager) {
+                    $query->where('manager_id', $manager->id)
+                        ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED]);
+                },
             ])
+            ->addSelect(['latest_booking_id' => $latestBookingIdSubquery])
             ->paginate(20);
-        
-        // Для каждого клиента получаем информацию о заявках
+
+        // Ограниченная гидратация: не более одной модели Booking на клиента
+        // текущей страницы, одним запросом вместо запроса на каждого клиента.
+        $latestBookingIds = $clients->pluck('latest_booking_id')->filter()->unique()->values();
+
+        $latestBookings = $latestBookingIds->isNotEmpty()
+            ? Booking::whereIn('id', $latestBookingIds)->get()->keyBy('id')
+            : collect();
+
+        // Только чтение из уже полученной коллекции — без запросов к БД.
         foreach ($clients as $client) {
-            $client->active_bookings = Booking::where('user_id', $client->id)
-                ->where('manager_id', $manager->id)
-                ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED])
-                ->count();
-            
-            $client->latest_booking = Booking::where('user_id', $client->id)
-                ->where('manager_id', $manager->id)
-                ->latest()
-                ->first();
+            $client->latest_booking = $client->latest_booking_id
+                ? $latestBookings->get($client->latest_booking_id)
+                : null;
         }
-        
+
         return view('manager.clients', compact('clients', 'manager'));
     }
     
