@@ -658,7 +658,31 @@ class AdminController extends Controller
 
         $user = User::findOrFail($userId);
         $role = Role::where('name', $request->role)->firstOrFail();
-        $user->roles()->sync([$role->id]);
+
+        $actorId = $request->user()->id;
+        $targetUserId = $user->id;
+
+        $changes = $user->roles()->sync([$role->id]);
+
+        if (!empty($changes['attached']) || !empty($changes['detached'])) {
+            $addedRoles = !empty($changes['attached']) ? [$role->name] : [];
+
+            $removedRoles = empty($changes['detached'])
+                ? []
+                : Role::query()
+                    ->whereIn('id', $changes['detached'])
+                    ->orderBy('name')
+                    ->pluck('name')
+                    ->all();
+
+            Log::warning('Admin updated user role', [
+                'actor_id' => $actorId,
+                'target_user_id' => $targetUserId,
+                'added_roles' => $addedRoles,
+                'removed_roles' => $removedRoles,
+                'resulting_roles' => [$role->name],
+            ]);
+        }
 
         return back()->with('success', 'Роль пользователя обновлена');
     }
