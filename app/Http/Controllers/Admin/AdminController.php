@@ -139,10 +139,23 @@ class AdminController extends Controller
         $request->validate([
             'role' => 'required|exists:roles,name',
         ]);
-        
+
         $user = User::findOrFail($userId);
-        $user->assignRole($request->role);
-        
+        $role = Role::where('name', $request->role)->firstOrFail();
+
+        $actorId = $request->user()->id;
+        $targetUserId = $user->id;
+
+        $changes = $user->roles()->syncWithoutDetaching([$role->id]);
+
+        if (!empty($changes['attached'])) {
+            Log::warning('Admin assigned user role', [
+                'actor_id' => $actorId,
+                'target_user_id' => $targetUserId,
+                'assigned_role' => $role->name,
+            ]);
+        }
+
         return back()->with('success', 'Роль успешно назначена');
     }
     
