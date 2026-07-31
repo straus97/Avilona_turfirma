@@ -551,12 +551,19 @@ class AdminController extends Controller
         ]);
 
         $user = $request->user();
+        $actorId = $user->id;
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $user->delete();
+        $deleted = $user->delete();
+
+        if ($deleted === true) {
+            Log::warning('Admin deleted own account', [
+                'actor_id' => $actorId,
+            ]);
+        }
 
         return redirect()->route('home.index')->with('status', 'Аккаунт удален.');
     }
