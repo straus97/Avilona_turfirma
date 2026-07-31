@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -555,6 +556,11 @@ class ManagerController extends Controller
         ]);
 
         $user = Auth::user();
+        $actorId = $user->id;
+        $actorRoles = $user->roles()
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
 
         Booking::where('manager_id', $user->id)->update(['manager_id' => null]);
         $documents = UserDocument::where('user_id', $user->id)->get();
@@ -567,7 +573,14 @@ class ManagerController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $user->delete();
+        $deleted = $user->delete();
+
+        if ($deleted === true) {
+            Log::warning('User deleted own account via manager settings', [
+                'actor_id' => $actorId,
+                'actor_roles' => $actorRoles,
+            ]);
+        }
 
         return redirect()->route('home.index')->with('status', 'Аккаунт удален.');
     }
