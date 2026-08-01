@@ -659,8 +659,6 @@ class CabinetController extends Controller
 
         // Связанные строки удаляются внешними ключами.
         // Файлы документов очищаются lifecycle-hook модели User.
-        $user->bookings()->delete();
-        $user->bonusAccount()->delete();
 
         // Выход из системы
         Auth::logout();
