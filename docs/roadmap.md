@@ -1,12 +1,12 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-07-29**
+Дата checkpoint: **2026-08-02**
 
 Последний функциональный checkpoint:
 
 ```text
-9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c
-feat: add cabinet notification bell
+f1a0fff0b1f0b93c654b836e93dd5049eae2569f
+fix: preserve tourist data on deletion failure
 ```
 
 Текущий репозиторный/документационный HEAD всегда определяется Git и
@@ -17,24 +17,25 @@ feat: add cabinet notification bell
 Родительский commit:
 
 ```text
-04c6c41035d9e421944ee1135fc95cd6fe9c2fd4
+d17255e74cc77ce56bd42bcbeaa47d590aa46f1d
+fix: align tourist deletion session teardown
 ```
 
 Предыдущий documentation checkpoint:
 
 ```text
-f351ae9e86092e7be9bf5215a63477822b097d3a
-docs: archive legacy docs and update stage 10
+f6d0e119ac22353bd411914db508eb6e45109de8
+docs: close stage 10 and plan stage 11
 ```
 
 Текущий тестовый baseline:
 
 ```text
-Full:    588 tests / 2486 assertions
-Focused (notification-bell slice): 57 tests / 216 assertions
+Full:    632 tests / 2777 assertions
+Focused (последний Stage 11 slice — tourist partial-failure): 15 tests / 106 assertions
 PHPUnit 10.5.20
 SQLite :memory: (единственно допустимая БД для PHPUnit)
-Canonical migrations: 53 Ran / 0 Pending (после guarded trip-reminder migration)
+Canonical migrations: 53 Ran / 0 Pending
 Canonical MySQL: turfirma_rebuild_v4, порт 3308
 PHP: C:\wamp\bin\php\php8.3.32\php.exe (8.3.32)
 ```
@@ -53,7 +54,7 @@ schema — backlog item, не часть текущего semantic slice.
 - Stage 8 — ✅ COMPLETE
 - Stage 9 — ✅ COMPLETE
 - Stage 10 — ✅ COMPLETE (12 slices)
-- Stage 11 — 🔜 NEXT (security, reliability, performance)
+- Stage 11 — 🟡 IN PROGRESS (12 completed slices; security, reliability, performance)
 - Stage 12 — ⏸ DEFERRED (dependency upgrades)
 - Stage 13 — 📋 PLANNED (production readiness)
 
@@ -471,14 +472,154 @@ generic-catch блока — без изменения перехватывае�
   mark-all-read** — явно отложенный backlog (см. ниже), не блокируют
   закрытие Stage 10.
 
-Следующий этап — **Stage 11. Security, reliability, performance**.
+Следующий этап после Stage 10 — **Stage 11. Security, reliability,
+performance**, в процессе (см. раздел ниже).
 
-## Stage 11. Security, reliability, performance — 🔜 NEXT
+## Stage 11. Security, reliability, performance — 🟡 IN PROGRESS
 
-- rate limiting;
-- security logging;
-- caching;
-- performance/image optimization.
+Stage 11 не завершён. На текущий функциональный checkpoint `f1a0fff0`
+завершено 12 маленьких semantic slice, один линейный commit chain.
+Последний функциональный checkpoint —
+`f1a0fff0b1f0b93c654b836e93dd5049eae2569f`
+(`fix: preserve tourist data on deletion failure`); его непосредственный
+родитель — `d17255e74cc77ce56bd42bcbeaa47d590aa46f1d`
+(`fix: align tourist deletion session teardown`):
+
+1. `8c23646b575d6a17636509edc1051ae901b84d96` — throttle public registration.
+2. `32dd86a1f12e884cd0a52930b606b6631aff139c` — throttle password reset link requests.
+3. `baedfac72cd9e1ce65ce60e86e5d80bc6e33e97f` — audit admin user deletion.
+4. `0a000e1aa50e7a33b34bf69805e67fd4ed916a13` — audit admin role removal.
+5. `b5923a868b0057c720b780ee773ce11e7159131d` — eliminate manager client list n+1 queries.
+6. `a3231a06d6aeaa846b1cd6af4a0e7f878f53bc6e` — audit admin role replacement.
+7. `c5aad3a4ebd9bde5b713df030326e3b22a00460d` — audit admin role assignment.
+8. `dfec2733bdb7ba6fc08e410e88be13382ea77aae` — audit admin self-account deletion.
+9. `e72aaaca7dc2bdd1c0933f401ef8df8b87e25228` — audit manager settings self-deletion.
+10. `ab80e8e23ae51554423a20ae783f21be141ecc65` — audit tourist self-account deletion.
+11. `d17255e74cc77ce56bd42bcbeaa47d590aa46f1d` — align tourist deletion session teardown.
+12. `f1a0fff0b1f0b93c654b836e93dd5049eae2569f` — preserve tourist data on deletion failure.
+
+Между слайсом 12 Stage 10 и слайсом 1 Stage 11 в истории есть отдельный
+standalone commit `1a2aeef67fb80fbbe15a4b8ebda09728e5cd4f6e`
+(`feat: update company logo`) — одобренное обновление визуального актива,
+не относится к security/reliability/performance и **не входит** в счёт
+12 слайсов Stage 11.
+
+### Rate limiting
+
+- слайс 1 (`8c23646b`) добавляет `throttle:6,1` на публичный
+  `POST register` (`routes/auth.php`);
+- слайс 2 (`32dd86a1`) добавляет `throttle:6,1` на
+  `POST forgot-password` (`routes/auth.php`, маршрут `password.email`);
+- существующее поведение успешной регистрации и успешного запроса
+  password-reset ссылки сохранено без изменений;
+- зависимости и миграции не менялись — используется штатный Laravel
+  `throttle`-middleware.
+
+### Security audit logging
+
+Слайсы 3, 4, 6, 7, 8, 9, 10 добавляют `Log::warning(...)` со связкой
+actor/target (и, где применимо, списком ролей) строго **после**
+подтверждённой успешной мутации:
+
+- `baedfac7` — `Admin deleted user account` (`AdminController::deleteUser`);
+- `0a000e1a` — `Admin removed user role`;
+- `a3231a06` — `Admin updated user role` (`added_roles`/`removed_roles`/`resulting_roles`);
+- `c5aad3a4` — `Admin assigned user role`;
+- `dfec2733` — `Admin deleted own account` (`AdminController`);
+- `e72aaaca` — `User deleted own account via manager settings` (`ManagerController`);
+- `ab80e8e2` — `Tourist deleted own account` (`CabinetController`).
+
+Подтверждённые гарантии:
+
+- логирование срабатывает только после успешного `delete()`/мутации роли,
+  не до и не при ошибке валидации (проверка внутри `if`-блока успешной
+  мутации, например `if ($deleted)`);
+- неуспешная попытка (например, отклонённое самоудаление собственного
+  аккаунта администратором до мутации) не создаёт audit-запись;
+- централизованной audit-подсистемы (единой таблицы, сервиса или UI для
+  просмотра логов) не существует — используется стандартный Laravel `Log`
+  facade поверх существующего log-канала.
+
+### Performance
+
+- слайс 5 (`b5923a86`) устраняет N+1 в `ManagerController` client-list:
+  вместо запроса `active_bookings`/`latest_booking` на каждого клиента в
+  цикле используется один коррелированный подзапрос (`addSelect` +
+  `latest_booking_id`) и один batched `whereIn`-запрос для гидратации;
+- область подтверждена именно для manager client-list; широкая
+  application-wide оптимизация запросов не выполнялась и не заявляется.
+
+### Session teardown
+
+Достижимый application-owned logout-flow audit завершён с вердиктом:
+
+```text
+NO_REMAINING_LOGOUT_TEARDOWN_DEFECT_FOUND
+```
+
+Достижимые обычные logout, email-change и admin/manager/tourist
+self-deletion потоки используют требуемую последовательность logout,
+session invalidation и CSRF-token rotation. Слайс 11 (`d17255e7`) добавил
+недостающие `$request->session()->invalidate()` и
+`$request->session()->regenerateToken()` в tourist self-deletion flow
+(`CabinetController::destroyAccount`) следом за `Auth::logout()`. Эта
+работа закрыта и не переоткрывается в разделе «Ближайший следующий шаг».
+
+### Tourist partial-failure reliability
+
+Слайс 12 (`f1a0fff0`) убирает избыточные pre-deletion вызовы в
+`CabinetController::destroyAccount`:
+
+```php
+$user->bookings()->delete();
+$user->bonusAccount()->delete();
+```
+
+- успешное удаление `User` продолжает полагаться на существующие
+  `ON DELETE CASCADE` foreign keys;
+- если listener удаления `User` бросает исключение до SQL `DELETE`:
+  - `User` остаётся в базе;
+  - `Booking` остаётся и не помечается soft-deleted;
+  - `BonusAccount` остаётся в базе;
+- изменение не заявляет filesystem-транзакционность;
+- порядок logout/session teardown в этом слайсе не менялся (сохранён
+  результат слайса 11);
+- manager self-deletion flow в этом слайсе не менялся.
+
+### Верификация Stage 11 (текущий срез, checkpoint `f1a0fff0`)
+
+- focused suite последнего слайса: 15 tests / 106 assertions;
+- full PHPUnit: 632 tests / 2777 assertions;
+- PHP `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32);
+- PHPUnit 10.5.20, только SQLite `:memory:`;
+- canonical migrations: 53 Ran / 0 Pending;
+- local, origin tracking и live origin совпадали на
+  `f1a0fff0b1f0b93c654b836e93dd5049eae2569f`;
+- working tree clean после commit и push.
+
+Известное non-blocking предупреждение о deprecated PHPUnit XML schema
+остаётся в общем backlog — конфигурация PHPUnit в рамках Stage 11 не
+мигрировалась.
+
+### Stage 11 — следующий кандидат
+
+Stage 11 не завершён. Следующий обоснованный ограниченный кандидат —
+**partial-failure reliability самоудаления аккаунта менеджера**. Уже
+установленные факты (реализация ещё не выполнена):
+
+- заявки менеджера отвязываются (`unassigned`) до финального удаления
+  `User`;
+- файлы и строки персональных документов обрабатываются до финального
+  удаления `User`;
+- более поздний сбой может оставить частичные, несогласованные мутации;
+- database-транзакции не могут откатить физическое удаление файлов из
+  файловой системы;
+- manager-flow требует отдельного ограниченного implementation-плана;
+- никакая правка manager-flow в рамках этого кандидата ещё не выполнена.
+
+Следующее действие требует отдельного guarded, узкого Plan с exact
+allowed paths и focused failure-injection покрытием — без него широкая
+реализация не начинается.
 
 ## Stage 12. Dependency upgrades — ⏸ DEFERRED
 
@@ -527,7 +668,14 @@ generic-catch блока — без изменения перехватывае�
   не устанавливается; manager sidebar проверяет `$unreadMessagesCount`,
   контроллер передаёт другие имена переменных) — code-hygiene cleanup,
   не связано с таблицей `notifications`, рабочее поведение туриста не
-  трогать.
+  трогать;
+- **Stage 11, текущий пункт (не завершён):** partial-failure reliability
+  самоудаления аккаунта менеджера — manager bookings отвязываются и
+  personal-document файлы/строки обрабатываются до финального удаления
+  `User`, более поздний сбой может оставить частичные мутации,
+  database-транзакции не откатывают удаление файлов; требуется отдельный
+  guarded, узкий implementation-план с exact allowed paths и focused
+  failure-injection покрытием — реализация ещё не начата.
 
 ## Жёсткие ограничения
 
@@ -552,17 +700,19 @@ generic-catch блока — без изменения перехватывае�
 
 ## Ближайший следующий шаг
 
-Stage 10 закрыт. Последний функциональный checkpoint —
-`9ef3c8e96411c11dd4f725f607bf3dc8f56b5a0c` (см. раздел Stage 10 выше); он
-не меняется публикацией текущего docs-only checkpoint.
+Stage 10 закрыт. Stage 11 (security, reliability, performance) **в
+процессе** — 12 завершённых semantic slice. Последний функциональный
+checkpoint — `f1a0fff0b1f0b93c654b836e93dd5049eae2569f`
+(`fix: preserve tourist data on deletion failure`, см. раздел Stage 11
+выше); он не меняется публикацией текущего docs-only checkpoint.
 
-1. Следующий этап — **Stage 11. Security, reliability, performance**
-   (rate limiting, security logging, caching, image/page-performance
-   optimization).
-2. Как и для каждого предыдущего этапа — отдельный read-only Plan и exact
-   allowed paths требуются до начала любых новых правок для первого
-   Stage 11 slice.
-3. До выбора scope Stage 11 не начинать широкую реализацию rate limiting,
-   security logging, caching или иных Stage 11 механизмов; миграции,
-   canonical DB операции, production-интеграции и деструктивные действия
-   выполнять только по отдельному guarded плану.
+1. Следующий обоснованный ограниченный кандидат Stage 11 —
+   **partial-failure reliability самоудаления аккаунта менеджера**;
+   реализация ещё не выполнена.
+2. Как и для каждого предыдущего слайса и этапа — отдельный read-only Plan
+   и exact allowed paths требуются до начала любых новых правок для этого
+   кандидата.
+3. До утверждения scope не начинать широкую реализацию manager-flow правок
+   или иных ещё не выбранных Stage 11 механизмов; миграции, canonical DB
+   операции, production-интеграции и деструктивные действия выполнять
+   только по отдельному guarded плану.
