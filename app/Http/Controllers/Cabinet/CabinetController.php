@@ -664,6 +664,8 @@ class CabinetController extends Controller
 
         // Выход из системы
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         // Удаление пользователя
         $deleted = $user->delete();
