@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -654,18 +655,25 @@ class CabinetController extends Controller
         ]);
         
         $user = Auth::user();
-        
+        $actorId = $user->id;
+
         // Связанные строки удаляются внешними ключами.
         // Файлы документов очищаются lifecycle-hook модели User.
         $user->bookings()->delete();
         $user->bonusAccount()->delete();
-        
+
         // Выход из системы
         Auth::logout();
-        
+
         // Удаление пользователя
-        $user->delete();
-        
+        $deleted = $user->delete();
+
+        if ($deleted === true) {
+            Log::warning('Tourist deleted own account', [
+                'actor_id' => $actorId,
+            ]);
+        }
+
         return redirect()->route('home.index')->with('status', 'Ваш аккаунт успешно удален.');
     }
 }
