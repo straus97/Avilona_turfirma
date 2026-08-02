@@ -562,13 +562,6 @@ class ManagerController extends Controller
             ->pluck('name')
             ->all();
 
-        Booking::where('manager_id', $user->id)->update(['manager_id' => null]);
-        $documents = UserDocument::where('user_id', $user->id)->get();
-        foreach ($documents as $document) {
-            Storage::disk('local')->delete($document->file_path);
-            $document->delete();
-        }
-
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
