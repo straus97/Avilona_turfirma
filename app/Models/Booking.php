@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class Booking extends Model
@@ -258,10 +259,31 @@ class Booking extends Model
 
         $oldStatus = $this->status;
 
-        $this->update(['status' => $targetStatus]);
+        // Статус и восстановление мест по туру фиксируются одной транзакцией:
+        // без неё сбой (исключение или false от increaseAvailableSeats()) уже
+        // после успешной записи статуса оставлял бы заявку CANCELLED без
+        // восстановленных мест.
+        try {
+            DB::transaction(function () use ($targetStatus): void {
+                $this->update(['status' => $targetStatus]);
 
-        if ($targetStatus === self::STATUS_CANCELLED && $this->tour) {
-            $this->tour->increaseAvailableSeats($this->total_tourists);
+                if ($targetStatus === self::STATUS_CANCELLED && $this->tour) {
+                    if (!$this->tour->increaseAvailableSeats($this->total_tourists)) {
+                        throw new \DomainException(
+                            "Cannot restore seats for tour {$this->tour->id}: would exceed max_tourists."
+                        );
+                    }
+                }
+            });
+        } catch (\Throwable $e) {
+            try {
+                $this->refresh();
+            } catch (\Throwable $ignored) {
+                // Best-effort only — a refresh failure must never replace or
+                // suppress the original transaction failure caught above.
+            }
+
+            throw $e;
         }
 
         // Заявка уже зафиксирована в БД: сбой уведомления не должен её откатывать
