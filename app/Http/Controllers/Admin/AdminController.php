@@ -623,7 +623,21 @@ class AdminController extends Controller
      */
     public function chats(Request $request, $bookingId = null): View
     {
+        // Бейджи непрочитанных считаются одним batched-запросом через
+        // коррелированные withCount-подзапросы, а не Message::count() на
+        // каждую заявку в цикле — иначе количество запросов росло бы
+        // линейно с числом заявок в этом неограниченном (без paginate) списке.
         $bookings = Booking::with(['user', 'manager'])
+            ->withCount([
+                'messages as manager_unread_count' => function ($query) {
+                    $query->where('is_read', false)
+                        ->whereColumn('messages.receiver_id', 'bookings.manager_id');
+                },
+                'messages as tourist_unread_count' => function ($query) {
+                    $query->where('is_read', false)
+                        ->whereColumn('messages.receiver_id', 'bookings.user_id');
+                },
+            ])
             ->latest()
             ->get();
 
@@ -643,24 +657,9 @@ class AdminController extends Controller
 
         $unreadByBooking = [];
         foreach ($bookings as $booking) {
-            $managerUnread = 0;
-            $touristUnread = 0;
-
-            if ($booking->manager_id) {
-                $managerUnread = Message::where('booking_id', $booking->id)
-                    ->where('receiver_id', $booking->manager_id)
-                    ->where('is_read', false)
-                    ->count();
-            }
-
-            $touristUnread = Message::where('booking_id', $booking->id)
-                ->where('receiver_id', $booking->user_id)
-                ->where('is_read', false)
-                ->count();
-
             $unreadByBooking[$booking->id] = [
-                'manager' => $managerUnread,
-                'tourist' => $touristUnread,
+                'manager' => (int) $booking->manager_unread_count,
+                'tourist' => (int) $booking->tourist_unread_count,
             ];
         }
 
