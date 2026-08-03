@@ -632,12 +632,14 @@ class CabinetController extends Controller
             abort(403);
         }
         
-        // Удаление файла
-        Storage::disk('local')->delete($document->file_path);
-        
+        $filePath = $document->file_path;
+
         // Удаление записи
         $document->delete();
-        
+
+        // Удаление файла
+        Storage::disk('local')->delete($filePath);
+
         return redirect()->route('cabinet.documents.personal')->with('status', 'Документ удален!');
     }
     

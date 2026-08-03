@@ -540,8 +540,11 @@ class ManagerController extends Controller
             abort(403);
         }
 
-        Storage::disk('local')->delete($document->file_path);
+        $filePath = $document->file_path;
+
         $document->delete();
+
+        Storage::disk('local')->delete($filePath);
 
         return redirect()->route('cabinet.manager.documents')->with('status', 'Документ удален.');
     }
