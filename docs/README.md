@@ -5,16 +5,16 @@
 | Параметр | Значение |
 |---|---|
 | Ветка | `db-rebuild-stage3` |
-| Последний функциональный checkpoint | `f1a0fff0b1f0b93c654b836e93dd5049eae2569f` |
-| Commit | `fix: preserve tourist data on deletion failure` |
-| Родительский commit | `d17255e74cc77ce56bd42bcbeaa47d590aa46f1d` |
-| Предыдущий documentation checkpoint | `f6d0e119ac22353bd411914db508eb6e45109de8` (`docs: close stage 10 and plan stage 11`) |
-| PHPUnit full baseline | 632 tests / 2777 assertions |
-| PHPUnit focused baseline (последний Stage 11 slice) | 15 tests / 106 assertions |
+| Последний функциональный checkpoint | `f3279a425458e69b64927f7fdb3b19c5e277ad9f` |
+| Commit | `fix: invalidate stale sessions after password changes` |
+| Родительский commit | `2e6ed73e037f1714fa547a82b775f082ad3da973` |
+| Предыдущий documentation checkpoint | `ebdb45bd2fd5b90e5ab7793d5c604df15ca75e2c` (`docs: update stage 11 checkpoint`) |
+| PHPUnit full baseline | 644 tests / 2861 assertions |
+| PHPUnit focused baseline (финальный Stage 11 slice) | 17 tests / 82 assertions |
 | PHPUnit DB | SQLite `:memory:` — единственно допустимая для PHPUnit |
 | Canonical schema | `turfirma_rebuild_v4`, порт 3308 |
-| Canonical migrations | 53 Ran / 0 Pending |
-| Дата checkpoint | 2026-08-02 |
+| Canonical migrations | 53 Ran / 0 Pending (последняя независимо проверенная canonical-верификация; в финальных Stage 11 слайсах миграции повторно не запускались) |
+| Дата checkpoint | 2026-08-04 |
 | Recovery | COMPLETE |
 | Stage 5 | COMPLETE |
 | Stage 6 | COMPLETE |
@@ -22,21 +22,21 @@
 | Stage 8 | COMPLETE |
 | Stage 9 | COMPLETE |
 | Stage 10 | ✅ COMPLETE |
-| Stage 11 | 🟡 IN PROGRESS — 12 завершённых semantic slices |
-| Stage 12 | ⏸ DEFERRED |
+| Stage 11 | ✅ COMPLETE — 17 завершённых functional semantic slices |
+| Stage 12 | ⏸ DEFERRED — dependency upgrades, следующий этап |
 | Stage 13 | 📋 PLANNED |
 
 Эта документация описывает функциональное состояние на момент последнего
-функционального checkpoint `f1a0fff0` (`fix: preserve tourist data on
-deletion failure`), родитель — `d17255e7` (`fix: align tourist deletion
-session teardown`). Текущий репозиторный/документационный HEAD, содержащий
-актуальную версию файлов, всегда определяется Git и после docs-only commit,
-фиксирующего эти правки, станет новее `f1a0fff0` — это не меняет сам
-последний функциональный checkpoint и его test baseline.
+функционального checkpoint `f3279a42` (`fix: invalidate stale sessions
+after password changes`), родитель — `2e6ed73e` (`fix: make booking
+cancellation atomic`). Текущий репозиторный/документационный HEAD,
+содержащий актуальную версию файлов, всегда определяется Git и после
+docs-only commit, фиксирующего эти правки, станет новее `f3279a42` — это не
+меняет сам последний функциональный checkpoint и его test baseline.
 Stage 10 (уведомления) **завершён** — см. раздел «Stage 10 — ✅ COMPLETE»
-ниже. Stage 11 (security, reliability, performance) **в процессе**: 12
-завершённых semantic slice — см. раздел «Stage 11 — 🟡 IN PROGRESS» ниже и
-[`roadmap.md`](roadmap.md).
+ниже. Stage 11 (security, reliability, performance) **завершён**: 17
+завершённых functional semantic slice — см. раздел «Stage 11 — ✅ COMPLETE»
+ниже и [`roadmap.md`](roadmap.md).
 
 ## Источники истины
 
@@ -328,10 +328,11 @@ Verification для Stage 10 (финальный слайс `9ef3c8e9`):
 - WebSocket/Echo, Telegram/SMS, полноценный notification center,
   mark-all-read — явно отложенный backlog, не блокеры закрытия Stage 10.
 
-## Stage 11 — 🟡 IN PROGRESS. Security, reliability, performance
+## Stage 11 — ✅ COMPLETE. Security, reliability, performance
 
-Stage 11 не завершён. На текущий функциональный checkpoint `f1a0fff0`
-завершено 12 маленьких semantic slice, один линейный commit chain:
+Stage 11 завершён. Финальный функциональный checkpoint — `f3279a42`
+(`fix: invalidate stale sessions after password changes`). Завершено 17
+functional semantic slice, один линейный commit chain:
 
 1. `8c23646b575d6a17636509edc1051ae901b84d96` — throttle public registration.
 2. `32dd86a1f12e884cd0a52930b606b6631aff139c` — throttle password reset link requests.
@@ -345,12 +346,20 @@ Stage 11 не завершён. На текущий функциональный
 10. `ab80e8e23ae51554423a20ae783f21be141ecc65` — audit tourist self-account deletion.
 11. `d17255e74cc77ce56bd42bcbeaa47d590aa46f1d` — align tourist deletion session teardown.
 12. `f1a0fff0b1f0b93c654b836e93dd5049eae2569f` — preserve tourist data on deletion failure.
+13. `c5f9cd77116e17f306efe02bd73a3be814be5042` — preserve manager data on deletion failure.
+14. `17b177194eb8d9110359a00ff04f4f7652c52eca` — preserve personal document files on deletion failure.
+15. `52e1c2e38eb25fe8bfda65bc52c4e8583cfeb62e` — eliminate admin chat unread count n plus one.
+16. `2e6ed73e037f1714fa547a82b775f082ad3da973` — make booking cancellation atomic.
+17. `f3279a425458e69b64927f7fdb3b19c5e277ad9f` — invalidate stale sessions after password changes.
 
 Между слайсом 12 Stage 10 и слайсом 1 Stage 11 в истории есть отдельный
 standalone commit `1a2aeef67fb80fbbe15a4b8ebda09728e5cd4f6e`
 (`feat: update company logo`) — одобренное обновление визуального актива,
 не является security/reliability/performance semantic slice и **не входит**
-в счёт 12 слайсов Stage 11.
+в счёт 17 слайсов Stage 11. Между слайсом 12 и слайсом 13 в истории есть
+отдельный documentation-only commit `ebdb45bd2fd5b90e5ab7793d5c604df15ca75e2c`
+(`docs: update stage 11 checkpoint`) — он также не входит в счёт
+функциональных слайсов.
 
 ### Rate limiting
 
@@ -435,39 +444,100 @@ $user->bonusAccount()->delete();
   результат слайса 11);
 - manager self-deletion flow в этом слайсе не менялся.
 
-### Верификация Stage 11 (текущий срез, checkpoint `f1a0fff0`)
+### Manager partial-failure reliability
 
-- focused suite последнего слайса: 15 tests / 106 assertions;
-- full PHPUnit: 632 tests / 2777 assertions;
+Слайс 13 (`c5f9cd77`) убирает преждевременные мутации в manager
+self-deletion flow: снят предварительный booking-unassignment и
+предварительные мутации персональных документов до финального удаления
+`User`.
+
+- успешное удаление продолжает полагаться на существующее
+  foreign-key-поведение;
+- если удаление `User` бросает исключение, сохраняются: сам менеджер,
+  связанное booking assignment, строка персонального документа и файл;
+- широкая filesystem-транзакционность не заявляется.
+
+### Personal-document deletion ordering
+
+Слайс 14 (`17b17719`) меняет порядок удаления персонального документа:
+удаление строки БД происходит до удаления физического файла.
+
+- если удаление модели бросает исключение, сохраняются и строка, и файл;
+- применяется к достижимым manager- и tourist-flow удаления персональных
+  документов;
+- успешное удаление по-прежнему удаляет и строку, и файл.
+
+### Admin chat unread-count query efficiency
+
+Слайс 15 (`52e1c2e3`) убирает per-booking запрос unread-count из списка
+чатов администратора.
+
+- unread-счётчики загружаются одним bounded batched-запросом;
+- рост числа запросов покрыт отдельным focused-тестом;
+- глобальная оптимизация всех chat/list endpoint не заявляется.
+
+### Booking cancellation atomicity
+
+Слайс 16 (`2e6ed73e`) оборачивает мутацию статуса заявки и восстановление
+мест тура в одну database-транзакцию.
+
+- исключение при восстановлении мест или `false`-результат проверки
+  вместимости откатывает отмену целиком;
+- успешная отмена обновляет статус и восстанавливает места ровно один раз;
+- диспатч уведомления намеренно остаётся вне database-транзакции и
+  устойчив к сбоям;
+- полный авторитетный дизайн booking-inventory не заявляется.
+
+### Password-change session invalidation
+
+Слайс 17 (`f3279a42`) включает
+`Illuminate\Session\Middleware\AuthenticateSession` один раз в глобальной
+web middleware group.
+
+- сессия, выполняющая аутентифицированную смену пароля, остаётся
+  аутентифицированной;
+- другая, независимо аутентифицированная и уже primed-сессия отклоняется
+  на следующем web-запросе после смены пароля;
+- forgot-password reset аналогично инвалидирует отдельно primed
+  аутентифицированную сессию на следующем запросе;
+- guest-маршруты не затронуты;
+- не потребовалось изменений контроллеров, маршрутов, миграций,
+  зависимостей, session-драйвера или схемы БД;
+- принятое deployment-bootstrap ограничение: сессия, созданная до
+  деплоя и ещё не прошедшая через `AuthenticateSession`, не имеет
+  закэшированного password hash и на первом post-deployment запросе
+  primed, а не отклонена.
+
+### Верификация Stage 11 (финальный checkpoint `f3279a42`)
+
+- focused suite финального слайса: 17 tests / 82 assertions;
+- full PHPUnit: 644 tests / 2861 assertions;
 - PHP `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32);
 - PHPUnit 10.5.20, только SQLite `:memory:`;
-- canonical migrations: 53 Ran / 0 Pending;
+- canonical migrations: 53 Ran / 0 Pending — последняя независимо
+  проверенная canonical-верификация; в финальных слайсах миграции
+  повторно не запускались и не проверялись против canonical MySQL заново;
 - local, origin tracking и live origin совпадали на
-  `f1a0fff0b1f0b93c654b836e93dd5049eae2569f`;
-- working tree clean после commit и push.
+  `f3279a425458e69b64927f7fdb3b19c5e277ad9f`;
+- working tree clean, staging area пуста после commit и push.
 
 Известное non-blocking предупреждение о deprecated PHPUnit XML schema
 остаётся в общем backlog — конфигурация PHPUnit в рамках Stage 11 не
 мигрировалась.
 
-### Stage 11 — статус и следующий кандидат
+### Stage 11 — закрытие
 
-Stage 11 **не завершён**. Следующий обоснованный ограниченный кандидат —
-**partial-failure reliability самоудаления аккаунта менеджера**. Уже
-установленные факты (без выполненной реализации):
+Guarded closure audit Stage 11 рассмотрел оставшиеся ограниченные
+кандидаты и выбрал в качестве финального кандидата password-session
+invalidation. Кандидат реализован, протестирован, закоммичен и запушен
+(слайс 17, `f3279a42`). Stage 11 **закрыт** — 17 функциональных semantic
+slice.
 
-- заявки менеджера отвязываются (`unassigned`) до финального удаления `User`;
-- файлы и строки персональных документов обрабатываются до финального
-  удаления `User`;
-- более поздний сбой может оставить частичные, несогласованные мутации;
-- database-транзакции не могут откатить физическое удаление файлов из
-  файловой системы;
-- manager-flow требует отдельного ограниченного implementation-плана;
-- никакая правка manager-flow в рамках этого кандидата ещё не выполнена.
-
-Следующее действие требует отдельного guarded, узкого Plan с exact allowed
-paths и focused failure-injection покрытием — без него широкая реализация
-не начинается.
+Следующий продуктовый этап — **Stage 12. Dependency upgrades**. Stage 12
+остаётся отложенным до отдельного read-only dependency inventory и
+guarded upgrade-плана; работа над зависимостями в рамках этой задачи не
+начиналась. Stage 13 остаётся production readiness и deployment; в рамках
+этой задачи deployment-планирование не выполнялось.
 
 ## Правила безопасной работы
 
@@ -491,6 +561,11 @@ paths и focused failure-injection покрытием — без него шир
 - `phpunit.xml` использует deprecated schema. Предупреждение non-blocking,
   не относится к текущему семантическому slice и отложено в общий backlog
   (см. `roadmap.md`).
+- N+1 unread-count поведение в manager chat-list, обнаруженное в ходе
+  Stage 11 closure audit — подтверждённый ограниченный performance-кандидат,
+  но не выбран в качестве финального Stage 11 слайса и **не** устраняется
+  admin chat-list оптимизацией (слайс 15, `52e1c2e3`); требует отдельного
+  рассмотрения (см. `roadmap.md`).
 
 ## Карта документации
 
@@ -506,16 +581,20 @@ paths и focused failure-injection покрытием — без него шир
 
 ## Следующий шаг
 
-Stage 9 и Stage 10 закрыты. Stage 11 (security, reliability, performance)
-**в процессе**: 12 завершённых semantic slice, последний функциональный
-checkpoint — `f1a0fff0b1f0b93c654b836e93dd5049eae2569f` (см.
-«Stage 11 — 🟡 IN PROGRESS» выше). Следующий обоснованный ограниченный
-кандидат — partial-failure reliability самоудаления аккаунта менеджера;
-реализация ещё не выполнена.
+Stage 9, Stage 10 и Stage 11 закрыты. Stage 11 (security, reliability,
+performance) **завершён**: 17 функциональных semantic slice, финальный
+функциональный checkpoint — `f3279a425458e69b64927f7fdb3b19c5e277ad9f` (см.
+«Stage 11 — ✅ COMPLETE» выше). Guarded closure audit выбрал
+password-session invalidation финальным кандидатом; он реализован,
+протестирован, закоммичен и запушен (слайс 17).
 
-Отдельный read-only Plan для следующего Stage 11 slice (manager
-self-deletion partial-failure) и exact allowed paths требуются до начала
-любых новых правок, как и для каждого предыдущего слайса и этапа. До
-утверждения scope не начинать широкую реализацию manager-flow правок или
-иных ещё не выбранных Stage 11 механизмов. Полный список жёстких
-ограничений — в [`roadmap.md`](roadmap.md).
+Следующий продуктовый этап — **Stage 12. Dependency upgrades**, остаётся
+отложенным до отдельного read-only dependency inventory и guarded
+upgrade-плана; работа над зависимостями в рамках этой задачи не
+начиналась. Stage 13 остаётся production readiness и deployment;
+deployment-планирование в рамках этой задачи не выполнялось. Новый
+post-Stage-11-closure handoff, roadmap export, new-chat prompt, manifest и
+source archive должны быть сгенерированы и независимо проверены отдельным
+source-refresh шагом после этого documentation-only commit — они ещё не
+сгенерированы в рамках этой задачи. Полный список жёстких ограничений — в
+[`roadmap.md`](roadmap.md).
