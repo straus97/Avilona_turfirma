@@ -8,13 +8,14 @@
 | Последний функциональный checkpoint | `f3279a425458e69b64927f7fdb3b19c5e277ad9f` |
 | Commit | `fix: invalidate stale sessions after password changes` |
 | Родительский commit | `2e6ed73e037f1714fa547a82b775f082ad3da973` |
-| Предыдущий documentation checkpoint | `ebdb45bd2fd5b90e5ab7793d5c604df15ca75e2c` (`docs: update stage 11 checkpoint`) |
-| PHPUnit full baseline | 644 tests / 2861 assertions |
+| Текущий repository-hygiene checkpoint | `ec0b20c503231dde7b3cf329f368da4e3009c53b` (`chore: stop tracking vendor dependencies`) |
+| Предыдущий documentation/source checkpoint | `85a7b22ba398c752c487cbaa505aa32014dc37ad` (`docs: close stage 11`) |
+| PHPUnit full baseline | 644 tests / 2861 assertions (без изменений в Stage 12) |
 | PHPUnit focused baseline (финальный Stage 11 slice) | 17 tests / 82 assertions |
 | PHPUnit DB | SQLite `:memory:` — единственно допустимая для PHPUnit |
 | Canonical schema | `turfirma_rebuild_v4`, порт 3308 |
-| Canonical migrations | 53 Ran / 0 Pending (последняя независимо проверенная canonical-верификация; в финальных Stage 11 слайсах миграции повторно не запускались) |
-| Дата checkpoint | 2026-08-04 |
+| Canonical migrations | 53 Ran / 0 Pending (последняя независимо проверенная canonical-верификация; в Stage 12 миграции не перезапускались) |
+| Дата checkpoint | 2026-08-05 |
 | Recovery | COMPLETE |
 | Stage 5 | COMPLETE |
 | Stage 6 | COMPLETE |
@@ -23,20 +24,24 @@
 | Stage 9 | COMPLETE |
 | Stage 10 | ✅ COMPLETE |
 | Stage 11 | ✅ COMPLETE — 17 завершённых functional semantic slices |
-| Stage 12 | ⏸ DEFERRED — dependency upgrades, следующий этап |
+| Stage 12 | 🔄 IN PROGRESS — dependency upgrades; inventory завершена, vendor untracked, ни одно обновление зависимости ещё не выполнено |
 | Stage 13 | 📋 PLANNED |
 
 Эта документация описывает функциональное состояние на момент последнего
 функционального checkpoint `f3279a42` (`fix: invalidate stale sessions
 after password changes`), родитель — `2e6ed73e` (`fix: make booking
-cancellation atomic`). Текущий репозиторный/документационный HEAD,
-содержащий актуальную версию файлов, всегда определяется Git и после
-docs-only commit, фиксирующего эти правки, станет новее `f3279a42` — это не
-меняет сам последний функциональный checkpoint и его test baseline.
+cancellation atomic`). Этот функциональный checkpoint не меняется Stage 12
+repository-hygiene работой. Текущий repository-hygiene checkpoint —
+`ec0b20c5` (`chore: stop tracking vendor dependencies`), родитель —
+`85a7b22b` (`docs: close stage 11`). Текущий репозиторный/документационный
+HEAD, содержащий актуальную версию файлов, всегда определяется Git и после
+этого docs-only commit станет новее `ec0b20c5` — это не меняет ни последний
+функциональный checkpoint, ни его test baseline.
 Stage 10 (уведомления) **завершён** — см. раздел «Stage 10 — ✅ COMPLETE»
 ниже. Stage 11 (security, reliability, performance) **завершён**: 17
 завершённых functional semantic slice — см. раздел «Stage 11 — ✅ COMPLETE»
-ниже и [`roadmap.md`](roadmap.md).
+ниже и [`roadmap.md`](roadmap.md). Stage 12 (dependency upgrades) **в
+процессе** — см. раздел «Stage 12 — 🔄 IN PROGRESS» ниже.
 
 ## Источники истины
 
@@ -51,6 +56,11 @@ Stage 10 (уведомления) **завершён** — см. раздел «
 Старые recovery-файлы со статусом `R5 pending` и Project Sources на `4b568d69`
 являются историческими после завершения нового documentation/source refresh.
 
+Текущий внешний Project Sources набор по-прежнему привязан к предыдущему
+documentation/source checkpoint `85a7b22b` (`docs: close stage 11`) и
+остаётся предыдущим source set до отдельного guarded source-refresh шага,
+который выполняется после этого documentation commit.
+
 `docs/archive/legacy-pre-rebuild/` содержит исторические pre-rebuild документы.
 Они НЕ являются источником истины и не должны использоваться как
 руководство к действию без сверки с текущим кодом и командами из этого
@@ -63,13 +73,18 @@ Stage 10 (уведомления) **завершён** — см. раздел «
 | PHP CLI проекта | 8.3.32 |
 | Laravel | 10.48.10 |
 | Composer | 2.8.3 |
-| Node.js | 22.11.0 |
+| Node.js | 24.18.1 (подтверждено в ходе Stage 12 dependency inventory; см. раздел Stage 12) |
 | npm | 11.12.1 |
 | PHPUnit | 10.5.20 |
 | PHPUnit DB | SQLite `:memory:` |
 | Canonical MySQL | 9.7.1, `turfirma_rebuild_v4`, port 3308 |
 | UI | Blade + Bootstrap 5 |
 | Build | Vite 4.x |
+
+Node.js/npm версии в этой таблице отражают окружение, в котором была
+выполнена Stage 12 read-only dependency inventory (2026-08-05), а не
+изменение самого проектного стека — `package.json`/`package-lock.json` не
+менялись.
 
 Глобальный `php` может указывать на PHP 8.4.13. Скрипты и PHPUnit проекта должны
 использовать `C:\wamp\bin\php\php8.3.32\php.exe`.
@@ -533,11 +548,98 @@ invalidation. Кандидат реализован, протестирован,
 (слайс 17, `f3279a42`). Stage 11 **закрыт** — 17 функциональных semantic
 slice.
 
-Следующий продуктовый этап — **Stage 12. Dependency upgrades**. Stage 12
-остаётся отложенным до отдельного read-only dependency inventory и
-guarded upgrade-плана; работа над зависимостями в рамках этой задачи не
-начиналась. Stage 13 остаётся production readiness и deployment; в рамках
-этой задачи deployment-планирование не выполнялось.
+Следующий продуктовый этап — **Stage 12. Dependency upgrades**, теперь
+**в процессе** — см. раздел «Stage 12 — 🔄 IN PROGRESS» ниже. Stage 13
+остаётся production readiness и deployment; в рамках Stage 12 работы
+deployment-планирование не выполнялось.
+
+## Stage 12 — 🔄 IN PROGRESS. Dependency upgrades
+
+Stage 12 начат. Ниже — краткий ledger завершённой на сегодня работы;
+подробный read-only отчёт инвентаризации в документацию не копируется.
+Stage 12 **не завершён**: ни одно обновление зависимости ещё не
+выполнено, версии не изменились.
+
+Текущий repository-hygiene checkpoint — `ec0b20c5`
+(`chore: stop tracking vendor dependencies`), родитель — `85a7b22b`
+(`docs: close stage 11`). Это repository-hygiene checkpoint, а не
+functional checkpoint и не завершённый dependency-upgrade slice —
+последний функциональный checkpoint остаётся `f3279a42`.
+
+Ledger:
+
+1. **Read-only dependency inventory — COMPLETE.** Прочитаны и сопоставлены
+   `composer.json`, `composer.lock`, `package.json`, `package-lock.json`.
+   Подтверждённое окружение: PHP 8.3.32; Composer 2.8.3 (через
+   pinned PHP executable и `composer.phar`); Node.js 24.18.1; npm 11.12.1.
+   Найдено 118 locked Composer-пакетов (80 production / 38 development) и
+   203 resolved npm package entries, конкретные Composer/npm advisory
+   evidence, кандидаты классифицированы как security-critical,
+   framework-major, minor/patch, transitive-only, informational/no-action.
+   Обновление зависимостей в ходе инвентаризации не выполнялось.
+2. **Первый кандидат — Guzzle.** Предложен Composer-only кандидат:
+   `guzzlehttp/guzzle` 7.8.1 → 7.15.2, `guzzlehttp/promises` 2.0.2 → 2.5.1,
+   `guzzlehttp/psr7` 2.6.2 → 2.13.0. Guarded dry-run разрешил ровно 0
+   installs / 3 updates / 0 removals. Существующее ограничение
+   `composer.json` (`^7.2`) уже допускает 7.15.2 — изменение
+   `composer.json` для будущего повтора не ожидается.
+3. **Прерванное первое выполнение Guzzle-обновления — полностью
+   откачено.** Одобренная команда `composer update` дала именно ту
+   трёхпакетную дельту, но выполнение было остановлено до валидации,
+   поскольку `vendor/` оказался неожиданно отслеживаемым Git несмотря на
+   `/vendor` в `.gitignore`. Временно менялись `composer.lock` и
+   Guzzle-related файлы под `vendor/`. Изменение было guarded-откачено;
+   итоговые версии остались 7.8.1 / 2.0.2 / 2.6.2. Обновление Guzzle
+   **не считается завершённым**.
+4. **Аудит tracked-vendor политики.** Обнаружено 8657 отслеживаемых путей
+   `vendor/` при уже присутствующем `/vendor` в `.gitignore`; история и
+   документация не устанавливали намеренную committed-vendor
+   deployment-политику; tracking классифицирован как случайный —
+   новые файлы зависимостей могли скрываться `.gitignore`, пока старые
+   оставались отслеживаемыми, что делало бы будущие committed vendor
+   snapshots неполными.
+5. **Vendor-untracking repository-hygiene slice — COMPLETE.** Commit
+   `ec0b20c5` (родитель `85a7b22b`) убрал ровно 8657 существующих путей
+   `vendor/` из Git index (только deletions, только под `vendor/`);
+   рабочая копия `vendor/` осталась физически присутствующей и
+   byte-identical; `.gitignore` уже покрывал `/vendor`; `composer.json` и
+   `composer.lock` не менялись; версии Guzzle-семейства остались
+   7.8.1 / 2.0.2 / 2.6.2; local/origin-tracking/live remote HEAD совпали
+   на `ec0b20c5`; working tree чист после push. PHPUnit не запускался —
+   слайс менял только git tracking state, не runtime-содержимое.
+6. **Git normalization recovery evidence (вспомогательное).** Прерванный
+   rollback временно показал status discrepancy из-за
+   `core.autocrlf=true`, LF blobs в индексе, CRLF working-tree
+   представления и устаревших index stat-метаданных. Read-only аудит
+   подтвердил для всех 82 затронутых путей совпадение normalized
+   working-tree object ID с индексом и индекса с HEAD — содержательных
+   расхождений не было. Metadata-only index refresh оставил репозиторий
+   content-clean и status-clean до vendor-untracking слайса. Это
+   вспомогательное repository-hygiene evidence, не отдельная product
+   milestone.
+
+Текущие версии зависимостей не изменились:
+
+- `laravel/framework` 10.48.10;
+- `guzzlehttp/guzzle` 7.8.1;
+- `guzzlehttp/promises` 2.0.2;
+- `guzzlehttp/psr7` 2.6.2;
+- `phpunit/phpunit` 10.5.20;
+- `axios` 1.7.2;
+- `vite` 4.5.3;
+- `webpack` 5.81.0.
+
+Test и migration baseline не изменились в ходе Stage 12: full PHPUnit
+644 tests / 2861 assertions, focused финальный Stage 11 slice 17 tests /
+82 assertions, canonical migrations 53 Ran / 0 Pending (последняя
+независимо проверенная canonical-верификация; в Stage 12 миграции не
+перезапускались).
+
+Следующий шаг: отдельный guarded Project Sources refresh (не выполняется
+в рамках этого documentation-only коммита), затем повтор Stage 12 Slice 1
+— узко-ограниченное Composer-only Guzzle security-maintenance обновление.
+Число будущих dependency-слайсов заранее не фиксируется, и утверждение о
+том, что все advisories устранены, не делается.
 
 ## Правила безопасной работы
 
@@ -588,13 +690,17 @@ performance) **завершён**: 17 функциональных semantic slic
 password-session invalidation финальным кандидатом; он реализован,
 протестирован, закоммичен и запушен (слайс 17).
 
-Следующий продуктовый этап — **Stage 12. Dependency upgrades**, остаётся
-отложенным до отдельного read-only dependency inventory и guarded
-upgrade-плана; работа над зависимостями в рамках этой задачи не
-начиналась. Stage 13 остаётся production readiness и deployment;
-deployment-планирование в рамках этой задачи не выполнялось. Новый
-post-Stage-11-closure handoff, roadmap export, new-chat prompt, manifest и
-source archive должны быть сгенерированы и независимо проверены отдельным
-source-refresh шагом после этого documentation-only commit — они ещё не
-сгенерированы в рамках этой задачи. Полный список жёстких ограничений — в
+Следующий продуктовый этап — **Stage 12. Dependency upgrades** — теперь
+**в процессе** (см. раздел «Stage 12 — 🔄 IN PROGRESS» выше): read-only
+dependency inventory завершена, первый кандидат (Guzzle) guarded dry-run
+проверен, его прерванное выполнение полностью откачено, а обнаруженный
+случайно отслеживаемый `vendor/` устранён коммитом `ec0b20c5`. Ни одно
+обновление зависимости ещё не выполнено. Stage 13 остаётся production
+readiness и deployment; deployment-планирование в рамках этой задачи не
+выполнялось. Новый post-closure handoff, roadmap export, new-chat prompt,
+manifest и source archive должны быть сгенерированы и независимо
+проверены отдельным guarded source-refresh шагом после этого
+documentation-only commit — они ещё не сгенерированы в рамках этой
+задачи; текущий Project Sources набор остаётся привязан к предыдущему
+checkpoint `85a7b22b`. Полный список жёстких ограничений — в
 [`roadmap.md`](roadmap.md).
