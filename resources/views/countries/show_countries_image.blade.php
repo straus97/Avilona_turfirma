@@ -35,7 +35,7 @@
                                 </a>
                                 @if($id_countries_image->updated_at)
                                 <span
-                                    class="document-date">Дата обновления: {{Date::parse($id_countries_image->updated_at)->format('j F Y г.')}}</span>
+                                    class="document-date">Дата обновления: {{\Carbon\Carbon::parse($id_countries_image->updated_at)->translatedFormat('j F Y г.')}}</span>
                                 @endif
                             </div>
                             @endif

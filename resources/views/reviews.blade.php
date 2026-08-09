@@ -28,7 +28,7 @@
                                 </div>
                                 <div class="col-md-11">
                                     <h5>{{ $item_review->name ?? 'Анонимный пользователь' }}</h5>
-                                    <p class="text-muted">{{ $item_review->created_at ? Date::parse($item_review->created_at)->format('j F Y г.') : '' }}</p>
+                                    <p class="text-muted">{{ $item_review->created_at ? \Carbon\Carbon::parse($item_review->created_at)->translatedFormat('j F Y г.') : '' }}</p>
                                     @if($item_review->title)
                                     <h6>{{ $item_review->title }}</h6>
                                     @endif

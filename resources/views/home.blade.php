@@ -456,7 +456,7 @@
                                     </div>
                                     <div class="card-footer">
                                         <small
-                                            class="text-muted">{{ $item_best_offers->created_at ? Date::parse($item_best_offers->created_at)->format('j F Y г.') : '' }}</small>
+                                            class="text-muted">{{ $item_best_offers->created_at ? \Carbon\Carbon::parse($item_best_offers->created_at)->translatedFormat('j F Y г.') : '' }}</small>
                                     </div>
                                     <div class="card-footer">
                                         <small class=""><a href="#" onclick="openContactModal()"
@@ -496,7 +496,7 @@
                             </div>
                             <div class="card-footer">
                                 <small
-                                    class="text-muted">{{ $item_reviews->created_at ? Date::parse($item_reviews->created_at)->format('j F Y г.') : '' }}</small>
+                                    class="text-muted">{{ $item_reviews->created_at ? \Carbon\Carbon::parse($item_reviews->created_at)->translatedFormat('j F Y г.') : '' }}</small>
                             </div>
                         </div>
                     </div>
@@ -521,7 +521,7 @@
                                    class="btn btn-primary btn-sm mt-auto">Подробнее</a>
                                 @endif
                             </div>
-                            <div class="card-footer text-muted">{{ $item_news->pub_date ? Date::parse($item_news->pub_date)->format('j F Y г.') : '' }}</div>
+                            <div class="card-footer text-muted">{{ $item_news->pub_date ? \Carbon\Carbon::parse($item_news->pub_date)->translatedFormat('j F Y г.') : '' }}</div>
                         </div>
                     </div>
                 @endforeach

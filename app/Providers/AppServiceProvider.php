@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\Paginator;
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +28,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Paginator::useBootstrap();
-        Date::setlocale(config('app.locale'));
+        Carbon::setLocale(config('app.locale'));
     }
 }

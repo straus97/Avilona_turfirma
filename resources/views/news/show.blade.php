@@ -21,7 +21,7 @@
                         <div class="news-meta text-muted mb-4">
                             <small>
                                 <i class="bi bi-calendar3"></i> 
-                                {{ $id_news->pub_date ? Date::parse($id_news->pub_date)->format('j F Y г.') : '' }}
+                                {{ $id_news->pub_date ? \Carbon\Carbon::parse($id_news->pub_date)->translatedFormat('j F Y г.') : '' }}
                             </small>
                         </div>
 
