@@ -10,8 +10,7 @@
     "require": {
         "php": "^8.0.2",
         "guzzlehttp/guzzle": "^7.2",
-        "jenssegers/date": "^4.0",
-        "laravel/framework": "^11.0",
+        "laravel/framework": "^12.61.1",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "@stable",
         "laravel/ui": "^4.2",
@@ -26,7 +25,7 @@
         "laravel/sail": "@stable",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^8.1",
-        "phpunit/phpunit": "@stable",
+        "phpunit/phpunit": "^11.0",
         "spatie/laravel-ignition": "@stable"
     },
     "autoload": {

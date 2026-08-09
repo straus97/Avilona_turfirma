@@ -311,6 +311,8 @@ class TripReminderIdempotencyTest extends TestCase
         $owner = $this->makeUser(Role::TOURIST);
         $booking = $this->makeBookingFor($owner, Carbon::today()->addDays(7));
 
+        $mailManager = $this->app->make('mail.manager');
+
         Mail::shouldReceive('to->queue')
             ->once()
             ->andThrow(new \Exception('Simulated mail transport failure'));
@@ -323,6 +325,7 @@ class TripReminderIdempotencyTest extends TestCase
 
         // Более поздний запуск с работающей отправкой должен успешно
         // повторить попытку для той же логической доставки.
+        Mail::swap($mailManager);
         Mail::fake();
 
         $this->artisan('bookings:send-trip-reminders')
