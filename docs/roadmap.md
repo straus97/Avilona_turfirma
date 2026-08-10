@@ -1,6 +1,6 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-08-05**
+Дата checkpoint: **2026-08-11**
 
 Последний функциональный checkpoint (не меняется Stage 12 работой):
 
@@ -9,16 +9,16 @@ f3279a425458e69b64927f7fdb3b19c5e277ad9f
 fix: invalidate stale sessions after password changes
 ```
 
-Текущий repository-hygiene checkpoint:
+Текущий dependency checkpoint (Stage 12 закрыт):
 
 ```text
-ec0b20c503231dde7b3cf329f368da4e3009c53b
-chore: stop tracking vendor dependencies
+61d2fef9ee30ecae2bc1f1d948e16ac2879b1aae
+chore: update picomatch to 2.3.2
 ```
 
 Текущий репозиторный/документационный HEAD всегда определяется Git и
 после docs-only commit, фиксирующего эти правки, станет новее указанного
-repository-hygiene checkpoint — это не меняет ни последний функциональный
+dependency checkpoint — это не меняет ни последний функциональный
 checkpoint, ни его test baseline.
 
 Родительский commit последнего функционального checkpoint:
@@ -44,26 +44,30 @@ documentation-only задачи — это отдельный source-refresh ш�
 текущего commit, который должен быть выполнен и независимо проверен
 отдельно.
 
-Текущий тестовый baseline (без изменений в Stage 12):
+Текущий тестовый baseline (после закрытия Stage 12; число тестов/assertions
+не изменилось при обновлении PHPUnit):
 
 ```text
 Full:    644 tests / 2861 assertions
 Focused (финальный Stage 11 slice — password-change session invalidation): 17 tests / 82 assertions
-PHPUnit 10.5.20
+PHPUnit 11.5.56
 SQLite :memory: (единственно допустимая БД для PHPUnit)
 Canonical migrations: 53 Ran / 0 Pending (последняя независимо проверенная
-  canonical-верификация; в Stage 12 inventory, rollback, metadata recovery
-  и vendor untracking миграции повторно не запускались)
+  canonical-верификация; Stage 12 dependency-работа не требовала нового
+  canonical-прогона)
 Canonical MySQL: turfirma_rebuild_v4, порт 3308
 PHP: C:\wamp\bin\php\php8.3.32\php.exe (8.3.32)
 ```
 
-Подтверждённое окружение Stage 12 dependency inventory (2026-08-05):
-PHP 8.3.32; Composer 2.8.3 (через pinned PHP executable и
-`composer.phar`); Node.js 24.18.1; npm 11.12.1.
+Подтверждённое финальное окружение/toolchain Stage 12 (2026-08-11):
+PHP 8.3.32; canonical PHP executable
+`C:\wamp\bin\php\php8.3.32\php.exe`; Composer 2.8.3 (verified through
+`composer.phar` под PHP 8.3.32); Node.js 24.18.1; npm 11.12.1.
 
 Известное non-blocking предупреждение: `phpunit.xml` использует deprecated
-schema — backlog item, не часть текущего semantic slice.
+schema — backlog item, не исправлено в Stage 12. Известное non-blocking
+предупреждение Vite из-за пересечения `publicDir`/`outDir` — также не
+исправлено в Stage 12.
 
 ## Сводный статус
 
@@ -77,8 +81,8 @@ schema — backlog item, не часть текущего semantic slice.
 - Stage 9 — ✅ COMPLETE
 - Stage 10 — ✅ COMPLETE (12 slices)
 - Stage 11 — ✅ COMPLETE (17 slices; security, reliability, performance)
-- Stage 12 — 🔄 IN PROGRESS (dependency upgrades; inventory complete, vendor untracked, no dependency update completed yet)
-- Stage 13 — 📋 PLANNED (production readiness)
+- Stage 12 — ✅ COMPLETE (dependency upgrades; repository hygiene, Composer/npm security modernization, Laravel 12, Vite 7, npm audit = 0, Composer advisories = 0)
+- Stage 13 — 📋 PLANNED (production readiness) — next product stage
 
 ---
 
@@ -704,20 +708,18 @@ Guarded closure audit Stage 11 рассмотрел оставшиеся огр�
 полный упорядоченный commit-инвентарь приведён выше.
 
 Следующий продуктовый этап — **Stage 12. Dependency upgrades**, теперь
-**в процессе** — см. раздел ниже.
+**завершён** — см. раздел ниже.
 
-## Stage 12. Dependency upgrades — 🔄 IN PROGRESS
+## Stage 12. Dependency upgrades — ✅ COMPLETE
 
 Stage 12 начат отдельным изолированным slice после стабилизации
-функционала (Stage 11 закрыт). Текущий repository-hygiene checkpoint —
-`ec0b20c503231dde7b3cf329f368da4e3009c53b`
-(`chore: stop tracking vendor dependencies`), родитель —
-`85a7b22ba398c752c487cbaa505aa32014dc37ad` (`docs: close stage 11`). Это
-repository-hygiene checkpoint, не functional checkpoint и не завершённый
-dependency-upgrade slice — последний функциональный checkpoint остаётся
-`f3279a42`. Stage 12 **не завершён**.
+функционала (Stage 11 закрыт) и теперь завершён. Текущий dependency
+checkpoint — `61d2fef9ee30ecae2bc1f1d948e16ac2879b1aae`
+(`chore: update picomatch to 2.3.2`). Это dependency checkpoint, не
+functional checkpoint — последний функциональный checkpoint остаётся
+`f3279a42` и не менялся Stage 12 работой.
 
-Завершённая на сегодня работа (ledger):
+Ledger (историческая хронология первых слайсов, затем закрывающая работа):
 
 1. **Read-only dependency inventory — COMPLETE.** Прочитаны и сопоставлены
    `composer.json`, `composer.lock`, `package.json`, `package-lock.json`.
@@ -765,20 +767,73 @@ dependency-upgrade slice — последний функциональный che
    индексом и индекса с HEAD. Metadata-only index refresh оставил
    репозиторий content-clean и status-clean до vendor-untracking слайса.
    Вспомогательное evidence, не отдельная product milestone.
+7. **Composer dependency/security модернизация — COMPLETE.** Ранее
+   откаченный слайс Guzzle (п. 2/3 выше) выполнен повторно и доведён до
+   конца: `guzzlehttp/guzzle` обновлён до 7.15.2. `laravel/framework`
+   проведён through guarded Laravel 10 patch maintenance → Laravel 11
+   bridge → Laravel 12, финально `v12.65.0`. Carbon line модернизирована
+   до Carbon 3.x. `phpunit/phpunit` обновлён до 11.5.56.
+8. **Frontend dependency/security модернизация — COMPLETE.** webpack- и
+   sass/sass-loader-инструменты удалены после подтверждения, что они не
+   используются активной сборкой. Выполнена миграция на Vite 7.3.6 +
+   `laravel-vite-plugin` 2.1.0 с адаптацией Laravel-совместимого manifest
+   (`public/build/manifest.json`, содержит `resources/css/app.css` и
+   `resources/js/app.js`). Tailwind обновлён до 3.4.19. Корневой уязвимый
+   `picomatch` обновлён с 2.3.1 до 2.3.2 (dependency checkpoint
+   `61d2fef9`).
+9. **Repository hygiene — подтверждено.** `vendor` и `node_modules` не
+   отслеживаются Git (tracked count = 0 для обоих).
+10. **Финальная верификация безопасности — COMPLETE.** `npm audit`: 0
+    total vulnerabilities. Composer locked audit под PHP 8.3.32: 0
+    advisories, 0 abandoned packages. `composer check-platform-reqs
+    --lock` под PHP 8.3.32: PASS.
+11. **Production build validation — COMPLETE.** Production Vite build
+    успешен; известное non-blocking предупреждение Vite из-за
+    пересечения `publicDir`/`outDir` осталось не исправленным.
+12. **Full PHPUnit validation — COMPLETE.** 644 tests / 2861 assertions,
+    PHPUnit 11.5.56, SQLite `:memory:`, exit code 0. Известное
+    non-blocking PHPUnit deprecation-предупреждение осталось не
+    исправленным.
 
-Текущие версии зависимостей не изменились: `laravel/framework` 10.48.10,
-`guzzlehttp/guzzle` 7.8.1, `guzzlehttp/promises` 2.0.2, `guzzlehttp/psr7`
-2.6.2, `phpunit/phpunit` 10.5.20, `axios` 1.7.2, `vite` 4.5.3, `webpack`
-5.81.0.
+Финальные версии зависимостей: `laravel/framework` 12.65.0,
+`guzzlehttp/guzzle` 7.15.2, `phpunit/phpunit` 11.5.56, Carbon 3.x,
+`vite` 7.3.6, `laravel-vite-plugin` 2.1.0, `tailwindcss` 3.4.19,
+корневой `picomatch` 2.3.2; webpack и sass/sass-loader удалены как
+неиспользуемые.
 
-Test/migration baseline не менялись в Stage 12 (см. baseline выше).
+Test/migration baseline: full PHPUnit 644 tests / 2861 assertions под
+PHPUnit 11.5.56 (число тестов/assertions не изменилось), canonical
+migrations 53 Ran / 0 Pending (Stage 12 dependency-работа не требовала
+нового canonical-прогона).
 
-Следующий шаг: отдельный guarded Project Sources refresh, затем повтор
-Stage 12 Slice 1 — узко-ограниченное Composer-only Guzzle
-security-maintenance обновление (ожидаемый изменяемый путь —
-`composer.lock`; ожидаемая дельта — та же, что в п. 2 выше). Число
-будущих dependency-слайсов заранее не фиксируется; утверждение о том, что
-все advisories устранены, не делается.
+Отложенное обслуживание (не блокеры закрытия Stage 12):
+
+- Composer non-security maintenance: `fakerphp/faker` v1.23.1 →
+  v1.24.1, `laravel/pint` v1.15.3 → v1.30.5;
+- Composer major-миграции, намеренно отложенные: `guzzlehttp/guzzle`
+  7.15.2 → 8.0.2, `laravel/framework` v12.65.0 → v13.24.0,
+  `phpmailer/phpmailer` v6.9.1 → v7.1.1, `phpunit/phpunit` 11.5.56 →
+  12.5.33 (под canonical PHP 8.3.32 Composer audit),
+  `spatie/laravel-sluggable` 3.8.1 → 4.0.3;
+- npm non-security same-major maintenance: `@popperjs/core` 2.11.6 →
+  2.11.8, `@tailwindcss/forms` 0.5.3 → 0.5.11, `alpinejs` 3.12.0 →
+  3.16.0, `autoprefixer` 10.4.14 → 10.5.4, `bootstrap` 5.3.0-alpha1 →
+  5.3.8;
+- npm major-миграции, намеренно отложенные: `laravel-vite-plugin`
+  2.1.0 → 3.1.3, `tailwindcss` 3.4.19 → 4.3.3, `vite` 7.3.6 → 8.2.1.
+
+Это отложенное обслуживание и future major-миграции, а не причина
+считать Stage 12 незакрытым; верифицированные security-аудиты (npm и
+Composer) на момент закрытия Stage 12 чисты.
+
+Stage 12 **закрыт**.
+
+Следующий шаг: отдельный guarded Project Sources refresh — отдельное
+guarded документационное/repository-management действие,
+предшествующее началу Stage 13. Project Sources в рамках Stage 12 не
+генерировались и не обновлялись. После Project Sources refresh
+следующий продуктовый этап — **Stage 13. Production readiness**; она не
+начата.
 
 ## Stage 13. Production readiness — 📋
 
@@ -858,34 +913,37 @@ security-maintenance обновление (ожидаемый изменяемы
 
 ## Ближайший следующий шаг
 
-Stage 10 и Stage 11 закрыты. Stage 11 (security, reliability, performance)
-**завершён** — 17 функциональных semantic slice. Финальный функциональный
-checkpoint — `f3279a425458e69b64927f7fdb3b19c5e277ad9f`
+Stage 10, Stage 11 и Stage 12 закрыты. Stage 11 (security, reliability,
+performance) **завершён** — 17 функциональных semantic slice. Финальный
+функциональный checkpoint — `f3279a425458e69b64927f7fdb3b19c5e277ad9f`
 (`fix: invalidate stale sessions after password changes`, см. раздел
 Stage 11 выше); он не меняется ни публикацией текущего docs-only
-checkpoint, ни Stage 12 repository-hygiene работой.
+checkpoint, ни Stage 12 dependency-работой.
 
 1. Guarded closure audit Stage 11 выбрал финальным кандидатом
    password-session invalidation; он реализован, протестирован,
    закоммичен и запушен (слайс 17).
-2. Следующий продуктовый этап — **Stage 12. Dependency upgrades**, теперь
-   **в процессе** (см. раздел «Stage 12. Dependency upgrades — 🔄 IN
-   PROGRESS» выше): read-only dependency inventory завершена, первый
-   кандидат (Guzzle) guarded dry-run проверен, его прерванное выполнение
-   полностью откачено, а случайно отслеживаемый `vendor/` устранён
-   коммитом `ec0b20c5` (родитель `85a7b22b`). Ни одно обновление
-   зависимости ещё не выполнено. Stage 13 остаётся production readiness и
-   deployment; deployment-планирование не выполнялось в рамках этой
-   задачи.
-3. Новый post-closure handoff, roadmap export, new-chat prompt, manifest и
-   source archive должны быть сгенерированы и независимо проверены
-   отдельным guarded source-refresh шагом после текущего
-   documentation-only commit — они ещё не сгенерированы. Предыдущий
-   source set остаётся привязан к `85a7b22b`.
-4. После source-refresh шага следующий одобренный продуктовый кандидат —
-   повтор Stage 12 Slice 1 (узко-ограниченное Composer-only Guzzle
-   security-maintenance обновление; ожидаемый путь — `composer.lock`).
-   Он не одобрен и не выполнен в рамках этой documentation-only задачи.
+2. Stage 12 (Dependency upgrades) **завершён** (см. раздел «Stage 12.
+   Dependency upgrades — ✅ COMPLETE» выше): repository hygiene для
+   `vendor`/`node_modules`, Composer dependency/security модернизация,
+   Laravel framework модернизация до Laravel 12, frontend
+   dependency/security модернизация, удаление неиспользуемых
+   webpack/sass инструментов, миграция на Vite 7 + `laravel-vite-plugin`
+   2, обновление Tailwind до 3.4.19, security-исправление `picomatch` до
+   2.3.2, финальный `npm audit` = 0, финальные Composer advisories = 0 и
+   abandoned packages = 0, production build validation и полная
+   верификация PHPUnit (644 tests / 2861 assertions) выполнены и
+   подтверждены. Отложенное non-security и major-обслуживание
+   перечислено в разделе Stage 12 и не является блокером.
+3. Следующее отдельное guarded действие — Project Sources refresh (не
+   выполняется в рамках этого documentation-only коммита и не выполнено
+   в рамках этой задачи): новый post-closure handoff, roadmap export,
+   new-chat prompt, manifest и source archive должны быть сгенерированы
+   и независимо проверены. Предыдущий source set остаётся привязан к
+   `85a7b22b`.
+4. После Project Sources refresh следующий продуктовый этап —
+   **Stage 13. Production readiness**. Она **не начата** и не одобрена
+   в рамках этой documentation-only задачи.
 5. Как и для каждого предыдущего слайса и этапа — миграции, canonical DB
    операции, production-интеграции и деструктивные действия выполнять
    только по отдельному guarded плану.
