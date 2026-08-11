@@ -1411,7 +1411,9 @@ document.addEventListener('DOMContentLoaded', function() {
             text += ` и ${childrenList.length} реб`;
         }
         
-        summary.textContent = text;
+        if (summary) {
+            summary.textContent = text;
+        }
     }
 
     function renderChildrenList() {
