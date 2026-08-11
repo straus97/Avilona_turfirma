@@ -27,5 +27,5 @@ export default defineConfig({
         outDir: 'public/build',
         manifest: 'manifest.json',
     },
-    publicDir: 'public',
+    publicDir: false,
 });
