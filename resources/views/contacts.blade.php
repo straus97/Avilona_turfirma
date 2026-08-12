@@ -76,7 +76,7 @@
                       novalidate>
                     @csrf
                     <div class="row">
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label for="name" class="form-label">Ваше имя</label>
                             <input type="text" class="form-control" id="name" name="name" placeholder="Например, Никита"
                                    value="{{ old('name') }}" required>
@@ -87,7 +87,7 @@
                                 Пожалуйста, введите свое имя
                             </div>
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email"
                                    placeholder="Например, test@mail.ru" value="{{ old('email') }}" required>

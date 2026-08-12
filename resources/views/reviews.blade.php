@@ -20,13 +20,13 @@
                     @if(isset($reviews) && $reviews->count() > 0)
                         @foreach($reviews as $item_review)
                             <div class="row mb-4">
-                                <div class="col-md-1">
+                                <div class="col-3 col-md-1">
                                     @if($item_review->image)
                                     <img src="{{ asset($item_review->image) }}" class="img-fluid rounded-circle"
                                          alt="User Icon">
                                     @endif
                                 </div>
-                                <div class="col-md-11">
+                                <div class="col-9 col-md-11">
                                     <h5>{{ $item_review->name ?? 'Анонимный пользователь' }}</h5>
                                     <p class="text-muted">{{ $item_review->created_at ? \Carbon\Carbon::parse($item_review->created_at)->translatedFormat('j F Y г.') : '' }}</p>
                                     @if($item_review->title)
@@ -121,7 +121,7 @@
                               novalidate>
                             @csrf
                             <div class="row">
-                                <div class="col-6 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="name" class="form-label">Ваше имя</label>
                                     <input type="text" class="form-control" id="name" name="name"
                                            placeholder="Например, Никита"
@@ -133,7 +133,7 @@
                                         Пожалуйста, введите свое имя
                                     </div>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" name="email"
                                            placeholder="Например, test@mail.ru" value="{{ old('email') }}" required>

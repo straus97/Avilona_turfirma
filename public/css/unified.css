@@ -259,6 +259,13 @@ a:hover {
     }
 }
 
+/* ===== Pagination ===== */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 /* ===== Animations ===== */
 @keyframes fadeIn {
     from {
