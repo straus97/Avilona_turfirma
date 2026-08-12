@@ -20,13 +20,13 @@
                     @if(isset($reviews) && $reviews->count() > 0)
                         @foreach($reviews as $item_review)
                             <div class="row mb-4">
-                                <div class="col-3 col-md-1">
+                                <div class="col-3 col-md-2 col-lg-1">
                                     @if($item_review->image)
                                     <img src="{{ asset($item_review->image) }}" class="img-fluid rounded-circle"
                                          alt="User Icon">
                                     @endif
                                 </div>
-                                <div class="col-9 col-md-11">
+                                <div class="col-9 col-md-10 col-lg-11">
                                     <h5>{{ $item_review->name ?? 'Анонимный пользователь' }}</h5>
                                     <p class="text-muted">{{ $item_review->created_at ? \Carbon\Carbon::parse($item_review->created_at)->translatedFormat('j F Y г.') : '' }}</p>
                                     @if($item_review->title)

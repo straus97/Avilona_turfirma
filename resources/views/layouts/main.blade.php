@@ -307,8 +307,8 @@
             <div class="col-12 col-sm-6 col-md-2 col-lg-2 mb-3">
                 <div class="row mb-3">
                     <h5>Метрика</h5>
-                    <div class="row mb-3">
-                        <div class="col-6">
+                    <div class="row mb-3 g-0">
+                        <div class="col-6 col-md-12 col-xl-6">
                             {{-- счетчик liveinternet --}}
                             <a href="https://www.liveinternet.ru/click" target="_blank"><img id="licntF51C" width="88"
                                                                                              height="31"
@@ -325,7 +325,7 @@
                                 })
                                 (document, screen)</script>
                         </div>
-                        <div class="col-6">
+                        <div class="col-6 col-md-12 col-xl-6">
                             {{-- счетчик Mail.ru --}}
                             <!-- Top.Mail.Ru counter -->
                             <script type="text/javascript">
@@ -361,8 +361,8 @@
                             <!-- /Top.Mail.Ru logo -->
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
+                    <div class="row mb-3 g-0">
+                        <div class="col-6 col-md-12 col-xl-6">
                             {{-- счетчик Яндекс --}}
                             <!-- Yandex.Metrika informer -->
                             <a href="https://metrika.yandex.ru/stat/?id=56393833&amp;from=informer"
