@@ -410,9 +410,8 @@
     <!-- /.content-wrapper -->
 
     <footer class="main-footer">
-        &copy; 2023 ООО «Авилона». Все
-        права защищены. Информация сайта защищена законом об авторских правах. <a
-            href="https://vk.com/id3221404" target="_blank">Shtraus Nikita</a>
+        &copy; {{ date('Y') }} ООО «Авилона». Все
+        права защищены. Информация сайта защищена законом об авторских правах.
     </footer>
 
     <!-- Control Sidebar -->

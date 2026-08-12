@@ -98,7 +98,6 @@
                 </div>
                 {{--                <div class="d-none d-lg-flex mt-2">--}}
                 {{--                    <button class="btn btn-primary w-100 me-2" type="button" data-bs-toggle="modal"--}}
-                {{--                            data-bs-target="#importantInfoModal">Важная информация--}}
                 {{--                    </button>--}}
                 {{--                </div>--}}
                 @auth
@@ -153,10 +152,6 @@
                                 </li>
                             </ul>
                         </div>
-                        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal"
-                                data-bs-target="#importantInfoModal" style="font-size: 0.8rem;">
-                            <i class="bi bi-info-circle"></i> Важная информация
-                        </button>
                     </div>
                 @else
                     <div class="d-flex flex-column align-items-end mt-2" style="gap: 0.25rem;">
@@ -168,10 +163,6 @@
                                 <i class="bi bi-person-plus"></i> Регистрация
                             </a>
                         </div>
-                        <button class="btn btn-primary btn-sm w-100" type="button" data-bs-toggle="modal"
-                                data-bs-target="#importantInfoModal" style="font-size: 0.8rem;">
-                            <i class="bi bi-info-circle"></i> Важная информация
-                        </button>
                     </div>
                 @endauth
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -230,39 +221,6 @@
             </div>
         </nav>
     </header>
-</div>
-<!-- Важная информация модальное окно -->
-<div class="modal fade" id="importantInfoModal" tabindex="-1" aria-labelledby="importantInfoModalLabel"
-     aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importantInfoModalLabel">Важная информация</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-center"><img src="{{ asset('/img/remont.png') }}" class="img-fluid" alt="Картинка"
-                                            height="500px" width="500px"></p>
-                <h3 class="text-center">Уважаемые пользователи сайта Авилона!</h3>
-                <p>Мы рады приветствовать вас на нашем новом туристическом портале. Сайт в настоящее время активно
-                    обновляется и находится на стадии активной разработки.</p>
-                <p>Мы прилагаем все усилия, чтобы предложить вам наиболее удобный и информативный сервис. Однако,
-                    учитывая, что наш сайт все еще в процессе разработки, некоторые функции могут временно работать
-                    нестабильно или быть недоступны.</p>
-                <p>Мы призываем вас, в случае обнаружения каких-либо недочетов или ошибок, связываться с нами по
-                    электронной почте
-                    <a href="mailto:straus97@mail.ru">straus97@mail.ru</a>. Мы также будем рады получить от вас любые
-                    отзывы или предложения по улучшению работы сайта. Ваше мнение очень важно для нас и поможет нам
-                    сделать наш сайт еще лучше и удобнее для вас.</p>
-                <p>Благодарим за понимание и ценим вашу поддержку в этот период.</p>
-                <p><b>С наилучшими пожеланиями, команда туристической фирмы "Авилона".</b></p>
-            </div>
-            <div class="modal-footer">
-                <small class="text-muted">Дата публикации: 15 мая 2024 г.</small>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-            </div>
-        </div>
-    </div>
 </div>
 <!-- Main Content -->
 @yield('content')
@@ -407,9 +365,8 @@
                 </div>
             </div>
             <div class="row">
-                <p class="text-center mb-2 p-2">&copy; 2024 ООО «Авилона». Все
-                    права защищены. Информация сайта защищена законом об авторских правах. <a
-                        href="https://vk.com/id3221404" target="_blank">Shtraus Nikita</a></p>
+                <p class="text-center mb-2 p-2">&copy; {{ date('Y') }} ООО «Авилона». Все
+                    права защищены. Информация сайта защищена законом об авторских правах.</p>
             </div>
         </div>
     </div>
