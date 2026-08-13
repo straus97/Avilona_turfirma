@@ -8,6 +8,13 @@
                 ENT_QUOTES
             )
         );
+        // Stage 13: серверный шлюз для аналитики. App\Support\CookieConsent —
+        // единственный источник истины для нормализации согласия, тот же
+        // класс использует App\Http\Middleware\CacheResponse для ключа
+        // кэша, поэтому эти два места не могут разойтись.
+        $avilonaAnalyticsConsent = \App\Support\CookieConsent::allowsAnalytics(
+            request()->cookie(\App\Support\CookieConsent::COOKIE_NAME)
+        );
     @endphp
     <!-- Кодировка страницы -->
     <meta charset="UTF-8">
@@ -66,6 +73,7 @@
     @yield('styles')
 </head>
 <body onload="initMap()">
+@include('includes.cookie-consent')
 {{-- шапка сайта --}}
 <div class="container mt-3">
     <header>
@@ -265,6 +273,7 @@
             <div class="col-12 col-sm-6 col-md-2 col-lg-2 mb-3">
                 <div class="row mb-3">
                     <h5>Метрика</h5>
+                    @if($avilonaAnalyticsConsent)
                     <div class="row mb-3 g-0">
                         <div class="col-6 col-md-12 col-xl-6">
                             {{-- счетчик liveinternet --}}
@@ -359,6 +368,7 @@
                             <!-- /Yandex.Metrika counter -->
                         </div>
                     </div>
+                    @endif
                     <div class="row">
                         <p><a href="https://avilona.ru/sitemap.xml" target="_blank">Карта сайта</a></p>
                     </div>
@@ -367,6 +377,12 @@
             <div class="row">
                 <p class="text-center mb-2 p-2">&copy; {{ date('Y') }} ООО «Авилона». Все
                     права защищены. Информация сайта защищена законом об авторских правах.</p>
+                <p class="text-center mb-2 p-2">
+                    <a href="{{ route('cookies.info') }}">Использование cookie</a>
+                    &nbsp;·&nbsp;
+                    <button type="button" id="cookie-settings-open"
+                            class="btn btn-link p-0 align-baseline">Настройки cookie</button>
+                </p>
             </div>
         </div>
     </div>
@@ -378,6 +394,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
+{{-- Cookie consent banner: сохранение выбора, перезагрузка, повторное открытие --}}
+<script src="{{ asset('js/cookie-consent.js') }}"></script>
 
 {{-- Дополнительные скрипты из дочерних шаблонов --}}
 @stack('scripts')

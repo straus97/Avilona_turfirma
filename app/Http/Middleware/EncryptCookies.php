@@ -12,6 +12,12 @@ class EncryptCookies extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        // Стage 13: cookie-баннер согласия пишет это cookie напрямую из JS
+        // (document.cookie), поэтому Laravel не должен пытаться его
+        // расшифровать как собственное зашифрованное cookie — иначе
+        // серверная проверка согласия всегда будет видеть null после
+        // перезагрузки страницы. Это единственное исключение; шифрование
+        // остальных cookie остаётся включённым.
+        'avilona_cookie_consent',
     ];
 }

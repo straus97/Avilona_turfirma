@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\CookieConsent;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +16,7 @@ class CacheResponse
             return $next($request);
         }
 
-        $cacheKey = $request->fullUrl();
+        $cacheKey = $this->cacheKey($request);
 
         if (Cache::has($cacheKey)) {
             return response(Cache::get($cacheKey));
@@ -34,5 +35,19 @@ class CacheResponse
     {
         // Исключать если пользователь авторизован, или URL содержит 'profile', 'logout'
         return $request->user() || $request->is('profile*') || $request->is('logout');
+    }
+
+    /**
+     * Stage 13: ключ кэша учитывает нормализованное (ровно три варианта)
+     * состояние согласия на cookie аналитики, чтобы ответ, отрисованный для
+     * одного состояния согласия, никогда не мог быть воспроизведён для
+     * другого. Сырое значение cookie в ключ не попадает — только
+     * нормализованное состояние из App\Support\CookieConsent.
+     */
+    protected function cacheKey(Request $request): string
+    {
+        $consentState = CookieConsent::normalize($request->cookie(CookieConsent::COOKIE_NAME));
+
+        return $request->fullUrl() . '|consent:' . $consentState;
     }
 }

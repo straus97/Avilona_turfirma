@@ -221,6 +221,11 @@ Route::group(['namespace' => 'HelpfulInformation'], function () {
     )->middleware('cache.response');
 });
 
+// Информация об использовании cookie (Stage 13: cookie consent)
+Route::get('/cookies', function () {
+    return view('legal.cookies');
+})->name('cookies.info');
+
 Route::group(['namespace' => 'Captcha'], function () {
     Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index")->middleware(
         'cache.response'
