@@ -41,7 +41,7 @@
                            style="background-color: #333333; color: #ffffff; display: inline-block; padding: 10px 20px; text-decoration: none; border-radius: 5px;"
                            target="_blank">Вернуться на сайт</a>
                         <p class="email_footer">С любовью, турфирма Авилона!<br>
-                            191119, Россия, Санкт-Петербург, Звенигородская улица, д. 22, офис 053<br>
+                            Адрес офиса: 198261, Россия, Санкт-Петербург, ул. Генерала Симоняка, д. 10<br>
                             +7 (921) 931-43-45, +7 (921) 984-20-22<br>
                             <a href="https://avilona.ru" target="_blank">avilona.ru</a></p>
                     </td>

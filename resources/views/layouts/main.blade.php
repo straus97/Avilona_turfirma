@@ -83,7 +83,7 @@
                         src="{{ asset('img/logo.png') }}" alt="Company Logo"
                         class="img-fluid"></a>
                 <div>
-                    <span class="d-block mb-1">Адрес: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</span>
+                    <span class="d-block mb-1">Адрес офиса: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</span>
                     <!-- Номера телефонов с кнопками для открытия модального окна -->
                     <span class="d-block mb-2">Телефон: <br>
                         <a href="#" onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</a> <br>
@@ -246,7 +246,7 @@
                 <p class="mt-2">Контактная информация</p>
                 <p>Тел.: <a href="#" onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</a></p>
                 <p>E-mail: <a href="mailto:avilonatur@bk.ru">avilonatur@bk.ru</a></p>
-                <p>Адрес: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
+                <p>Адрес офиса: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
             </div>
             <div class="col-12 col-sm-6 col-md-2 mb-3">
                 <h5>Краткое меню</h5>
