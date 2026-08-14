@@ -1,73 +1,72 @@
 # Avilona_turfirma — актуальная дорожная карта
 
-Дата checkpoint: **2026-08-11**
+Дата checkpoint: **2026-08-14**
 
-Последний функциональный checkpoint (не меняется Stage 12 работой):
+Текущий функциональный checkpoint:
 
 ```text
-f3279a425458e69b64927f7fdb3b19c5e277ad9f
-fix: invalidate stale sessions after password changes
+d66035541e8ab96a801b011168663758181c1e25
+feat: separate public personal data consent
 ```
 
-Текущий dependency checkpoint (Stage 12 закрыт):
+Родительский commit текущего функционального checkpoint:
 
 ```text
-61d2fef9ee30ecae2bc1f1d948e16ac2879b1aae
-chore: update picomatch to 2.3.2
-```
-
-Текущий репозиторный/документационный HEAD всегда определяется Git и
-после docs-only commit, фиксирующего эти правки, станет новее указанного
-dependency checkpoint — это не меняет ни последний функциональный
-checkpoint, ни его test baseline.
-
-Родительский commit последнего функционального checkpoint:
-
-```text
-2e6ed73e037f1714fa547a82b775f082ad3da973
-fix: make booking cancellation atomic
+6c5c33bede6530d3aae66a93a27c18e578c1330e
+fix: align public company details
 ```
 
 Предыдущий documentation/source checkpoint:
 
 ```text
-85a7b22ba398c752c487cbaa505aa32014dc37ad
-docs: close stage 11
+e067124c4323e82ab5d10d8e6aa1491029fb767b
+docs: close stage 12
 ```
 
-Предыдущий source set (Project Sources / handoff / manifest) сгенерирован
-на этом же предыдущем documentation/source checkpoint `85a7b22b` и
-остаётся текущим внешним source set до отдельного guarded source-refresh
-шага. Новый post-closure handoff, roadmap export, new-chat prompt,
-manifest и source archive ещё не сгенерированы в рамках этой
-documentation-only задачи — это отдельный source-refresh шаг после
-текущего commit, который должен быть выполнен и независимо проверен
-отдельно.
+Текущий репозиторный/документационный HEAD всегда определяется Git и
+после docs-only commit, фиксирующего эти правки, станет новее
+`d6603554` — это не меняет ни текущий функциональный checkpoint, ни его
+test baseline.
 
-Текущий тестовый baseline (после закрытия Stage 12; число тестов/assertions
-не изменилось при обновлении PHPUnit):
+Внешний source set (Project Sources / handoff / roadmap export /
+new-chat prompt / manifest / source archive) в рамках этой
+documentation-only задачи **не генерировался и не обновлялся**. Он должен
+быть создан и независимо проверен отдельным guarded source-refresh шагом
+из нового documentation HEAD.
+
+Текущий проверенный тестовый baseline (Stage 13):
 
 ```text
-Full:    644 tests / 2861 assertions
-Focused (финальный Stage 11 slice — password-change session invalidation): 17 tests / 82 assertions
+Full:    704 tests / 3128 assertions, exit code 0
+Focused (PublicPersonalDataConsentTest): 22 tests / 46 assertions
 PHPUnit 11.5.56
 SQLite :memory: (единственно допустимая БД для PHPUnit)
 Canonical migrations: 53 Ran / 0 Pending (последняя независимо проверенная
-  canonical-верификация; Stage 12 dependency-работа не требовала нового
-  canonical-прогона)
+  canonical-верификация; Stage 13 не добавлял миграций и не требовал
+  нового canonical-прогона)
 Canonical MySQL: turfirma_rebuild_v4, порт 3308
 PHP: C:\wamp\bin\php\php8.3.32\php.exe (8.3.32)
 ```
 
-Подтверждённое финальное окружение/toolchain Stage 12 (2026-08-11):
-PHP 8.3.32; canonical PHP executable
-`C:\wamp\bin\php\php8.3.32\php.exe`; Composer 2.8.3 (verified through
-`composer.phar` под PHP 8.3.32); Node.js 24.18.1; npm 11.12.1.
+Арифметика baseline независимо сверена: 682 tests / 3081 assertions
+(проверенный baseline непосредственно перед слайсом personal-data-consent)
++ 22 tests / 46 assertions нового `PublicPersonalDataConsentTest`
++ ровно 1 assertion, добавленный новым публичным маршрутом к существующему
+`PublicReviewDetailRouteConsistencyTest` (он выполняет по одному assertion
+на каждый зарегистрированный маршрут) = 704 tests / 3128 assertions.
+
+Подтверждённое окружение/toolchain (зафиксировано в Stage 12, файлы
+зависимостей в Stage 13 не менялись): PHP 8.3.32; canonical PHP executable
+`C:\wamp\bin\php\php8.3.32\php.exe`; Composer 2.8.3; Node.js 24.18.1;
+npm 11.12.1; Laravel 12.65.0; Vite 7.3.6 + `laravel-vite-plugin` 2.1.0.
 
 Известное non-blocking предупреждение: `phpunit.xml` использует deprecated
-schema — backlog item, не исправлено в Stage 12. Известное non-blocking
-предупреждение Vite из-за пересечения `publicDir`/`outDir` — также не
-исправлено в Stage 12.
+schema — backlog item, не исправлено. Зафиксированное в Stage 12
+предупреждение Vite о пересечении `publicDir`/`outDir` относится к
+конфигурации до `0316e7c7`: с этого коммита `publicDir` установлен в
+`false`, поэтому пересечения в конфигурации больше нет; отдельный
+подтверждающий production-build прогон в рамках Stage 13 документации не
+выполнялся.
 
 ## Сводный статус
 
@@ -82,7 +81,13 @@ schema — backlog item, не исправлено в Stage 12. Известно
 - Stage 10 — ✅ COMPLETE (12 slices)
 - Stage 11 — ✅ COMPLETE (17 slices; security, reliability, performance)
 - Stage 12 — ✅ COMPLETE (dependency upgrades; repository hygiene, Composer/npm security modernization, Laravel 12, Vite 7, npm audit = 0, Composer advisories = 0)
-- Stage 13 — 📋 PLANNED (production readiness) — next product stage
+- Stage 13 — 🚧 **IN PROGRESS** (production readiness / локальный runtime /
+  публичная поверхность / подготовка к деплою). **НЕ завершён**: 8 слайсов
+  завершено и запушено, разделы A–H остаются.
+
+Все числовые baseline и checkpoint внутри разделов закрытых этапов
+(Stage 5–12) сохранены **как исторические** и не описывают текущее
+состояние.
 
 ---
 
@@ -713,11 +718,12 @@ Guarded closure audit Stage 11 рассмотрел оставшиеся огр�
 ## Stage 12. Dependency upgrades — ✅ COMPLETE
 
 Stage 12 начат отдельным изолированным slice после стабилизации
-функционала (Stage 11 закрыт) и теперь завершён. Текущий dependency
-checkpoint — `61d2fef9ee30ecae2bc1f1d948e16ac2879b1aae`
+функционала (Stage 11 закрыт) и теперь завершён. Финальный dependency
+checkpoint Stage 12 — `61d2fef9ee30ecae2bc1f1d948e16ac2879b1aae`
 (`chore: update picomatch to 2.3.2`). Это dependency checkpoint, не
-functional checkpoint — последний функциональный checkpoint остаётся
-`f3279a42` и не менялся Stage 12 работой.
+functional checkpoint; функциональным checkpoint на момент закрытия
+Stage 12 оставался `f3279a42`. **Оба значения исторические** — текущий
+функциональный checkpoint указан в начале документа.
 
 Ledger (историческая хронология первых слайсов, затем закрывающая работа):
 
@@ -801,10 +807,12 @@ Ledger (историческая хронология первых слайсо�
 корневой `picomatch` 2.3.2; webpack и sass/sass-loader удалены как
 неиспользуемые.
 
-Test/migration baseline: full PHPUnit 644 tests / 2861 assertions под
-PHPUnit 11.5.56 (число тестов/assertions не изменилось), canonical
-migrations 53 Ran / 0 Pending (Stage 12 dependency-работа не требовала
-нового canonical-прогона).
+Test/migration baseline **на момент закрытия Stage 12 (историческое
+значение, не текущее)**: full PHPUnit 644 tests / 2861 assertions под
+PHPUnit 11.5.56 (число тестов/assertions не изменилось при обновлении
+PHPUnit), canonical migrations 53 Ran / 0 Pending (Stage 12
+dependency-работа не требовала нового canonical-прогона). Текущий
+проверенный baseline — 704 tests / 3128 assertions, см. начало документа.
 
 Отложенное обслуживание (не блокеры закрытия Stage 12):
 
@@ -826,26 +834,153 @@ migrations 53 Ran / 0 Pending (Stage 12 dependency-работа не требо�
 считать Stage 12 незакрытым; верифицированные security-аудиты (npm и
 Composer) на момент закрытия Stage 12 чисты.
 
-Stage 12 **закрыт**.
+Stage 12 **закрыт**; документационное закрытие зафиксировано commit
+`e067124c` (`docs: close stage 12`).
 
-Следующий шаг: отдельный guarded Project Sources refresh — отдельное
-guarded документационное/repository-management действие,
-предшествующее началу Stage 13. Project Sources в рамках Stage 12 не
-генерировались и не обновлялись. После Project Sources refresh
-следующий продуктовый этап — **Stage 13. Production readiness**; она не
-начата.
+## Stage 13. Production readiness и публичная поверхность — 🚧 IN PROGRESS
 
-## Stage 13. Production readiness — 📋
+Stage 13 **начат и не закрыт**. Линейная цепочка коммитов от Stage 12
+closure commit `e067124c` до текущего HEAD `d6603554`. Зависимости и
+миграции в Stage 13 не менялись.
 
-- deployment и rollback;
-- production backup;
-- queues и cron;
-- asset build;
-- `APP_DEBUG=false`;
-- SSL;
-- private storage;
-- production smoke;
-- monitoring.
+### Завершено и запушено (8 слайсов)
+
+1. `0316e7c73b454ea59899deb3c57247853606a99c` — `build: stop tracking
+   generated Vite output`. 2288 путей под `public/build/` убраны из Git
+   index (`.gitignore` уже содержал `/public/build`); в `vite.config.js`
+   `publicDir` изменён с `'public'` на `false`, устранив пересечение
+   `publicDir`/`outDir` в конфигурации. Composer/npm не запускались.
+2. `712ff965e98af3fff74068694436d0793e98aa20` — `fix: resolve public
+   browser runtime errors`. `lazysizes` переведён с `async` на `defer`;
+   присвоение `summary.textContent` в каталоге туров защищено проверкой
+   существования элемента.
+3. `1b66c5484ff8ccfe9cbcf07fb312e41fdbaf4774` — `fix: improve mobile
+   responsive layout`. Формы «Контакты»/«Отзывы» переведены на
+   `col-12 col-md-6`; блок отзыва — на `col-3` / `col-9` на мобильных;
+   добавлен переносимый центрируемый блок `.pagination`.
+4. `3000c2984ddb2a055ae95057356cbdd54c225e50` — `fix: refine tablet
+   responsive layout`. Колонка счётчиков в подвале — `col-6 col-md-12
+   col-xl-6` с `g-0`; блок отзыва уточнён до `col-md-2` / `col-md-10` и
+   `col-lg-1` / `col-lg-11`.
+5. `88d0fcc6689cbfb3091bb8eab523aee1950198c2` — `fix: clean up public
+   development notices`. Удалено модальное окно «Важная информация» с
+   текстом о том, что сайт находится в стадии активной разработки, вместе
+   с личным email для сообщений об ошибках, и все три кнопки его вызова;
+   из подвалов публичного и профильного layout убран персональный кредит
+   разработчика со ссылкой на личный профиль; год копирайта стал
+   динамическим (`{{ date('Y') }}`) вместо 2024 / 2023.
+6. `a9bf145d32cacc9d3761a0265e32eb69e4c828df` — `feat: add cookie consent
+   and analytics gating`. Стабильное поведение: cookie
+   `avilona_cookie_consent` со значениями `v1_all` / `v1_necessary`
+   (любое иное, отсутствующее или несовпадающее по версии значение
+   нормализуется в `undecided`); аналитика (Яндекс.Метрика, LiveInternet,
+   Top.Mail.Ru) рендерится сервером **только** при согласии на аналитику;
+   публичная информационная страница `GET /cookies` (`cookies.info`);
+   постоянная точка входа «Настройки cookie» в подвале для изменения
+   выбора; `App\Support\CookieConsent` — единственный источник истины
+   нормализации; `CacheResponse` изолирует кэш по согласию, добавляя
+   нормализованное состояние в ключ, что ограничивает число вариантов
+   кэша на URL тремя; ad-hoc кэши страниц «Контакты» и «Словарь
+   путешественника» удалены; `avilona_cookie_consent` внесён в
+   `EncryptCookies::$except` как единственное исключение.
+7. `6c5c33bede6530d3aae66a93a27c18e578c1330e` — `fix: align public company
+   details`. Фактический адрес офиса — 198261, Россия, Санкт-Петербург,
+   ул. Генерала Симоняка, д. 10; юридический адрес — 191119, Россия,
+   Санкт-Петербург, ул. Звенигородская, д. 22, литера А, офис 053,
+   пом. 7Н; ИНН 7805502454; КПП 784001001; ОГРН 1097847289803.
+   Юридический и фактический адреса **намеренно различаются**.
+8. `d66035541e8ab96a801b011168663758181c1e25` — `feat: separate public
+   personal data consent` (текущий HEAD). «Главная» и «Контакты» получили
+   два независимых обязательных подтверждения: `agree` (Пользовательское
+   соглашение) и `personal_data_consent` (отдельное согласие на обработку
+   персональных данных); оба серверных правила используют `accepted`;
+   добавлен публичный маршрут `GET /personal-data-consent`
+   (`personal_data_consent.info`) с отдельной visitor-facing страницей,
+   ссылающейся на существующую политику обработки персональных данных;
+   evidence согласия (отметка времени, версия, объём, IP) **не
+   сохраняется**; миграций не добавлялось; «Отзывы», «Регистрация» и
+   «Бронирование» намеренно не менялись.
+
+### Локальный runtime и браузерные evidence
+
+Для Stage 13 настроен изолированный локальный WAMP-стенд браузерной
+проверки Avilona: `avilona.local` → `127.0.0.2`, без изменения обычных
+проектов на `localhost`. Приватные файлы evidence в репозиторий не
+копируются.
+
+Последняя браузерная QA раздельного согласия («Главная» + «Контакты»):
+desktop1440 1440×1000 — PASS; mobile390 390×844 — PASS; проверены
+маршруты `/`, `/contacts`, `/personal-data-consent`; два отдельных
+обязательных элемента согласия подтверждены в реальном DOM; независимость
+их состояний подтверждена; ссылка на Пользовательское соглашение
+проверена; ссылка на страницу согласия проверена; страница согласия
+доступна анонимно; ссылка на PDF политики проверена; горизонтального
+переполнения нет; исключений локального runtime нет; ошибок консоли нет;
+отправка формы не выполнялась; запросов к провайдерам не выполнялось;
+репозиторий остался неизменным.
+
+### Оставшийся путь Stage 13 до production и передачи
+
+Ни один пункт ниже не реализован, и ни одно перечисленное решение не
+является утверждённым.
+
+**A. Согласие на обработку персональных данных / публикацию для отзывов.**
+Известные границы: форма отзывов по-прежнему содержит старую объединённую
+формулировку и правило `agree => required`; содержимое отзыва и имя могут
+публиковаться публично; email требуется формой, но текущей реализацией не
+сохраняется. Требуется отдельный рассмотренный slice. Финальные
+юридические формулировки в этих канонических документах не фиксируются.
+
+**B. Согласие и применимость политики для публичной регистрации.**
+Известные границы: публичная регистрация собирает имя, email и пароль;
+текущая документальная/политическая база не покрывает явно цель обработки
+«создание аккаунта / личный кабинет». Требуется отдельное
+контентное/юридическое/бизнес-решение до реализации.
+
+**C. Решение о хранении evidence согласия.** Текущее согласие на
+«Главной»/«Контактах» валидируется, но не сохраняется. Возможное будущее
+хранение отметки времени, версии, объёма и факта отзыва **не реализовано**
+и не должно представляться как принятое решение. Любая работа со
+схемой/миграциями остаётся отдельно gated.
+
+**D. Гостевой сценарий бронирования.** Отдельный известный функциональный
+дефект: публичный UI бронирования и защищённый `auth` endpoint
+бронирования не согласованы для реального анонимного гостевого потока.
+Не исправляется документацией и не смешивается с работой по согласиям.
+
+**E. Финальная локальная проверка production-readiness.**
+
+**F. Деплой на хостинг по отдельному guarded операционному плану.**
+
+**G. Production smoke-проверка после деплоя.**
+
+**H. Финальный независимый аудит сайта после production-валидации:**
+визуальное оформление; вёрстка/UX; контент; функциональность;
+ошибки/незавершённые области; адаптивность; общее качество передачи.
+Аудит **ещё не выполнялся**.
+
+Ранее зафиксированные production-readiness пункты остаются в области
+Stage 13 и распределяются по разделам E–G: deployment и rollback;
+production backup; queues и cron (сейчас `QUEUE_CONNECTION=sync`, worker и
+scheduler не привязаны к реальному cron / Task Scheduler); asset build;
+`APP_DEBUG=false`; SSL; private storage; production smoke; monitoring.
+
+### Граница по поиску туров / агрегатору
+
+Текущий виджет поиска/подбора туров — **временная заглушка**. Он
+намеренно не доводится до финального вида в рамках текущей Stage 13
+работы по согласиям и юридическим материалам.
+
+Итоговое решение — отдельное продуктовое решение более позднего этапа,
+которое должно оценить: реалистичные доступные/бесплатные варианты
+виджетов и агрегаторов; API/фиды туроператоров; собственный поиск и
+агрегацию; и только после этого — скрапинг там, где это допустимо по
+условиям использования и стабильно. Любое итоговое решение должно
+укладываться в существующий процесс личного кабинета и заявок/заказов
+клиента Avilona.
+
+Реальные запросы к провайдерам и провайдерские интеграции в рамках
+Stage 13 документационной работы не инициировались.
 
 ---
 
@@ -869,7 +1004,8 @@ guarded документационное/repository-management действие,
 - mark-all-read действие;
 - Telegram/SMS-доставка уведомлений;
 - queue-worker deployment configuration (Supervisor/systemd) — сейчас
-  `QUEUE_CONNECTION=sync`, отдельный operational plan до Stage 13;
+  `QUEUE_CONNECTION=sync`; относится к области Stage 13 (разделы E–F) и
+  требует отдельного operational plan;
 - scheduler operational wiring (production cron / Windows Task Scheduler
   для `schedule:run`) — команда `bookings:send-trip-reminders` уже
   реализована и запланирована в `app/Console/Kernel.php`, но не привязана
@@ -884,6 +1020,10 @@ guarded документационное/repository-management действие,
   кандидат, но не выбран в качестве финального Stage 11 слайса и **не**
   устраняется admin chat-list оптимизацией (слайс 15, `52e1c2e3`);
   требует отдельного рассмотрения;
+- email в форме отзывов требуется валидацией, но не сохраняется текущей
+  реализацией — рассматривать вместе со Stage 13, раздел A, а не отдельно;
+- рассогласование публичного UI бронирования и защищённого `auth` endpoint
+  бронирования для анонимного гостя — Stage 13, раздел D;
 - available_seats как предполагаемый authoritative application-owned
   inventory counter для бронирований — Stage 11 closure audit не нашёл
   достаточных оснований классифицировать текущее поведение booking
@@ -891,6 +1031,13 @@ guarded документационное/repository-management действие,
   работа здесь требует отдельного booking-inventory design decision.
 
 ## Жёсткие ограничения
+
+Обязательные условия работы:
+
+- единственный допустимый PHP executable проекта:
+  `C:\wamp\bin\php\php8.3.32\php.exe` (глобальный `php` может указывать на
+  PHP 8.4.13);
+- PHPUnit запускается только с SQLite `:memory:`.
 
 Без отдельного утверждённого плана запрещено:
 
@@ -913,37 +1060,30 @@ guarded документационное/repository-management действие,
 
 ## Ближайший следующий шаг
 
-Stage 10, Stage 11 и Stage 12 закрыты. Stage 11 (security, reliability,
-performance) **завершён** — 17 функциональных semantic slice. Финальный
-функциональный checkpoint — `f3279a425458e69b64927f7fdb3b19c5e277ad9f`
-(`fix: invalidate stale sessions after password changes`, см. раздел
-Stage 11 выше); он не меняется ни публикацией текущего docs-only
-checkpoint, ни Stage 12 dependency-работой.
+Stage 0–12 закрыты. **Stage 13 находится в работе** и не закрыт. Текущий
+функциональный checkpoint — `d66035541e8ab96a801b011168663758181c1e25`
+(`feat: separate public personal data consent`).
 
-1. Guarded closure audit Stage 11 выбрал финальным кандидатом
-   password-session invalidation; он реализован, протестирован,
-   закоммичен и запушен (слайс 17).
-2. Stage 12 (Dependency upgrades) **завершён** (см. раздел «Stage 12.
-   Dependency upgrades — ✅ COMPLETE» выше): repository hygiene для
-   `vendor`/`node_modules`, Composer dependency/security модернизация,
-   Laravel framework модернизация до Laravel 12, frontend
-   dependency/security модернизация, удаление неиспользуемых
-   webpack/sass инструментов, миграция на Vite 7 + `laravel-vite-plugin`
-   2, обновление Tailwind до 3.4.19, security-исправление `picomatch` до
-   2.3.2, финальный `npm audit` = 0, финальные Composer advisories = 0 и
-   abandoned packages = 0, production build validation и полная
-   верификация PHPUnit (644 tests / 2861 assertions) выполнены и
-   подтверждены. Отложенное non-security и major-обслуживание
-   перечислено в разделе Stage 12 и не является блокером.
-3. Следующее отдельное guarded действие — Project Sources refresh (не
-   выполняется в рамках этого documentation-only коммита и не выполнено
-   в рамках этой задачи): новый post-closure handoff, roadmap export,
-   new-chat prompt, manifest и source archive должны быть сгенерированы
-   и независимо проверены. Предыдущий source set остаётся привязан к
-   `85a7b22b`.
-4. После Project Sources refresh следующий продуктовый этап —
-   **Stage 13. Production readiness**. Она **не начата** и не одобрена
-   в рамках этой documentation-only задачи.
-5. Как и для каждого предыдущего слайса и этапа — миграции, canonical DB
+1. Завершённая часть Stage 13 (8 слайсов) перечислена в разделе
+   «Stage 13 … — 🚧 IN PROGRESS» выше и уже запушена.
+2. Ближайшее отдельное guarded действие — **Project Sources refresh** из
+   нового documentation HEAD, создаваемого этими правками: новый handoff,
+   roadmap export, new-chat prompt, manifest и source archive должны быть
+   сгенерированы и независимо проверены. В рамках этой documentation-only
+   задачи они **не генерировались**.
+3. Затем — оставшаяся работа Stage 13 по разделам A–H. Разделы A
+   (согласие для отзывов), B (согласие/применимость политики для
+   регистрации) и C (хранение evidence согласия) требуют отдельных
+   контентных/юридических/бизнес-решений до реализации и **не одобрены**.
+4. Раздел D (гостевой сценарий бронирования) — отдельный функциональный
+   дефект; его нельзя смешивать с работой по согласиям.
+5. Разделы E–G (финальная локальная проверка production-readiness, деплой
+   по отдельному guarded операционному плану, production smoke) выполняются
+   строго в этом порядке.
+6. Раздел H — финальный независимый аудит сайта — выполняется **после**
+   production-валидации и ещё не проводился.
+7. Итоговое решение по поиску/агрегации туров — отдельное продуктовое
+   решение; текущий виджет остаётся временной заглушкой.
+8. Как и для каждого предыдущего слайса и этапа — миграции, canonical DB
    операции, production-интеграции и деструктивные действия выполнять
    только по отдельному guarded плану.
