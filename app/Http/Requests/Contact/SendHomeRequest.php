@@ -27,7 +27,21 @@ class SendHomeRequest extends FormRequest
             'subject' => '',
             'message' => 'required|min:50',
             'captcha' => 'required|captcha',
-            'agree' => 'required',
+            'agree' => 'accepted',
+            'personal_data_consent' => 'accepted',
+        ];
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'agree.accepted' => 'Необходимо принять условия Пользовательского соглашения.',
+            'personal_data_consent.accepted' => 'Необходимо дать согласие на обработку персональных данных.',
         ];
     }
 }

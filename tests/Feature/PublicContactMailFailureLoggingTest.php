@@ -41,6 +41,7 @@ class PublicContactMailFailureLoggingTest extends TestCase
             'message' => str_repeat('A', 60),
             'captcha' => 'anything',
             'agree'   => '1',
+            'personal_data_consent' => '1',
         ];
     }
 

@@ -226,6 +226,9 @@ Route::get('/cookies', function () {
     return view('legal.cookies');
 })->name('cookies.info');
 
+// Информация о согласии на обработку персональных данных (Stage 13: personal data consent)
+Route::view('/personal-data-consent', 'legal.personal-data-consent')->name('personal_data_consent.info');
+
 Route::group(['namespace' => 'Captcha'], function () {
     Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index")->middleware(
         'cache.response'

@@ -144,14 +144,22 @@
                         </div>
                     </div>
                     <div class="mb-3 form-check">
-                        <label class="form-check-label" for="agree">Нажимая кнопку, я принимаю условия <a
+                        <input type="checkbox" class="form-check-input" id="agree" name="agree" required>
+                        <label class="form-check-label" for="agree">Я принимаю условия <a
                                 href="{{ asset('/documents/User_Agreement.pdf') }}"
                                 target="_blank">Пользовательского
-                                соглашения</a> и даю своё согласие на обработку моих персональных данных, в соответствии
-                            с Федеральным законом от 27.07.2006 года №152-ФЗ «О персональных данных»</label>
-                        <input type="checkbox" class="form-check-input" id="agree" name="agree" required>
+                                соглашения</a></label>
                         <div class="invalid-feedback">
                             Пожалуйста, прочтите и отметьте свое согласие с условиями Пользовательского соглашения
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="personal_data_consent" name="personal_data_consent" required>
+                        <label class="form-check-label" for="personal_data_consent">Я даю <a
+                                href="{{ route('personal_data_consent.info') }}"
+                                target="_blank">согласие на обработку персональных данных</a></label>
+                        <div class="invalid-feedback">
+                            Пожалуйста, дайте согласие на обработку персональных данных
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Отправить</button>
