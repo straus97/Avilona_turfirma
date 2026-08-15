@@ -486,11 +486,11 @@
                                     <img src="{{ asset($item_reviews->image) }}" class="mr-2" alt="User Avatar"
                                          style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
                                     @endif
-                                    <h5 class="card-title mb-0">{!! $item_reviews->name ?? 'Анонимный пользователь' !!}</h5>
+                                    <h5 class="card-title mb-0">{{ $item_reviews->name ?? 'Анонимный пользователь' }}</h5>
                                 </div>
-                                <p class="content card-text">{!! Str::limit($item_reviews->content ?? '', 200) !!}</p>
+                                <p class="content card-text">{{ Str::limit($item_reviews->content ?? '', 200) }}</p>
                                 @if($item_reviews->content && strlen($item_reviews->content) > 200)
-                                    <p class="full-content d-none">{!! $item_reviews->content !!}</p>
+                                    <p class="full-content d-none">{{ $item_reviews->content }}</p>
                                     <button class="btn btn-primary btn-sm read-more mt-2">Читать полностью</button>
                                 @endif
                             </div>
