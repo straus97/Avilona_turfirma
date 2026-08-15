@@ -23,11 +23,10 @@ class CreateRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email',
             'subject' => '',
             'message' => 'required|min:50',
             'captcha' => 'required|captcha',
-            'agree' => 'required',
+            'agree' => 'accepted',
         ];
     }
 }

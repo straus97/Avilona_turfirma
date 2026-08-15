@@ -85,7 +85,7 @@
                                                 aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Ваш отзыв был успешно отправлен!
+                                        Ваш отзыв успешно отправлен на модерацию!
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -116,12 +116,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="alert alert-info">
+                            Отзыв сначала поступит на модерацию и не публикуется автоматически. После одобрения он
+                            может быть опубликован на avilona.ru с указанным вами именем.
+                        </div>
                         <form action="{{ route('review_create.index') }}" id="review_create" method="post"
                               class="needs-validation"
                               novalidate>
                             @csrf
                             <div class="row">
-                                <div class="col-12 col-md-6 mb-3">
+                                <div class="col-12 mb-3">
                                     <label for="name" class="form-label">Ваше имя</label>
                                     <input type="text" class="form-control" id="name" name="name"
                                            placeholder="Например, Никита"
@@ -131,17 +135,6 @@
                                     </div>
                                     <div class="invalid-feedback">
                                         Пожалуйста, введите свое имя
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email"
-                                           placeholder="Например, test@mail.ru" value="{{ old('email') }}" required>
-                                    <div class="valid-feedback">
-                                        Поле заполнено верно!
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        Пожалуйста, введите корректный email
                                     </div>
                                 </div>
                             </div>
