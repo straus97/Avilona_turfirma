@@ -5,8 +5,9 @@
     avilona_cookie_consent (v1_all / v1_necessary), чтобы избежать мигания
     при загрузке страницы. public/js/cookie-consent.js дополнительно
     подстраховывает это на клиенте (например, если markup был отдан из кэша
-    cache.response для другого посетителя) и обрабатывает сохранение выбора,
-    перезагрузку страницы и повторное открытие баннера через "Настройки cookie".
+    cache.response для другого посетителя) и обрабатывает сохранение выбора
+    (без перезагрузки страницы, кроме отзыва v1_all -> v1_necessary) и
+    повторное открытие баннера через "Настройки cookie".
 --}}
 @php
     $avilonaCookieConsentIsValid = \App\Support\CookieConsent::isValid(

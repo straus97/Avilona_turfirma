@@ -5,8 +5,14 @@
  *  - прочитать cookie согласия и проверить, что значение валидно;
  *  - показать/скрыть баннер;
  *  - сохранить выбор посетителя в first-party cookie с нужными атрибутами;
- *  - перезагрузить страницу после сохранения выбора (сервер сам решит,
- *    показывать ли аналитику, на основании отправленного cookie);
+ *  - для обычных выборов — сохранить cookie и скрыть баннер без перезагрузки
+ *    страницы (аналитика, если разрешена, включится на следующей обычной
+ *    навигации — сервер сам решает, показывать ли её, на основании
+ *    отправленного cookie);
+ *  - если посетитель отзывает уже действующее согласие v1_all в пользу
+ *    v1_necessary, страница перезагружается, потому что аналитика могла уже
+ *    исполняться в текущем документе, и перезагрузка — простой способ
+ *    остановить её под новым серверным гейтингом;
  *  - повторно открыть баннер по действию "Настройки cookie" в подвале.
  *
  * Модуль не собирает аналитику, не отправляет сетевые запросы и не хранит
@@ -47,9 +53,21 @@
         document.cookie = attributes.join('; ');
     }
 
-    function saveChoiceAndReload(value) {
+    function saveChoice(value, banner) {
+        var previousConsent = readCookie(COOKIE_NAME);
         writeConsentCookie(value);
-        window.location.reload();
+
+        // Отзыв уже действующего согласия v1_all -> v1_necessary: аналитика
+        // могла уже исполняться в текущем документе, поэтому перезагружаем
+        // страницу, чтобы серверный гейтинг применился к текущему документу.
+        if (previousConsent === 'v1_all' && value === 'v1_necessary') {
+            window.location.reload();
+            return;
+        }
+
+        if (banner) {
+            banner.hidden = true;
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -67,13 +85,13 @@
 
         if (acceptAllBtn) {
             acceptAllBtn.addEventListener('click', function () {
-                saveChoiceAndReload('v1_all');
+                saveChoice('v1_all', banner);
             });
         }
 
         if (acceptNecessaryBtn) {
             acceptNecessaryBtn.addEventListener('click', function () {
-                saveChoiceAndReload('v1_necessary');
+                saveChoice('v1_necessary', banner);
             });
         }
 
