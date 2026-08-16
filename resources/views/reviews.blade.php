@@ -29,9 +29,6 @@
                                 <div class="col-9 col-md-10 col-lg-11">
                                     <h5>{{ $item_review->name ?? 'Анонимный пользователь' }}</h5>
                                     <p class="text-muted">{{ $item_review->created_at ? \Carbon\Carbon::parse($item_review->created_at)->translatedFormat('j F Y г.') : '' }}</p>
-                                    @if($item_review->title)
-                                    <h6>{{ $item_review->title }}</h6>
-                                    @endif
                                     <p class="content">{{ Str::limit($item_review->content ?? '', 200) }}</p>
                                     @if($item_review->content && strlen($item_review->content) > 200)
                                         <p class="full-content d-none">{{ $item_review->content }}</p>
@@ -138,16 +135,38 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="subject" class="form-label">Тема</label>
-                                <input type="text" class="form-control" id="subject" name="subject"
-                                       placeholder="Тема вашего обращения..." value="{{ old('subject') }}">
-                                <div class="valid-feedback">
-                                    Вы можете оставить пустым это поле, если не знаете какую тему указать
+                            <div class="alert alert-secondary">
+                                Данные ниже (ФИО и email для оформления согласия) используются только для оформления
+                                и, при необходимости, отзыва согласия. Они не публикуются вместе с отзывом.
+                            </div>
+                            <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="consent_full_name" class="form-label">ФИО для оформления согласия</label>
+                                    <input type="text" class="form-control" id="consent_full_name" name="consent_full_name"
+                                           placeholder="Иванов Иван Иванович"
+                                           value="{{ old('consent_full_name') }}" required>
+                                    <div class="valid-feedback">
+                                        Поле заполнено верно!
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите ФИО для оформления согласия
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="consent_email" class="form-label">Email для оформления и отзыва согласия</label>
+                                    <input type="email" class="form-control" id="consent_email" name="consent_email"
+                                           placeholder="example@mail.ru"
+                                           value="{{ old('consent_email') }}" required>
+                                    <div class="valid-feedback">
+                                        Поле заполнено верно!
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите корректный email
+                                    </div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="message" class="form-label">Ваше сообщение</label>
+                                <label for="message" class="form-label">Ваш отзыв</label>
                                 <textarea class="form-control" id="message" rows="5" name="message"
                                           placeholder="Введите свое сообщение..."
                                           minlength="50" required>{{ old('message') }}</textarea>
@@ -156,6 +175,16 @@
                                 </div>
                                 <div class="invalid-feedback">
                                     Пожалуйста, введите свое сообщение. Минимум 50 символов. Сейчас <span class="count">0</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="publication_conditions" class="form-label">Условия или запреты для публикации (необязательно)</label>
+                                <textarea class="form-control" id="publication_conditions" rows="3"
+                                          name="publication_conditions"
+                                          placeholder="Например: не публиковать телефон/адрес и т.п.">{{ old('publication_conditions') }}</textarea>
+                                <div class="form-text">
+                                    Необязательное поле. Здесь можно указать условия или запреты для публикации отзыва
+                                    (это не текст самого отзыва).
                                 </div>
                             </div>
                             <div class="form-group">
@@ -183,15 +212,39 @@
                                 </div>
                             </div>
                             <div class="mb-3 form-check">
-                                <label class="form-check-label" for="agree">Нажимая кнопку, я принимаю условия <a
-                                        href="{{ asset('/documents/User_Agreement.pdf') }}" target="_blank">Пользовательского
-                                        соглашения</a> и даю своё согласие на
-                                    обработку моих персональных данных, в соответствии с Федеральным законом от
-                                    27.07.2006 года №152-ФЗ «О персональных данных»</label>
-                                <input type="checkbox" class="form-check-input" id="agree" name="agree" required>
+                                <input type="checkbox" class="form-check-input" id="user_agreement_accepted"
+                                       name="user_agreement_accepted" required>
+                                <label class="form-check-label" for="user_agreement_accepted">
+                                    Я принимаю условия
+                                    <a href="{{ asset('/documents/User_Agreement.pdf') }}" target="_blank" rel="noopener">
+                                        Пользовательского соглашения</a>.
+                                </label>
                                 <div class="invalid-feedback">
-                                    Пожалуйста, прочтите и отметьте свое согласие с условиями Пользовательского
-                                    соглашения
+                                    Пожалуйста, примите условия Пользовательского соглашения
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="personal_data_consent_accepted"
+                                       name="personal_data_consent_accepted" required>
+                                <label class="form-check-label" for="personal_data_consent_accepted">
+                                    Я даю согласие на обработку моих персональных данных для направления отзыва.
+                                    Подробнее —
+                                    <a href="{{ route('review_personal_data_consent.info') }}" target="_blank" rel="noopener">
+                                        согласие на обработку персональных данных при направлении отзыва</a>.
+                                </label>
+                                <div class="invalid-feedback">
+                                    Пожалуйста, дайте согласие на обработку персональных данных
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="review_publication_consent_accepted"
+                                       name="review_publication_consent_accepted" required>
+                                <label class="form-check-label" for="review_publication_consent_accepted">
+                                    Я даю согласие на публикацию моего отзыва и указанного мной имени на avilona.ru после модерации.
+                                    <a href="{{ route('review_publication_consent.info') }}" target="_blank" rel="noopener">Читать согласие на публикацию</a>.
+                                </label>
+                                <div class="invalid-feedback">
+                                    Пожалуйста, дайте согласие на публикацию отзыва
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary">Отправить</button>

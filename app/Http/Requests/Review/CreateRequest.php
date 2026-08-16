@@ -22,11 +22,15 @@ class CreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
-            'subject' => '',
-            'message' => 'required|min:50',
+            'name' => 'required|string|max:255',
+            'consent_full_name' => 'required|string|max:255',
+            'consent_email' => 'required|email|max:255',
+            'message' => 'required|string|min:50',
+            'publication_conditions' => 'nullable|string|max:2000',
             'captcha' => 'required|captcha',
-            'agree' => 'accepted',
+            'user_agreement_accepted' => 'accepted',
+            'personal_data_consent_accepted' => 'accepted',
+            'review_publication_consent_accepted' => 'accepted',
         ];
     }
 }

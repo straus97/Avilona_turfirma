@@ -279,11 +279,14 @@ class ReviewPublicCacheConsistencyTest extends TestCase
 
         $response = $this->post(route('review_create.index'), [
             'name' => 'Submitting Tourist',
-            'email' => 'tourist@example.com',
-            'subject' => 'Trip feedback',
+            'consent_full_name' => 'Submitting Tourist Full Name',
+            'consent_email' => 'tourist@example.com',
             'message' => 'SUBMITTED-REVIEW-MARKER-1010 ' . str_repeat('x', 60),
+            'publication_conditions' => '',
             'captcha' => 'anything',
-            'agree' => '1',
+            'user_agreement_accepted' => '1',
+            'personal_data_consent_accepted' => '1',
+            'review_publication_consent_accepted' => '1',
         ]);
 
         $response->assertRedirect(route('review.index'));
