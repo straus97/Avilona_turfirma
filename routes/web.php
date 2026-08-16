@@ -229,6 +229,12 @@ Route::get('/cookies', function () {
 // Информация о согласии на обработку персональных данных (Stage 13: personal data consent)
 Route::view('/personal-data-consent', 'legal.personal-data-consent')->name('personal_data_consent.info');
 
+// Согласие на обработку персональных данных при направлении отзыва (Stage 13 C2)
+Route::view('/reviews/personal-data-consent', 'legal.review-personal-data-consent')->name('review_personal_data_consent.info');
+
+// Согласие на публикацию отзыва и имени (Stage 13 C2)
+Route::view('/reviews/publication-consent', 'legal.review-publication-consent')->name('review_publication_consent.info');
+
 Route::group(['namespace' => 'Captcha'], function () {
     Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index")->middleware(
         'cache.response'
