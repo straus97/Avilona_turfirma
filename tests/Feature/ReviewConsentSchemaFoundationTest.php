@@ -43,6 +43,7 @@ class ReviewConsentSchemaFoundationTest extends TestCase
             'review_publication_consent_version',
             'publication_scope',
             'publication_conditions',
+            'publication_conditions_satisfied_at',
             'review_payload_sha256',
             'withdrawn_at',
             'created_at',
@@ -52,9 +53,50 @@ class ReviewConsentSchemaFoundationTest extends TestCase
         $this->assertTrue(Schema::hasColumns('review_consents', $expectedColumns));
     }
 
+    // -----------------------------------------------------------------------
+    // A2. Stage 13 C4A: publication_conditions_satisfied_at foundation
+    // -----------------------------------------------------------------------
+
+    public function test_publication_conditions_satisfied_at_is_nullable_and_null_by_default(): void
+    {
+        $review = $this->makeReview();
+
+        $consent = ReviewConsent::create($this->consentPayload($review->id));
+
+        $this->assertNull($consent->publication_conditions_satisfied_at);
+
+        $this->assertDatabaseHas('review_consents', [
+            'id' => $consent->id,
+            'publication_conditions_satisfied_at' => null,
+        ]);
+    }
+
+    public function test_publication_conditions_satisfied_at_is_cast_to_datetime(): void
+    {
+        $review = $this->makeReview();
+
+        $consent = ReviewConsent::create($this->consentPayload($review->id));
+
+        $consent->publication_conditions_satisfied_at = now();
+        $consent->save();
+        $consent->refresh();
+
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $consent->publication_conditions_satisfied_at);
+    }
+
+    public function test_review_payload_sha256_remains_char_64_and_unchanged(): void
+    {
+        $review = $this->makeReview();
+
+        $consent = ReviewConsent::create($this->consentPayload($review->id));
+
+        $this->assertSame(64, strlen($consent->review_payload_sha256));
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $consent->review_payload_sha256);
+    }
+
     public function test_review_consents_table_does_not_contain_forbidden_collection_fields(): void
     {
-        $forbidden = ['ip_address', 'ip', 'user_agent', 'phone', 'session_id'];
+        $forbidden = ['ip_address', 'ip', 'user_agent', 'phone', 'session_id', 'original_content', 'original_name'];
 
         foreach ($forbidden as $column) {
             $this->assertFalse(

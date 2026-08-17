@@ -38,6 +38,7 @@ class ReviewConsent extends Model
         'review_publication_consent_accepted_at' => 'datetime',
         'withdrawn_at' => 'datetime',
         'publication_scope' => 'array',
+        'publication_conditions_satisfied_at' => 'datetime',
     ];
 
     public function review(): BelongsTo
