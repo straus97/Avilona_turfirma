@@ -117,10 +117,15 @@
                             Отзыв сначала поступит на модерацию и не публикуется автоматически. После одобрения он
                             может быть опубликован на avilona.ru с указанным вами именем.
                         </div>
-                        <form action="{{ route('review_create.index') }}" id="review_create" method="post"
+                        <form action="{{ route('review_create.index') }}" id="review-form" method="post"
                               class="needs-validation"
                               novalidate>
                             @csrf
+                            @if ($errors->any())
+                                <div class="alert alert-danger" role="alert">
+                                    Отзыв не отправлен. Проверьте выделенные поля и попробуйте ещё раз.
+                                </div>
+                            @endif
                             <div class="row">
                                 <div class="col-12 mb-3">
                                     <label for="name" class="form-label">Ваше имя</label>
@@ -272,7 +277,7 @@
         });
         $(document).ready(function () {
             // Добавьте этот код для проверки формы
-            const form = document.querySelector('form#review_create');
+            const form = document.querySelector('form#review-form');
             form.addEventListener('submit', function (event) {
                 const inputs = form.querySelectorAll('input, textarea');
                 let isValid = true;
@@ -334,4 +339,50 @@
             });
         });
     </script>
+    @if ($errors->any())
+        {{-- Форма отзывов расположена внизу страницы: после редиректа с ошибками
+             валидации возвращаем посетителя к форме и ставим фокус на первое
+             поле с серверной ошибкой. Обычная отправка формы не перехватывается. --}}
+        <script>
+            (function () {
+                var firstErrorField = @json($errors->keys()[0] ?? null);
+
+                function returnToReviewForm() {
+                    try {
+                        var form = document.getElementById('review-form');
+                        if (!form) {
+                            return;
+                        }
+                        if (typeof form.scrollIntoView === 'function') {
+                            form.scrollIntoView({behavior: 'smooth', block: 'start'});
+                        }
+                        if (!firstErrorField || !form.elements) {
+                            return;
+                        }
+                        var target = form.elements.namedItem(firstErrorField);
+                        // namedItem может вернуть коллекцию одноимённых полей.
+                        if (target && !target.tagName && typeof target.length === 'number') {
+                            target = target[0] || null;
+                        }
+                        if (!target || typeof target.focus !== 'function') {
+                            return;
+                        }
+                        try {
+                            target.focus({preventScroll: true});
+                        } catch (ignored) {
+                            target.focus();
+                        }
+                    } catch (ignored) {
+                        // Только улучшение UX: ошибки здесь не должны ломать страницу.
+                    }
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', returnToReviewForm);
+                } else {
+                    returnToReviewForm();
+                }
+            })();
+        </script>
+    @endif
 @endsection
