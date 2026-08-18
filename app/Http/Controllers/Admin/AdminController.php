@@ -16,12 +16,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -358,29 +360,69 @@ class AdminController extends Controller
     public function updateReview(Request $request, Reviews $review): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
             'title' => 'nullable|string|max:255',
             'content' => 'required|string',
             'gender' => 'nullable|in:boy,girl',
             'is_published' => 'nullable|boolean',
+            'publication_conditions_satisfied' => 'sometimes|accepted',
         ]);
 
-        $validated['is_published'] = $request->boolean('is_published');
+        $requestedPublished = $request->boolean('is_published');
+        $freshConfirmation = array_key_exists('publication_conditions_satisfied', $validated);
 
         $gender = $validated['gender'] ?? null;
         if (!$gender) {
             $gender = str_contains((string) $review->image, 'user-girl') ? 'girl' : 'boy';
         }
 
-        $validated['image'] = $gender === 'girl'
+        $image = $gender === 'girl'
             ? url('/img/user-girl.png')
             : url('/img/user-boy.png');
 
-        $validated['title'] = $validated['title'] ? trim($validated['title']) : '';
+        $title = $validated['title'] ? trim($validated['title']) : '';
+        $content = $validated['content'];
+        $contentChanged = $content !== $review->content;
 
-        unset($validated['gender']);
+        $consent = $review->reviewConsent;
+        $conditions = $consent ? trim((string) $consent->publication_conditions) : '';
+        $hasConditions = $consent !== null && $conditions !== '';
 
-        $review->update($validated);
+        $now = now();
+
+        if ($hasConditions) {
+            if ($contentChanged) {
+                $resultingSatisfiedAt = $freshConfirmation ? $now : null;
+            } else {
+                $resultingSatisfiedAt = $freshConfirmation ? $now : $consent->publication_conditions_satisfied_at;
+            }
+        } else {
+            $resultingSatisfiedAt = null;
+        }
+
+        if ($hasConditions && $requestedPublished && $resultingSatisfiedAt === null) {
+            throw ValidationException::withMessages([
+                'publication_conditions_satisfied' => 'Перед публикацией подтвердите, что условия и запреты публикации соблюдены в итоговом тексте отзыва.',
+            ]);
+        }
+
+        DB::transaction(function () use ($review, $consent, $hasConditions, $resultingSatisfiedAt, $title, $content, $image, $requestedPublished, $contentChanged, $now) {
+            $review->title = $title;
+            $review->content = $content;
+            $review->image = $image;
+            $review->is_published = $requestedPublished;
+
+            if ($contentChanged) {
+                $review->is_moderator_edited = true;
+                $review->moderator_edited_at = $now;
+            }
+
+            $review->save();
+
+            if ($hasConditions) {
+                $consent->publication_conditions_satisfied_at = $resultingSatisfiedAt;
+                $consent->save();
+            }
+        });
 
         Cache::forget('home_reviews');
         for ($page = 1; $page <= 10; $page++) {
