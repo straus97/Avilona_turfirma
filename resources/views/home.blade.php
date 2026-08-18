@@ -493,6 +493,9 @@
                                     <p class="full-content d-none">{{ $item_reviews->content }}</p>
                                     <button class="btn btn-primary btn-sm read-more mt-2">Читать полностью</button>
                                 @endif
+                                @if($item_reviews->is_moderator_edited)
+                                    <p class="small text-muted fst-italic mb-0 mt-2">Текст отзыва отредактирован модератором без изменения общего смысла.</p>
+                                @endif
                             </div>
                             <div class="card-footer">
                                 <small

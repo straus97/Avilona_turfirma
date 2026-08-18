@@ -20,7 +20,7 @@ class IndexController extends Controller
             ->take(4)
             ->get();
         
-        $reviews = Reviews::select('id', 'name', 'content', 'image', 'created_at')
+        $reviews = Reviews::select('id', 'name', 'content', 'image', 'created_at', 'is_moderator_edited')
             ->where('is_published', 1)
             ->orderBy('id', 'desc')
             ->take(3)

@@ -34,6 +34,9 @@
                                         <p class="full-content d-none">{{ $item_review->content }}</p>
                                         <button class="btn btn-primary read-more">Читать полностью</button>
                                     @endif
+                                    @if($item_review->is_moderator_edited)
+                                        <p class="small text-muted fst-italic mb-0 mt-2">Текст отзыва отредактирован модератором без изменения общего смысла.</p>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
