@@ -22,6 +22,9 @@ class IndexController extends Controller
         
         $reviews = Reviews::select('id', 'name', 'content', 'image', 'created_at', 'is_moderator_edited')
             ->where('is_published', 1)
+            ->whereDoesntHave('reviewConsent', function ($query) {
+                $query->whereNotNull('withdrawn_at');
+            })
             ->orderBy('id', 'desc')
             ->take(3)
             ->get();

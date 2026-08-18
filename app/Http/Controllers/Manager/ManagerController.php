@@ -730,6 +730,13 @@ class ManagerController extends Controller
         $contentChanged = $content !== $review->content;
 
         $consent = $review->reviewConsent;
+
+        if ($requestedPublished && $consent !== null && $consent->withdrawn_at !== null) {
+            throw ValidationException::withMessages([
+                'is_published' => 'Согласие на публикацию этого отзыва отозвано. Повторная публикация невозможна.',
+            ]);
+        }
+
         $conditions = $consent ? trim((string) $consent->publication_conditions) : '';
         $hasConditions = $consent !== null && $conditions !== '';
 
