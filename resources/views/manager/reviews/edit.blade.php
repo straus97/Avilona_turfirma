@@ -21,12 +21,28 @@
         @csrf
         @method('PUT')
         <div class="mb-3">
-            <label class="form-label">Имя</label>
-            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $review->name) }}" required>
-            @error('name')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label class="form-label">Имя автора</label>
+            <div class="form-control-plaintext">{{ $review->name }}</div>
         </div>
+        @php
+            $reviewConsent = $review->reviewConsent;
+            $publicationConditions = $reviewConsent ? trim((string) $reviewConsent->publication_conditions) : '';
+        @endphp
+        @if ($publicationConditions !== '')
+        <div class="mb-3 p-3 border rounded bg-light">
+            <label class="form-label fw-bold">Условия и запреты публикации, указанные автором</label>
+            <p class="mb-3" style="white-space: pre-wrap;">{{ $publicationConditions }}</p>
+            <div class="form-check">
+                <input class="form-check-input @error('publication_conditions_satisfied') is-invalid @enderror" type="checkbox" name="publication_conditions_satisfied" id="publication_conditions_satisfied" value="1">
+                <label class="form-check-label" for="publication_conditions_satisfied">
+                    Условия и запреты публикации проверены и соблюдены в итоговом тексте отзыва.
+                </label>
+                @error('publication_conditions_satisfied')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+        @endif
         <div class="mb-3">
             <label class="form-label">Тема (необязательно)</label>
             <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $review->title) }}">
