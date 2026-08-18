@@ -1,216 +1,115 @@
 # Avilona_turfirma
 
-Веб-сайт и внутренняя система бронирования туристического агентства «Авилона».
-Приложение построено на Laravel 12 и обслуживает роли **турист**, **менеджер** и **администратор**.
+Веб-сайт и внутренняя система туристического агентства «Авилона» на Laravel.
 
-## Текущее состояние
+## Текущий статус
 
-- Активная ветка: `db-rebuild-stage3`.
-- Текущий функциональный checkpoint:
-  `d66035541e8ab96a801b011168663758181c1e25`
-  — `feat: separate public personal data consent`.
-- Предыдущий documentation/source checkpoint:
-  `e067124c4323e82ab5d10d8e6aa1491029fb767b`
-  — `docs: close stage 12`.
-- Этапы 0–12 — ✅ завершены.
-- **Stage 13 (production readiness / публичная поверхность / подготовка к
-  деплою) — 🚧 В РАБОТЕ.** Не закрыт.
-- Аварийное восстановление canonical MySQL завершено и проверено.
-- Документационный commit, содержащий эту версию файлов, всегда определяется Git.
+- Project path: `C:\wamp\www\Avilona_turfirma`
+- Branch: `db-rebuild-stage3`
+- Текущий функциональный checkpoint: `15bd01a29cdb17c8bda3e3812027343971d6bd80` — `feat: disclose moderator-edited reviews`
+- Stage 0–12: ✅ COMPLETE
+- Stage 13: 🚧 **IN PROGRESS** — production-readiness / публичная поверхность / reviews & consent hardening
+- Последний independently verified full PHPUnit baseline: **839 tests / 3718 assertions**, PHP 8.3.32, SQLite `:memory:`
+- Laravel: 12.65.0; PHPUnit: 11.5.56
 
-Полный перечень checkpoint, статус этапов и точный оставшийся путь до
-production/handoff приведены в [`docs/roadmap.md`](docs/roadmap.md).
+Documentation/source checkpoint, содержащий этот файл, является docs-only commit поверх функционального checkpoint `15bd01a2` и определяется текущим Git HEAD.
 
-## Подтверждённые возможности
+## Что уже завершено в Stage 13
 
-- Аутентификация, email verification и роли admin / manager / tourist.
-- Создание, просмотр, назначение и жизненный цикл бронирований.
-- Правила переходов статусов и согласованный UI.
-- Безопасное назначение активных менеджеров и администраторов.
-- Приватные пользовательские документы и документы бронирования.
-- Защищённый чат участников бронирования и приватные вложения.
-- Post-persistence уведомления с изоляцией ошибок доставки и колокольчик
-  уведомлений в кабинете.
-- Единый role precedence: `admin > manager > tourist`.
-- Booking-scoped staff authority:
-  - admin всегда остаётся staff-facing;
-  - manager получает staff-facing доступ только к назначенной ему заявке;
-  - manager+tourist, владелец, но не назначенный менеджер, остаётся owner-facing.
-- Rate limiting публичной регистрации и запроса password-reset ссылки,
-  audit-логирование административных мутаций, инвалидация чужих сессий
-  после смены пароля.
-- Публичная страница новостей работает только на чтение; RSS-синхронизация
-  вынесена в явную команду `news:sync-rss`.
-- Публичный каталог и поиск туров (Stage 8) — read-only, без внешних
-  HTTP-запросов; фильтры выровнены с внутренним JSON tour-search API.
-- Публичный контент и CMS (Stage 9): локальный RSS, актуальность публичных
-  страниц без устаревшего application cache, единый canonical URL / `og:url`.
+Помимо ранних production-readiness slice (Vite build hygiene, browser runtime fixes, responsive fixes, development-notice cleanup, cookie consent/analytics gating, company details и раздельного personal-data consent на «Главной»/«Контактах»), завершён большой review-flow:
 
-### Публичная поверхность Stage 13 (уже завершено)
+- публичный review UGC безопасно экранируется;
+- email удалён из публичного содержимого отзыва как legacy/public field;
+- отзывы всегда уходят на модерацию, auto-publish нет;
+- review-specific consent evidence хранится отдельно от публичного отзыва;
+- три обязательных подтверждения разделены;
+- private evidence-поля `consent_full_name` и `consent_email` не публикуются;
+- public scope зафиксирован как `name + content`;
+- публичный subject/title из review flow удалён, legacy DB field пока сохранён;
+- добавлены отдельные legal pages review consent/publication consent;
+- validation UX возвращает пользователя к форме и фокусирует первую ошибку;
+- moderation foundation хранит `is_moderator_edited` и `moderator_edited_at`;
+- Admin и Manager не могут менять публичное имя автора;
+- условия/запреты автора должны быть явно подтверждены модератором перед публикацией;
+- изменение content инвалидирует stale confirmation;
+- moderator-edited marker sticky;
+- Admin/Manager moderation UI имеет parity;
+- на `/reviews` и homepage показывается точная публичная пометка только для реально отредактированного модератором текста:
+  `Текст отзыва отредактирован модератором без изменения общего смысла.`
+- `moderator_edited_at`, private consent/evidence и moderator identity публично не выводятся.
 
-- Cookie-баннер и серверный гейтинг аналитики: cookie
-  `avilona_cookie_consent` со значениями `v1_all` / `v1_necessary`;
-  счётчики Яндекс.Метрики, LiveInternet и Top.Mail.Ru рендерятся **только**
-  после согласия на аналитику; публичная информационная страница
-  `/cookies`; постоянная точка входа «Настройки cookie» в подвале.
-- Изоляция кэша по согласию: `CacheResponse` включает нормализованное
-  состояние согласия (ровно три варианта) в ключ кэша.
-- Раздельные обязательные подтверждения на формах «Главная» и «Контакты»:
-  `agree` (Пользовательское соглашение) и `personal_data_consent`
-  (согласие на обработку персональных данных), плюс публичная страница
-  `GET /personal-data-consent`.
-- Согласованные публичные реквизиты компании: фактический адрес офиса и
-  юридический адрес разделены и намеренно различаются.
-- Удалены development-facing уведомления и персональный кредит с публичного
-  сайта; год в копирайте динамический.
-- Исправления адаптивной вёрстки для мобильных и планшетов; устранены
-  ошибки публичного браузерного runtime.
-- Сгенерированный вывод Vite (`public/build`) больше не отслеживается Git.
+## Непосредственно оставшаяся работа Stage 13
+
+Stage 13 **не закрыт**. Не смешивать оставшиеся пункты в один большой batch.
+
+1. Review withdrawal / `withdrawn_at` guard и связанный workflow — отдельный согласованный slice.
+2. Проверить/закрыть известный Manager review cache parity cleanup, если он всё ещё релевантен после текущей cache architecture; сначала read-only re-verification.
+3. Отдельно решить consent/policy applicability для публичной регистрации.
+4. Отдельно закрыть гостевой сценарий бронирования, если текущий public UI всё ещё расходится с auth-only endpoint.
+5. Финальная локальная production-readiness проверка Stage 13.
+6. Stage 13 documentation/closure checkpoint.
+
+## Endgame после Stage 13
+
+После функционального закрытия Stage 13 проект **не считается визуально финальным**.
+
+Запланирован отдельный комплексный technical + UX/UI/design pass:
+
+- аудит всех публичных страниц и пользовательских сценариев;
+- выявление слабых мест, устаревших решений и грубой/неудачной компоновки;
+- адаптивность, визуальная иерархия, spacing, сетки, типографика, состояния форм;
+- проверка логичности расположения блоков и компонентов;
+- оптимизация кода/структуры там, где она реально оправдана;
+- системная модернизация дизайна публичного сайта и отдельных элементов;
+- отдельный глубокий pass личных кабинетов: структура, навигация, карточки, таблицы, формы, статусы, иконки, цветовая схема, визуальная иерархия, mobile/desktop usability;
+- решения по redesign принимаются после анализа, а не механически «перерисовать всё»;
+- после redesign — полный regression/cross-device pass.
+
+### Поиск туров — самый последний продуктовый блок
+
+Текущий search/tours widget считается **временной заглушкой**. Его не доводить до финального решения раньше времени.
+
+После стабилизации и design-pass отдельно выбрать архитектуру:
+
+- подходящий готовый агрегатор/виджет;
+- API/интеграции туроператоров;
+- собственный поиск/агрегация, если это оправдано.
+
+Финальный вариант должен учитывать публичный UX, кабинеты и будущую CRM-интеграцию. Реальные внешние provider-запросы — только по отдельному guarded operational plan.
 
 ## Технологический стек
 
-| Слой | Технология |
+| Компонент | Значение |
 |---|---|
 | PHP CLI проекта | 8.3.32 |
-| Фреймворк | Laravel 12.65.0 |
-| Composer | 2.8.3 |
-| Node.js | 24.18.1 |
-| npm | 11.12.1 |
-| Сборка | Vite 7.3.6 + `laravel-vite-plugin` 2.1.0 |
+| Laravel | 12.65.0 |
+| PHPUnit | 11.5.56 |
+| PHPUnit DB | SQLite `:memory:` |
 | UI | Blade + Bootstrap 5 |
-| Canonical DB | MySQL 9.7.1, `turfirma_rebuild_v4`, port 3308 |
-| Тесты | PHPUnit 11.5.56, SQLite `:memory:` |
+| Canonical local DB | `turfirma_rebuild_v4`, port 3308 |
+| Build | Vite 7.3.6 + laravel-vite-plugin 2.1.0 |
 
-Версии зафиксированы завершённым Stage 12 dependency-обновлением;
-`composer.json`/`composer.lock` и `package.json`/`package-lock.json` в
-Stage 13 не менялись.
-
-Глобальная команда `php` в текущей Windows-среде может указывать на PHP 8.4.13.
-Для проекта использовать точный executable:
+Для проекта использовать только:
 
 ```text
 C:\wamp\bin\php\php8.3.32\php.exe
 ```
 
-## Canonical DB
-
-Восстановление canonical DB завершено.
-
-Подтверждено:
-
-- 52 migrations Ran / 0 Pending на момент recovery;
-- последняя независимо проверенная canonical-верификация: 53 Ran / 0 Pending
-  (после guarded trip-reminder миграции Stage 10);
-- 28 таблиц InnoDB;
-- users=7, role_user=7, roles=3;
-- распределение ролей: admin=1, manager=0, tourist=6;
-- bookings/messages/booking_documents/user_documents=0;
-- recovery application fingerprint:
-  `fc449488f3d115713cfa0ee97b62a933dfa11393cdbc89c391816aa25d174784`;
-- Stage 7 read-only session fingerprint:
-  `afb2cd19ce0401e82c8bc29f0446785906afd9cc31197f81cc573adb19f06cca`;
-- Stage 7 browser-smoke fixtures полностью удалены;
-- read-only session fingerprint после cleanup восстановлен без изменений;
-- Apache service lifecycle probe: HTTP 200;
-- canonical MySQL lifecycle probe: PASS.
-
-Эти два fingerprint получены разными алгоритмами и не должны сравниваться друг с другом.
-
-Старый rollback/physical backup и recovery evidence пока не удалять без отдельного retention-решения.
-
-## Локальная разработка
-
-```bash
-composer install
-npm ci
-```
-
-Настройте локальный `.env`. Не публикуйте `.env`, SQL-дампы, токены, cookies и приватные документы.
-
-Не запускайте команды записи в canonical DB без утверждённого плана.
-
-Для браузерной проверки Stage 13 используется изолированный локальный WAMP
-host `avilona.local` → `127.0.0.2`, не затрагивающий обычные проекты на
-`localhost`. Файлы браузерных evidence остаются приватными и в репозиторий
-не копируются.
-
-## Тестирование
-
-PHPUnit всегда должен использовать:
-
-```text
-DB_CONNECTION=sqlite
-DB_DATABASE=:memory:
-```
-
-Текущий проверенный baseline (Stage 13):
-
-```text
-704 tests
-3128 assertions
-exit code 0
-PHP 8.3.32
-```
-
-Запускать через PHP 8.3.32:
-
-```powershell
-& 'C:\wamp\bin\php\php8.3.32\php.exe' `
-    'vendor\bin\phpunit' `
-    --colors=never
-```
-
-Известное неблокирующее предупреждение: `phpunit.xml` использует устаревшую XML schema.
-Не смешивать её обновление с функциональным slice.
-
-## Запрещённые операции без отдельного плана
-
-- `composer update`
-- `npm update`
-- `npm audit fix`
-- `migrate`, `migrate:fresh`, `refresh`, `reset`, `db:wipe`, seed
-- `legacy:import-v4 --execute`
-- PHPUnit против canonical MySQL
-- запуск `news:sync-rss` против canonical MySQL
-- реальные запросы к Sletat / Coral Travel и другим провайдерам
-- удаление recovery/rollback artifacts
-- деструктивные операции над репозиторием и данными
+PHPUnit никогда не запускать против canonical MySQL.
 
 ## Документация
 
-- [`docs/README.md`](docs/README.md) — источники истины, правила работы и
-  детальный ledger текущего состояния.
-- [`docs/roadmap.md`](docs/roadmap.md) — статус Stage 0–13 и оставшийся путь
-  до production/handoff.
+- [`docs/README.md`](docs/README.md) — operational source of truth и checkpoint ledger.
+- [`docs/roadmap.md`](docs/roadmap.md) — текущий roadmap и endgame.
+- `docs/archive/` — исторические документы, не руководство к действию без сверки с текущим кодом.
 
-## Текущий приоритет
+## Жёсткие ограничения
 
-**Stage 13 в работе.** Уже завершена и запушена работа по публичной
-поверхности: cookie consent и гейтинг аналитики, раздельное согласие на
-обработку персональных данных на «Главной» и «Контактах», согласование
-публичных реквизитов, очистка development-facing материалов, адаптивные
-исправления и repository/runtime cleanup сборки Vite.
+Без отдельного утверждённого guarded plan не выполнять:
 
-Оставшийся путь Stage 13 (детали — в [`docs/roadmap.md`](docs/roadmap.md)):
-
-1. Согласие на обработку персональных данных / публикацию для формы отзывов —
-   отдельный рассмотренный slice.
-2. Согласие и применимость политики для публичной регистрации — требует
-   отдельного контентного/юридического/бизнес-решения.
-3. Решение о хранении evidence согласия (timestamp/версия/объём/отзыв) —
-   **не принято и не реализовано**.
-4. Гостевой сценарий бронирования — отдельный функциональный дефект,
-   не смешивать с работой по согласиям.
-5. Финальная локальная проверка production-readiness.
-6. Деплой на хостинг по отдельному guarded операционному плану.
-7. Production smoke-проверка после деплоя.
-8. Финальный независимый аудит сайта после production-валидации.
-
-Текущий виджет поиска туров — временная заглушка; он **не** доводится до
-финального вида в рамках текущей Stage 13 работы по согласиям и юридическим
-материалам. Итоговое решение по поиску/агрегации туров — отдельное
-продуктовое решение.
-
-Не начинать широкую реализацию без выбора одного маленького семантического
-slice и не смешивать её с активацией внешних интеграций, обновлением
-зависимостей или DB maintenance.
+- `composer update`, `npm update`, `npm audit fix`;
+- migrations/seed/import/reset/refresh/wipe;
+- PHPUnit против canonical MySQL;
+- реальные внешние provider integrations;
+- деструктивные DB/repository операции;
+- широкие refactor/batch-изменения вместо одного semantic slice.
