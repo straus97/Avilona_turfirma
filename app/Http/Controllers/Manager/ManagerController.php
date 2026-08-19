@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Message;
 use App\Models\Article;
+use App\Models\ReviewConsent;
 use App\Models\Reviews;
 use App\Models\UserDocument;
 use App\Models\User;
@@ -729,16 +730,16 @@ class ManagerController extends Controller
         $content = $validated['content'];
         $contentChanged = $content !== $review->content;
 
-        $consent = $review->reviewConsent;
+        $existingConsent = $review->reviewConsent;
 
-        if ($requestedPublished && $consent !== null && $consent->withdrawn_at !== null) {
+        if ($requestedPublished && $existingConsent !== null && $existingConsent->withdrawn_at !== null) {
             throw ValidationException::withMessages([
                 'is_published' => 'Согласие на публикацию этого отзыва отозвано. Повторная публикация невозможна.',
             ]);
         }
 
-        $conditions = $consent ? trim((string) $consent->publication_conditions) : '';
-        $hasConditions = $consent !== null && $conditions !== '';
+        $conditions = $existingConsent ? trim((string) $existingConsent->publication_conditions) : '';
+        $hasConditions = $existingConsent !== null && $conditions !== '';
 
         $now = now();
 
@@ -746,7 +747,7 @@ class ManagerController extends Controller
             if ($contentChanged) {
                 $resultingSatisfiedAt = $freshConfirmation ? $now : null;
             } else {
-                $resultingSatisfiedAt = $freshConfirmation ? $now : $consent->publication_conditions_satisfied_at;
+                $resultingSatisfiedAt = $freshConfirmation ? $now : $existingConsent->publication_conditions_satisfied_at;
             }
         } else {
             $resultingSatisfiedAt = null;
@@ -758,7 +759,17 @@ class ManagerController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($review, $consent, $hasConditions, $resultingSatisfiedAt, $title, $content, $image, $requestedPublished, $contentChanged, $now) {
+        DB::transaction(function () use ($review, $existingConsent, $hasConditions, $resultingSatisfiedAt, $title, $content, $image, $requestedPublished, $contentChanged, $now) {
+            $lockedConsent = $existingConsent !== null
+                ? ReviewConsent::where('review_id', $review->id)->lockForUpdate()->first()
+                : null;
+
+            if ($requestedPublished && $lockedConsent !== null && $lockedConsent->withdrawn_at !== null) {
+                throw ValidationException::withMessages([
+                    'is_published' => 'Согласие на публикацию этого отзыва отозвано. Повторная публикация невозможна.',
+                ]);
+            }
+
             $review->title = $title;
             $review->content = $content;
             $review->image = $image;
@@ -771,13 +782,88 @@ class ManagerController extends Controller
 
             $review->save();
 
-            if ($hasConditions) {
-                $consent->publication_conditions_satisfied_at = $resultingSatisfiedAt;
-                $consent->save();
+            if ($hasConditions && $lockedConsent !== null) {
+                $lockedConsent->publication_conditions_satisfied_at = $resultingSatisfiedAt;
+                $lockedConsent->save();
             }
         });
 
         return redirect()->route('cabinet.manager.content')
             ->with('success', 'Отзыв обновлен');
+    }
+
+    /**
+     * Экран фиксации отзыва согласия на публикацию отзыва
+     */
+    public function confirmWithdrawConsent(Request $request, Reviews $review): RedirectResponse|View
+    {
+        $consent = $review->reviewConsent;
+
+        if ($consent === null) {
+            return redirect()->route('cabinet.manager.reviews.edit', $review)
+                ->with('error', 'У этого отзыва нет записи согласия на публикацию — фиксация отзыва согласия недоступна.');
+        }
+
+        if ($consent->withdrawn_at !== null) {
+            return redirect()->route('cabinet.manager.reviews.edit', $review)
+                ->with('status', 'Согласие на публикацию этого отзыва уже отозвано. Повторное действие не требуется.');
+        }
+
+        return view('manager.reviews.withdraw-consent', compact('review', 'consent'));
+    }
+
+    /**
+     * Фиксация отзыва согласия на публикацию отзыва
+     */
+    public function withdrawConsent(Request $request, Reviews $review): RedirectResponse
+    {
+        $request->validate([
+            'withdrawal_confirmed' => 'required|accepted',
+        ], [
+            'withdrawal_confirmed.required' => 'Подтвердите, что запрос автора на отзыв согласия получен, проверен и относится к этому отзыву.',
+            'withdrawal_confirmed.accepted' => 'Подтвердите, что запрос автора на отзыв согласия получен, проверен и относится к этому отзыву.',
+        ]);
+
+        $result = DB::transaction(function () use ($review, $request) {
+            $lockedConsent = ReviewConsent::where('review_id', $review->id)->lockForUpdate()->first();
+
+            if ($lockedConsent === null) {
+                return 'no_consent';
+            }
+
+            $wasPublishedBefore = (bool) $review->is_published;
+            $isFirstWithdrawal = $lockedConsent->withdrawn_at === null;
+
+            if ($isFirstWithdrawal) {
+                $lockedConsent->withdrawn_at = now();
+                $lockedConsent->save();
+            }
+
+            $review->is_published = false;
+            $review->save();
+
+            if ($isFirstWithdrawal) {
+                Log::warning('Operator recorded review publication-consent withdrawal', [
+                    'actor_id' => $request->user()->id,
+                    'review_id' => $review->id,
+                    'was_published_before' => $wasPublishedBefore,
+                ]);
+            }
+
+            return $isFirstWithdrawal ? 'first_withdrawal' : 'already_withdrawn';
+        });
+
+        if ($result === 'no_consent') {
+            return redirect()->route('cabinet.manager.reviews.edit', $review)
+                ->with('error', 'У этого отзыва нет записи согласия на публикацию — фиксация отзыва согласия недоступна.');
+        }
+
+        if ($result === 'already_withdrawn') {
+            return redirect()->route('cabinet.manager.reviews.edit', $review)
+                ->with('status', 'Согласие на публикацию этого отзыва уже отозвано. Повторное действие не требуется.');
+        }
+
+        return redirect()->route('cabinet.manager.reviews.edit', $review)
+            ->with('success', 'Отзыв согласия на публикацию зафиксирован. Материал снят с публикации.');
     }
 }

@@ -83,8 +83,11 @@
         </div>
         <input type="hidden" name="is_published" value="0">
         <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $review->is_published) ? 'checked' : '' }}>
+            <input class="form-check-input @error('is_published') is-invalid @enderror" type="checkbox" name="is_published" id="is_published" value="1" {{ old('is_published', $review->is_published) ? 'checked' : '' }}>
             <label class="form-check-label" for="is_published">Опубликовать на сайте</label>
+            @error('is_published')
+                <div class="invalid-feedback d-block">{{ $message }}</div>
+            @enderror
         </div>
 
         <div class="d-flex gap-2">
@@ -94,6 +97,21 @@
             </button>
         </div>
     </form>
+</div>
+
+<div class="card-custom mt-3">
+    <div class="card-header-custom">
+        <div class="card-title-custom">Отзыв согласия на публикацию</div>
+    </div>
+    @if ($reviewConsent === null)
+        <p class="text-muted mb-0">У этого отзыва нет записи согласия на публикацию — фиксация отзыва согласия недоступна.</p>
+    @elseif ($reviewConsent->withdrawn_at !== null)
+        <p class="text-muted mb-0">Согласие на публикацию этого отзыва уже отозвано {{ $reviewConsent->withdrawn_at->format('d.m.Y H:i') }}. Повторное действие не требуется.</p>
+    @else
+        <a href="{{ route('cabinet.admin.reviews.withdraw-consent.confirm', $review) }}" class="btn btn-outline-danger">
+            Зафиксировать отзыв согласия на публикацию
+        </a>
+    @endif
 </div>
 
 @push('scripts')

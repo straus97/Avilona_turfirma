@@ -81,6 +81,8 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::delete('/articles/{article}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteArticle'])->name('articles.delete');
         Route::get('/reviews/{review}/edit', [\App\Http\Controllers\Manager\ManagerController::class, 'editReview'])->name('reviews.edit');
         Route::put('/reviews/{review}', [\App\Http\Controllers\Manager\ManagerController::class, 'updateReview'])->name('reviews.update');
+        Route::get('/reviews/{review}/withdraw-consent', [\App\Http\Controllers\Manager\ManagerController::class, 'confirmWithdrawConsent'])->name('reviews.withdraw-consent.confirm');
+        Route::post('/reviews/{review}/withdraw-consent', [\App\Http\Controllers\Manager\ManagerController::class, 'withdrawConsent'])->name('reviews.withdraw-consent');
     });
     
     // Админ
@@ -110,6 +112,8 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::delete('/articles/{article}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteArticle'])->name('articles.delete');
         Route::get('/reviews/{review}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editReview'])->name('reviews.edit');
         Route::put('/reviews/{review}', [\App\Http\Controllers\Admin\AdminController::class, 'updateReview'])->name('reviews.update');
+        Route::get('/reviews/{review}/withdraw-consent', [\App\Http\Controllers\Admin\AdminController::class, 'confirmWithdrawConsent'])->name('reviews.withdraw-consent.confirm');
+        Route::post('/reviews/{review}/withdraw-consent', [\App\Http\Controllers\Admin\AdminController::class, 'withdrawConsent'])->name('reviews.withdraw-consent');
         Route::get('/finance', [\App\Http\Controllers\Admin\AdminController::class, 'finance'])->name('finance');
         Route::get('/bonus', [\App\Http\Controllers\Admin\AdminController::class, 'bonus'])->name('bonus');
         Route::get('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('settings');
