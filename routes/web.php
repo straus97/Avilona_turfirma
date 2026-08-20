@@ -239,6 +239,9 @@ Route::view('/reviews/personal-data-consent', 'legal.review-personal-data-consen
 // Согласие на публикацию отзыва и имени (Stage 13 C2)
 Route::view('/reviews/publication-consent', 'legal.review-publication-consent')->name('review_publication_consent.info');
 
+// Согласие на обработку персональных данных при регистрации учётной записи (Stage 13 R3B)
+Route::view('/account/personal-data-consent', 'legal.registration-personal-data-consent')->name('registration_personal_data_consent.info');
+
 Route::group(['namespace' => 'Captcha'], function () {
     Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index")->middleware(
         'cache.response'

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -151,6 +152,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function bonusAccount()
     {
         return $this->hasOne(BonusAccount::class);
+    }
+
+    public function registrationConsent(): HasOne
+    {
+        return $this->hasOne(UserRegistrationConsent::class);
     }
 
     /**

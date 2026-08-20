@@ -22,6 +22,8 @@ class RegistrationThrottleTest extends TestCase
             'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',
+            'user_agreement_accepted' => '1',
+            'personal_data_consent_accepted' => '1',
         ];
     }
 
