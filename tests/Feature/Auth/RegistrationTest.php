@@ -15,6 +15,19 @@ class RegistrationTest extends TestCase
         $response = $this->get('/register');
 
         $response->assertStatus(200);
+
+        $content = $response->getContent();
+
+        // Two independent password-visibility toggle buttons, one per password field.
+        $this->assertSame(2, substr_count($content, 'x-bind:aria-label="showPassword'));
+        $this->assertSame(2, substr_count($content, '<button type="button" @click="showPassword = !showPassword"'));
+        $this->assertStringContainsString('id="password"', $content);
+        $this->assertStringContainsString('id="password_confirmation"', $content);
+
+        // Toggle for password appears before password_confirmation, keeping each scoped to its own field.
+        $passwordFieldPos = strpos($content, 'id="password"');
+        $confirmationFieldPos = strpos($content, 'id="password_confirmation"');
+        $this->assertLessThan($confirmationFieldPos, $passwordFieldPos);
     }
 
     public function test_new_users_can_register(): void
