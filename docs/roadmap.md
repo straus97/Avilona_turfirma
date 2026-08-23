@@ -1,17 +1,18 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-08-18**
+Актуализировано: **2026-08-23**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- Functional HEAD: `15bd01a29cdb17c8bda3e3812027343971d6bd80`
-- Functional subject: `feat: disclose moderator-edited reviews`
+- Functional HEAD: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`
+- Functional subject: `fix: remove obsolete guest booking flow`
 - Stage 0–12: ✅ COMPLETE
-- Stage 13: 🚧 IN PROGRESS
-- Full verified baseline: **839 tests / 3718 assertions**
+- Stage 13: ✅ COMPLETE (repository/local technical closure — not production deployment, not the endgame audit/redesign in E1–E6)
+- Full verified baseline: **917 tests / 4012 assertions**
 - PHP: 8.3.32
 - PHPUnit DB: SQLite `:memory:`
+- Project Sources: stale relative to this HEAD, refresh required after this docs-only commit (previous Project Sources checkpoint: `dc59ed912120872428efe2355e04dcff1d1b948a`)
 
 ## Completed stages
 
@@ -51,7 +52,7 @@ Current catalog/search behavior is local/read-only. This completion does **not**
 Laravel 12.65.0, Vite 7, vendor/node_modules not tracked, prior security/dependency checks closed.
 
 ## Stage 13 — Production readiness / public surface
-🚧 **IN PROGRESS**
+✅ **COMPLETE** — repository/local technical closure at `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`
 
 ### Completed before review flow
 
@@ -134,50 +135,39 @@ Evidence:
 - full 839 / 3718;
 - browser QA isolation PASS.
 
-## Stage 13 — remaining queue
+## Stage 13 — closed queue
 
 ### S13-R1 — withdrawn consent publication guard/workflow
-⬜ TODO
+✅ COMPLETE — `e2a7ce0637f146b77c1ce1fcbc13008c18a50fb2`, `ac11dc3237272999dbb1a31d1371b384d5971e97`
 
-Goal: define and enforce what happens when review publication consent is withdrawn, including already-published state. Exact legal/business behavior must be agreed before implementation.
-
-Keep separate from cache cleanup and other consent surfaces.
+`withdrawn_at` enforced on the public path (fails safe even if stale `is_published=true`); Admin/Manager cannot publish/re-publish withdrawn reviews; explicit unpublish still possible; dedicated operator workflow records an already-received/verified withdrawal request; first timestamp preserved on repeated action; no public self-service withdrawal introduced.
 
 ### S13-R2 — Manager review cache parity relevance check
 ⬜ TODO / READ-ONLY FIRST
 
 Historical finding: Admin and Manager had asymmetric legacy review cache clearing.
 
-Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup decision over unnecessary parity code.
+Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup decision over unnecessary parity code. Not resolved by the Stage 13 docs closure — kept explicitly open, tracked outside Stage 13.
 
 ### S13-R3 — public registration consent/policy
-⬜ TODO
+✅ COMPLETE — `1cef8d2642b3785e3ab759d5eedbc1ddd65b9cf9`, `a3824554033f92c0ef8723c6ab1cdc2a5c6eaa0f`
 
-Separate business/legal/content decision for account creation and cabinet data processing.
+Two separate required confirmations (User Agreement; registration personal-data processing consent), dedicated consent page, `UserRegistrationConsent` one-to-one evidence with server-side timestamps/SHA256 document versions, atomic user+role+evidence creation. User Agreement extended with §9 for registration/account use.
 
 ### S13-R4 — guest booking contract
-⬜ TODO / VERIFY FIRST
+✅ COMPLETE — `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`
 
-Re-check whether anonymous public booking UI still conflicts with protected endpoint behavior. Fix as a separate functional slice if confirmed.
+Anonymous booking confirmed unsupported; dead anonymous `StoreController` and unreachable `@guest` form/layout/modal remnants removed; `/tours` CTA uses canonical `bookings.create` with `tour_id` prefill; unauthenticated create/store route boundary covered by tests; no booking schema/migration change.
 
 ### S13-R5 — final local production-readiness
-⬜ TODO
+✅ COMPLETE
 
-After R1–R4:
-
-- full PHPUnit;
-- migration/schema inventory;
-- read-only dependency/security verification where appropriate;
-- routes/config/cache/build checks;
-- desktop/tablet/mobile key browser flows;
-- auth/role/cabinet smoke;
-- reviews/privacy/legal paths;
-- no real external-provider traffic.
+Full PHPUnit (917 / 4012), Stage 13 migration/schema inventory (4 migrations, all Ran, 0 pending on canonical local MySQL), code/schema/legal/test reconciliation PASS. Password visibility UX (login + independent registration/confirmation toggles) shipped as part of this closure pass — `7818c54ee3315e34f26fc8c1e9796b9b6417e79c`.
 
 ### S13-R6 — Stage 13 closure docs
-⬜ TODO
+✅ COMPLETE (this checkpoint)
 
-Create closure documentation/source checkpoint only after remaining Stage 13 work is verified.
+Documentation closure recorded in `docs/README.md` and this file. Project Sources refresh is a separate required follow-up (see Current state) and must be generated from the new docs closure HEAD, not from `dba20e2c`.
 
 ## Endgame after Stage 13
 

@@ -6,13 +6,13 @@
 
 - Project path: `C:\wamp\www\Avilona_turfirma`
 - Branch: `db-rebuild-stage3`
-- Текущий функциональный checkpoint: `15bd01a29cdb17c8bda3e3812027343971d6bd80` — `feat: disclose moderator-edited reviews`
+- Текущий функциональный checkpoint: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` — `fix: remove obsolete guest booking flow`
 - Stage 0–12: ✅ COMPLETE
-- Stage 13: 🚧 **IN PROGRESS** — production-readiness / публичная поверхность / reviews & consent hardening
-- Последний independently verified full PHPUnit baseline: **839 tests / 3718 assertions**, PHP 8.3.32, SQLite `:memory:`
+- Stage 13: ✅ **COMPLETE** — repository/local technical closure (production deployment и endgame audit/redesign — отдельные последующие этапы)
+- Последний independently verified full PHPUnit baseline: **917 tests / 4012 assertions**, PHP 8.3.32, SQLite `:memory:`
 - Laravel: 12.65.0; PHPUnit: 11.5.56
 
-Documentation/source checkpoint, содержащий этот файл, является docs-only commit поверх функционального checkpoint `15bd01a2` и определяется текущим Git HEAD.
+Documentation/source checkpoint, содержащий этот файл, является docs-only commit поверх функционального checkpoint `dba20e2c` и определяется текущим Git HEAD. Внешний Project Sources checkpoint пока не обновлён — см. `docs/README.md` §8.
 
 ## Что уже завершено в Stage 13
 
@@ -36,18 +36,22 @@ Documentation/source checkpoint, содержащий этот файл, явл�
 - Admin/Manager moderation UI имеет parity;
 - на `/reviews` и homepage показывается точная публичная пометка только для реально отредактированного модератором текста:
   `Текст отзыва отредактирован модератором без изменения общего смысла.`
-- `moderator_edited_at`, private consent/evidence и moderator identity публично не выводятся.
+- `moderator_edited_at`, private consent/evidence и moderator identity публично не выводятся;
+- publication-consent withdrawal (`withdrawn_at`) обеспечивает fail-safe публикации и не допускает Admin/Manager republish withdrawn review; дедикейтед operator workflow фиксирует уже полученный withdrawal request;
+- регистрация требует двух раздельных подтверждений (User Agreement; consent на обработку персональных данных для регистрации/кабинета), evidence хранится в `UserRegistrationConsent`, создаётся атомарно вместе с пользователем и ролью Tourist;
+- Пользовательское соглашение расширено §9 для регистрации/личного кабинета;
+- добавлены independent password visibility toggles на login и registration (password + confirmation);
+- анонимное бронирование не поддерживается: мёртвый anonymous booking flow и дублирующий `/tours` modal удалены, `/tours` CTA использует канонический `bookings.create`.
+
+Подробности — `docs/README.md` §5.
 
 ## Непосредственно оставшаяся работа Stage 13
 
-Stage 13 **не закрыт**. Не смешивать оставшиеся пункты в один большой batch.
+Stage 13 **закрыт** на уровне repository/local technical closure. Не закрытые смежные пункты:
 
-1. Review withdrawal / `withdrawn_at` guard и связанный workflow — отдельный согласованный slice.
-2. Проверить/закрыть известный Manager review cache parity cleanup, если он всё ещё релевантен после текущей cache architecture; сначала read-only re-verification.
-3. Отдельно решить consent/policy applicability для публичной регистрации.
-4. Отдельно закрыть гостевой сценарий бронирования, если текущий public UI всё ещё расходится с auth-only endpoint.
-5. Финальная локальная production-readiness проверка Stage 13.
-6. Stage 13 documentation/closure checkpoint.
+- Manager review cache parity relevance re-check (read-only first; см. `docs/roadmap.md` S13-R2);
+- внешний Project Sources refresh под новый docs closure HEAD (см. `docs/README.md` §8);
+- comprehensive audit / production deploy — отдельные последующие этапы (см. ниже).
 
 ## Endgame после Stage 13
 

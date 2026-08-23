@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-08-18**
+Дата актуализации содержания: **2026-08-23**
 
 ## 1. Текущий checkpoint
 
@@ -8,21 +8,20 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| Текущий функциональный checkpoint | `15bd01a29cdb17c8bda3e3812027343971d6bd80` |
-| Commit | `feat: disclose moderator-edited reviews` |
-| Parent | `149bce99d9928022d10747e8d686c1880388d1f8` (`feat: add review moderation UI`) |
-| Предыдущий внешний documentation/source checkpoint | `aca92d5c56263c0dbd2564b8fd068365b021c8d5` |
-| Full PHPUnit baseline | **839 tests / 3718 assertions** |
-| Focused C4C | **13 tests / 81 assertions** |
-| Review/moderation regression C4C | **113 tests / 709 assertions** |
+| Текущий функциональный checkpoint | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` |
+| Commit | `fix: remove obsolete guest booking flow` |
+| Предыдущий внешний documentation/source (Project Sources) checkpoint | `dc59ed912120872428efe2355e04dcff1d1b948a` (`docs: checkpoint stage 13 review moderation`) |
+| Full PHPUnit baseline | **917 tests / 4012 assertions** |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
 | PHPUnit | 11.5.56 |
 | Stage 0–12 | ✅ COMPLETE |
-| Stage 13 | 🚧 **IN PROGRESS** |
+| Stage 13 | ✅ **COMPLETE** (repository/local technical closure; см. §5) |
 
-Этот файл будет зафиксирован отдельным docs-only commit поверх `15bd01a2`. Поэтому текущий documentation/source HEAD после refresh будет новее функционального checkpoint и должен определяться Git, а не быть заранее зашит в этот файл.
+Этот файл фиксируется отдельным docs-only commit поверх функционального checkpoint `dba20e2c`. Documentation/source HEAD после этого commit будет новее функционального checkpoint и должен определяться Git, а не быть заранее зашит в этот файл.
+
+Project Sources ещё не обновлён под этот checkpoint — см. §8.
 
 ## 2. Источники истины
 
@@ -76,7 +75,9 @@ Stage 0–12 полностью завершены. Не возвращатьс�
 - security/reliability/performance hardening;
 - dependency modernization, Laravel 12 / Vite 7, repository hygiene.
 
-## 5. Stage 13 — IN PROGRESS
+## 5. Stage 13 — ✅ COMPLETE
+
+Repository/local technical closure at functional HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`. Это не заявление о production deployment или о завершении последующего финального аудита/redesign (см. §9, §10).
 
 ### 5.1 Ранние production-readiness slices
 
@@ -144,6 +145,69 @@ Stage 0–12 полностью завершены. Не возвращатьс�
 - local/tracking/live origin after push: `15bd01a29cdb17c8bda3e3812027343971d6bd80`;
 - working tree clean after push.
 
+### 5.3 Публикационное согласие — отзыв (withdrawal)
+
+Commits: `e2a7ce0637f146b77c1ce1fcbc13008c18a50fb2` (`feat: enforce withdrawn review publication`), `ac11dc3237272999dbb1a31d1371b384d5971e97` (`feat: add review consent withdrawal workflow`).
+
+- `withdrawn_at` enforced на публичном пути: withdrawn review не публикуется, даже если stale `is_published=true`;
+- Admin/Manager не могут публиковать/republish withdrawn review;
+- explicit unpublish остаётся возможным;
+- отдельный operator workflow фиксирует уже полученный/проверенный withdrawal request (не self-service);
+- первый timestamp сохраняется при повторном действии;
+- ReviewConsent не фабрикуется;
+- `publication_conditions_satisfied_at` сохраняется;
+- private consent identity показывается только на dedicated withdrawal confirmation экране;
+- публичный self-service withdrawal не вводился.
+
+### 5.4 Registration consent — S13-R3
+
+Commits: `1cef8d2642b3785e3ab759d5eedbc1ddd65b9cf9` (`feat: add registration consent evidence`), `a3824554033f92c0ef8723c6ab1cdc2a5c6eaa0f` (`docs: extend user agreement for registration`).
+
+Финальные два раздельных обязательных подтверждения при регистрации:
+
+1. «Я принимаю условия Пользовательского соглашения.»
+2. «Я даю согласие на обработку моих персональных данных в целях регистрации учётной записи и использования личного кабинета в соответствии с Согласием на обработку персональных данных.»
+
+- отдельная страница registration personal-data consent;
+- `UserRegistrationConsent` — one-to-one evidence;
+- server-side timestamps и SHA256 document versions;
+- один общий acceptance instant;
+- client не может подделать evidence timestamps/versions;
+- user + роль Tourist + consent evidence создаются атомарно (одна транзакция);
+- `Registered` event / Auth login только после успешного commit транзакции;
+- не собираются marketing/publication/IP/UA/device/session/geolocation evidence.
+
+**R3A — User Agreement.** Пользовательское соглашение расширено §9 для регистрации/использования личного кабинета. Канонические артефакты (не изменялись в этой правке):
+
+- `public/documents/Пользовательское соглашение.docx`, SHA256 `24322d36383b8ed61599b0f1f2f087a88d11ac1c6286da31bc6f2221d7084ba4`;
+- `public/documents/User_Agreement.pdf`, SHA256 `a686c44c3a38529422734ba4ea54dcc10ecda3d57664db54a7d120bd21de87d9`.
+
+### 5.5 Password visibility UX
+
+Commit: `7818c54ee3315e34f26fc8c1e9796b9b6417e79c` (`feat: add password visibility toggles`).
+
+- login password visibility toggle;
+- независимые toggle для registration password и password-confirmation;
+- accessible show/hide controls;
+- default hidden state;
+- browser QA пройдено успешно.
+
+Это UX-улучшение внутри Stage 13, отдельным нумерованным этапом не считается.
+
+### 5.6 S13-R4 — Authenticated-only booking cleanup
+
+Commit: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`).
+
+- анонимное бронирование не поддерживается;
+- удалён мёртвый anonymous `StoreController`;
+- удалены недостижимые booking `@guest` form/layout остатки;
+- удалено сломанное дублирующее `/tours` booking modal;
+- `/tours` CTA использует канонический `bookings.create` с `tour_id`;
+- переиспользуется существующее поведение prefill `tour_id`;
+- граница unauthenticated create/store route покрыта тестами;
+- Tourist ownership и Admin/Manager new-client flow сохранены;
+- изменений booking schema/migrations не было.
+
 ## 6. Local DB notes
 
 Review schema/evidence work introduced migrations after the old Stage 12 migration count.
@@ -159,7 +223,18 @@ Known guarded local-dev state:
 
 Не переносить local migration assumptions на production. Перед production migration нужен отдельный guarded deploy/migration plan с independent inventory.
 
-## 7. Известные browser-QA fixtures
+### 6.1 Полный Stage 13 migration inventory
+
+Оригинальная таблица `reviews` / основа `is_published` предшествует Stage 13. Stage 13 добавил ровно четыре миграции:
+
+- `2026_08_16_000000_create_review_consents_table.php`;
+- `2026_08_17_000000_add_moderation_state_to_reviews_table.php`;
+- `2026_08_17_000001_add_publication_conditions_satisfied_at_to_review_consents_table.php`;
+- `2026_08_20_000000_create_user_registration_consents_table.php`.
+
+Closure audit на canonical local MySQL (`127.0.0.1:3308`, `turfirma_rebuild_v4`): все четыре Stage 13 миграции = **Ran**, pending Stage 13 миграций = **0**. Это local/canonical-dev статус, не production DB migration статус.
+
+## 7. Известные browser-QA fixtures / local QA data
 
 В local dev DB намеренно могут оставаться review QA rows, включая:
 
@@ -169,38 +244,29 @@ Known guarded local-dev state:
 
 C4B2 Admin QA был реально изменён при C4C browser QA и поэтому имеет moderator-edited marker. Эти локальные QA rows не являются production data. Cleanup — отдельная local-only операция, если она понадобится.
 
-## 8. Оставшийся Stage 13
+Closure audit зафиксировал, что канонические local MySQL evidence-таблицы структурно корректны, но на момент closure пусты: `reviews = 0`, `review_consents = 0`, `user_registration_consents = 0`, `tours = 0`. Это не является дефектом приложения — automated Stage 13 coverage полный, а local QA evidence rows на момент closure не сохранены.
 
-Не считать Stage 13 закрытым после C4C.
+## 8. Stage 13 closure и Project Sources статус
 
-### 8.1 Review withdrawal / `withdrawn_at`
+Stage 13 закрыт на уровне repository/local technical closure на функциональном HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`:
 
-Нужен отдельный slice для корректного publication guard/workflow после отзыва согласия. Не смешивать с другими review cleanup.
+- все Stage 13 миграции применены, pending = 0 (§6.1);
+- Stage 13 code/schema/legal/test reconciliation — PASS;
+- функциональных блокеров Stage 13 не осталось.
 
-### 8.2 Manager review cache parity cleanup
+Ранее в этом разделе перечислялись S13-R1–R4 как TODO; все они реализованы (§5.3–§5.6), поэтому пункты сняты отсюда.
 
-Ранее обнаружено различие старого cache-clearing поведения Admin/Manager. Однако текущие regression-тесты показывают, что public review routes/controllers не используют старые review cache layers и publish/unpublish обеих ролей видимы сразу.
+### 8.1 Project Sources — требуется refresh
 
-Поэтому сначала нужен **read-only relevance re-check**. Не делать механический fix, если код уже мёртв/не влияет на public behavior.
+Активный (внешний) Project Sources checkpoint устарел относительно текущего repo:
 
-### 8.3 Registration consent/policy applicability
+- предыдущий Project Sources checkpoint: `dc59ed912120872428efe2355e04dcff1d1b948a` (`docs: checkpoint stage 13 review moderation`);
+- с этого checkpoint репозиторий продвинулся через withdrawal (§5.3), R3 registration consent (§5.4), password UX (§5.5) и R4 booking cleanup (§5.6), плюс этот docs-only closure commit;
+- Project Sources refresh **обязателен** после commit/push этого docs-only closure slice;
+- refresh должен генерироваться из **нового docs closure HEAD**, а не из `dba20e2c` (функционального HEAD до docs commit);
+- активный Project Sources набор заменяется только после верификации сгенерированного пакета.
 
-Отдельно решить, что именно пользователь подтверждает при публичной регистрации и какая legal/policy база покрывает account creation / cabinet.
-
-### 8.4 Guest booking contract
-
-Отдельно проверить известное расхождение public booking UI и защищённого endpoint для анонимного гостя. Не смешивать с consent work.
-
-### 8.5 Stage 13 readiness + closure
-
-После оставшихся functional slices:
-
-- final local full regression;
-- migration/schema inventory;
-- dependency/security checks в разрешённом read-only режиме;
-- key browser flows desktop/mobile;
-- production deploy plan;
-- Stage 13 closure docs.
+Refresh не выполнялся в рамках данной docs-only задачи.
 
 ## 9. Endgame roadmap — обязательный финальный аудит и redesign
 
@@ -258,9 +324,13 @@ C4B2 Admin QA был реально изменён при C4C browser QA и по
 
 ## 10. Поиск туров — самый последний продуктовый этап
 
-Текущий widget на homepage и `/tours` — временная заглушка.
+Текущий widget на homepage и `/tours` — временная заглушка. Известные local/UX факты на момент Stage 13 closure:
 
-Не выбирать решение до завершения основной стабилизации и design audit.
+- canonical local таблица `tours` содержит 0 строк;
+- текущий temporary `/tours` UI всё ещё содержит старую/статичную презентацию, включая placeholder «22 окт - 26 окт 25»;
+- архитектура search/widget/aggregator намеренно отложена.
+
+Не выбирать решение до завершения основной стабилизации и design audit. Код `/tours` в рамках Stage 13 closure docs не менялся.
 
 Последним крупным product block сравнить:
 
