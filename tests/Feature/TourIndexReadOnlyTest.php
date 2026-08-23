@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\Tour;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -514,6 +516,53 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertDontSee('Public Connecting Flight Hotel');
     }
 
+    public function test_tour_cta_links_directly_to_canonical_booking_form_with_no_obsolete_modal(): void
+    {
+        $tour = Tour::factory()->create([
+            'title' => 'Турция, Анталия - Direct Booking Link Hotel',
+            'hotel_name' => 'Direct Booking Link Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+        ]);
+
+        $response = $this->get(route('tours.index'));
+
+        $response->assertOk();
+        $response->assertSee(route('bookings.create', ['tour_id' => $tour->id]), false);
+        $response->assertDontSee('id="bookingModal"', false);
+        $response->assertDontSee('name="contact_name"', false);
+        $response->assertDontSee('action="' . route('bookings.store') . '"', false);
+        $response->assertDontSee('openBookingModal', false);
+    }
+
+    public function test_authenticated_tourist_sees_same_direct_booking_link_with_no_residual_modal(): void
+    {
+        $tourist = $this->makeTourist();
+
+        $tour = Tour::factory()->create([
+            'title' => 'Турция, Анталия - Authenticated Booking Link Hotel',
+            'hotel_name' => 'Authenticated Booking Link Hotel',
+            'is_active' => true,
+            'start_date' => '2026-09-10',
+            'end_date' => '2026-09-17',
+            'departure_city' => 'Москва',
+            'destination_country' => 'Турция',
+            'destination_city' => 'Анталия',
+        ]);
+
+        $response = $this->actingAs($tourist)->get(route('tours.index'));
+
+        $response->assertOk();
+        $response->assertSee(route('bookings.create', ['tour_id' => $tour->id]), false);
+        $response->assertDontSee('id="bookingModal"', false);
+        $response->assertDontSee('action="' . route('bookings.store') . '"', false);
+        $response->assertDontSee('openBookingModal', false);
+    }
+
     public function test_search_form_does_not_expose_unsupported_nonstop_filter(): void
     {
         $response = $this->get(route('tours.index', [
@@ -528,5 +577,18 @@ class TourIndexReadOnlyTest extends TestCase
         $response->assertDontSee('Без стопов');
         $response->assertSee('name="charter"', false);
         $response->assertSee('name="direct"', false);
+    }
+
+    private function makeTourist(): User
+    {
+        $role = Role::query()->firstOrCreate(
+            ['name' => Role::TOURIST],
+            ['description' => Role::availableRoles()[Role::TOURIST] ?? Role::TOURIST]
+        );
+
+        $user = User::factory()->create();
+        $user->roles()->attach($role->id);
+
+        return $user;
     }
 }

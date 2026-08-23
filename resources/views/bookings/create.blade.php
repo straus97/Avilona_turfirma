@@ -358,158 +358,6 @@
             </form>
         </div>
     @endauth
-
-    @guest
-        <main>
-            <div class="container mt-5 mb-5">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <div class="card shadow-lg">
-                            <div class="card-header bg-gradient-primary text-white py-3">
-                                <h3 class="mb-0">
-                                    <i class="bi bi-plus-circle-fill"></i> Создать заявку на тур
-                                </h3>
-                            </div>
-                            <div class="card-body p-4">
-                                @if($tour)
-                                    <div class="alert alert-info border-left-info mb-4">
-                                        <i class="bi bi-info-circle-fill"></i>
-                                        Вы создаете заявку на тур: <strong>{{ $tour->title }}</strong>
-                                    </div>
-                                @endif
-
-                                <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
-                                    @csrf
-
-                                    @if($tour)
-                                        <input type="hidden" name="tour_id" value="{{ $tour->id }}">
-                                    @endif
-
-                                    <!-- Направление -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0"><i class="bi bi-geo-alt-fill"></i> Направление</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-4">
-                                                    <label for="departure_city_guest" class="form-label">Город вылета <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control @error('departure_city') is-invalid @enderror" id="departure_city_guest" name="departure_city" value="{{ old('departure_city', $tour->departure_city ?? 'Санкт-Петербург') }}" list="departureCitiesListGuest" required>
-                                                    <datalist id="departureCitiesListGuest">
-                                                        @foreach($departureCities as $city)
-                                                            <option value="{{ $city }}">
-                                                        @endforeach
-                                                    </datalist>
-                                                    @error('departure_city')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label for="destination_country_guest" class="form-label">Страна <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control @error('destination_country') is-invalid @enderror" id="destination_country_guest" name="destination_country" value="{{ old('destination_country', $tour->destination_country ?? '') }}" list="destinationCountriesListGuest" required>
-                                                    <datalist id="destinationCountriesListGuest">
-                                                        @foreach($destinationCountries as $country)
-                                                            <option value="{{ $country }}">
-                                                        @endforeach
-                                                    </datalist>
-                                                    @error('destination_country')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label for="destination_city_guest" class="form-label">Курорт/Город</label>
-                                                    <input type="text" class="form-control @error('destination_city') is-invalid @enderror" id="destination_city_guest" name="destination_city" value="{{ old('destination_city', $tour->destination_city ?? '') }}" list="destinationCitiesListGuest" placeholder="Сначала выберите страну">
-                                                    <datalist id="destinationCitiesListGuest"></datalist>
-                                                    @error('destination_city')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Даты и ночи -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0"><i class="bi bi-calendar-event-fill"></i> Даты поездки</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="start_date_guest" class="form-label">Дата вылета (с) <span class="text-danger">*</span></label>
-                                                    <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date_guest" name="start_date" value="{{ old('start_date', $tour->start_date ?? '') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
-                                                    @error('start_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="start_date_end_guest" class="form-label">Дата вылета (по)</label>
-                                                    <input type="date" class="form-control @error('start_date_end') is-invalid @enderror" id="start_date_end_guest" name="start_date_end" value="{{ old('start_date_end') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                                                    @error('start_date_end')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="nights_guest" class="form-label">Количество ночей (от) <span class="text-danger">*</span></label>
-                                                    <input type="number" class="form-control @error('nights') is-invalid @enderror" id="nights_guest" name="nights" value="{{ old('nights', $tour->nights ?? 7) }}" min="1" max="30" required>
-                                                    @error('nights')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="nights_max_guest" class="form-label">Количество ночей (до)</label>
-                                                    <input type="number" class="form-control @error('nights_max') is-invalid @enderror" id="nights_max_guest" name="nights_max" value="{{ old('nights_max') }}" min="1" max="30">
-                                                    @error('nights_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Туристы -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0"><i class="bi bi-people-fill"></i> Количество туристов</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="adults_guest" class="form-label">Взрослых <span class="text-danger">*</span></label>
-                                                    <input type="number" class="form-control @error('adults') is-invalid @enderror" id="adults_guest" name="adults" value="{{ old('adults', 2) }}" min="1" max="10" required>
-                                                    @error('adults')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="children_count_guest" class="form-label">Детей</label>
-                                                    <select class="form-select @error('children') is-invalid @enderror" id="children_count_guest" name="children">
-                                                        @for($i = 0; $i <= 5; $i++)
-                                                            <option value="{{ $i }}" {{ old('children', 0) == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                                        @endfor
-                                                    </select>
-                                                    @error('children')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                                </div>
-                                            </div>
-                                            <div id="childrenAgesBlockGuest" style="display: none;">
-                                                <label class="form-label">Возраст детей</label>
-                                                <div id="childrenAgesContainerGuest" class="row"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Пожелания -->
-                                    <div class="card mb-4">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <textarea class="form-control @error('notes') is-invalid @enderror" id="notes_guest" name="notes" rows="4" placeholder="Укажите ваши пожелания...">{{ old('notes') }}</textarea>
-                                            @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Кнопки -->
-                                    <div class="d-flex justify-content-between mt-4">
-                                        <a href="{{ route('home.index') }}" class="btn btn-secondary btn-lg">
-                                            <i class="bi bi-arrow-left"></i> Отмена
-                                        </a>
-                                        <button type="submit" class="btn btn-primary btn-lg">
-                                            <i class="bi bi-check-circle-fill"></i> Создать заявку
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    @endguest
 @endsection
 
 @push('styles')
@@ -658,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     initChildrenAges('children_count', 'childrenAgesBlock', 'childrenAgesContainer');
-    initChildrenAges('children_count_guest', 'childrenAgesBlockGuest', 'childrenAgesContainerGuest');
 
     function getYearWord(age) {
         const lastDigit = age % 10;
@@ -723,7 +570,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     initDestinationFilter('destination_country', 'destination_city', 'destinationCitiesList');
-    initDestinationFilter('destination_country_guest', 'destination_city_guest', 'destinationCitiesListGuest');
 });
 </script>
 @endpush

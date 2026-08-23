@@ -975,9 +975,9 @@
                                             <small class="text-muted">за человека</small>
                                         </div>
                                         
-                                        <button type="button" class="btn btn-primary btn-lg w-100" onclick="openBookingModal({{ $tour->id }})">
+                                        <a href="{{ route('bookings.create', ['tour_id' => $tour->id]) }}" class="btn btn-primary btn-lg w-100">
                                             📞 Связаться с менеджером
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -1000,48 +1000,6 @@
     </div>
 </div>
 
-<!-- Модальное окно для заявки -->
-<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="bookingModalLabel">Оставить заявку на тур</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('bookings.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <input type="hidden" name="tour_id" id="bookingTourId">
-                    
-                    @guest
-                        <div class="mb-3">
-                            <label for="contact_name" class="form-label">Ваше имя</label>
-                            <input type="text" class="form-control" id="contact_name" name="contact_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" class="form-control" required placeholder="ivan@example.com">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Телефон <span class="text-danger">*</span></label>
-                            <input type="tel" name="phone" id="phoneInput" class="form-control" required placeholder="+7 (999) 123-45-67">
-                        </div>
-                    @endauth
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Комментарий или пожелания</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="Напишите ваши пожелания..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">Отправить заявку</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @section('scripts')
@@ -1052,11 +1010,6 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
 
 <script>
-function openBookingModal(tourId) {
-    document.getElementById('bookingTourId').value = tourId;
-    new bootstrap.Modal(document.getElementById('bookingModal')).show();
-}
-
 // Инициализация daterangepicker
 $(document).ready(function() {
     // Настройка локали для moment.js
@@ -1112,28 +1065,6 @@ $(document).ready(function() {
         $('#end_date').val('');
     });
 });
-
-// Маска телефона
-function formatPhoneNumber(input) {
-    let value = input.value.replace(/\D/g, '');
-    
-    if (value.length === 0) {
-        input.value = '';
-        return;
-    }
-    
-    if (value.length <= 1) {
-        input.value = '+7';
-    } else if (value.length <= 4) {
-        input.value = '+7 (' + value.substring(1);
-    } else if (value.length <= 7) {
-        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4);
-    } else if (value.length <= 9) {
-        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4, 7) + '-' + value.substring(7);
-    } else {
-        input.value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4, 7) + '-' + value.substring(7, 9) + '-' + value.substring(9, 11);
-    }
-}
 
 // Автообновление курортов с галочками
 function updateResorts() {
@@ -1264,14 +1195,6 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
         });
     });
-    
-    // Инициализация маски телефона
-    const phoneInput = document.getElementById('phoneInput');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            formatPhoneNumber(this);
-        });
-    }
     
     // Инициализация автообновления курортов
     const countrySelect = document.querySelector('select[name="destination_country"]');

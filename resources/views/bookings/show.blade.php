@@ -41,11 +41,6 @@
         <div class="row">
     @endauth
 
-    @guest
-        <main>
-            <div class="container mt-5">
-                <div class="row">
-    @endguest
             <div class="col-md-8">
                 <!-- Основная информация о заявке -->
                 <div class="@auth card-custom @else card shadow @endauth mb-4">
@@ -680,12 +675,6 @@
     @auth
         </div>
     @endauth
-
-    @guest
-                </div>
-            </div>
-        </main>
-    @endguest
 @endsection
 
 @push('styles')

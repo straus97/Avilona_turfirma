@@ -27,11 +27,6 @@
     </div>
 @endauth
 
-@guest
-<main>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-@endguest
             <div class="col-md-8">
                 <div class="@auth card-custom @else card shadow @endauth">
                     @auth
@@ -187,9 +182,4 @@
                     @endauth
                 </div>
             </div>
-@guest
-        </div>
-    </div>
-</main>
-@endguest
 @endsection

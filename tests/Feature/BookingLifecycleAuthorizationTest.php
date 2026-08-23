@@ -24,6 +24,25 @@ class BookingLifecycleAuthorizationTest extends TestCase
     // 1. Unauthenticated users cannot access lifecycle mutation routes
     // -----------------------------------------------------------------------
 
+    public function test_unauthenticated_cannot_open_create_booking(): void
+    {
+        $this->get(route('bookings.create'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_unauthenticated_cannot_store_booking(): void
+    {
+        $this->post(route('bookings.store'), [
+            'departure_city'       => 'Moscow',
+            'destination_country'  => 'Turkey',
+            'start_date'           => now()->addDays(10)->format('Y-m-d'),
+            'nights'               => 7,
+            'adults'               => 2,
+        ])->assertRedirect(route('login'));
+
+        $this->assertDatabaseCount('bookings', 0);
+    }
+
     public function test_unauthenticated_cannot_view_booking(): void
     {
         $owner   = $this->makeUser(Role::TOURIST);
