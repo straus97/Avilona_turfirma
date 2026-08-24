@@ -27,7 +27,7 @@
                                         <p class="card-text">{{ $item_employee->position }}</p>
                                         @endif
                                         @if($item_employee->tel)
-                                        <p class="card-text">Телефон: <a href="tel:{{ $item_employee->whatsapp ?? $item_employee->tel }}"
+                                        <p class="card-text">Телефон: <a href="tel:{{ $item_employee->tel }}"
                                                                          target="_blank">{{ $item_employee->tel }}</a></p>
                                         @endif
                                         @if($item_employee->email)
