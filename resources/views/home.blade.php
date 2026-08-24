@@ -717,12 +717,30 @@
                 </div>
             </div>
             <div class="container">
+                @php
+                    // E1-A1-F3: локальная проверка согласия для карты. Не переиспользует
+                    // $avilonaAnalyticsConsent из layouts/main.blade.php — секция content
+                    // этого шаблона выполняется раньше, чем @php родительского layout,
+                    // поэтому эта переменная там ещё не определена.
+                    $avilonaMapConsent = \App\Support\CookieConsent::allowsAnalytics(
+                        request()->cookie(\App\Support\CookieConsent::COOKIE_NAME)
+                    );
+                @endphp
+                @if($avilonaMapConsent)
                 <div class="embed-responsive embed-responsive-16by9">
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2005.2877751084227!2d30.202907216066!3d59.82775128183606!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4696311aec4c423b%3A0x7f0d41bbdff2477a!2z0KLRg9GA0LjRgdGC0LjRh9C10YHQutC-0LUg0LDQs9C10L3RgtGB0YLQstC-INCQ0LLQuNC70L7QvdCw!5e0!3m2!1sru!2sru!4v1677875357483!5m2!1sru!2sru"
                         width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
+                @else
+                <div id="google-map-consent-placeholder" class="border rounded p-4 text-center bg-light">
+                    <p class="mb-2">Интерактивная карта Google не загружается автоматически без вашего согласия на использование необязательных cookie.</p>
+                    <p class="mb-2"><strong>Адрес офиса:</strong><br>198261, Россия, Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
+                    <a href="https://www.google.com/maps/search/?api=1&query=198261%2C+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F%2C+%D0%A1%D0%B0%D0%BD%D0%BA%D1%82-%D0%9F%D0%B5%D1%82%D0%B5%D1%80%D0%B1%D1%83%D1%80%D0%B3%2C+%D1%83%D0%BB.+%D0%93%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D0%BB%D0%B0+%D0%A1%D0%B8%D0%BC%D0%BE%D0%BD%D1%8F%D0%BA%D0%B0%2C+%D0%B4.+10"
+                       target="_blank" rel="noopener noreferrer">Открыть в Google Картах</a>
+                </div>
+                @endif
             </div>
         </div>
     </main>

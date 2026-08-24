@@ -233,4 +233,50 @@ class PublicCookieConsentTest extends TestCase
         $this->assertStringNotContainsString('licntF51C', $html);
         $this->assertStringNotContainsString('top-fwz1.mail.ru', $html);
     }
+
+    // -----------------------------------------------------------------------
+    // 8. E1-A1-F3: Google Maps embed gated on the same v1_all threshold
+    // -----------------------------------------------------------------------
+
+    private const MAP_OFFICE_ADDRESS = '198261, Россия, Санкт-Петербург, ул. Генерала Симоняка, д. 10';
+
+    private function assertMapEmbedAbsentWithPlaceholder(string $html): void
+    {
+        $this->assertStringNotContainsString('www.google.com/maps/embed', $html);
+        $this->assertStringNotContainsString('maps.googleapis.com', $html);
+        $this->assertStringContainsString('id="google-map-consent-placeholder"', $html);
+        $this->assertStringContainsString(self::MAP_OFFICE_ADDRESS, $html);
+        $this->assertStringContainsString('Открыть в Google Картах', $html);
+    }
+
+    public function test_first_visit_without_consent_does_not_load_google_maps_embed(): void
+    {
+        Http::preventStrayRequests();
+
+        $response = $this->get(route('home.index'));
+
+        $response->assertOk();
+        $this->assertMapEmbedAbsentWithPlaceholder($response->getContent());
+    }
+
+    public function test_necessary_only_consent_does_not_load_google_maps_embed(): void
+    {
+        Http::preventStrayRequests();
+
+        $response = $this->withUnencryptedCookie(self::COOKIE_NAME, 'v1_necessary')
+            ->get(route('home.index'));
+
+        $response->assertOk();
+        $this->assertMapEmbedAbsentWithPlaceholder($response->getContent());
+    }
+
+    public function test_full_consent_renders_the_existing_google_maps_embed(): void
+    {
+        $response = $this->withUnencryptedCookie(self::COOKIE_NAME, 'v1_all')
+            ->get(route('home.index'));
+
+        $response->assertOk();
+        $response->assertSee('www.google.com/maps/embed', false);
+        $response->assertDontSee('id="google-map-consent-placeholder"', false);
+    }
 }
