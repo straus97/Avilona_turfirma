@@ -279,13 +279,47 @@ BLADE;
             $xpath->query('//meta[@name="twitter:card"]')->item(0)->getAttribute('content')
         );
         $this->assertSame(
-            'https://www.avilona.ru/img/logo.png',
+            'https://avilona.ru/img/logo.png',
             $xpath->query('//meta[@name="twitter:image"]')->item(0)->getAttribute('content')
         );
 
         $titleNodes = $xpath->query('//title');
         $this->assertSame(1, $titleNodes->length);
         $this->assertNotSame('', trim($titleNodes->item(0)->textContent));
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. Social-preview image metadata uses one canonical host
+    // -----------------------------------------------------------------------
+
+    public function test_social_preview_image_metadata_uses_one_canonical_host(): void
+    {
+        $response = $this->get(route('home.index'));
+        $response->assertOk();
+
+        $doc = $this->parseHtml($response->getContent());
+        $xpath = new \DOMXPath($doc);
+
+        $ogImage = $xpath->query('//meta[@property="og:image"]')->item(0)->getAttribute('content');
+        $twitterImage = $xpath->query('//meta[@name="twitter:image"]')->item(0)->getAttribute('content');
+
+        $this->assertNotSame('', $ogImage);
+        $this->assertNotSame('', $twitterImage);
+
+        // og:image and twitter:image must resolve to the exact same absolute URL,
+        // so the split between avilona.ru and www.avilona.ru cannot silently return.
+        $this->assertSame($ogImage, $twitterImage);
+
+        $ogHost = parse_url($ogImage, PHP_URL_HOST);
+        $twitterHost = parse_url($twitterImage, PHP_URL_HOST);
+
+        $this->assertSame($ogHost, $twitterHost);
+        $this->assertSame('avilona.ru', $ogHost, 'Social-preview images must use the site\'s canonical bare host, matching the "| avilona.ru" convention used elsewhere in the layout');
+        $this->assertStringStartsWith('https://', $ogImage);
+        $this->assertStringStartsWith('https://', $twitterImage);
+
+        $layout = file_get_contents(resource_path('views/layouts/main.blade.php'));
+        $this->assertStringNotContainsString('https://www.avilona.ru/img/logo.png', $layout);
     }
 
     // -----------------------------------------------------------------------

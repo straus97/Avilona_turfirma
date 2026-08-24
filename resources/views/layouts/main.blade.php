@@ -47,7 +47,7 @@
           content="@yield('twitter_title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')">
     <meta name="twitter:description"
           content="@yield('twitter_description', 'Туристическая фирма Авилона предлагает лучшие туры и путевки для отдыха в России и за границей. Индивидуальный подход к каждому клиенту, горящие предложения, удобный конструктор туров. Подарите себе незабываемые впечатления и отдых вместе с нами.')">
-    <meta name="twitter:image" content="https://www.avilona.ru/img/logo.png">
+    <meta name="twitter:image" content="https://avilona.ru/img/logo.png">
     <link rel="shortcut icon" href="{{ asset('img/favicon.ico') }}" type="image/x-icon">
     <title>@yield('title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')</title>
     
