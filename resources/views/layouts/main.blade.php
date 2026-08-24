@@ -187,11 +187,11 @@
                         <a class="nav-link" href="{{route('home.index')}}">Главная</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCompany" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
                             Компания
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownCompany">
                             <li><a class="dropdown-item h5 pb-2" href="{{route('about_company.index')}}">О компании</a>
                             </li>
                             <li><a class="dropdown-item h5 pb-2" href="{{route('employees.index')}}">Сотрудники</a></li>
@@ -211,11 +211,11 @@
                         <a class="nav-link" href="{{route('review.index')}}">Отзывы</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUsefulInfo" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
                             Полезная информация
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsefulInfo">
                             <li><a class="dropdown-item h5 pb-2" href="{{route('interesting_articles.index')}}">Интересные
                                     статьи</a></li>
                             <li><a class="dropdown-item h5 pb-2" href="{{route('helpful_news.index')}}">Новости</a></li>
