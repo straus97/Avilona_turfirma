@@ -119,8 +119,9 @@
         <div class="email-footer">
             <p><strong>ООО "Авилона"</strong></p>
             <p>
-                Телефон: <a href="tel:+74951234567">+7 (495) 123-45-67</a><br>
-                Email: <a href="mailto:info@avilona.ru">info@avilona.ru</a><br>
+                Телефон: <a href="tel:+79219314345">+7 (921) 931-43-45</a>,
+                <a href="tel:+79219842022">+7 (921) 984-20-22</a><br>
+                Email: <a href="mailto:avilonatur@bk.ru">avilonatur@bk.ru</a><br>
                 Сайт: <a href="{{ config('app.url') }}">{{ config('app.url') }}</a>
             </p>
             <p style="margin-top: 15px; color: #999;">

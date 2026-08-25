@@ -450,6 +450,32 @@ class BookingCreatedEmailPreferenceTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 13. Общий подвал письма содержит актуальные контакты компании и не
+    //     содержит устаревшие шаблонные значения
+    // -----------------------------------------------------------------------
+
+    public function test_booking_created_mail_footer_uses_current_company_contacts(): void
+    {
+        $owner = $this->makeUser(Role::TOURIST);
+        $booking = $this->makeBookingFor($owner);
+
+        $this->dispatchListener($booking);
+
+        Mail::assertQueued(
+            BookingCreatedMail::class,
+            function (BookingCreatedMail $mail): bool {
+                $html = $mail->render();
+
+                return str_contains($html, '+7 (921) 931-43-45')
+                    && str_contains($html, '+7 (921) 984-20-22')
+                    && str_contains($html, 'avilonatur@bk.ru')
+                    && ! str_contains($html, '+7 (495) 123-45-67')
+                    && ! str_contains($html, 'info@avilona.ru');
+            }
+        );
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
