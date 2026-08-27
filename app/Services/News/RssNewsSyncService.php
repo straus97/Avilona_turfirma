@@ -3,6 +3,7 @@
 namespace App\Services\News;
 
 use App\Models\News;
+use App\Support\NewsHtmlSanitizer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -132,6 +133,10 @@ class RssNewsSyncService
 
         $encoded = $this->firstValueNS($item, self::CONTENT_NS, 'encoded');
         $description = $encoded !== null ? str_replace('<p>&nbsp;</p>', '', $encoded) : '';
+        // Внешний фид — недоверенный источник: исполняемая разметка (script,
+        // обработчики событий, javascript:-ссылки, iframe/object/embed и т.п.)
+        // не должна попадать в хранимое описание. См. App\Support\NewsHtmlSanitizer.
+        $description = NewsHtmlSanitizer::sanitize($description);
 
         $image = $this->extractImage($item, $encoded);
         // image nullable string(255): некорректный/слишком длинный URL не храним усечённым.

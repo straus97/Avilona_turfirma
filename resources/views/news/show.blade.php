@@ -18,7 +18,7 @@
                         <h1 class="text-center mb-4">{{ $id_news->title ?? 'Без названия' }}</h1>
                         
                         <div class="news-content">
-                            {!! $id_news->description !!}
+                            {!! \App\Support\NewsHtmlSanitizer::sanitize($id_news->description) !!}
                         </div>
                         
                         <hr>

@@ -326,6 +326,119 @@ class SyncNewsRssCommandTest extends TestCase
         $this->assertSame($before, News::withTrashed()->orderBy('id')->get()->map->getAttributes()->all());
     }
 
+    /**
+     * S15 (E1-A5-F1): исполняемая разметка из внешнего фида не сохраняется как есть —
+     * script/обработчики событий/javascript:-ссылки/iframe вырезаются, но
+     * читаемый текст вокруг них сохраняется. См. App\Support\NewsHtmlSanitizer.
+     */
+    public function test_dangerous_encoded_markup_is_sanitized_before_persistence(): void
+    {
+        $encoded = '<p>Before script marker.</p>'
+            . '<script>alert(1)</script>'
+            . '<p>After script marker.</p>'
+            . '<img src="x" onerror="alert(1)">'
+            . '<p><a href="javascript:alert(1)">click marker</a></p>'
+            . '<iframe src="https://evil.example"></iframe>'
+            . '<p>Trailing safe marker.</p>';
+
+        $this->fakeFeed($this->rss([[
+            'title' => 'Malicious Encoded Item',
+            'link' => 'https://example.com/malicious',
+            'encoded' => $encoded,
+        ]]));
+
+        $this->artisan('news:sync-rss')->assertExitCode(0);
+
+        $row = News::where('link', 'https://example.com/malicious')->firstOrFail();
+
+        // Читаемый текст сохранён.
+        $this->assertStringContainsString('Before script marker.', $row->description);
+        $this->assertStringContainsString('After script marker.', $row->description);
+        $this->assertStringContainsString('click marker', $row->description);
+        $this->assertStringContainsString('Trailing safe marker.', $row->description);
+
+        // Опасная разметка не пережила очистку в хранимом значении.
+        $this->assertStringNotContainsString('<script', $row->description);
+        $this->assertStringNotContainsString('alert(1)', $row->description);
+        $this->assertStringNotContainsString('onerror', $row->description);
+        $this->assertStringNotContainsString('javascript:', $row->description);
+        $this->assertStringNotContainsString('<iframe', $row->description);
+        $this->assertStringNotContainsString('evil.example', $row->description);
+    }
+
+    /**
+     * S16 (E1-A5-F1 URL-obfuscation correction): TAB/LF/CR-обфусцированные и
+     * decimal/hex/named-entity-обфусцированные варианты схемы `javascript:`,
+     * а также percent-encoded обфускация, не должны сохраняться как активный
+     * href. Проверяется через фактический разбор DOM сохранённого значения
+     * (наличие/отсутствие атрибута href у каждой ссылки), а не только через
+     * отсутствие одной подстроки.
+     */
+    public function test_obfuscated_javascript_scheme_href_is_not_persisted(): void
+    {
+        $encoded = '<p>Before obfuscated marker.</p>'
+            . '<p><a href="java&#x09;script:alert(1)">obfuscated hex entity tab</a></p>'
+            . '<p><a href="java&#9;script:alert(1)">obfuscated decimal entity tab</a></p>'
+            . '<p><a href="java&Tab;script:alert(1)">obfuscated named entity tab</a></p>'
+            . '<p><a href="javascript&#58;alert(1)">obfuscated entity colon</a></p>'
+            . '<p><a href="java%09script:alert(1)">percent tab scheme</a></p>'
+            . '<p><a href="java%0Ascript:alert(1)">percent lf scheme</a></p>'
+            . '<p><a href="java%0Dscript:alert(1)">percent cr scheme</a></p>'
+            . '<p><a href="JAVASCRIPT:alert(1)">uppercase scheme</a></p>'
+            . '<p><a href="vbscript:alert(1)">vbscript scheme</a></p>'
+            . '<p><a href="https://example.com/safe">safe https link</a></p>'
+            . '<p><a href="mailto:contact@example.com">safe mailto link</a></p>'
+            . '<p><a href="/relative/path">safe relative link</a></p>'
+            . '<p>After obfuscated marker.</p>';
+
+        $this->fakeFeed($this->rss([[
+            'title' => 'Obfuscated Scheme Item',
+            'link' => 'https://example.com/obfuscated',
+            'encoded' => $encoded,
+        ]]));
+
+        $this->artisan('news:sync-rss')->assertExitCode(0);
+
+        $row = News::where('link', 'https://example.com/obfuscated')->firstOrFail();
+
+        // Читаемый текст вокруг всех вариантов сохранён.
+        $this->assertStringContainsString('Before obfuscated marker.', $row->description);
+        $this->assertStringContainsString('obfuscated hex entity tab', $row->description);
+        $this->assertStringContainsString('obfuscated decimal entity tab', $row->description);
+        $this->assertStringContainsString('obfuscated named entity tab', $row->description);
+        $this->assertStringContainsString('obfuscated entity colon', $row->description);
+        $this->assertStringContainsString('percent tab scheme', $row->description);
+        $this->assertStringContainsString('percent lf scheme', $row->description);
+        $this->assertStringContainsString('percent cr scheme', $row->description);
+        $this->assertStringContainsString('uppercase scheme', $row->description);
+        $this->assertStringContainsString('vbscript scheme', $row->description);
+        $this->assertStringContainsString('safe https link', $row->description);
+        $this->assertStringContainsString('safe mailto link', $row->description);
+        $this->assertStringContainsString('safe relative link', $row->description);
+        $this->assertStringContainsString('After obfuscated marker.', $row->description);
+
+        // Фактический DOM-разбор сохранённого значения: только явно
+        // разрешённые ссылки сохранили атрибут href.
+        $previousUseErrors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $row->description);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousUseErrors);
+
+        $hrefs = [];
+        foreach ($dom->getElementsByTagName('a') as $a) {
+            if ($a->hasAttribute('href')) {
+                $hrefs[] = $a->getAttribute('href');
+            }
+        }
+        sort($hrefs);
+
+        $this->assertSame(
+            ['/relative/path', 'https://example.com/safe', 'mailto:contact@example.com'],
+            $hrefs
+        );
+    }
+
     /** S14: нормализация ограничений колонок; слишком длинный link пропускается (без усечения). */
     public function test_field_constraints_are_normalized(): void
     {
