@@ -16,10 +16,12 @@
                 <div class="col-12 col-md-10">
                     <h1 class="text-center" style="font-size: 2rem;">{{$id_special->title}}</h1>
                     <hr>
+                    @if($id_special->image)
                     <div class="row justify-content-center">
                         <img src="{{ $id_special->image }}" class="card-img-top w-75" alt="{{$id_special->title}}">
                     </div>
                     <hr>
+                    @endif
                     <div class="row">
                         <div class="">
                             <p>{!! $id_special->content !!}</p>

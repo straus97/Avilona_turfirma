@@ -40,9 +40,13 @@
                                                  loading="lazy">
                                         @endif
                                         <div class="card-body text-center">
+                                            @if($item_destination_image->slug)
                                             <a href="{{ route('destinations.show_destinations_image', $item_destination_image->slug) }}">
                                                 <h5 class="card-title">{{ $item_destination_image->title }}</h5>
                                             </a>
+                                            @else
+                                            <h5 class="card-title">{{ $item_destination_image->title }}</h5>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

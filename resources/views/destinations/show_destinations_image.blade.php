@@ -16,11 +16,13 @@
                 <div class="col-md-10">
                     <h1 class="text-center" style="font-size: 2rem;">Немного о "{{$id_destination_image->title}}"</h1>
                     <hr>
+                    @if($id_destination_image->image_large)
                     <div class="row justify-content-center">
                         <img src="{{ $id_destination_image->image_large }}" class="card-img-top w-75"
                              alt="{{$id_destination_image->title}}">
                     </div>
                     <hr>
+                    @endif
                     <div class="row">
                         <div class="">
                             <p>{!! $id_destination_image->description !!}</p>

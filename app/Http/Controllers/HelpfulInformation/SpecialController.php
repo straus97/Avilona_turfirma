@@ -11,7 +11,7 @@ class SpecialController extends Controller
     public function __invoke($slug)
     {
         $cacheKey = 'special_' . $slug;
-        $cacheTime = 60; // Время кеширования в минутах
+        $cacheTime = 3600; // 1 час (в секундах)
         $id_special = Cache::remember($cacheKey, $cacheTime, function () use ($slug) {
             return OurClient::where('slug', $slug)->firstOrFail();
         });

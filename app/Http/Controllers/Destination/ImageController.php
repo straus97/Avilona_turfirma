@@ -11,7 +11,7 @@ class ImageController extends Controller
     public function __invoke($slug)
     {
         $cacheKey = 'destination_image_' . $slug;
-        $cacheTime = 60; // Время кеширования в минутах
+        $cacheTime = 3600; // 1 час (в секундах)
         $id_destination_image = Cache::remember($cacheKey, $cacheTime, function () use ($slug) {
             return Destination_image::where('slug', $slug)->firstOrFail();
         });

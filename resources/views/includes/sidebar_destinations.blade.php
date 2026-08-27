@@ -2,10 +2,14 @@
     <ul class="navbar-nav h5">
         @foreach($destination_title_menu as $item_destination_title_menu)
             <li class="nav-item">
+                @if($item_destination_title_menu->slug)
                 <a class="nav-link"
                    href="{{ route('destinations.show_destinations_image', $item_destination_title_menu->slug) }}">
                     {{$item_destination_title_menu->title}}
                 </a>
+                @else
+                <span class="nav-link">{{$item_destination_title_menu->title}}</span>
+                @endif
             </li>
         @endforeach
     </ul>

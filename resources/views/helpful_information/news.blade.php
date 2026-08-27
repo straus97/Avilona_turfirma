@@ -30,7 +30,7 @@
                                     <div class="card-body flex-grow-1 d-flex flex-column">
                                         <h5 class="card-title">{{ $item->title ?? 'Без названия' }}</h5>
                                         @if($item->description)
-                                        <p class="card-text flex-grow-1">{!! App\Helpers\TextHelper::formatNewsDescription($item->description) !!}</p>
+                                        <p class="card-text flex-grow-1">{{ App\Helpers\TextHelper::formatNewsDescription($item->description) }}</p>
                                         @endif
                                         @if($item->slug)
                                         <a href="{{ route('helpful_news_id.index', $item->slug) }}"

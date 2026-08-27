@@ -11,7 +11,7 @@ class ClientsController extends Controller
     public function __invoke()
     {
         $cacheKey = 'clients_page_' . request('page', 1); // Учитываем пагинацию
-        $cacheTime = 60; // Время кеширования в минутах
+        $cacheTime = 3600; // 1 час (в секундах)
         $special = Cache::remember($cacheKey, $cacheTime, function () {
             return OurClient::paginate(6); // показать 6 первые (актуальные) записи
         });

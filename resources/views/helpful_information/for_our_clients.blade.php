@@ -23,8 +23,10 @@
                         @foreach ($special as $item_special)
                             <div class="col-sm-6 col-lg-4 mb-3">
                                 <div class="card">
+                                    @if($item_special->image)
                                     <img src="{{ $item_special->image }}" class="card-img-top"
                                          alt="{{ $item_special->title }}">
+                                    @endif
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $item_special->title }}</h5>
                                         <p class="card-text">{!! Str::limit($item_special->content, 100) !!}</p>
