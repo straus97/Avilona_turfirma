@@ -1,18 +1,19 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-08-23**
+Актуализировано: **2026-08-28**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- Functional HEAD: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`
-- Functional subject: `fix: remove obsolete guest booking flow`
-- Stage 0–12: ✅ COMPLETE
-- Stage 13: ✅ COMPLETE (repository/local technical closure — not production deployment, not the endgame audit/redesign in E1–E6)
-- Full verified baseline: **917 tests / 4012 assertions**
-- PHP: 8.3.32
-- PHPUnit DB: SQLite `:memory:`
-- Project Sources: stale relative to this HEAD, refresh required after this docs-only commit (previous Project Sources checkpoint: `dc59ed912120872428efe2355e04dcff1d1b948a`)
+- Authoritative E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990`
+- Subject: `fix: close final public audit gaps`
+- Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
+- Stage 0–13: ✅ CLOSED
+- E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
+- **Next phase: E2 — Public UX / UI / Design Redesign**
+- Full verified baseline: **1001 tests / 7013 assertions** (PHPUnit 11.5.56, PHP 8.3.32, SQLite `:memory:`)
+- Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
+- Project Sources: stale relative to this HEAD, refresh required after this docs-only commit (previous Project Sources checkpoint: `8e8d6d96f4024953b4cca25f005d55429dec9e92`, 2026-08-24)
 
 ## Completed stages
 
@@ -147,7 +148,7 @@ Evidence:
 
 Historical finding: Admin and Manager had asymmetric legacy review cache clearing.
 
-Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup decision over unnecessary parity code. Not resolved by the Stage 13 docs closure — kept explicitly open, tracked outside Stage 13.
+Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup decision over unnecessary parity code. Not resolved by the Stage 13 docs closure — kept explicitly open, tracked outside Stage 13. Not reopened as an E1 defect; carry into E3 (cabinet pass) as a read-only relevance check unless a concrete live defect appears earlier.
 
 ### S13-R3 — public registration consent/policy
 ✅ COMPLETE — `1cef8d2642b3785e3ab759d5eedbc1ddd65b9cf9`, `a3824554033f92c0ef8723c6ab1cdc2a5c6eaa0f`
@@ -169,25 +170,37 @@ Full PHPUnit (917 / 4012), Stage 13 migration/schema inventory (4 migrations, al
 
 Documentation closure recorded in `docs/README.md` and this file. Project Sources refresh is a separate required follow-up (see Current state) and must be generated from the new docs closure HEAD, not from `dba20e2c`.
 
-## Endgame after Stage 13
+## Endgame after Stage 13 — E1…E6
 
 ### E1 — comprehensive project audit
-⬜ PLANNED
+✅ TECHNICALLY CLOSED — application commit `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`)
 
-Not only technical defects. Produce prioritized findings for:
+Baseline at closure: **1001 tests / 7013 assertions**.
 
-- functionality;
-- security/privacy;
-- code quality/duplication/dead code;
-- performance/query patterns;
-- content consistency;
-- responsive behavior;
-- accessibility/usability;
-- page/component composition;
-- old/rough visual decisions.
+Closed slices (details — `docs/README.md` §5A):
+
+- **E1-A1** — canonical social image host; duplicate public nav IDs; Google Maps consent gating.
+- **E1-A2** — employee `tel:` href; current payment/refund copy; transactional email public company details; stale public profile/dashboard disposition.
+- **E1-A3** — sitemap; robots.txt; regression coverage.
+- **E1-A4** — page-specific dynamic detail OG/Twitter title/description.
+- **E1-A5 / RSS** — external RSS News HTML sanitisation at ingestion + render-time for historical rows; safe URL-scheme handling; RSS security regressions.
+- **E1-RPD** — News listing decode-then-raw XSS; public inner-cache TTLs corrected to one hour; Destination/Specials nullable image robustness; Destination null-slug rendering.
+- **E1-FINAL** — About country links use slugs; Article rich HTML sanitised on Admin/Manager write + re-sanitised for historical rows; Article listing excerpt plain/escaped; About cache TTL; hardcoded 55/12 SEO claims removed; reload-captcha removed from response cache; Awards public regression coverage; Cyrillic `Str::slug` audit claim DISPROVEN by runtime (`«Путешествие по Азии» -> putesestvie-po-azii`).
+
+Intentionally deferred (NOT defects — do not "fix" accidentally):
+
+- `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 vs contacts 11:00–20:00 by prior appointment; no authoritative decision; must be resolved before final production release.
+- Per-page `og:type=article` refinement → E2.
+- Temporary public tour-search widget stays until E5.
+- News RSS scheduling — verify real production cron in E6; do not add Laravel scheduling blindly.
+- Future-risk raw HTML (`Best_offer` / `OurClient` / `Countries_image` / `Destination_image`) — no current untrusted web write path; do not reopen unless a CMS/write path is added.
 
 ### E2 — public-site UX/UI/design modernization
-⬜ PLANNED
+⬜ **NEXT**
+
+Not merely a cosmetic recolor — treat the public site as a coherent modern tourism website: information architecture, header/navigation, home-page hierarchy, typography, spacing, colour system, buttons/forms, cards, responsive behaviour, mobile navigation, visual consistency, destinations/countries, company pages, employees, awards, articles/news/special offers/reviews, contacts, empty/error states, consent UI, accessibility, trust/credibility, conversion paths, CTA consistency, image treatment, desktop/tablet/mobile.
+
+Begin with a **READ-ONLY visual/UX inventory and design-system proposal** before broad implementation. Do not redesign final tour-search mechanics; the current widget may be visually accommodated as a temporary component, its final provider/architecture belongs to E5.
 
 After analysis, improve coherent design system and individual pages/components:
 

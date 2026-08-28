@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-08-23**
+Дата актуализации содержания: **2026-08-28**
 
 ## 1. Текущий checkpoint
 
@@ -8,18 +8,21 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| Текущий функциональный checkpoint | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` |
-| Commit | `fix: remove obsolete guest booking flow` |
-| Предыдущий внешний documentation/source (Project Sources) checkpoint | `dc59ed912120872428efe2355e04dcff1d1b948a` (`docs: checkpoint stage 13 review moderation`) |
-| Full PHPUnit baseline | **917 tests / 4012 assertions** |
+| Authoritative E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) |
+| Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
+| Предыдущий внешний documentation/source (Project Sources) checkpoint | `8e8d6d96f4024953b4cca25f005d55429dec9e92` (`docs: checkpoint stage 13 complete`, 2026-08-24) |
+| Full PHPUnit baseline | **1001 tests / 7013 assertions** |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
 | PHPUnit | 11.5.56 |
-| Stage 0–12 | ✅ COMPLETE |
-| Stage 13 | ✅ **COMPLETE** (repository/local technical closure; см. §5) |
+| Stage 0–13 | ✅ CLOSED |
+| E1 Comprehensive Audit | ✅ **TECHNICALLY CLOSED** (см. §5A) |
+| Следующая фаза | **E2 — Public UX / UI / Design Redesign** (см. §9) |
 
-Этот файл фиксируется отдельным docs-only commit поверх функционального checkpoint `dba20e2c`. Documentation/source HEAD после этого commit будет новее функционального checkpoint и должен определяться Git, а не быть заранее зашит в этот файл.
+Единственная PHPUnit deprecation — это pre-existing XML schema deprecation; это не функциональный/кодовый сбой.
+
+Этот файл фиксируется отдельным docs-only commit поверх E1-closure application commit `08d06263`. Documentation/source HEAD после этого commit будет новее application commit и должен определяться Git, а не быть заранее зашит в этот файл.
 
 Project Sources ещё не обновлён под этот checkpoint — см. §8.
 
@@ -194,7 +197,7 @@ Commit: `7818c54ee3315e34f26fc8c1e9796b9b6417e79c` (`feat: add password visibili
 
 Это UX-улучшение внутри Stage 13, отдельным нумерованным этапом не считается.
 
-### 5.6 S13-R4 — Authenticated-only booking cleanup
+### 5.6 S13-R4 — Authenticated-only booking cleanup (Stage 13)
 
 Commit: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`).
 
@@ -207,6 +210,90 @@ Commit: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest 
 - граница unauthenticated create/store route покрыта тестами;
 - Tourist ownership и Admin/Manager new-client flow сохранены;
 - изменений booking schema/migrations не было.
+
+## 5A. E1 Comprehensive Audit — ✅ TECHNICALLY CLOSED
+
+Authoritative E1 closure application commit:
+`08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`).
+
+Authoritative PHPUnit baseline на закрытии E1:
+
+```text
+PHP 8.3.32
+PHPUnit 11.5.56
+SQLite :memory:
+full: 1001 tests / 7013 assertions
+```
+
+Единственная PHPUnit deprecation — pre-existing XML schema deprecation; это не
+функциональный/кодовый сбой.
+
+### 5A.1 Закрытые области E1
+
+**E1-A1**
+- канонический host для social image;
+- дубли ID в публичной навигации;
+- gating Google Maps за cookie consent.
+
+**E1-A2**
+- `tel:` href сотрудника;
+- актуальная копия по оплате/возврату;
+- публичные реквизиты компании в транзакционных письмах;
+- disposition устаревшего публичного profile/dashboard вопроса.
+
+**E1-A3**
+- sitemap;
+- robots.txt;
+- regression-покрытие.
+
+**E1-A4**
+- page-specific динамический OG/Twitter title/description для detail-страниц.
+
+**E1-A5 / RSS**
+- санитизация HTML внешнего RSS News при ингесте;
+- render-time санитизация для исторических News-строк;
+- безопасная обработка URL-схем;
+- RSS-related security regressions.
+
+**E1-RPD (consolidated package)**
+- News listing decode-then-raw XSS исправлен;
+- публичные inner-cache TTL исправлены на задуманный один час;
+- Destination nullable image robustness;
+- Specials nullable images;
+- Destination null-slug rendering.
+
+**E1-FINAL**
+- About page country links используют slug;
+- Article rich HTML санитизируется на Admin/Manager write;
+- Article detail пересанитизируется для исторических строк;
+- Article listing excerpt — plain/escaped;
+- article/special listing robustness;
+- About cache TTL исправлен;
+- убраны hardcoded SEO-заявления «55/12»;
+- reload-captcha убран из response cache;
+- Awards public regression coverage;
+- заявление аудита про Cyrillic `Str::slug` ОПРОВЕРГНУТО runtime-проверкой:
+  `«Путешествие по Азии» -> putesestvie-po-azii`; лишний slug fallback не добавлялся.
+
+### 5A.2 Намеренно отложенные / pending пункты E1
+
+Эти пункты **не «баг»** и не блокировали техническое закрытие E1. Последующие
+агенты не должны «чинить» их случайно.
+
+- **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** — конфликт копий часов работы:
+  home «будни 10:00–20:00» vs contacts «будни 11:00–20:00, по предварительной
+  записи». Авторитетного решения нет. **Не выбирать значение.** Должно быть
+  решено до финального production-релиза. Не технический блокер.
+- **OG type** — уточнение per-page `og:type=article` намеренно отложено в E2.
+- **Tour search** — существующий публичный tour-search widget остаётся
+  ВРЕМЕННЫМ. Не переделывать/заменять до E5 (выделенная фаза финального
+  решения по поиску туров).
+- **News RSS scheduling** — не добавлять Laravel scheduling вслепую; внешний
+  production cron может уже существовать. Проверить реальный production-механизм
+  в рамках E6 (operations/deployment).
+- **Future-risk raw HTML** — `Best_offer` / `OurClient` / `Countries_image` /
+  `Destination_image` raw-контент сейчас не имеет untrusted web write path. Не
+  переоткрывать как текущие XSS-дефекты, пока не появится CMS/write path.
 
 ## 6. Local DB notes
 
@@ -246,35 +333,62 @@ C4B2 Admin QA был реально изменён при C4C browser QA и по
 
 Closure audit зафиксировал, что канонические local MySQL evidence-таблицы структурно корректны, но на момент closure пусты: `reviews = 0`, `review_consents = 0`, `user_registration_consents = 0`, `tours = 0`. Это не является дефектом приложения — automated Stage 13 coverage полный, а local QA evidence rows на момент closure не сохранены.
 
-## 8. Stage 13 closure и Project Sources статус
+## 8. Stage 13 / E1 closure и Project Sources статус
 
-Stage 13 закрыт на уровне repository/local technical closure на функциональном HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`:
+Stage 13 закрыт на уровне repository/local technical closure на функциональном HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`. E1 Comprehensive Audit технически закрыт на application commit `08d0626311234faa06dedf2828cb878805241990` (§5A):
 
 - все Stage 13 миграции применены, pending = 0 (§6.1);
 - Stage 13 code/schema/legal/test reconciliation — PASS;
-- функциональных блокеров Stage 13 не осталось.
-
-Ранее в этом разделе перечислялись S13-R1–R4 как TODO; все они реализованы (§5.3–§5.6), поэтому пункты сняты отсюда.
+- E1 baseline: **1001 tests / 7013 assertions**;
+- функциональных блокеров Stage 13 / E1 не осталось (см. §5A.2 про намеренно отложенные пункты).
 
 ### 8.1 Project Sources — требуется refresh
 
 Активный (внешний) Project Sources checkpoint устарел относительно текущего repo:
 
-- предыдущий Project Sources checkpoint: `dc59ed912120872428efe2355e04dcff1d1b948a` (`docs: checkpoint stage 13 review moderation`);
-- с этого checkpoint репозиторий продвинулся через withdrawal (§5.3), R3 registration consent (§5.4), password UX (§5.5) и R4 booking cleanup (§5.6), плюс этот docs-only closure commit;
+- предыдущий Project Sources checkpoint: `8e8d6d96f4024953b4cca25f005d55429dec9e92` (`docs: checkpoint stage 13 complete`, 2026-08-24);
+- с этого checkpoint репозиторий продвинулся через весь E1 audit (E1-A1…E1-A5, E1-RPD, E1-FINAL, HEAD `08d06263`), плюс этот docs-only E1-closure commit;
 - Project Sources refresh **обязателен** после commit/push этого docs-only closure slice;
-- refresh должен генерироваться из **нового docs closure HEAD**, а не из `dba20e2c` (функционального HEAD до docs commit);
-- активный Project Sources набор заменяется только после верификации сгенерированного пакета.
+- refresh должен генерироваться из **нового docs closure HEAD**, а не из application HEAD `08d06263` до docs commit;
+- активный Project Sources набор заменяется только после верификации сгенерированного пакета;
+- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`), запускается пользователем из чистого pushed HEAD; publish в `C:\Avilona_private\ChatGPT_sources` с backup предыдущего набора в `archive/`.
 
-Refresh не выполнялся в рамках данной docs-only задачи.
+Refresh выполняется отдельным guarded шагом после этого docs commit (как и для checkpoint `8e8d6d96`).
 
-## 9. Endgame roadmap — обязательный финальный аудит и redesign
+## 9. Endgame roadmap — E1…E6
 
-После Stage 13 и базовой production-readiness нужен **отдельный комплексный pass всего проекта**, а не только bugfix audit.
+Канонический roadmap после Stage 13 (детали — `docs/roadmap.md`):
 
-### 9.1 Technical / product audit
+| Фаза | Название | Статус |
+|---|---|---|
+| E1 | Comprehensive Audit | ✅ CLOSED (§5A) |
+| **E2** | **Public UX / UI / Design Redesign** | **NEXT** |
+| E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | PENDING |
+| E4 | Stabilization / Regression / Browser / Device QA | PENDING |
+| E5 | Final Tour Search Solution | PENDING |
+| E6 | Production Deployment / Operations Validation | PENDING |
 
-Проверить:
+Следующая рабочая фаза — **E2**.
+
+### 9.0 E2 — стартовые принципы
+
+E2 — это не просто косметическая перекраска. Публичный сайт рассматривается как
+цельный современный туристический веб-сайт: information architecture,
+header/navigation, иерархия главной страницы, типографика, spacing, цветовая
+система, buttons/forms, cards, responsive behavior, мобильная навигация,
+визуальная консистентность, destinations/countries, страницы компании,
+сотрудники, awards, articles/news/special offers/reviews, contacts,
+empty/error states, consent UI, accessibility, trust/credibility, conversion
+paths, CTA consistency, image treatment, desktop/tablet/mobile.
+
+E2 **начинается с READ-ONLY visual/UX inventory и design-system proposal** до
+широкой реализации. Механику финального поиска туров в E2 не переделывать:
+текущий tour widget может быть визуально размещён как временный компонент, но
+его финальный provider/архитектура — это E5.
+
+### 9.1 Technical / product audit (E1 — выполнено)
+
+Покрыто в E1 (§5A). Оставлено здесь как чеклист областей:
 
 - functionality and error paths;
 - security/privacy/data minimization;
@@ -285,7 +399,7 @@ Refresh не выполнялся в рамках данной docs-only зад�
 - component/page composition;
 - accessibility/usability basics.
 
-### 9.2 Public UX/UI/design pass
+### 9.2 Public UX/UI/design pass (E2)
 
 Отдельно анализировать и при необходимости перерабатывать:
 
@@ -303,7 +417,7 @@ Refresh не выполнялся в рамках данной docs-only зад�
 
 Не менять всё механически: сначала audit/findings/priorities, затем approved redesign slices.
 
-### 9.3 Personal cabinet UX/UI/design pass
+### 9.3 Personal cabinet UX/UI/design pass (E3)
 
 Глубоко пройти tourist / manager / admin cabinets:
 
@@ -318,11 +432,30 @@ Refresh не выполнялся в рамках данной docs-only зад�
 - removal/merging/repositioning of awkward elements;
 - consistency between roles without стирания role-specific UX.
 
-### 9.4 Post-redesign validation
+### 9.4 Post-redesign validation (E4)
 
 После redesign — full regression + cross-device/browser QA + final production-readiness again.
 
-## 10. Поиск туров — самый последний продуктовый этап
+## 9A. Канонические факты компании
+
+Точные проектные факты (не менять при рефакторинге контента):
+
+- Официальный публичный e-mail: `avilonatur@bk.ru`.
+- Получатель входящей публичной формы: `straus97@mail.ru` — это намеренный
+  внутренний submission recipient; **не** заменять его автоматически на
+  публичный e-mail.
+- Текущий фактический офис / публичный адрес:
+  `198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10`.
+- Старый адрес на Звенигородской — **не** текущее физическое расположение.
+  Там, где Звенигородская явно помечена как юридический/регистрационный адрес,
+  это намеренно и не должно удаляться из-за переезда офиса.
+- Оплата: наличные; интернет-эквайринг; оплата по QR на расчётный счёт
+  организации; эквайринговый терминал в офисе.
+- Возвраты: на банковскую карту клиента; итоговая сумма зависит от условий/
+  решения туроператора; при, например, неподтверждённом отеле возможен полный
+  возврат.
+
+## 10. Поиск туров — самый последний продуктовый этап (E5)
 
 Текущий widget на homepage и `/tours` — временная заглушка. Известные local/UX факты на момент Stage 13 closure:
 
