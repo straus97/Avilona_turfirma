@@ -132,6 +132,36 @@ class PublicCacheTtlConsistencyTest extends TestCase
         $this->assertHourTtl('special_ttl-marker-special-detail');
     }
 
+    public function test_about_page_category_lookups_cache_for_one_hour(): void
+    {
+        Countries_image::create([
+            'title' => 'Ttl About Asia',
+            'slug' => 'ttl-about-asia',
+            'category' => 'Азия',
+            'description' => 'Body.',
+        ]);
+        Countries_image::create([
+            'title' => 'Ttl About Europe',
+            'slug' => 'ttl-about-europe',
+            'category' => 'Европа',
+            'description' => 'Body.',
+        ]);
+
+        $this->recordWrittenTtls();
+
+        $this->get(route('about_company.index'))->assertOk();
+
+        foreach ([
+            'about_category_asia',
+            'about_category_africa',
+            'about_category_middle_east',
+            'about_category_europe',
+            'about_category_caribbean',
+        ] as $key) {
+            $this->assertHourTtl($key);
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Static-source regression: no bare `= 60;` TTL literal survives
     // -----------------------------------------------------------------------
@@ -143,6 +173,7 @@ class PublicCacheTtlConsistencyTest extends TestCase
             'Http/Controllers/Destination/ImageController.php',
             'Http/Controllers/HelpfulInformation/ClientsController.php',
             'Http/Controllers/HelpfulInformation/SpecialController.php',
+            'Http/Controllers/Company/AboutController.php',
         ];
 
         foreach ($files as $relative) {

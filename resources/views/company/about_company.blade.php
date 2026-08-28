@@ -41,55 +41,44 @@
                 </div>
                 <h1 class="text-center">Основные направления</h1>
                 <p>Мы предоставляем комплексные туристические услуги по следующим направлениям:</p>
+                {{-- E1-FINAL-01: ссылки строятся из ->slug (параметр маршрута — {slug},
+                     Countries\ImageController резолвит по slug). Если slug отсутствует,
+                     показываем название без ссылки — та же защита, что в публичных
+                     списках стран/направлений. --}}
                 <ul>
                     <li>Азия:
                         @for($i = 0; $i < count($category_asia); $i++)
-                            <a href="{{route('countries.show_countries_image', $category_asia[$i] -> id)}}"
-                               target="_blank">{{ $category_asia[$i]->title }}</a>@if($i != count($category_asia) - 1)
-                                ,
-                            @else
-                                .
-                            @endif
+                            @if($category_asia[$i]->slug)
+                                <a href="{{route('countries.show_countries_image', $category_asia[$i]->slug)}}"
+                                   target="_blank">{{ $category_asia[$i]->title }}</a>@else{{ $category_asia[$i]->title }}@endif{{ $i != count($category_asia) - 1 ? ',' : '.' }}
                         @endfor
                     </li>
                     <li>Африка:
                         @for($i = 0; $i < count($category_africa); $i++)
-                            <a href="{{route('countries.show_countries_image', $category_africa[$i] -> id)}}"
-                               target="_blank">{{ $category_africa[$i]->title }}</a>@if($i != count($category_africa) - 1)
-                                ,
-                            @else
-                                .
-                            @endif
+                            @if($category_africa[$i]->slug)
+                                <a href="{{route('countries.show_countries_image', $category_africa[$i]->slug)}}"
+                                   target="_blank">{{ $category_africa[$i]->title }}</a>@else{{ $category_africa[$i]->title }}@endif{{ $i != count($category_africa) - 1 ? ',' : '.' }}
                         @endfor
                     </li>
                     <li>Ближний Восток:
                         @for($i = 0; $i < count($category_middle_east); $i++)
-                            <a href="{{route('countries.show_countries_image', $category_middle_east[$i] -> id)}}"
-                               target="_blank">{{ $category_middle_east[$i]->title }}</a>@if($i != count($category_middle_east) - 1)
-                                ,
-                            @else
-                                .
-                            @endif
+                            @if($category_middle_east[$i]->slug)
+                                <a href="{{route('countries.show_countries_image', $category_middle_east[$i]->slug)}}"
+                                   target="_blank">{{ $category_middle_east[$i]->title }}</a>@else{{ $category_middle_east[$i]->title }}@endif{{ $i != count($category_middle_east) - 1 ? ',' : '.' }}
                         @endfor
                     </li>
                     <li>Европа:
                         @for($i = 0; $i < count($category_europe); $i++)
-                            <a href="{{route('countries.show_countries_image', $category_europe[$i] -> id)}}"
-                               target="_blank">{{ $category_europe[$i]->title }}</a>@if($i != count($category_europe) - 1)
-                                ,
-                            @else
-                                .
-                            @endif
+                            @if($category_europe[$i]->slug)
+                                <a href="{{route('countries.show_countries_image', $category_europe[$i]->slug)}}"
+                                   target="_blank">{{ $category_europe[$i]->title }}</a>@else{{ $category_europe[$i]->title }}@endif{{ $i != count($category_europe) - 1 ? ',' : '.' }}
                         @endfor
                     </li>
                     <li>Карибский бассейн:
                         @for($i = 0; $i < count($category_caribbean); $i++)
-                            <a href="{{route('countries.show_countries_image', $category_caribbean[$i] -> id)}}"
-                               target="_blank">{{ $category_caribbean[$i]->title }}</a>@if($i != count($category_caribbean) - 1)
-                                ,
-                            @else
-                                .
-                            @endif
+                            @if($category_caribbean[$i]->slug)
+                                <a href="{{route('countries.show_countries_image', $category_caribbean[$i]->slug)}}"
+                                   target="_blank">{{ $category_caribbean[$i]->title }}</a>@else{{ $category_caribbean[$i]->title }}@endif{{ $i != count($category_caribbean) - 1 ? ',' : '.' }}
                         @endfor
                     </li>
                 </ul>

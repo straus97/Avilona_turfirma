@@ -10,7 +10,7 @@ class AboutController extends Controller
 {
     public function __invoke()
     {
-        $cacheTime = 60; // Время кеширования в минутах
+        $cacheTime = 3600; // 1 hour, in seconds
         $category_asia = Cache::remember('about_category_asia', $cacheTime, function () {
             return Countries_image::where('category', 'Азия')->get();
         });

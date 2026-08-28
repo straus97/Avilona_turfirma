@@ -19,15 +19,18 @@
                 @include('includes.sidebar')
                 <div class="col-12 col-lg-10">
                     <h1 class="text-center mb-3" style="font-size: 2rem;">Интересные статьи</h1>
+                    @if ($interesting_news->count() > 0)
                     <div class="row">
                         @foreach ($interesting_news as $item_news)
                             <div class="col-sm-6 col-lg-4 mb-3">
                                 <div class="card">
+                                    @if ($item_news->image)
                                     <img src="{{ $item_news->image }}" class="card-img-top"
                                          alt="{{ $item_news->title }}">
+                                    @endif
                                     <div class="card-body">
                                         <h5 class="card-title">{{ $item_news->title }}</h5>
-                                        <p class="card-text">{!! Str::limit($item_news->content, 100)  !!}</p>
+                                        <p class="card-text">{{ \App\Helpers\TextHelper::plainExcerpt($item_news->content, 100) }}</p>
                                         <a href="{{route('helpful_information.show_interesting_news', $item_news->slug)}}"
                                            class="btn btn-primary">Подробнее</a>
                                     </div>
@@ -37,9 +40,14 @@
                     </div>
                     <nav class="d-flex justify-content-center mt-3">
                         <ul class="pagination">
-                            {{ $interesting_news->links() }}
+                            {{ $interesting_news->appends(request()->query())->links() }}
                         </ul>
                     </nav>
+                    @else
+                    <div class="alert alert-info" role="alert">
+                        <p class="mb-0">Статьи пока не добавлены. Загляните позже — мы регулярно публикуем новые материалы о путешествиях.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

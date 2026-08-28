@@ -16,7 +16,7 @@ class ImageController extends Controller
             return Destination_image::where('slug', $slug)->firstOrFail();
         });
         $title = $id_destination_image->title . " | avilona.ru";
-        $meta_description = "Узнайте больше о направлении " . $id_destination_image->title . " с туристической фирмой Авилона. Туристическая фирма Авилона предлагает 12 популярных туристических направлений. Узнайте больше о каждом направлении и выберите идеальное место для вашего отпуска.";
+        $meta_description = "Узнайте больше о направлении " . $id_destination_image->title . " с туристической фирмой Авилона. Туристическая фирма Авилона предлагает популярные туристические направления. Узнайте больше о каждом направлении и выберите идеальное место для вашего отпуска.";
         $meta_keywords = "туристические направления, популярные направления, отдых, туризм, отпуск, туристическая фирма Авилона,туризм, направления, " . $id_destination_image->title;
         $destination_title_menu = Cache::remember('destination_title_menu', $cacheTime, function () {
             return Destination_image::orderBy('title', 'asc')->get();

@@ -10,6 +10,7 @@ use App\Models\ReviewConsent;
 use App\Models\Reviews;
 use App\Models\UserDocument;
 use App\Models\User;
+use App\Support\NewsHtmlSanitizer;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -663,6 +664,10 @@ class ManagerController extends Controller
             'slug' => ['required', 'string', 'max:255', Rule::unique('articles', 'slug')],
         ])->validate();
 
+        // E1-FINAL-02: Article.content — богатый HTML, но по allow-list.
+        // Очистка на записи через тот же проверенный санитайзер, что и News.
+        $validated['content'] = NewsHtmlSanitizer::sanitize($validated['content']);
+
         Article::create($validated);
 
         return redirect()->route('cabinet.manager.articles')
@@ -686,6 +691,9 @@ class ManagerController extends Controller
             'image' => 'nullable|url',
             'slug' => ['required', 'string', 'max:255', Rule::unique('articles', 'slug')->ignore($article->id)],
         ])->validate();
+
+        // E1-FINAL-02: см. storeArticle — очистка HTML-содержимого на записи.
+        $validated['content'] = NewsHtmlSanitizer::sanitize($validated['content']);
 
         $article->update($validated);
 

@@ -243,9 +243,10 @@ Route::view('/reviews/publication-consent', 'legal.review-publication-consent')-
 Route::view('/account/personal-data-consent', 'legal.registration-personal-data-consent')->name('registration_personal_data_consent.info');
 
 Route::group(['namespace' => 'Captcha'], function () {
-    Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index")->middleware(
-        'cache.response'
-    );
+    // E1-FINAL-08: намеренно без 'cache.response' — ответ содержит одноразовый
+    // токен капчи (Captcha::src(...) . time()) и не должен переотдаваться из
+    // кэша ответов. CacheResponse глобально не меняется — снят только здесь.
+    Route::get('/reload-captcha', "ReloadCaptchaController")->name("captcha_reload.index");
 });
 
 // СТАРЫЕ МАРШРУТЫ - РЕДИРЕКТЫ НА НОВЫЙ КАБИНЕТ

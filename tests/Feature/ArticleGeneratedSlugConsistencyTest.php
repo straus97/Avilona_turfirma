@@ -270,6 +270,55 @@ class ArticleGeneratedSlugConsistencyTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // E1-FINAL-10: the audit claimed Str::slug() returns '' for a Cyrillic-only
+    // title such as "Путешествие по Азии". A read-only runtime probe against
+    // this installed Laravel 12.65.0 / PHP 8.3.32 DISPROVED that: ordinary
+    // Cyrillic titles transliterate to a non-empty URL-safe slug
+    //   "Путешествие по Азии" -> "putesestvie-po-azii"
+    //   "Статья"              -> "statia"
+    //   "Турция и ОАЭ"        -> "turciia-i-oae"
+    // Only punctuation/whitespace-only input yields '' — and that path is
+    // already covered above (it fails slug validation, never reaching the DB).
+    // These assertions lock the Cyrillic behaviour so the question stays closed.
+    // -----------------------------------------------------------------------
+
+    public function test_cyrillic_only_title_generates_a_non_empty_url_safe_slug(): void
+    {
+        $admin = $this->makeUser([Role::ADMIN]);
+
+        $response = $this->actingAs($admin)->post(route('cabinet.admin.articles.store'), [
+            'title' => 'Путешествие по Азии',
+            'content' => 'Содержимое статьи',
+        ]);
+
+        $response->assertRedirect(route('cabinet.admin.articles'));
+        $response->assertSessionHasNoErrors();
+
+        $article = Article::first();
+        $this->assertNotNull($article);
+        $this->assertNotSame('', $article->slug);
+        $this->assertMatchesRegularExpression('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $article->slug);
+        $this->assertSame(Str::slug('Путешествие по Азии'), $article->slug);
+    }
+
+    public function test_generated_cyrillic_slug_is_reachable_on_the_public_detail_page(): void
+    {
+        $manager = $this->makeUser([Role::MANAGER]);
+
+        $this->actingAs($manager)->post(route('cabinet.manager.articles.store'), [
+            'title' => 'Турция и ОАЭ',
+            'content' => 'Содержимое статьи про направления',
+        ])->assertRedirect(route('cabinet.manager.articles'));
+
+        $slug = Article::first()->slug;
+        $this->assertNotSame('', $slug);
+
+        $this->get(route('helpful_information.show_interesting_news', ['slug' => $slug]))
+            ->assertOk()
+            ->assertSee('Турция и ОАЭ', false);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 

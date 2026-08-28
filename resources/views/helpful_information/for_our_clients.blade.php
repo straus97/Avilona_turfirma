@@ -19,6 +19,7 @@
                 @include('includes.sidebar')
                 <div class="col-12 col-lg-10">
                     <h1 class="text-center mb-3" style="font-size: 2rem;">Специальные предложения</h1>
+                    @if ($special->count() > 0)
                     <div class="row">
                         @foreach ($special as $item_special)
                             <div class="col-sm-6 col-lg-4 mb-3">
@@ -39,9 +40,14 @@
                     </div>
                     <nav class="d-flex justify-content-center mt-3">
                         <ul class="pagination">
-                            {{ $special->links() }}
+                            {{ $special->appends(request()->query())->links() }}
                         </ul>
                     </nav>
+                    @else
+                    <div class="alert alert-info" role="alert">
+                        <p class="mb-0">Сейчас активных специальных предложений нет. Следите за обновлениями — скоро появятся новые акции.</p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
