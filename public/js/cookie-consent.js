@@ -95,6 +95,19 @@
             });
         }
 
+        function reopenBanner() {
+            if (!banner) {
+                return;
+            }
+
+            banner.hidden = false;
+            banner.scrollIntoView({block: 'end', behavior: 'smooth'});
+
+            if (acceptAllBtn) {
+                acceptAllBtn.focus();
+            }
+        }
+
         if (settingsOpenBtn) {
             settingsOpenBtn.addEventListener('click', function () {
                 if (!banner) {
@@ -109,5 +122,21 @@
                 }
             });
         }
+
+        // Дополнительные триггеры «Настроить cookie» (например, из панели
+        // карты на главной). id="cookie-settings-open" в подвале сохранён
+        // как есть для обратной совместимости и тестов; эти элементы лишь
+        // переоткрывают тот же баннер и НЕ выдают согласие сами по себе.
+        var extraSettingsTriggers = document.querySelectorAll('[data-cookie-settings-open]');
+        Array.prototype.forEach.call(extraSettingsTriggers, function (trigger) {
+            if (trigger === settingsOpenBtn) {
+                return;
+            }
+
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                reopenBanner();
+            });
+        });
     });
 })();

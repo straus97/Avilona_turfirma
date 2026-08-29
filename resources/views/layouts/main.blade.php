@@ -103,7 +103,8 @@
                 <span class="e2-header__phones">
                     <span class="e2-header__label">Телефон:</span>
                     @foreach ($managerPhones as $phone)
-                        <a href="#" onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</a>
+                        <button type="button" class="e2-phone-link"
+                                onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</button>
                     @endforeach
                 </span>
             </div>
@@ -232,7 +233,8 @@
                     <span class="e2-header__phones">
                         <span class="e2-header__label">Телефон:</span>
                         @foreach ($managerPhones as $phone)
-                            <a href="#" onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</a>
+                            <button type="button" class="e2-phone-link"
+                                    onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</button>
                         @endforeach
                     </span>
                 </div>
@@ -261,160 +263,143 @@
 
 @yield('scripts')
 <!-- Footer -->
-<footer class="pt-3 pb-1 mt-3">
+<footer class="e2-footer">
     <div class="container">
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-2 mb-3">
-                <a class="navbar-brand mb-2 mb-lg-0" href="{{ route('home.index') }}"><img
-                        src="{{ asset('/img/logo.png') }}" alt="Company logo" class="w-75"></a>
+        <div class="e2-footer__grid">
+            <div>
+                <a class="navbar-brand" href="{{ route('home.index') }}"><img
+                        src="{{ asset('/img/logo.png') }}" alt="Туристическая фирма Авилона" class="e2-footer__logo"></a>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-3 mb-3">
-                <p class="mt-2">Контактная информация</p>
-                <p>Тел.: <a href="#" onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</a></p>
+            <div>
+                <h2 class="e2-footer__heading">Контактная информация</h2>
+                <p>Тел.: <button type="button" class="e2-phone-link"
+                        onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</button></p>
                 <p>E-mail: <a href="mailto:avilonatur@bk.ru">avilonatur@bk.ru</a></p>
-                <p>Адрес офиса: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
+                <p>Адрес офиса:<br>198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
             </div>
-            <div class="col-12 col-sm-6 col-md-2 mb-3">
-                <h5>Краткое меню</h5>
-                <ul class="list-unstyled">
+            <nav aria-label="Навигация в подвале сайта">
+                <h2 class="e2-footer__heading">Краткое меню</h2>
+                <ul class="e2-footer__list">
                     <li><a href="{{route('home.index')}}">Главная</a></li>
                     <li><a href="{{route('countries.index')}}">Страны</a></li>
                     <li><a href="{{route('destination.index')}}">Направления</a></li>
                     <li><a href="{{route('contact.index')}}">Контакты</a></li>
                     <li><a href="{{route('review.index')}}">Отзывы</a></li>
                     <li><a href="{{route('for_our_clients.index')}}">Спец. предложения</a></li>
+                    <li><a href="https://avilona.ru/sitemap.xml" target="_blank" rel="noopener">Карта сайта</a></li>
                 </ul>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3 col-lg-2 mb-3">
-                <h5>Социальные сети</h5>
-                <a href="https://vk.com/avilona" target="_blank"><img src="{{ asset('/img/vk.png') }}" alt=""
-                                                                      width="45px" class="mb-1 mx-1 mt-1"></a>
-                {{--                <a href="#" target="_blank"><img src="{{ asset('/img/fb.png') }}" alt="" width="45px" class="mb-1 mx-1 mt-1"></a>--}}
-                <a href="#" target="_blank"><img src="{{ asset('/img/ok.png') }}" alt="" width="45px"
-                                                 class="mb-1 mx-1 mt-1"></a>
-                {{--                <a href="#" target="_blank"><img src="{{ asset('/img/inst.png') }}" alt="" width="45px" class="mb-1 mx-1 mt-1"></a>--}}
-                <a href="mailto:avilonatur@bk.ru" target="_blank"><img src="{{ asset('/img/mail.png') }}" alt=""
-                                                                       width="45px" class="mb-1 mx-1 mt-1"></a>
-            </div>
-            <div class="col-12 col-sm-6 col-md-2 col-lg-2 mb-3">
-                <div class="row mb-3">
-                    <h5>Метрика</h5>
-                    @if($avilonaAnalyticsConsent)
-                    <div class="row mb-3 g-0">
-                        <div class="col-6 col-md-12 col-xl-6">
-                            {{-- счетчик liveinternet --}}
-                            <a href="https://www.liveinternet.ru/click" target="_blank"><img id="licntF51C" width="88"
-                                                                                             height="31"
-                                                                                             style="border:0"
-                                                                                             title="LiveInternet: показано число просмотров за 24 часа, посетителей за 24 часа и за сегодня"
-                                                                                             src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
-                                                                                             alt=""/></a>
-                            <script>(function (d, s) {
-                                    d.getElementById("licntF51C").src =
-                                        "https://counter.yadro.ru/hit?t21.6;r" + escape(d.referrer) +
-                                        ((typeof (s) == "undefined") ? "" : ";s" + s.width + "*" + s.height + "*" +
-                                            (s.colorDepth ? s.colorDepth : s.pixelDepth)) + ";u" + escape(d.URL) +
-                                        ";h" + escape(d.title.substring(0, 150)) + ";" + Math.random()
-                                })
-                                (document, screen)</script>
-                        </div>
-                        <div class="col-6 col-md-12 col-xl-6">
-                            {{-- счетчик Mail.ru --}}
-                            <!-- Top.Mail.Ru counter -->
-                            <script type="text/javascript">
-                                var _tmr = window._tmr || (window._tmr = []);
-                                _tmr.push({id: "3150807", type: "pageView", start: (new Date()).getTime()});
-                                (function (d, w, id) {
-                                    if (d.getElementById(id)) return;
-                                    var ts = d.createElement("script");
-                                    ts.type = "text/javascript";
-                                    ts.async = true;
-                                    ts.id = id;
-                                    ts.src = "https://top-fwz1.mail.ru/js/code.js";
-                                    var f = function () {
-                                        var s = d.getElementsByTagName("script")[0];
-                                        s.parentNode.insertBefore(ts, s);
-                                    };
-                                    if (w.opera == "[object Opera]") {
-                                        d.addEventListener("DOMContentLoaded", f, false);
-                                    } else {
-                                        f();
-                                    }
-                                })(document, window, "tmr-code");
-                            </script>
-                            <noscript>
-                                <div><img src="https://top-fwz1.mail.ru/counter?id=3150807;js=na"
-                                          style="position:absolute;left:-9999px;" alt="Top.Mail.Ru"/></div>
-                            </noscript>
-                            <!-- /Top.Mail.Ru counter -->
-                            <!-- Top.Mail.Ru logo -->
-                            <a href="https://top-fwz1.mail.ru/jump?from=3150807">
-                                <img src="https://top-fwz1.mail.ru/counter?id=3150807;t=479;l=1" height="31" width="88"
-                                     alt="Top.Mail.Ru" style="border:0;"/></a>
-                            <!-- /Top.Mail.Ru logo -->
-                        </div>
-                    </div>
-                    <div class="row mb-3 g-0">
-                        <div class="col-6 col-md-12 col-xl-6">
-                            {{-- счетчик Яндекс --}}
-                            <!-- Yandex.Metrika informer -->
-                            <a href="https://metrika.yandex.ru/stat/?id=56393833&amp;from=informer"
-                               target="_blank" rel="nofollow"><img
-                                    src="https://informer.yandex.ru/informer/56393833/3_1_FFE222FF_EEC202FF_0_pageviews"
-                                    style="width:88px; height:31px; border:0;" alt="Яндекс.Метрика"
-                                    title="Яндекс.Метрика: данные за сегодня (просмотры, визиты и уникальные посетители)"
-                                    class="ym-advanced-informer" data-cid="56393833" data-lang="ru"/></a>
-                            <!-- /Yandex.Metrika informer -->
-                            <!-- Yandex.Metrika counter -->
-                            <script type="text/javascript">
-                                (function (m, e, t, r, i, k, a) {
-                                    m[i] = m[i] || function () {
-                                        (m[i].a = m[i].a || []).push(arguments)
-                                    };
-                                    m[i].l = 1 * new Date();
-                                    for (var j = 0; j < document.scripts.length; j++) {
-                                        if (document.scripts[j].src === r) {
-                                            return;
-                                        }
-                                    }
-                                    k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
-                                })
-                                (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-
-                                ym(56393833, "init", {
-                                    clickmap: true,
-                                    trackLinks: true,
-                                    accurateTrackBounce: true
-                                });
-                            </script>
-                            <noscript>
-                                <div><img src="https://mc.yandex.ru/watch/56393833"
-                                          style="position:absolute; left:-9999px;" alt=""/></div>
-                            </noscript>
-                            <!-- /Yandex.Metrika counter -->
-                        </div>
-                    </div>
-                    @endif
-                    <div class="row">
-                        <p><a href="https://avilona.ru/sitemap.xml" target="_blank">Карта сайта</a></p>
-                    </div>
+            </nav>
+            <div>
+                <h2 class="e2-footer__heading">Социальные сети</h2>
+                <div class="e2-footer__social">
+                    <a class="e2-footer__social-link" href="https://vk.com/avilona" target="_blank" rel="noopener"
+                       aria-label="Авилона во ВКонтакте"><i class="fab fa-vk" aria-hidden="true"></i></a>
+                    <a class="e2-footer__social-link" href="mailto:avilonatur@bk.ru"
+                       aria-label="Написать письмо в Авилону"><i class="bi bi-envelope" aria-hidden="true"></i></a>
                 </div>
             </div>
-            <div class="row">
-                <p class="text-center mb-2 p-2">&copy; {{ date('Y') }} ООО «Авилона». Все
-                    права защищены. Информация сайта защищена законом об авторских правах.</p>
-                <p class="text-center mb-2 p-2">
-                    <a href="{{ route('cookies.info') }}">Использование cookie</a>
-                    &nbsp;·&nbsp;
-                    <button type="button" id="cookie-settings-open"
-                            class="btn btn-link p-0 align-baseline">Настройки cookie</button>
-                </p>
+        </div>
+
+        <div class="e2-footer__utility">
+            <p class="mb-0"><a href="https://avilona.ru/sitemap.xml" target="_blank" rel="noopener">Карта сайта</a></p>
+            @if($avilonaAnalyticsConsent)
+            {{-- Аналитика (гейт $avilonaAnalyticsConsent). Инициализация счётчиков
+                 сохранена без изменений. Убраны только презентационные бейджи —
+                 видимый «логотип» Top.Mail.Ru и информер-картинка Яндекс.Метрики
+                 (informer.yandex.ru отдаёт 403 и показывался «битой» картинкой):
+                 они не участвуют в инициализации счётчиков. Обязательный пиксель
+                 LiveInternet (#licntF51C) и noscript-фолбэки оставлены. --}}
+            <div class="e2-analytics" aria-hidden="true">
+                {{-- счетчик liveinternet --}}
+                <a href="https://www.liveinternet.ru/click" target="_blank"><img id="licntF51C" width="88"
+                     height="31" style="border:0"
+                     title="LiveInternet: показано число просмотров за 24 часа, посетителей за 24 часа и за сегодня"
+                     src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                     alt=""/></a>
+                <script>(function (d, s) {
+                        d.getElementById("licntF51C").src =
+                            "https://counter.yadro.ru/hit?t21.6;r" + escape(d.referrer) +
+                            ((typeof (s) == "undefined") ? "" : ";s" + s.width + "*" + s.height + "*" +
+                                (s.colorDepth ? s.colorDepth : s.pixelDepth)) + ";u" + escape(d.URL) +
+                            ";h" + escape(d.title.substring(0, 150)) + ";" + Math.random()
+                    })
+                    (document, screen)</script>
+                {{-- счетчик Mail.ru --}}
+                <!-- Top.Mail.Ru counter -->
+                <script type="text/javascript">
+                    var _tmr = window._tmr || (window._tmr = []);
+                    _tmr.push({id: "3150807", type: "pageView", start: (new Date()).getTime()});
+                    (function (d, w, id) {
+                        if (d.getElementById(id)) return;
+                        var ts = d.createElement("script");
+                        ts.type = "text/javascript";
+                        ts.async = true;
+                        ts.id = id;
+                        ts.src = "https://top-fwz1.mail.ru/js/code.js";
+                        var f = function () {
+                            var s = d.getElementsByTagName("script")[0];
+                            s.parentNode.insertBefore(ts, s);
+                        };
+                        if (w.opera == "[object Opera]") {
+                            d.addEventListener("DOMContentLoaded", f, false);
+                        } else {
+                            f();
+                        }
+                    })(document, window, "tmr-code");
+                </script>
+                <noscript>
+                    <div><img src="https://top-fwz1.mail.ru/counter?id=3150807;js=na"
+                              style="position:absolute;left:-9999px;" alt="Top.Mail.Ru"/></div>
+                </noscript>
+                <!-- /Top.Mail.Ru counter -->
+                {{-- счетчик Яндекс --}}
+                <!-- Yandex.Metrika counter -->
+                <script type="text/javascript">
+                    (function (m, e, t, r, i, k, a) {
+                        m[i] = m[i] || function () {
+                            (m[i].a = m[i].a || []).push(arguments)
+                        };
+                        m[i].l = 1 * new Date();
+                        for (var j = 0; j < document.scripts.length; j++) {
+                            if (document.scripts[j].src === r) {
+                                return;
+                            }
+                        }
+                        k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
+                    })
+                    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+                    ym(56393833, "init", {
+                        clickmap: true,
+                        trackLinks: true,
+                        accurateTrackBounce: true
+                    });
+                </script>
+                <noscript>
+                    <div><img src="https://mc.yandex.ru/watch/56393833"
+                              style="position:absolute; left:-9999px;" alt=""/></div>
+                </noscript>
+                <!-- /Yandex.Metrika counter -->
             </div>
+            @endif
+        </div>
+
+        <div class="e2-footer__bottom">
+            <p>&copy; {{ date('Y') }} ООО «Авилона». Все права защищены. Информация сайта защищена законом об авторских правах.</p>
+            <span class="e2-footer__bottom-links">
+                <a href="{{ route('cookies.info') }}">Использование cookie</a>
+                <span aria-hidden="true">·</span>
+                <button type="button" id="cookie-settings-open"
+                        class="btn btn-link p-0 align-baseline">Настройки cookie</button>
+            </span>
         </div>
     </div>
 </footer>
-{{-- код для кнопки подьема на верх страницы --}}
-<a id="button-up"></a>
+{{-- код для кнопки подьема на верх страницы. id="button-up" сохранён дословно:
+     на него завязан show/hide/click в public/js/scripts_min.js. --}}
+<button type="button" id="button-up" class="e2-button-up" aria-label="Наверх">
+    <i class="bi bi-arrow-up" aria-hidden="true"></i>
+</button>
 <script async="true" src="{{ asset('js/scripts_min.js') }}"></script>
 {{--скрипт JS Bootstrap--}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
