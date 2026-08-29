@@ -79,8 +79,9 @@
     // E2-A1-I1: единая адаптивная шапка. Данные офиса/телефонов вынесены в
     // локальные переменные, чтобы одинаковая разметка контактов
     // (десктопная утилити-полоса + мобильная панель) не разъезжалась.
-    // Телефонные ссылки намеренно оставлены на openModal(...) — поведение
-    // мессенджер-модалки не входит в этот слайс.
+    // E2-A2-I2: телефонные кнопки открывают общую Bootstrap-модалку
+    // #managerContactModal декларативно (data-bs-toggle + data-manager-*),
+    // наполнение делает public/js/e2-public.js.
     $officeAddress = 'Санкт-Петербург, ул. Генерала Симоняка, д. 10';
     $managerPhones = [
         ['number' => '+79219314345', 'name' => 'Илона', 'display' => '+7 (921) 931-43-45'],
@@ -104,7 +105,9 @@
                     <span class="e2-header__label">Телефон:</span>
                     @foreach ($managerPhones as $phone)
                         <button type="button" class="e2-phone-link"
-                                onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</button>
+                                data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                                data-manager-mode="single" data-manager-name="{{ $phone['name'] }}"
+                                data-manager-phone="{{ $phone['number'] }}">{{ $phone['display'] }}</button>
                     @endforeach
                 </span>
             </div>
@@ -234,7 +237,9 @@
                         <span class="e2-header__label">Телефон:</span>
                         @foreach ($managerPhones as $phone)
                             <button type="button" class="e2-phone-link"
-                                    onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</button>
+                                    data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                                    data-manager-mode="single" data-manager-name="{{ $phone['name'] }}"
+                                    data-manager-phone="{{ $phone['number'] }}">{{ $phone['display'] }}</button>
                         @endforeach
                     </span>
                 </div>
@@ -242,21 +247,6 @@
         </div>
     </nav>
 
-    {{-- Модальное окно с менеджером (телефоны шапки). id и класс сохранены
-         дословно: на них завязан public/js/scripts_min.js (getElementById
-         'contactModal' и первый .close-button в документе). --}}
-    <div id="contactModal" class="modal1">
-        <div class="modal-content-manager">
-            <span class="close-button">&times;</span>
-            <p id="managerName">Открыть чат с менеджером через:</p>
-            <button class="whatsapp-button" onclick="openWhatsApp(currentNumber)">
-                <i class="fab fa-whatsapp fa-2x" style="color: #006600;"></i> WhatsApp
-            </button>
-            <button class="telegram-button" onclick="openTelegram(currentNumber)">
-                <i class="fa fa-telegram fa-2x" aria-hidden="true"></i> Telegram
-            </button>
-        </div>
-    </div>
 </header>
 <!-- Main Content -->
 @yield('content')
@@ -273,7 +263,9 @@
             <div>
                 <h2 class="e2-footer__heading">Контактная информация</h2>
                 <p>Тел.: <button type="button" class="e2-phone-link"
-                        onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</button></p>
+                        data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                        data-manager-mode="single" data-manager-name="Илона"
+                        data-manager-phone="+79219314345">+7 (921) 931-43-45</button></p>
                 <p>E-mail: <a href="mailto:avilonatur@bk.ru">avilonatur@bk.ru</a></p>
                 <p>Адрес офиса:<br>198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
             </div>
@@ -395,18 +387,67 @@
         </div>
     </div>
 </footer>
-{{-- код для кнопки подьема на верх страницы. id="button-up" сохранён дословно:
-     на него завязан show/hide/click в public/js/scripts_min.js. --}}
+
+{{-- E2-A2-I2: единая Bootstrap-модалка контактов менеджера. Одна на весь
+     публичный сайт. Строки всех менеджеров присутствуют в разметке сразу;
+     public/js/e2-public.js по data-атрибутам нажатого триггера показывает
+     либо одного менеджера (телефоны шапки/подвала, data-manager-mode="single"),
+     либо всех (обобщённые CTA, data-manager-mode="all"). Открытие/закрытие,
+     фокус-трап, Escape, backdrop и возврат фокуса — штатный Bootstrap. --}}
+<div class="modal fade e2-manager-modal" id="managerContactModal" tabindex="-1"
+     aria-labelledby="managerContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="managerContactModalLabel">Связаться с менеджером</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p class="e2-manager-modal__intro" data-manager-intro
+                   data-intro-all="Выберите менеджера и удобный мессенджер — откроется чат."
+                   data-intro-single="Выберите удобный мессенджер — откроется чат с менеджером.">Выберите менеджера и удобный мессенджер — откроется чат.</p>
+                <ul class="e2-manager-modal__list">
+                    @foreach ($managerPhones as $phone)
+                        @php $phoneDigits = preg_replace('/[^\d+]/', '', $phone['number']); @endphp
+                        <li class="e2-manager-modal__row" data-manager-row
+                            data-manager-name="{{ $phone['name'] }}" data-manager-phone="{{ $phone['number'] }}">
+                            <span class="e2-manager-modal__manager">
+                                <span class="e2-manager-modal__name">{{ $phone['name'] }}</span>
+                                <span class="e2-manager-modal__phone">{{ $phone['display'] }}</span>
+                            </span>
+                            <span class="e2-manager-modal__actions">
+                                <a class="e2-manager-modal__action e2-manager-modal__action--wa"
+                                   href="https://wa.me/{{ $phoneDigits }}" target="_blank" rel="noopener noreferrer">
+                                    <i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp
+                                </a>
+                                <a class="e2-manager-modal__action e2-manager-modal__action--tg"
+                                   href="https://t.me/{{ $phoneDigits }}" target="_blank" rel="noopener noreferrer">
+                                    <i class="bi bi-telegram" aria-hidden="true"></i> Telegram
+                                </a>
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Кнопка подъёма наверх. id="button-up" сохранён дословно: на него завязан
+     show/hide/click в public/js/e2-public.js. --}}
 <button type="button" id="button-up" class="e2-button-up" aria-label="Наверх">
     <i class="bi bi-arrow-up" aria-hidden="true"></i>
 </button>
-<script async="true" src="{{ asset('js/scripts_min.js') }}"></script>
 {{--скрипт JS Bootstrap--}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
 {{-- Cookie consent banner: сохранение выбора, перезагрузка, повторное открытие --}}
 <script src="{{ asset('js/cookie-consent.js') }}"></script>
+{{-- E2-A2-I2: общий интерактивный слой (модалка контактов менеджера + кнопка
+     «Наверх»). Заменяет в живом рантайме public/js/scripts_min.js. Грузится
+     после bootstrap.bundle, поэтому Bootstrap уже доступен. --}}
+<script src="{{ asset('js/e2-public.js') }}"></script>
 
 {{-- Дополнительные скрипты из дочерних шаблонов --}}
 @stack('scripts')

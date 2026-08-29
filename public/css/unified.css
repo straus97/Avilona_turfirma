@@ -1634,3 +1634,139 @@ html {
         transform: none;
     }
 }
+
+/* ---- E2-A2-I2: единая модалка контактов менеджера --------------------
+   Скоуп строго .e2-manager-modal — глобальные компоненты Bootstrap modal
+   (в т.ч. #successModal / #errorModal) не затрагиваются. --------------- */
+.e2-manager-modal .modal-content {
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+    box-shadow: var(--e2-elev-3);
+    color: var(--e2-ink);
+}
+
+.e2-manager-modal .modal-header {
+    border-bottom: 1px solid var(--e2-border);
+    padding: 1rem 1.25rem;
+}
+
+.e2-manager-modal .modal-title {
+    margin: 0;
+    color: var(--e2-ink);
+    font-weight: 700;
+}
+
+.e2-manager-modal .modal-body {
+    padding: 1.25rem;
+}
+
+.e2-manager-modal__intro {
+    margin: 0 0 1rem;
+    color: var(--e2-muted);
+    font-size: .95rem;
+}
+
+.e2-manager-modal__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.e2-manager-modal__row {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: .9rem 1rem;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-manager-modal__manager {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.e2-manager-modal__name {
+    font-weight: 700;
+    color: var(--e2-ink);
+}
+
+.e2-manager-modal__phone {
+    color: var(--e2-muted);
+    font-size: .9rem;
+}
+
+.e2-manager-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.e2-manager-modal__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 42px;
+    padding: .5rem .9rem;
+    border-radius: var(--e2-radius-md);
+    border: 1px solid transparent;
+    font-weight: 600;
+    font-size: .9rem;
+    text-decoration: none;
+    line-height: 1.2;
+    transition: background-color .15s ease;
+}
+
+.e2-manager-modal__action--wa {
+    background: #0b7a3b;              /* белый текст ~4.7:1 */
+    color: #ffffff;
+}
+
+.e2-manager-modal__action--wa:hover {
+    background: #096330;
+    color: #ffffff;
+}
+
+.e2-manager-modal__action--tg {
+    background: var(--e2-sea);
+    color: var(--e2-primary-ink);
+}
+
+.e2-manager-modal__action--tg:hover {
+    background: var(--e2-sea-strong);
+    color: var(--e2-primary-ink);
+}
+
+.e2-manager-modal__action:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+}
+
+.e2-manager-modal .btn-close:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+}
+
+@media (min-width: 480px) {
+    .e2-manager-modal__row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .e2-manager-modal__actions {
+        flex-shrink: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .e2-manager-modal__action {
+        transition: none;
+    }
+}

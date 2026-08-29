@@ -283,31 +283,9 @@
 
 <!-- Main Content -->
 @section('content')
-    <!-- Модальное окно для связи с менеджерами -->
-    <div id="contactManagersModal" class="modal-managers">
-        <div class="modal-content-managers">
-            <span class="close-button-managers">&times;</span>
-            <div>
-                <p>Связаться с менеджером Илона через:</p>
-                <button class="whatsapp-button-managers" onclick="openWhatsAppManagers('+79219314345')">
-                    <i class="fab fa-whatsapp fa-2x" style="color: #006600;"></i> WhatsApp
-                </button>
-                <button class="telegram-button-managers" onclick="openTelegramManagers('+79219314345')">
-                    <i class="fa fa-telegram fa-2x" aria-hidden="true"></i> Telegram
-                </button>
-            </div>
-            <hr>
-            <div>
-                <p>Связаться с менеджером Алла через:</p>
-                <button class="whatsapp-button-managers" onclick="openWhatsAppManagers('+79219842022')">
-                    <i class="fab fa-whatsapp fa-2x" style="color: #006600;"></i> WhatsApp
-                </button>
-                <button class="telegram-button-managers" onclick="openTelegramManagers('+79219842022')">
-                    <i class="fa fa-telegram fa-2x" aria-hidden="true"></i> Telegram
-                </button>
-            </div>
-        </div>
-    </div>
+    {{-- E2-A2-I2: локальная модалка менеджеров удалена. Обобщённые CTA
+         «Связаться с менеджером» открывают общую Bootstrap-модалку
+         #managerContactModal из layouts/main.blade.php (data-manager-mode="all"). --}}
     <main>
         <div class="container">
             <section class="e2-hero" aria-labelledby="e2-hero-title">
@@ -511,7 +489,8 @@
                             </div>
                             <div class="e2-card__footer">
                                 <button type="button" class="e2-btn e2-btn--primary e2-btn--sm"
-                                        onclick="openContactModal()">Связаться с менеджером</button>
+                                        data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                                        data-manager-mode="all">Связаться с менеджером</button>
                             </div>
                         </article>
                     @endforeach
@@ -564,7 +543,9 @@
                     «Авилона» подберут варианты под ваши даты и бюджет.</p>
                 <div class="e2-cta-band__actions">
                     <a class="e2-btn e2-btn--primary" href="#tour-search">Подобрать тур</a>
-                    <button type="button" class="e2-btn e2-btn--secondary" onclick="openContactModal()">Связаться с менеджером</button>
+                    <button type="button" class="e2-btn e2-btn--secondary"
+                            data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                            data-manager-mode="all">Связаться с менеджером</button>
                 </div>
             </section>
             @endif
@@ -932,40 +913,8 @@
                 return false;
             });
         });
-        // Скрипт для открытия модального окна менеджеров
-        var modalManagers = document.getElementById('contactManagersModal');
-        var closeButtonManagers = document.querySelector('.close-button-managers');
-
-        function openContactModal() {
-            modalManagers.style.display = 'block';
-        }
-
-        function openWhatsAppManagers(number) {
-            window.open(`https://wa.me/${number}`, '_blank');
-            modalManagers.style.display = 'none';
-        }
-
-        function openTelegramManagers(number) {
-            window.open(`https://t.me/${number}`, '_blank');
-            modalManagers.style.display = 'none';
-        }
-
-        closeButtonManagers.onclick = function () {
-            modalManagers.style.display = "none";
-        }
-        window.onclick = function (event) {
-            if (event.target === modalManagers) {
-                modalManagers.style.display = "none";
-            }
-        }
-        closeButtonManagers.addEventListener('click', function () {
-            modalManagers.style.display = "none";
-        });
-        window.addEventListener('click', function (event) {
-            if (event.target === modalManagers) {
-                modalManagers.style.display = "none";
-            }
-        });
+        {{-- E2-A2-I2: инлайновый скрипт локальной модалки менеджеров удалён.
+             Общую модалку #managerContactModal обслуживает public/js/e2-public.js. --}}
     </script>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
