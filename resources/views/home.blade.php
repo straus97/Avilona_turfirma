@@ -22,31 +22,42 @@
 .modern-select:focus,
 .modern-input:focus {
     background: white;
-    border-color: #ffc107;
-    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    border-color: #01466f;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7);
     outline: none;
 }
 
+/* E2-A1-I1: кнопка поиска приведена к первичной кнопке E2 — сплошной
+   «закатный» оранжевый, без цветного свечения и без принудительного
+   верхнего регистра. Механика поиска не затрагивается. */
 .modern-btn {
-    background: linear-gradient(45deg, #ffc107, #ff8c00);
+    background: #b8500f;
     border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
+    border-radius: 10px;
+    font-size: 1.05rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    letter-spacing: 0.2px;
+    color: #fff;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
 }
 
 .modern-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
-    background: linear-gradient(45deg, #ff8c00, #ffc107);
+    background: #98410b;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.18);
 }
 
 .modern-btn:active {
-    transform: translateY(0);
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modern-select,
+    .modern-input,
+    .modern-btn {
+        transition: none;
+    }
 }
 
 /* Стили для выпадающего списка туристов */
@@ -299,16 +310,56 @@
     </div>
     <main>
         <div class="container">
+            <section class="e2-hero" aria-labelledby="e2-hero-title">
+                <div class="e2-hero__body">
+                    <div class="e2-hero__content">
+                        <h1 id="e2-hero-title" class="e2-hero__title">Поможем выбрать и организовать ваше путешествие</h1>
+                        <p class="e2-hero__lead">Индивидуальный подбор туров, проверенные отели и поддержка опытного менеджера —
+                            от выбора направления до вылета из Санкт-Петербурга.</p>
+                        <div class="e2-hero__actions">
+                            <a class="e2-btn e2-btn--primary" href="#tour-search">Подобрать тур</a>
+                            <a class="e2-btn e2-btn--secondary" href="{{ route('countries.index') }}">Смотреть направления</a>
+                        </div>
+                    </div>
+                    {{-- Поддерживающий визуальный блок хиро: только XL+, декоративная опора,
+                         не набор конкурирующих CTA. Иконки — уже подключённый Bootstrap Icons. --}}
+                    <div class="e2-hero__aside d-none d-xl-block">
+                        <ul class="e2-hero__benefits">
+                            <li class="e2-hero__benefit">
+                                <span class="e2-hero__benefit-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+                                <span>
+                                    <span class="e2-hero__benefit-title">Подбор направления</span>
+                                    <span class="e2-hero__benefit-text">Куда поехать под ваши даты, бюджет и пожелания</span>
+                                </span>
+                            </li>
+                            <li class="e2-hero__benefit">
+                                <span class="e2-hero__benefit-icon e2-hero__benefit-icon--sea"><i class="bi bi-airplane" aria-hidden="true"></i></span>
+                                <span>
+                                    <span class="e2-hero__benefit-title">Отель и перелёт</span>
+                                    <span class="e2-hero__benefit-text">Собираем перелёт и проживание в одну поездку</span>
+                                </span>
+                            </li>
+                            <li class="e2-hero__benefit">
+                                <span class="e2-hero__benefit-icon"><i class="bi bi-headset" aria-hidden="true"></i></span>
+                                <span>
+                                    <span class="e2-hero__benefit-title">Поддержка менеджера</span>
+                                    <span class="e2-hero__benefit-text">Личный менеджер на связи от заявки до вылета</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
             <div class="row my-3">
                 <div class="col">
-                    <!-- Современный виджет поиска туров -->
-                    <div class="tour-search-widget mb-4" style="position: relative; z-index: 1;">
-                        <div class="card border-0 shadow-lg" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); overflow: visible;">
+                    <!-- Современный виджет поиска туров (временный блок, механика — E5) -->
+                    <div class="tour-search-widget e2-search mb-4" id="tour-search" style="position: relative; z-index: 1;">
+                        <div class="card border-0 e2-search-card">
                             <div class="card-body p-4" style="overflow: visible; position: relative;">
                                 <form action="{{ route('tours.index') }}" method="GET" id="tourSearchForm" onsubmit="return validateTourSearchForm()">
                                     <!-- Основные поля в одну строку -->
                                     <div class="row g-3 align-items-center">
-                                        <div class="col-md-2">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
                                             <label class="form-label text-white fw-bold mb-2">Откуда</label>
                                             <div class="position-relative">
                                                 <select name="departure_city" class="form-select form-select-lg modern-select" required>
@@ -327,7 +378,7 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
                                             <label class="form-label text-white fw-bold mb-2">Куда</label>
                                             <div class="position-relative">
                                                 <select name="destination_country" class="form-select form-select-lg modern-select" required>
@@ -347,7 +398,7 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
                                             <label class="form-label text-white fw-bold mb-2">Интервал дат вылета</label>
                                             <div class="position-relative">
                                                 <input type="text" name="date_range" class="form-control form-control-lg modern-input" placeholder="Выберите даты" readonly>
@@ -356,7 +407,7 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
                                             <label class="form-label text-white fw-bold mb-2">Количество ночей</label>
                                             <div class="row g-1">
                                                 <div class="col-6">
@@ -378,7 +429,7 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
                                             <label class="form-label text-white fw-bold mb-2">Количество туристов</label>
                                             <div class="position-relative" style="z-index: 10000;">
                                                 <input type="text" name="tourist_summary" class="form-control form-control-lg modern-input" placeholder="2 взрослых" readonly onclick="toggleTouristDropdown()" id="touristSummary">
@@ -421,9 +472,9 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-2 d-flex align-items-end">
+                                        <div class="col-12 col-sm-6 col-lg-4 col-xl-2 d-flex align-items-end">
                                             <div class="w-100">
-                                                <div class="mb-2" style="height: 21px;"></div> <!-- Пустой div для выравнивания -->
+                                                <div class="mb-2 d-none d-xl-block" style="height: 21px;"></div> <!-- Выравнивание с полями только в одну строку (xl) -->
                                                 <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold modern-btn">
                                                     Найти туры
                                                 </button>
@@ -440,7 +491,7 @@
             @if(isset($best_offers) && $best_offers->count() > 0)
             <div class="row" id="block_best_offers">
                 <div class="col-12">
-                    <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Лучшие предложения</h1>
+                    <h2 class="text-center mb-3 p-3 border-top border-2 border-bottom e2-section-title">Лучшие предложения</h2>
                     <div class="row">
                         @foreach($best_offers as $item_best_offers)
                             <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
@@ -473,7 +524,7 @@
             @if(isset($reviews) && $reviews->count() > 0)
             <div class="row" id="block_reviews">
                 <div class="col-md-12">
-                    <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Отзывы</h1>
+                    <h2 class="text-center mb-3 p-3 border-top border-2 border-bottom e2-section-title">Отзывы</h2>
                 </div>
             </div>
             <div class="row">
@@ -507,7 +558,7 @@
             </div>
             @endif
             @if(isset($news) && $news->count() > 0)
-            <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Новости</h1>
+            <h2 class="text-center mb-3 p-3 border-top border-2 border-bottom e2-section-title">Новости</h2>
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 mt-3">
                 @foreach($news as $item_news)
                     <div class="col-12 col-md-4 col-lg-3">
@@ -532,7 +583,7 @@
             @endif
             @if(isset($partners) && $partners->count() > 0)
             <div class="container my-3">
-                <h1 class="text-center mb-3 p-3 border-top border-2 border-bottom">Наши партнеры</h1>
+                <h2 class="text-center mb-3 p-3 border-top border-2 border-bottom e2-section-title">Наши партнеры</h2>
                 <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
                     @foreach ($partners as $item_partner)
                         <div class="col">
@@ -552,7 +603,7 @@
             <div class="container py-5">
                 <div class="row">
                     <div class="col-md-6">
-                        <h1 class="mb-4">Туристическое агентство «Авилона»</h1>
+                        <h2 class="mb-4 e2-section-title">Туристическое агентство «Авилона»</h2>
                         <p><strong>Адрес офиса:</strong><br>198261, Россия, Санкт-Петербург, ул. Генерала Симоняка, д. 10</p>
                         <p><strong>Телефоны:</strong><br>+7 (921) 931-43-45, +7 (921) 984-20-22</p>
                         <p><strong>Эл. почта:</strong><br>avilonatur@bk.ru</p>
@@ -560,7 +611,7 @@
                             воскресенье, с 12:00 до 19:00</p>
                     </div>
                     <div class="col-md-6">
-                        <h1 class="mb-4">Есть вопросы — спрашивайте!</h1>
+                        <h2 class="mb-4 e2-section-title">Есть вопросы — спрашивайте!</h2>
                         <p>Менеджеры туристического агентства «Авилона» с радостью помогут Вам найти ответы на
                             интересующие Вас вопросы, окажут консультацию или запишут Вас на посещение нашего
                             туристического офиса.<br>Мы всегда рады Вам!</p>

@@ -75,41 +75,98 @@
 <body onload="initMap()">
 @include('includes.cookie-consent')
 {{-- шапка сайта --}}
-<div class="container mt-3">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light ">
-            <div class="d-flex justify-content-between align-items-center flex-wrap w-100">
-                <a class="navbar-brand mb-2 mb-lg-0" href="{{ route('home.index') }}"><img
-                        src="{{ asset('img/logo.png') }}" alt="Company Logo"
-                        class="img-fluid"></a>
-                <div>
-                    <span class="d-block mb-1">Адрес офиса: <br>Санкт-Петербург, ул. Генерала Симоняка, д. 10</span>
-                    <!-- Номера телефонов с кнопками для открытия модального окна -->
-                    <span class="d-block mb-2">Телефон: <br>
-                        <a href="#" onclick="openModal('+79219314345', 'Илона')">+7 (921) 931-43-45</a> <br>
-                        <a href="#" onclick="openModal('+79219842022', 'Алла')">+7 (921) 984-20-22</a>
-                    </span>
-                </div>
-                <!-- Модальное окно с менеджером -->
-                <div id="contactModal" class="modal1">
-                    <div class="modal-content-manager">
-                        <span class="close-button">&times;</span>
-                        <p id="managerName">Открыть чат с менеджером через:</p>
-                        <!-- Идентификатор для изменения текста -->
-                        <button class="whatsapp-button" onclick="openWhatsApp(currentNumber)">
-                            <i class="fab fa-whatsapp fa-2x" style="color: #006600;"></i> WhatsApp
-                        </button>
-                        <button class="telegram-button" onclick="openTelegram(currentNumber)">
-                            <i class="fa fa-telegram fa-2x" aria-hidden="true"></i> Telegram
-                        </button>
-                    </div>
-                </div>
-                {{--                <div class="d-none d-lg-flex mt-2">--}}
-                {{--                    <button class="btn btn-primary w-100 me-2" type="button" data-bs-toggle="modal"--}}
-                {{--                    </button>--}}
-                {{--                </div>--}}
-                @auth
-                    <div class="d-flex flex-column align-items-end mt-2" style="gap: 0.25rem;">
+@php
+    // E2-A1-I1: единая адаптивная шапка. Данные офиса/телефонов вынесены в
+    // локальные переменные, чтобы одинаковая разметка контактов
+    // (десктопная утилити-полоса + мобильная панель) не разъезжалась.
+    // Телефонные ссылки намеренно оставлены на openModal(...) — поведение
+    // мессенджер-модалки не входит в этот слайс.
+    $officeAddress = 'Санкт-Петербург, ул. Генерала Симоняка, д. 10';
+    $managerPhones = [
+        ['number' => '+79219314345', 'name' => 'Илона', 'display' => '+7 (921) 931-43-45'],
+        ['number' => '+79219842022', 'name' => 'Алла', 'display' => '+7 (921) 984-20-22'],
+    ];
+
+    $navHome      = request()->routeIs('home.index');
+    $navCompany   = request()->routeIs('about_company.index', 'employees.index', 'awards.index');
+    $navCountries = request()->routeIs('countries.index', 'countries.show_countries_image');
+    $navDest      = request()->routeIs('destination.index', 'destinations.show_destinations_image');
+    $navContact   = request()->routeIs('contact.index');
+    $navReview    = request()->routeIs('review.index');
+    $navUseful    = request()->routeIs('interesting_articles.index', 'helpful_news.index', 'for_our_clients.index', 'travel_dictionary.index');
+@endphp
+<header class="e2-header">
+    <div class="e2-header__utility d-none d-xxl-block">
+        <div class="container">
+            <div class="e2-header__contact">
+                <span><span class="e2-header__label">Адрес офиса:</span> {{ $officeAddress }}</span>
+                <span class="e2-header__phones">
+                    <span class="e2-header__label">Телефон:</span>
+                    @foreach ($managerPhones as $phone)
+                        <a href="#" onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</a>
+                    @endforeach
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-xxl e2-navbar" aria-label="Основная навигация">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('home.index') }}">
+                <img src="{{ asset('img/logo.png') }}" alt="Туристическая фирма Авилона" class="e2-header__logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Открыть меню">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav e2-nav me-xxl-auto">
+                    <li class="nav-item">
+                        <a class="nav-link @if($navHome) active @endif" href="{{ route('home.index') }}"
+                           @if($navHome) aria-current="page" @endif>Главная</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle @if($navCompany) active @endif" href="#"
+                           id="navbarDropdownCompany" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                           @if($navCompany) aria-current="page" @endif>Компания</a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownCompany">
+                            <li><a class="dropdown-item" href="{{ route('about_company.index') }}">О компании</a></li>
+                            <li><a class="dropdown-item" href="{{ route('employees.index') }}">Сотрудники</a></li>
+                            <li><a class="dropdown-item" href="{{ route('awards.index') }}">Наши достижения</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if($navCountries) active @endif" href="{{ route('countries.index') }}"
+                           @if($navCountries) aria-current="page" @endif>Страны</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if($navDest) active @endif" href="{{ route('destination.index') }}"
+                           @if($navDest) aria-current="page" @endif>Направления</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if($navContact) active @endif" href="{{ route('contact.index') }}"
+                           @if($navContact) aria-current="page" @endif>Контакты</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if($navReview) active @endif" href="{{ route('review.index') }}"
+                           @if($navReview) aria-current="page" @endif>Отзывы</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle @if($navUseful) active @endif" href="#"
+                           id="navbarDropdownUsefulInfo" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                           @if($navUseful) aria-current="page" @endif>Полезная информация</a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsefulInfo">
+                            <li><a class="dropdown-item" href="{{ route('interesting_articles.index') }}">Интересные статьи</a></li>
+                            <li><a class="dropdown-item" href="{{ route('helpful_news.index') }}">Новости</a></li>
+                            <li><a class="dropdown-item" href="{{ route('for_our_clients.index') }}">Специально для наших клиентов</a></li>
+                            <li><a class="dropdown-item" href="{{ route('travel_dictionary.index') }}">Туристический словарь</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="e2-header__account">
+                    @auth
                         <div class="dropdown">
                             <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="userMenuDropdown"
                                     data-bs-toggle="dropdown" aria-expanded="false">
@@ -160,76 +217,45 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                @else
-                    <div class="d-flex flex-column align-items-end mt-2" style="gap: 0.25rem;">
-                        <div class="d-flex" style="gap: 0.25rem;">
-                            <a class="btn btn-outline-primary btn-sm" href="{{ route('login') }}">
-                                <i class="bi bi-box-arrow-in-right"></i> Войти
-                            </a>
-                            <a class="btn btn-success btn-sm" href="{{ route('register') }}">
-                                <i class="bi bi-person-plus"></i> Регистрация
-                            </a>
-                        </div>
-                    </div>
-                @endauth
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
-        </nav>
-        <nav class="navbar navbar-expand-lg navbar-light ">
-            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('home.index')}}">Главная</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCompany" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            Компания
+                    @else
+                        <a class="btn btn-outline-primary btn-sm" href="{{ route('login') }}">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownCompany">
-                            <li><a class="dropdown-item h5 pb-2" href="{{route('about_company.index')}}">О компании</a>
-                            </li>
-                            <li><a class="dropdown-item h5 pb-2" href="{{route('employees.index')}}">Сотрудники</a></li>
-                            <li><a class="dropdown-item h5" href="{{route('awards.index')}}">Наши достижения</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('countries.index')}}">Страны</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('destination.index')}}">Направления</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('contact.index')}}">Контакты</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('review.index')}}">Отзывы</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUsefulInfo" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            Полезная информация
+                        <a class="btn btn-success btn-sm" href="{{ route('register') }}">
+                            <i class="bi bi-person-plus"></i> Регистрация
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsefulInfo">
-                            <li><a class="dropdown-item h5 pb-2" href="{{route('interesting_articles.index')}}">Интересные
-                                    статьи</a></li>
-                            <li><a class="dropdown-item h5 pb-2" href="{{route('helpful_news.index')}}">Новости</a></li>
-                            <li><a class="dropdown-item h5 pb-2" href="{{route('for_our_clients.index')}}">Специально
-                                    для наших клиентов</a></li>
-                            <li><a class="dropdown-item h5" href="{{route('travel_dictionary.index')}}">Туристический
-                                    словарь</a></li>
-                        </ul>
-                    </li>
-                </ul>
+                    @endauth
+                </div>
+
+                <div class="e2-header__panel-extra d-xxl-none">
+                    <span><span class="e2-header__label">Адрес офиса:</span> {{ $officeAddress }}</span>
+                    <span class="e2-header__phones">
+                        <span class="e2-header__label">Телефон:</span>
+                        @foreach ($managerPhones as $phone)
+                            <a href="#" onclick="openModal('{{ $phone['number'] }}', '{{ $phone['name'] }}')">{{ $phone['display'] }}</a>
+                        @endforeach
+                    </span>
+                </div>
             </div>
-        </nav>
-    </header>
-</div>
+        </div>
+    </nav>
+
+    {{-- Модальное окно с менеджером (телефоны шапки). id и класс сохранены
+         дословно: на них завязан public/js/scripts_min.js (getElementById
+         'contactModal' и первый .close-button в документе). --}}
+    <div id="contactModal" class="modal1">
+        <div class="modal-content-manager">
+            <span class="close-button">&times;</span>
+            <p id="managerName">Открыть чат с менеджером через:</p>
+            <button class="whatsapp-button" onclick="openWhatsApp(currentNumber)">
+                <i class="fab fa-whatsapp fa-2x" style="color: #006600;"></i> WhatsApp
+            </button>
+            <button class="telegram-button" onclick="openTelegram(currentNumber)">
+                <i class="fa fa-telegram fa-2x" aria-hidden="true"></i> Telegram
+            </button>
+        </div>
+    </div>
+</header>
 <!-- Main Content -->
 @yield('content')
 
