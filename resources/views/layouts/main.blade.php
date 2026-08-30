@@ -94,7 +94,7 @@
     $navDest      = request()->routeIs('destination.index', 'destinations.show_destinations_image');
     $navContact   = request()->routeIs('contact.index');
     $navReview    = request()->routeIs('review.index');
-    $navUseful    = request()->routeIs('interesting_articles.index', 'helpful_news.index', 'for_our_clients.index', 'travel_dictionary.index');
+    $navUseful    = request()->routeIs('interesting_articles.index', 'helpful_news.index', 'for_our_clients.index', 'helpful_information.show_special', 'travel_dictionary.index');
 @endphp
 <header class="e2-header">
     <div class="e2-header__utility d-none d-xxl-block">

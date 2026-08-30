@@ -26,7 +26,7 @@ class IndexController extends Controller
         $cacheKey = 'countries_index_' . md5(serialize($filters));
         
         $countries_image = Cache::remember($cacheKey, $cacheTime, function () use ($request) {
-            $query = Countries_image::select('id', 'title', 'slug', 'image_small', 'category');
+            $query = Countries_image::select('id', 'title', 'slug', 'image_small', 'category', 'description');
             
             // Применяем фильтры
             if ($request->filled('category')) {

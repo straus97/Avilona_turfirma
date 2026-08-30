@@ -12,46 +12,65 @@
 
 <!-- Main Content -->
 @section('content')
-    {{--говорим какой блок будет отображаться как контент, каждый на своей странице будет разный--}}
+    {{-- E2-A3-I1: миграция на систему E2. Легаси includes.sidebar больше не
+         подключается (файл остаётся в репозитории). Пагинация (6 на страницу),
+         добавление query-string и семантика заголовка сохранены. Дата
+         публикации предложений не выводится: our_clients.created_at не является
+         достоверной бизнес-датой офера. --}}
     <main>
-        <div class="container mt-3">
-            <div class="row">
-                @include('includes.sidebar')
-                <div class="col-12 col-lg-10">
-                    <h1 class="text-center mb-3" style="font-size: 2rem;">Специальные предложения</h1>
-                    @if ($special->count() > 0)
-                    <div class="row">
-                        @foreach ($special as $item_special)
-                            <div class="col-sm-6 col-lg-4 mb-3">
-                                <div class="card">
-                                    @if($item_special->image)
-                                    <img src="{{ $item_special->image }}" class="card-img-top"
-                                         alt="{{ $item_special->title }}">
-                                    @endif
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ $item_special->title }}</h5>
-                                        <p class="card-text">{!! Str::limit($item_special->content, 100) !!}</p>
-                                        <a href="{{route('helpful_information.show_special', $item_special->slug)}}"
-                                           class="btn btn-primary">Подробнее</a>
-                                    </div>
-                                </div>
+        <div class="container">
+            @include('includes.e2-breadcrumb', ['items' => [
+                ['label' => 'Главная', 'url' => route('home.index')],
+                ['label' => 'Специальные предложения', 'url' => null],
+            ]])
+
+            <section class="e2-page-hero" aria-labelledby="e2-page-hero-title">
+                <h1 id="e2-page-hero-title" class="e2-page-hero__title">Специальные предложения</h1>
+                <p class="e2-page-hero__intro">Актуальные акции, скидки и специальные предложения
+                    туристического агентства «Авилона». Выберите предложение, чтобы узнать условия.</p>
+            </section>
+
+            @if ($special->count() > 0)
+                <div class="e2-discovery e2-grid e2-grid--3">
+                    @foreach ($special as $item_special)
+                        <article class="e2-card">
+                            @include('includes.e2-discovery-media', [
+                                'mediaSrc' => $item_special->image,
+                                'mediaAlt' => $item_special->image ? ($item_special->title ?? 'Специальное предложение') : '',
+                                'mediaClass' => 'e2-card__media',
+                            ])
+                            <div class="e2-card__body">
+                                <h2 class="e2-card__title">{{ $item_special->title ?? 'Без названия' }}</h2>
+                                <p class="e2-card__text">{{ \Illuminate\Support\Str::limit(strip_tags($item_special->content ?? ''), 140) }}</p>
                             </div>
-                        @endforeach
-                    </div>
-                    <nav class="d-flex justify-content-center mt-3">
-                        <ul class="pagination">
-                            {{ $special->appends(request()->query())->links() }}
-                        </ul>
-                    </nav>
-                    @else
-                    <div class="alert alert-info" role="alert">
-                        <p class="mb-0">Сейчас активных специальных предложений нет. Следите за обновлениями — скоро появятся новые акции.</p>
-                    </div>
-                    @endif
+                            @if($item_special->slug)
+                                <div class="e2-card__footer">
+                                    <a href="{{ route('helpful_information.show_special', $item_special->slug) }}"
+                                       class="e2-btn e2-btn--primary e2-btn--sm">Подробнее</a>
+                                </div>
+                            @endif
+                        </article>
+                    @endforeach
                 </div>
-            </div>
+
+                <nav class="d-flex justify-content-center mt-4" aria-label="Навигация по страницам">
+                    <ul class="pagination">
+                        {{ $special->appends(request()->query())->links() }}
+                    </ul>
+                </nav>
+            @else
+                <section class="e2-cta-band" aria-labelledby="e2-specials-empty-title">
+                    <h2 id="e2-specials-empty-title" class="e2-cta-band__title">Не нашли подходящий вариант?</h2>
+                    <p class="e2-cta-band__text">Можно перейти к подбору тура или связаться с менеджером —
+                        поможем выбрать поездку под ваши даты и бюджет.</p>
+                    <div class="e2-cta-band__actions">
+                        <a class="e2-btn e2-btn--primary" href="{{ route('home.index') }}#tour-search">Подобрать тур</a>
+                        <button type="button" class="e2-btn e2-btn--secondary"
+                                data-bs-toggle="modal" data-bs-target="#managerContactModal"
+                                data-manager-mode="all">Связаться с менеджером</button>
+                    </div>
+                </section>
+            @endif
         </div>
     </main>
 @endsection
-
-

@@ -1770,3 +1770,514 @@ html {
         transition: none;
     }
 }
+
+/* =========================================================================
+   E2-A3-I1 — Public travel discovery (Countries / Destinations / Specials)
+   -------------------------------------------------------------------------
+   Additive, scoped continuation of the E2 layer. Reuses the existing
+   --e2-* tokens, .e2-section, .e2-grid, .e2-card, .e2-btn, .e2-cta-band.
+   Only the discovery primitives genuinely missing from E2-A1/A2 are added:
+   an inner-page hero, a breadcrumb, a trusted-HTML prose wrapper, a GET
+   filter bar, a stretched-link card modifier and a non-<img> media
+   placeholder. No parallel design system, no new image assets.
+   ========================================================================= */
+
+/* ---- Inner-page hero (compact; NOT the home hero) -------------------- */
+.e2-page-hero {
+    margin-top: clamp(1.25rem, 1rem + 2vw, 2rem);
+    margin-bottom: clamp(1.25rem, 1rem + 2vw, 2rem);
+}
+
+.e2-page-hero__title {
+    max-width: 24ch;
+    margin: 0 0 .5rem;
+    font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--e2-ink);
+}
+
+.e2-page-hero__intro {
+    max-width: 65ch;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--e2-muted);
+}
+
+.e2-page-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1rem;
+}
+
+/* ---- Breadcrumb --------------------------------------------------- */
+.e2-breadcrumb {
+    margin-top: 1rem;
+    font-size: .875rem;
+}
+
+.e2-breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .2rem .5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.e2-breadcrumb li {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--e2-muted);
+}
+
+.e2-breadcrumb li + li::before {
+    content: "\203A";
+    color: var(--e2-border);
+}
+
+.e2-breadcrumb a {
+    color: var(--e2-sea-strong);
+    text-decoration: none;
+}
+
+.e2-breadcrumb a:hover {
+    text-decoration: underline;
+    color: var(--e2-primary-strong);
+}
+
+.e2-breadcrumb [aria-current="page"] {
+    color: var(--e2-ink);
+    font-weight: 600;
+}
+
+.e2-breadcrumb a:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+    border-radius: var(--e2-radius-sm);
+}
+
+/* ---- Trusted rich-HTML wrapper (scoped; no global rich-text restyle) */
+.e2-prose {
+    max-width: 68ch;
+    margin: 1.5rem 0;
+    color: var(--e2-ink);
+    line-height: 1.7;
+}
+
+.e2-prose > :first-child { margin-top: 0; }
+.e2-prose > :last-child { margin-bottom: 0; }
+
+.e2-prose p,
+.e2-prose ul,
+.e2-prose ol {
+    margin: 0 0 1rem;
+}
+
+.e2-prose ul,
+.e2-prose ol {
+    padding-left: 1.4rem;
+}
+
+.e2-prose li { margin-bottom: .35rem; }
+
+.e2-prose h2 {
+    margin: 1.75rem 0 .75rem;
+    font-size: clamp(1.2rem, 1.05rem + .8vw, 1.5rem);
+    color: var(--e2-ink);
+}
+
+.e2-prose h3 {
+    margin: 1.5rem 0 .5rem;
+    font-size: 1.15rem;
+    color: var(--e2-ink);
+}
+
+.e2-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-prose a {
+    color: var(--e2-sea-strong);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.e2-prose a:hover { color: var(--e2-primary-strong); }
+
+.e2-prose a:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+    border-radius: var(--e2-radius-sm);
+}
+
+/* ---- Countries GET filter bar ----------------------------------- */
+.e2-filter-bar {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1rem, .85rem + 1vw, 1.5rem);
+    margin-bottom: clamp(1.5rem, 1.2rem + 2vw, 2.5rem);
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+}
+
+.e2-filter-bar__field {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.e2-filter-bar__field label {
+    font-weight: 600;
+    font-size: .875rem;
+    color: var(--e2-ink);
+}
+
+.e2-filter-bar__field input,
+.e2-filter-bar__field select {
+    width: 100%;
+    min-height: 44px;
+    padding: .55rem .75rem;
+    font: inherit;
+    color: var(--e2-ink);
+    background: var(--e2-surface);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-filter-bar__field input:focus,
+.e2-filter-bar__field select:focus {
+    outline: none;
+    border-color: var(--e2-sea);
+    box-shadow: var(--e2-focus-ring);
+}
+
+.e2-filter-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: end;
+}
+
+@media (min-width: 768px) {
+    .e2-filter-bar {
+        grid-template-columns: 1fr 1fr;
+        align-items: end;
+    }
+
+    .e2-filter-bar__actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (min-width: 992px) {
+    .e2-filter-bar {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+    }
+
+    .e2-filter-bar__actions {
+        grid-column: auto;
+    }
+}
+
+/* ---- Discovery grid margin (no section head) -------------------- */
+.e2-discovery {
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+/* ---- Whole-card link (extends .e2-card; one real anchor) ------- */
+.e2-card--link {
+    position: relative;
+}
+
+.e2-card--link .e2-card__link-target {
+    color: var(--e2-ink);
+    text-decoration: none;
+}
+
+.e2-card--link .e2-card__link-target::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+
+.e2-card--link:hover .e2-card__link-target {
+    color: var(--e2-sea-strong);
+}
+
+.e2-card--link:focus-within {
+    box-shadow: var(--e2-focus-ring), var(--e2-elev-2);
+}
+
+.e2-card--link .e2-card__link-target:focus-visible {
+    outline: none;
+}
+
+/* ---- Non-<img> media placeholder (Bootstrap Icons; no asset) --- */
+.e2-media-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--e2-surface-warm) 0%, rgba(2, 119, 189, .09) 100%);
+    color: var(--e2-sea);
+}
+
+.e2-media-placeholder > i {
+    font-size: 2rem;
+    opacity: .55;
+}
+
+/* ---- Detail media frame ------------------------------------- */
+.e2-detail-media {
+    position: relative;
+    display: block;
+    margin: 1.5rem 0;
+    aspect-ratio: 16 / 9;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .e2-detail-media {
+        aspect-ratio: 21 / 9;
+    }
+}
+
+.e2-detail-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ---- Document / tourist-memo callout ----------------------- */
+.e2-doc-callout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem .85rem;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-left: 4px solid var(--e2-primary);
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-doc-callout__heading {
+    width: 100%;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--e2-ink);
+}
+
+.e2-doc-callout__icon {
+    font-size: 1.4rem;
+    color: var(--e2-primary-strong);
+}
+
+.e2-doc-callout a {
+    color: var(--e2-sea-strong);
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.e2-doc-callout__date {
+    color: var(--e2-muted);
+    font-size: .85rem;
+}
+
+/* ---- Compact tertiary chips ("Другие направления" / "Смотрите также") */
+.e2-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.e2-chip-text {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: .45rem .9rem;
+    font-size: .9375rem;
+    color: var(--e2-muted);
+    background: var(--e2-surface-warm);
+    border: 1px dashed var(--e2-border);
+    border-radius: var(--e2-radius-md);
+}
+
+/* =========================================================================
+   E2-A3-I1 (browser-QA polish) — desktop reading layout for discovery
+   DETAIL pages only (Country / Destination / Special detail).
+   -------------------------------------------------------------------------
+   Below 1200px this is a plain block: media + article, then the rail's
+   navigation / conversion actions stack after it — the accepted mobile /
+   tablet flow. At >=1200px a two-column grid puts the article in a bounded
+   main column and moves the already-present contextual nav + CTA into a
+   sticky right rail that fills the previously empty desktop gutter. No
+   multi-column text, no full-width paragraphs, no dashboard sidebar.
+   List pages are untouched — every selector here is scoped to
+   .e2-discovery-detail*.
+   ========================================================================= */
+.e2-discovery-detail {
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+.e2-discovery-detail__main > :first-child {
+    margin-top: 0;
+}
+
+.e2-discovery-detail__rail-inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.25rem, 1rem + 1.5vw, 1.75rem);
+    margin-top: clamp(1.75rem, 1.4rem + 2vw, 2.5rem);
+}
+
+.e2-rail-block {
+    margin: 0;
+}
+
+.e2-rail-block__title {
+    margin: 0 0 .6rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--e2-ink);
+}
+
+.e2-rail-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+@media (min-width: 1200px) {
+    .e2-discovery-detail {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr);
+        gap: clamp(2rem, 1.4rem + 2.5vw, 3.25rem);
+        align-items: start;
+    }
+
+    .e2-discovery-detail__rail-inner {
+        position: sticky;
+        top: 1.5rem;
+        margin-top: 0;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: var(--e2-surface-warm);
+        border: 1px solid var(--e2-border);
+        border-radius: var(--e2-radius-lg);
+    }
+
+    /* The rail is the single home of conversion on desktop — lighten the
+       shared .e2-cta-band so it reads as calm rail content, not a card. */
+    .e2-discovery-detail__rail .e2-cta-band {
+        margin-top: 0;
+        padding: 0;
+        background: none;
+        border: 0;
+        border-radius: 0;
+        text-align: left;
+    }
+
+    .e2-discovery-detail__rail .e2-cta-band__title {
+        font-size: 1.1rem;
+    }
+
+    .e2-discovery-detail__rail .e2-cta-band__text {
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+        font-size: .95rem;
+    }
+
+    .e2-discovery-detail__rail .e2-cta-band__actions {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .e2-discovery-detail__rail .e2-cta-band__actions .e2-btn {
+        width: 100%;
+    }
+
+    /* Dedicated main column -> a slightly wider but still bounded measure. */
+    .e2-discovery-detail__main .e2-prose {
+        max-width: 78ch;
+    }
+}
+
+/* ---- Legacy rich-text tables inside discovery-detail prose (scoped) --- */
+.e2-discovery-detail__main .e2-prose table {
+    border-collapse: collapse;
+    margin: 0 0 1rem;
+    max-width: 100%;
+}
+
+.e2-discovery-detail__main .e2-prose th,
+.e2-discovery-detail__main .e2-prose td {
+    border: 1px solid var(--e2-border);
+    padding: .5rem .65rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+@media (min-width: 700px) {
+    /* Fill the main column even when legacy HTML carries narrow width hints. */
+    .e2-discovery-detail__main .e2-prose table,
+    .e2-discovery-detail__main .e2-prose table[width],
+    .e2-discovery-detail__main .e2-prose table[style*="width"] {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 699.98px) {
+    /* Local horizontal scroll so a wide table never overflows the page. */
+    .e2-discovery-detail__main .e2-prose table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+}
+
+/* ---- Special detail: let legacy .table content fill the main column ---
+   Browser evidence: the populated Special fixture stores CLEAN markup
+   (<p>, <table class="table">, <th scope="col">, <td>) with NO width
+   wrappers, NO inline width/style, NO <center>/<font> — verified against
+   the rendered QA response. The only remaining width limit is the
+   discovery-detail reading measure (max-width on .e2-prose), so a
+   width:100% table still stops at ~78ch and leaves a blank strip to its
+   right inside the wider main column.
+   Fix, scoped to .e2-special-prose only (no global div/table override):
+   at >=1200px lift the cap on the Special prose CONTAINER and re-apply a
+   readable measure to text-level blocks, so tables span the full
+   .e2-discovery-detail__main width while paragraphs stay readable. Narrow
+   widths keep the accepted local-scroll behaviour above. */
+@media (min-width: 1200px) {
+    .e2-discovery-detail__main .e2-special-prose {
+        max-width: none;
+    }
+
+    .e2-discovery-detail__main .e2-special-prose > p,
+    .e2-discovery-detail__main .e2-special-prose > ul,
+    .e2-discovery-detail__main .e2-special-prose > ol,
+    .e2-discovery-detail__main .e2-special-prose > blockquote,
+    .e2-discovery-detail__main .e2-special-prose > h2,
+    .e2-discovery-detail__main .e2-special-prose > h3 {
+        max-width: 78ch;
+    }
+}
