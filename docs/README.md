@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-08-28**
+Дата актуализации содержания: **2026-09-02**
 
 ## 1. Текущий checkpoint
 
@@ -8,23 +8,29 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| Authoritative E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) |
+| **Текущий authoritative application HEAD** | **`ad6e9c23986d479cbbbf6f511e96bc139ae26576` (`feat: redesign public News + Articles editorial experience (E2-A5-I1)`)** |
+| Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
-| Предыдущий внешний documentation/source (Project Sources) checkpoint | `8e8d6d96f4024953b4cca25f005d55429dec9e92` (`docs: checkpoint stage 13 complete`, 2026-08-24) |
-| Full PHPUnit baseline | **1001 tests / 7013 assertions** |
+| Активный внешний documentation/source (Project Sources) checkpoint | `0be9044e35ec5be670c8f9bb33de020491214423` (`docs: close E1 and prepare E2`) — набор сгенерирован 2026-08-29, сейчас **STALE / pending refresh** (см. §8) |
+| Full PHPUnit baseline | **1006 tests / 7037 assertions** (историческое E1-closure значение: 1001 / 7013) |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
 | PHPUnit | 11.5.56 |
 | Stage 0–13 | ✅ CLOSED |
 | E1 Comprehensive Audit | ✅ **TECHNICALLY CLOSED** (см. §5A) |
-| Следующая фаза | **E2 — Public UX / UI / Design Redesign** (см. §9) |
+| Текущая фаза | **E2 — Public UX / UI / Design Redesign — 🔄 IN PROGRESS** (E2-A1…E2-A5 завершены; см. §9B) |
+| E3 / E4 / E5 / E6 | PENDING (см. §9) |
 
 Единственная PHPUnit deprecation — это pre-existing XML schema deprecation; это не функциональный/кодовый сбой.
 
-Этот файл фиксируется отдельным docs-only commit поверх E1-closure application commit `08d06263`. Documentation/source HEAD после этого commit будет новее application commit и должен определяться Git, а не быть заранее зашит в этот файл.
+Baseline 1006 / 7037 ожидаем: E2-A5 намеренно добавил 5 regression-тестов
+(2× News.link render-safety, 2× editorial `og:type=article`, 1× News RSS
+autodiscovery). Это **не** регрессия относительно 1001 / 7013.
 
-Project Sources ещё не обновлён под этот checkpoint — см. §8.
+Этот файл фиксируется отдельным docs-only commit поверх application HEAD `ad6e9c23`. Documentation/source HEAD после этого commit будет новее application commit и должен определяться Git, а не быть заранее зашит в этот файл. Будущий docs/source checkpoint hash пока неизвестен и не выдумывается.
+
+Project Sources ещё не обновлён под этот checkpoint — активен исторический набор для `0be9044e`, он устарел — см. §8.
 
 ## 2. Источники истины
 
@@ -36,7 +42,7 @@ Project Sources ещё не обновлён под этот checkpoint — см
 4. внешний Project Sources set, созданный из clean pushed documentation HEAD;
 5. исторические материалы под `docs/archive/` и старые Project Sources.
 
-Старый внешний source set `aca92d5c` после нового refresh должен быть сохранён в archive, а не удалён.
+Активный внешний source set для `0be9044e` (см. §8) после нового refresh должен быть сохранён в archive, а не удалён.
 
 ## 3. Workflow / guards
 
@@ -283,14 +289,18 @@ full: 1001 tests / 7013 assertions
 - **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** — конфликт копий часов работы:
   home «будни 10:00–20:00» vs contacts «будни 11:00–20:00, по предварительной
   записи». Авторитетного решения нет. **Не выбирать значение.** Должно быть
-  решено до финального production-релиза. Не технический блокер.
-- **OG type** — уточнение per-page `og:type=article` намеренно отложено в E2.
+  решено до финального production-релиза (E6). Не технический блокер. Остаётся
+  нерешённым.
+- **OG type** — ✅ закрыто в E2-A5 (§9B): News detail и Article detail объявляют
+  `og:type=article`; `layouts/main` использует `@yield('og_type', 'website')`.
 - **Tour search** — существующий публичный tour-search widget остаётся
-  ВРЕМЕННЫМ. Не переделывать/заменять до E5 (выделенная фаза финального
-  решения по поиску туров).
+  ВРЕМЕННЫМ. В E2 он только визуально интегрируется в новые surfaces; механика/
+  архитектура не финальны. Не переделывать/заменять до E5 (выделенная фаза
+  финального решения по поиску туров).
 - **News RSS scheduling** — не добавлять Laravel scheduling вслепую; внешний
-  production cron может уже существовать. Проверить реальный production-механизм
-  в рамках E6 (operations/deployment).
+  production cron может уже существовать. E2-A5 добавил только HTML autodiscovery
+  на listing новостей; production scheduling НЕ верифицирован. Проверить реальный
+  production-механизм в рамках E6 (operations/deployment).
 - **Future-risk raw HTML** — `Best_offer` / `OurClient` / `Countries_image` /
   `Destination_image` raw-контент сейчас не имеет untrusted web write path. Не
   переоткрывать как текущие XSS-дефекты, пока не появится CMS/write path.
@@ -333,27 +343,34 @@ C4B2 Admin QA был реально изменён при C4C browser QA и по
 
 Closure audit зафиксировал, что канонические local MySQL evidence-таблицы структурно корректны, но на момент closure пусты: `reviews = 0`, `review_consents = 0`, `user_registration_consents = 0`, `tours = 0`. Это не является дефектом приложения — automated Stage 13 coverage полный, а local QA evidence rows на момент closure не сохранены.
 
-## 8. Stage 13 / E1 closure и Project Sources статус
+## 8. E1 closure / E2 progress и Project Sources статус
 
-Stage 13 закрыт на уровне repository/local technical closure на функциональном HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`. E1 Comprehensive Audit технически закрыт на application commit `08d0626311234faa06dedf2828cb878805241990` (§5A):
+Stage 13 закрыт на уровне repository/local technical closure на функциональном HEAD `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`. E1 Comprehensive Audit технически закрыт на историческом application commit `08d0626311234faa06dedf2828cb878805241990` (§5A). После E1 closure repository прошёл E2-A1…E2-A5 и находится на application HEAD `ad6e9c23986d479cbbbf6f511e96bc139ae26576` (§9B):
 
 - все Stage 13 миграции применены, pending = 0 (§6.1);
 - Stage 13 code/schema/legal/test reconciliation — PASS;
-- E1 baseline: **1001 tests / 7013 assertions**;
-- функциональных блокеров Stage 13 / E1 не осталось (см. §5A.2 про намеренно отложенные пункты).
+- E1 closure baseline: **1001 tests / 7013 assertions**; текущий baseline после E2-A5: **1006 tests / 7037 assertions**;
+- функциональных блокеров Stage 13 / E1 не осталось (см. §5A.2 про намеренно отложенные пункты);
+- E2 **в процессе** — глобально не завершён.
 
 ### 8.1 Project Sources — требуется refresh
 
-Активный (внешний) Project Sources checkpoint устарел относительно текущего repo:
+Активный (внешний) Project Sources набор устарел относительно текущего repo:
 
-- предыдущий Project Sources checkpoint: `8e8d6d96f4024953b4cca25f005d55429dec9e92` (`docs: checkpoint stage 13 complete`, 2026-08-24);
-- с этого checkpoint репозиторий продвинулся через весь E1 audit (E1-A1…E1-A5, E1-RPD, E1-FINAL, HEAD `08d06263`), плюс этот docs-only E1-closure commit;
-- Project Sources refresh **обязателен** после commit/push этого docs-only closure slice;
-- refresh должен генерироваться из **нового docs closure HEAD**, а не из application HEAD `08d06263` до docs commit;
-- активный Project Sources набор заменяется только после верификации сгенерированного пакета;
-- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`), запускается пользователем из чистого pushed HEAD; publish в `C:\Avilona_private\ChatGPT_sources` с backup предыдущего набора в `archive/`.
+- активный Project Sources checkpoint: `0be9044e35ec5be670c8f9bb33de020491214423` (`docs: close E1 and prepare E2`);
+- активный набор из пяти файлов (сгенерирован 2026-08-29T01:22:19+03:00):
+  - `Avilona_turfirma_source_0be9044e_20260829-012223.zip` (SHA256 `62F714B92A45147553EB325988A015E9F6F280562608BB6CED61258879356E80`, 1041510 bytes);
+  - `Avilona_Handoff_2026-08-28_0be9044e.md`;
+  - `Avilona_Roadmap_2026-08-28_0be9044e.md`;
+  - `Avilona_New_Chat_Prompt_2026-08-28_0be9044e.md`;
+  - `Avilona_Project_Sources_2026-08-28_0be9044e.csv`;
+- с этого checkpoint репозиторий продвинулся через E2-A1…E2-A5 (HEAD `ad6e9c23`) — набор **STALE**;
+- Project Sources refresh **обязателен** после review / commit / push этого docs-only slice и появления чистого нового documentation HEAD;
+- refresh должен генерироваться из **нового docs HEAD**, а не из application HEAD `ad6e9c23` до docs commit; будущий docs HEAD пока неизвестен и не выдумывается;
+- активный набор из пяти файлов **не трогать** до верификации нового сгенерированного пакета;
+- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`), запускается пользователем из чистого pushed HEAD; publish с backup предыдущего набора в `archive/`.
 
-Refresh выполняется отдельным guarded шагом после этого docs commit (как и для checkpoint `8e8d6d96`).
+Refresh выполняется отдельным guarded шагом ПОСЛЕ этого docs commit. Пакет сейчас НЕ генерируется.
 
 ## 9. Endgame roadmap — E1…E6
 
@@ -361,14 +378,14 @@ Refresh выполняется отдельным guarded шагом после 
 
 | Фаза | Название | Статус |
 |---|---|---|
-| E1 | Comprehensive Audit | ✅ CLOSED (§5A) |
-| **E2** | **Public UX / UI / Design Redesign** | **NEXT** |
+| E1 | Comprehensive Audit | ✅ TECHNICALLY CLOSED (§5A) |
+| **E2** | **Public UX / UI / Design Redesign** | **🔄 IN PROGRESS** — E2-A1…E2-A5 завершены (§9B) |
 | E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | PENDING |
-| E4 | Stabilization / Regression / Browser / Device QA | PENDING |
-| E5 | Final Tour Search Solution | PENDING |
+| E4 | Post-redesign stabilization / regression / browser-device QA | PENDING |
+| E5 | Final Tour Search Solution | PENDING (намеренно один из последних крупных блоков) |
 | E6 | Production Deployment / Operations Validation | PENDING |
 
-Следующая рабочая фаза — **E2**.
+Текущая рабочая фаза — **E2** (в процессе). Следующий E2 slice ещё не выбран.
 
 ### 9.0 E2 — стартовые принципы
 
@@ -381,10 +398,73 @@ header/navigation, иерархия главной страницы, типог�
 empty/error states, consent UI, accessibility, trust/credibility, conversion
 paths, CTA consistency, image treatment, desktop/tablet/mobile.
 
-E2 **начинается с READ-ONLY visual/UX inventory и design-system proposal** до
-широкой реализации. Механику финального поиска туров в E2 не переделывать:
-текущий tour widget может быть визуально размещён как временный компонент, но
-его финальный provider/архитектура — это E5.
+E2 началась с READ-ONLY visual/UX inventory и design-system proposal, затем идёт
+согласованными slices. Механику финального поиска туров в E2 не переделывать:
+текущий tour widget визуально размещается как временный компонент, но его
+финальный provider/архитектура — это E5.
+
+### 9B. E2 — выполненные slices (E2-A1…E2-A5)
+
+E2 **в процессе**. Ниже — завершённые slices. E2 глобально НЕ завершён; следующий
+E2-A номер и slice ещё не выбраны. Оставшиеся публичные маршруты (вероятные
+кандидаты — Reviews, Contacts, прочие helper/content/error/empty surfaces) будут
+проверены read-only перед выбором следующего coherent slice.
+
+Текущий authoritative application HEAD: `ad6e9c23986d479cbbbf6f511e96bc139ae26576`.
+Текущий full baseline: **1006 tests / 7037 assertions** (было 1001 / 7013; E2-A5
+добавил 5 regression-тестов).
+
+#### E2-A1 — header / первый экран главной
+✅ COMPLETE — `43a073e676d441021445f73f38733fa70a0e1463` (`feat: redesign public header and home first screen`)
+
+- единый публичный header/навигация; route-derived active states; accessible `aria-current`;
+- редизайн hero главной; один H1; улучшенная CTA-иерархия;
+- временный tour-search widget визуально интегрирован — архитектура tour-search намеренно НЕ переделана (E5). Текущее решение поиска туров не финальное.
+
+#### E2-A2 — home below-the-fold / shared public shell
+✅ COMPLETE — `72202ab7d35b064ab4b0c66147bfff21357e5343` (`feat: redesign home and shared public shell`), `eaa2093f5f406e7a5fbd73c6fe3a1897802852a` (`refactor: unify public manager interactions`)
+
+- shared public shell; редизайн home below-the-fold; footer cleanup;
+- взаимодействие с телефоном в header/footer больше не вызывает page jump;
+- убран сломанный Yandex-информер; очищен map placeholder;
+- контрол scroll-to-top доступен с клавиатуры;
+- в verified QA нет page-level горизонтального overflow;
+- общий слой manager-contact взаимодействия.
+- Не заявление о production deployment.
+
+#### E2-A3 — public travel discovery
+✅ COMPLETE — `5e22e4b78ed6e8610d4c2b7f11043ff9e1336806` (`feat: redesign public travel discovery`)
+
+- Countries; Destinations; Specials / публичные travel discovery surfaces;
+- slice включал populated / browser QA.
+- Историческая SQL для изолированного визуального/reference QA: `C:\Users\nikita\Downloads\u0588341_turfirma.sql`, SHA256 `A721C984DE0F2B366598A7B5D92E6B5F6C7D629692C2C34E2EED52BD85B3109A`. Исторические fixture-счётчики (countries_images 55, destination_images 12, our_clients 1, best_offers 4, reviews 46, employees 10, partners 20, awards 22, articles 50, news 138, users 7) — **только исторические QA/reference**, НЕ текущая бизнес-истина. Legacy users/персональные данные никогда не импортируются в canonical/production data.
+
+#### E2-A4 — company / trust surfaces
+✅ COMPLETE — `94aedad09468d50be45e8f11c4be0a8c41dbb474` (`feat: redesign company trust pages`)
+
+Область: About Company, Employees, Awards.
+
+- **About Company:** убрана legacy sidebar/grid презентация; один H1; E2 breadcrumbs/hero/секции; исправлен wide-desktop layout после browser QA; три существующих PDF сохранены (НЕ объявлены юридически/актуально up to date; их отображаемая/repository дата остаётся **22 May 2024**); канонические формулировки оплаты/возврата сохранены; публичный email `avilonatur@bk.ru` сохранён; публичная формулировка изменена с общей «курьерской доставки» на `«Передача документов по договорённости»`; общая формулировка рассрочки/кредита сохранена; country slug контракты сохранены.
+- **Employees:** responsive E2 employee cards; контактные ссылки остаются прямыми личными контактами; tel/mailto/WhatsApp/VK поведение сохранено; поддержаны image placeholders; личные контакты сотрудников НЕ заменены на generic manager modal.
+- **Awards:** responsive award grid; native button как триггер модалки; keyboard-accessible Bootstrap modal; portrait/landscape media handling; null-image-safe; без выдуманных дат, issuers, рейтингов, provenance.
+- Populated QA: 10 employees, 22 awards. Финальный E2-A4 browser QA пройден.
+
+#### E2-A5 — News + Articles editorial experience
+✅ COMPLETE — `ad6e9c23986d479cbbbf6f511e96bc139ae26576` (`feat: redesign public News + Articles editorial experience (E2-A5-I1)`) — текущий authoritative application HEAD
+
+Область: News listing/detail, Articles listing/detail, общий partial `includes/e2-editorial-card`, editorial CSS, детерминированный порядок пагинации News, безопасная граница публичного рендера ссылок-источников News, regression-тесты.
+
+- **News listing:** удалена legacy sidebar; E2 breadcrumb + page hero; один H1; responsive 1/2/3 card grid; title-ссылки вместо повторяющихся «Подробнее»; `pub_date` на карточках News; date filter сохранён; убрана старая AJAX-пагинация → обычная server-side пагинация; добавлен RSS HTML autodiscovery `<link>`; сохранены `#news-container`, `.card-text`, контракт escaped first-paragraph excerpt.
+- **News detail:** широкая центрированная editorial колонка (~84ch при ≥992px, ~88ch при ≥1200px — намеренно НЕ узкая generic 68ch); left-aligned H1; реальный `pub_date` рядом с заголовком (только если не null); сохранён `.news-content`; сохранена граница рендера `NewsHtmlSanitizer`; безопасное действие «Источник новости» (рендерятся только валидные явные http/https `News.link`; `target=_blank` + `rel="noopener noreferrer"`); `og:type=article`; back-to-news; CTA.
+  - Browser-QA follow-up (включён в HEAD `ad6e9c23`): первая реализация рендерила `News.image` как отдельное верхнее изображение, тогда как то же изображение уже встроено в тело RSS → дубль. Пользователь явно запросил удаление ПЕРВОГО standalone-изображения. Отдельный блок медиа в News detail удалён; изображение в теле остаётся. Listings News и Articles не изменены.
+- **Article listing:** E2 editorial cards; без выдуманных дат; `.card-text` сохранён; сохранена подстрока empty-state `«Статьи пока не добавлены»`; server-пагинация.
+- **Article detail:** широкая центрированная editorial колонка; `Article.image` остаётся одним standalone hero (отдельное CMS-медиа, не дублировало протестированное тело статьи); сохранён `.article-content`; сохранена граница `NewsHtmlSanitizer`; дата публикации статьи не выдумывается; `og:type=article`; back-to-articles; CTA.
+- **Shared layout (точечно):** `resources/views/layouts/main.blade.php` — hard-coded `og:type` website → `@yield('og_type', 'website')`; добавлен `@yield('head_extra')`. Это НЕ общий редизайн shared-layout.
+- **HelpfulNewsController:** первичный порядок `pub_date DESC` + детерминированный вторичный `id DESC`. Без изменения cache-policy, без изменения page-size, без введения recent/related News запроса.
+
+**Тестовый baseline.** До E2-A5: 1001 tests / 7013 assertions. После E2-A5: **1006 tests / 7037 assertions** (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`). E2-A5 намеренно добавил 5 regression-тестов: 2× публичная render-safety `News.link`, 2× editorial `og:type=article`, 1× News RSS autodiscovery. 1006 / 7037 — ожидаемо, не регрессия. Единственная PHPUnit deprecation — pre-existing XML schema deprecation.
+
+**E1 security-контракты остаются закрытыми.** `NewsHtmlSanitizer` остаётся security-границей для публичного stored/external rich HTML. Известное наблюдение: структура HTML-таблиц сейчас не сохраняется allow-list санитайзера — это НЕ дефект E2-A5, и allow-list не расширяется в рамках этой работы.
 
 ### 9.1 Technical / product audit (E1 — выполнено)
 
@@ -446,24 +526,50 @@ E2 **начинается с READ-ONLY visual/UX inventory и design-system prop
   публичный e-mail.
 - Текущий фактический офис / публичный адрес:
   `198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10`.
-- Старый адрес на Звенигородской — **не** текущее физическое расположение.
+- Старый адрес на Звенигородской (`191119, Санкт-Петербург, ул. Звенигородская,
+  д. 22, литера А, офис 053, пом. 7Н`) — **не** текущее физическое расположение.
   Там, где Звенигородская явно помечена как юридический/регистрационный адрес,
   это намеренно и не должно удаляться из-за переезда офиса.
+- Параллельно идёт регистрация юридического адреса `198302, г. Санкт-Петербург,
+  ул. Морской Пехоты, д. 10, корп. 1, литера А, кв. 22`. Успешная регистрация в
+  ФНС/ЕГРЮЛ пользователем **НЕ подтверждена**. Этот адрес **НЕ** документируется
+  как текущий зарегистрированный/юридический адрес компании — упоминается только
+  как pending параллельный юридический трек, явно помеченный «не утверждён».
 - Оплата: наличные; интернет-эквайринг; оплата по QR на расчётный счёт
   организации; эквайринговый терминал в офисе.
 - Возвраты: на банковскую карту клиента; итоговая сумма зависит от условий/
   решения туроператора; при, например, неподтверждённом отеле возможен полный
-  возврат.
+  возврат; отмена по инициативе клиента может быть ограничена условиями
+  оператора.
+- Передача документов: Авилона публично **не** рекламирует отдельную общую
+  курьерскую доставку. По индивидуальной договорённости сотрудники могут
+  распечатать документы (страховку/ваучер/билеты) и организовать их передачу.
+  Каноническая публичная формулировка — `«Передача документов по договорённости»`.
+- Рассрочка/кредит на поездки сейчас предлагаются, но допустима только общая
+  формулировка — не выдумывать банки, ставки, партнёров, финансовые условия.
+- Часы работы: `PENDING_BUSINESS_DECISION_OPENING_HOURS` — конфликт исторической
+  публичной копии (home: «будни 10:00–20:00» vs contacts: «будни 11:00–20:00, по
+  предварительной записи»). Авторитетного выбора нет. **Не выбирать.** Должно быть
+  решено до финального production-релиза (E6).
 
 ## 10. Поиск туров — самый последний продуктовый этап (E5)
 
-Текущий widget на homepage и `/tours` — временная заглушка. Известные local/UX факты на момент Stage 13 closure:
+Текущий widget на homepage и `/tours` — временная заглушка. В E2 (начиная с E2-A1)
+widget только визуально интегрируется в новые surfaces; его механика/архитектура
+не финальны и не решены. E2 НЕ решил финальный поиск туров.
+
+Известные local/UX факты на момент Stage 13 closure (историческое):
 
 - canonical local таблица `tours` содержит 0 строк;
-- текущий temporary `/tours` UI всё ещё содержит старую/статичную презентацию, включая placeholder «22 окт - 26 окт 25»;
+- temporary `/tours` UI всё ещё содержит старую/статичную презентацию, включая placeholder «22 окт - 26 окт 25»;
 - архитектура search/widget/aggregator намеренно отложена.
 
-Не выбирать решение до завершения основной стабилизации и design audit. Код `/tours` в рамках Stage 13 closure docs не менялся.
+E5 остаётся выделенной финальной фазой поиска туров и должен сравнить готовые
+widgets/aggregators, прямые API туроператоров и собственный aggregation/search
+layer — с учётом стоимости, стабильности, contracts/legal terms, mobile UX,
+интеграции с cabinet/booking/CRM, caching, rate limits и стоимости поддержки.
+
+Не выбирать решение до завершения основной стабилизации и design audit.
 
 Последним крупным product block сравнить:
 

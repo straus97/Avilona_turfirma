@@ -1,19 +1,21 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-08-28**
+Актуализировано: **2026-09-02**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- Authoritative E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990`
-- Subject: `fix: close final public audit gaps`
+- **Current authoritative application HEAD: `ad6e9c23986d479cbbbf6f511e96bc139ae26576`**
+- Subject: `feat: redesign public News + Articles editorial experience (E2-A5-I1)`
+- Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
 - Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
 - Stage 0–13: ✅ CLOSED
 - E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
-- **Next phase: E2 — Public UX / UI / Design Redesign**
-- Full verified baseline: **1001 tests / 7013 assertions** (PHPUnit 11.5.56, PHP 8.3.32, SQLite `:memory:`)
+- **Current phase: E2 — Public UX / UI / Design Redesign — 🔄 IN PROGRESS** (E2-A1…E2-A5 completed; next slice not yet selected)
+- Full verified baseline: **1006 tests / 7037 assertions** (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
+  - historical E1-closure baseline was **1001 tests / 7013 assertions**; E2-A5 intentionally added 5 regression tests (2× News.link render-safety, 2× editorial og:type=article, 1× News RSS autodiscovery) — expected, not a regression
 - Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Project Sources: stale relative to this HEAD, refresh required after this docs-only commit (previous Project Sources checkpoint: `8e8d6d96f4024953b4cca25f005d55429dec9e92`, 2026-08-24)
+- Project Sources: the active external set is still the **historical E1-closure set for `0be9044e35ec5be670c8f9bb33de020491214423`** (`docs: close E1 and prepare E2`) — now **STALE**; refresh required after this docs-only slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD is not known and must not be invented.
 
 ## Completed stages
 
@@ -189,18 +191,66 @@ Closed slices (details — `docs/README.md` §5A):
 
 Intentionally deferred (NOT defects — do not "fix" accidentally):
 
-- `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 vs contacts 11:00–20:00 by prior appointment; no authoritative decision; must be resolved before final production release.
-- Per-page `og:type=article` refinement → E2.
-- Temporary public tour-search widget stays until E5.
-- News RSS scheduling — verify real production cron in E6; do not add Laravel scheduling blindly.
+- `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 vs contacts 11:00–20:00 by prior appointment; no authoritative decision; must be resolved before final production release (E6). Still unresolved.
+- Per-page `og:type=article` refinement — ✅ resolved in E2-A5 (News detail + Article detail declare `og:type=article`; `layouts/main` now `@yield('og_type', 'website')`).
+- Temporary public tour-search widget stays until E5 — still temporary; it is only visually integrated into E2 surfaces.
+- News RSS scheduling — verify real production cron in E6; do not add Laravel scheduling blindly. E2-A5 added only HTML autodiscovery on the News listing; production scheduling is NOT verified.
 - Future-risk raw HTML (`Best_offer` / `OurClient` / `Countries_image` / `Destination_image`) — no current untrusted web write path; do not reopen unless a CMS/write path is added.
 
 ### E2 — public-site UX/UI/design modernization
-⬜ **NEXT**
+🔄 **IN PROGRESS** — E2-A1…E2-A5 completed; E2 is **not** globally complete.
 
 Not merely a cosmetic recolor — treat the public site as a coherent modern tourism website: information architecture, header/navigation, home-page hierarchy, typography, spacing, colour system, buttons/forms, cards, responsive behaviour, mobile navigation, visual consistency, destinations/countries, company pages, employees, awards, articles/news/special offers/reviews, contacts, empty/error states, consent UI, accessibility, trust/credibility, conversion paths, CTA consistency, image treatment, desktop/tablet/mobile.
 
-Begin with a **READ-ONLY visual/UX inventory and design-system proposal** before broad implementation. Do not redesign final tour-search mechanics; the current widget may be visually accommodated as a temporary component, its final provider/architecture belongs to E5.
+Do not redesign final tour-search mechanics; the current widget is visually accommodated as a temporary component, its final provider/architecture belongs to E5.
+
+#### E2-A1 — public header / home first screen
+✅ COMPLETE — `43a073e676d441021445f73f38733fa70a0e1463` (`feat: redesign public header and home first screen`)
+
+- unified public header/navigation; route-derived active states; accessible `aria-current`;
+- home hero redesign; one H1; improved CTA hierarchy;
+- temporary tour-search widget visually integrated — tour-search architecture deliberately NOT redesigned (E5).
+
+#### E2-A2 — home below-the-fold / shared public shell
+✅ COMPLETE — `72202ab7d35b064ab4b0c66147bfff21357e5343` (`feat: redesign home and shared public shell`), `eaa2093f5f406e7a5fbd73c6fe3a1897802852a` (`refactor: unify public manager interactions`)
+
+- shared public shell; redesigned home below-the-fold; footer cleanup;
+- header/footer phone interaction no longer causes page jump;
+- broken Yandex informer removed; map placeholder cleaned;
+- scroll-to-top control keyboard accessible;
+- no page-level horizontal overflow in verified QA;
+- shared manager-contact interaction layer.
+- Not a production-deployment claim.
+
+#### E2-A3 — public travel discovery
+✅ COMPLETE — `5e22e4b78ed6e8610d4c2b7f11043ff9e1336806` (`feat: redesign public travel discovery`)
+
+- Countries; Destinations; Specials / public travel discovery surfaces;
+- included populated / browser QA.
+- Historical SQL used for isolated visual/reference QA only (`C:\Users\nikita\Downloads\u0588341_turfirma.sql`, SHA256 `A721C984DE0F2B366598A7B5D92E6B5F6C7D629692C2C34E2EED52BD85B3109A`). Legacy dump content is historical QA/reference only — NOT current business truth; legacy users/personal data must never be imported into canonical or production data.
+
+#### E2-A4 — company / trust surfaces
+✅ COMPLETE — `94aedad09468d50be45e8f11c4be0a8c41dbb474` (`feat: redesign company trust pages`)
+
+- **About Company:** retired legacy sidebar/grid; one H1; E2 breadcrumbs/hero/sections; corrected wide-desktop layout after browser QA; three existing PDFs preserved (NOT declared legally/currently up to date; displayed/repository date remains **22 May 2024**); payment/refund canonical wording preserved; public email `avilonatur@bk.ru` preserved; public wording moved from a general "courier delivery" service to `«Передача документов по договорённости»`; generic installments/credit offering remains; country slug contracts preserved.
+- **Employees:** responsive E2 employee cards; contact links remain direct personal contacts; tel/mailto/WhatsApp/VK behaviour preserved; image placeholders supported; personal contacts NOT replaced with the generic manager modal.
+- **Awards:** responsive award grid; native button modal trigger; keyboard-accessible Bootstrap modal; portrait/landscape media handling; null-image-safe; no invented dates, issuers, rankings or provenance.
+- Populated QA: 10 employees, 22 awards. Final E2-A4 browser QA passed.
+
+#### E2-A5 — News + Articles editorial experience
+✅ COMPLETE — `ad6e9c23986d479cbbbf6f511e96bc139ae26576` (`feat: redesign public News + Articles editorial experience (E2-A5-I1)`) — current authoritative application HEAD
+
+- Scope: News listing/detail, Articles listing/detail, shared `includes/e2-editorial-card` partial, editorial CSS, deterministic News pagination ordering, safe public rendering boundary for News source links, regression tests.
+- **News listing:** legacy sidebar removed; E2 breadcrumb + page hero; one H1; responsive 1/2/3 card grid; title links instead of repeated "Подробнее"; `pub_date` shown on cards; date filter preserved; old AJAX pagination removed → normal server-side pagination; RSS HTML autodiscovery `<link>` added; `#news-container`, `.card-text`, escaped first-paragraph excerpt contract retained.
+- **News detail:** broad centred editorial column (~84ch ≥992px, ~88ch ≥1200px — intentionally not a narrow 68ch column); left-aligned H1; real `pub_date` near heading; `.news-content` retained; `NewsHtmlSanitizer` render boundary retained; safe "Источник новости" action (only explicit http/https `News.link` values render; `target=_blank` + `rel="noopener noreferrer"`); `og:type=article`; back-to-news; CTA.
+  - Browser-QA follow-up (in HEAD `ad6e9c23`): the first implementation rendered `News.image` as a standalone top image while the same image was already embedded in the RSS body → duplicate. The standalone News detail media block was removed at the user's explicit request; the body image remains. News listings and Articles unchanged.
+- **Article listing:** E2 editorial cards; no fabricated dates; `.card-text` preserved; empty-state substring `«Статьи пока не добавлены»` retained; server pagination.
+- **Article detail:** broad centred editorial column; `Article.image` remains as one standalone hero (separate CMS media, did not duplicate the tested article body); `.article-content` retained; `NewsHtmlSanitizer` boundary retained; no article publication date invented; `og:type=article`; back-to-articles; CTA.
+- **Shared layout (surgical):** `resources/views/layouts/main.blade.php` — hard-coded `og:type` website → `@yield('og_type', 'website')`; added `@yield('head_extra')`. Not a general shared-layout redesign.
+- **HelpfulNewsController:** primary ordering `pub_date DESC` + deterministic secondary `id DESC`. No cache-policy change, no page-size change, no recent/related News query introduced.
+
+#### E2 — remaining
+The remaining public routes/page families (likely candidates: Reviews, Contacts, other helper/content/error/empty surfaces) will be audited **read-only** before the next coherent E2 slice is selected. The next E2-A number and slice are NOT yet chosen.
 
 After analysis, improve coherent design system and individual pages/components:
 
