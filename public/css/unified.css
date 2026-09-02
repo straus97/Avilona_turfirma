@@ -2281,3 +2281,416 @@ html {
         max-width: 78ch;
     }
 }
+
+/* =========================================================================
+   E2-A4-I1 — Company / Trust surfaces (About / Employees / Awards)
+   -------------------------------------------------------------------------
+   Additive, scoped continuation of the E2 layer. Reuses the existing
+   --e2-* tokens and primitives (.e2-section, .e2-grid, .e2-card, .e2-btn,
+   .e2-prose, .e2-doc-callout, .e2-cta-band, .e2-page-hero, .e2-breadcrumb).
+   Only genuinely new primitives are added: a centred About reading column,
+   a directions chip group, an advantage tile, a person card and an award
+   tile + its zoom modal. The award modal trigger is a real <button>, so the
+   rules below explicitly neutralise the legacy bare `button` rule from
+   style_min.css (padding / margin / border-radius / color / font-size) and
+   its `button img` sizing. No new image assets, no parallel design system,
+   no JS. Respects prefers-reduced-motion; no glow-heavy styling.
+   ========================================================================= */
+
+/* ---- About: centred content column (outer cap only) --------------- */
+.e2-about {
+    max-width: 60rem;
+    margin-inline: auto;
+}
+
+.e2-about > .e2-section:first-of-type {
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+/* ---- About: "Основные направления" — compact grouped links --------- */
+.e2-about-directions {
+    display: grid;
+    gap: clamp(1rem, .8rem + 1vw, 1.5rem);
+    grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+    .e2-about-directions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.e2-about-directions__group {
+    padding: 1rem 1.15rem;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-about-directions__label {
+    margin: 0 0 .5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--e2-ink);
+}
+
+.e2-about-directions__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem .55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.e2-about-directions__item {
+    font-size: .9375rem;
+    line-height: 1.5;
+    color: var(--e2-muted);
+}
+
+.e2-about-directions__item:not(:last-child)::after {
+    content: "\00B7";
+    margin-left: .55rem;
+    color: var(--e2-border);
+}
+
+.e2-about-directions__empty {
+    margin: 0;
+    font-size: .9375rem;
+    color: var(--e2-muted);
+}
+
+.e2-about-directions__actions {
+    margin-top: 1rem;
+}
+
+/* ---- About: legal document callout — PDF type tag ----------------- */
+.e2-doc-callout__type {
+    display: inline-flex;
+    align-items: center;
+    padding: .1rem .4rem;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+    color: var(--e2-muted);
+    background: var(--e2-surface);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-sm);
+}
+
+/* ---- About: advantages (extends .e2-card / .e2-grid) -------------- */
+.e2-about-advantages {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.e2-about-advantage {
+    align-items: flex-start;
+    gap: .85rem;
+    padding: clamp(1rem, .85rem + .6vw, 1.35rem);
+}
+
+.e2-about-advantage:hover {
+    transform: none;
+    box-shadow: var(--e2-elev-1);
+}
+
+.e2-about-advantage__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--e2-radius-md);
+    background: rgba(184, 80, 15, .1);
+    color: var(--e2-primary);
+    font-size: 1.15rem;
+}
+
+.e2-about-advantage__text {
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--e2-ink);
+}
+
+/* ---- About: desktop width (browser QA polish #2) -----------------
+   Browser QA: capping the OUTER `.e2-about` was not enough — the text
+   inside still self-shrank because the generic `.e2-prose` measure
+   (68ch) and the generic `.e2-page-hero__intro` measure (65ch, ~560px)
+   still applied, leaving a large empty strip inside the About content
+   area. Per the confirmed requirement, About body text and the About
+   hero intro now use the FULL width of the `.e2-about` content column;
+   the outer column stays centred and sensibly capped (60 -> 68 -> 75rem).
+   The two-column polish #1 grids (.e2-about-split / .e2-about-cols) are
+   removed — "Перспективы развития" / "Качество продукта" and the payment
+   subsections flow vertically at full width. Scoped to .e2-about* only:
+   the generic .e2-prose / .e2-page-hero__intro / .e2-section__intro rules
+   and the E2-A3 discovery-detail prose are NOT weakened. */
+.e2-about .e2-prose,
+.e2-about .e2-page-hero__intro,
+.e2-about .e2-section__intro {
+    max-width: none;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .e2-about {
+        max-width: 68rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .e2-about {
+        max-width: 75rem;
+    }
+}
+
+/* ---- Employees: person card ------------------------------------- */
+.e2-person-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--e2-surface);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+    box-shadow: var(--e2-elev-1);
+    overflow: hidden;
+}
+
+.e2-person-card__media {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    background: var(--e2-surface-warm);
+    overflow: hidden;
+}
+
+.e2-person-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+}
+
+.e2-person-card__media-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--e2-surface-warm) 0%, rgba(2, 119, 189, .09) 100%);
+    color: var(--e2-sea);
+}
+
+.e2-person-card__media-placeholder > i {
+    font-size: 2.75rem;
+    opacity: .55;
+}
+
+.e2-person-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: .4rem;
+    padding: clamp(1rem, .85rem + .6vw, 1.35rem);
+}
+
+.e2-person-card__name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--e2-ink);
+    overflow-wrap: anywhere;
+}
+
+.e2-person-card__position {
+    margin: 0;
+    font-size: .9375rem;
+    line-height: 1.45;
+    color: var(--e2-muted);
+    overflow-wrap: anywhere;
+}
+
+.e2-person-card__contacts {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    margin: .4rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.e2-person-card__contact {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    min-height: 40px;
+    padding: .35rem .5rem;
+    margin-left: -.5rem;
+    border-radius: var(--e2-radius-sm);
+    font-size: .9375rem;
+    line-height: 1.35;
+    color: var(--e2-sea-strong);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.e2-person-card__contact > i {
+    flex: 0 0 auto;
+    font-size: 1rem;
+    color: var(--e2-muted);
+}
+
+.e2-person-card__contact:hover {
+    color: var(--e2-primary-strong);
+    text-decoration: underline;
+}
+
+.e2-person-card__contact:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+}
+
+/* ---- Awards: tile grid ---------------------------------------- */
+.e2-award-grid {
+    display: grid;
+    gap: clamp(1rem, .8rem + 1vw, 1.5rem);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+@media (min-width: 768px) {
+    .e2-award-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 992px) {
+    .e2-award-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.e2-award-tile {
+    display: flex;
+}
+
+/* The modal trigger is a real <button>: fully neutralise the legacy bare
+   `button` rule (style_min.css) and `button img` sizing, then rebuild as a
+   calm tile. .e2-award-tile__placeholder is a <div> but shares the look. */
+.e2-award-tile__trigger,
+.e2-award-tile__placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    width: 100%;
+    margin: 0;
+    padding: .85rem;
+    font: inherit;
+    color: var(--e2-ink);
+    text-align: center;
+    background: var(--e2-surface);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+    box-shadow: var(--e2-elev-1);
+}
+
+.e2-award-tile__trigger {
+    cursor: pointer;
+    transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+.e2-award-tile__trigger:hover {
+    border-color: var(--e2-sea);
+    box-shadow: var(--e2-elev-2);
+}
+
+.e2-award-tile__trigger:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring), var(--e2-elev-2);
+}
+
+.e2-award-tile__thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 3 / 4;
+    padding: .5rem;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+    overflow: hidden;
+}
+
+.e2-award-tile__trigger .e2-award-tile__thumb img {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: contain;
+    display: block;
+}
+
+.e2-award-tile__thumb--empty {
+    color: var(--e2-sea);
+}
+
+.e2-award-tile__thumb--empty > i {
+    font-size: 2.5rem;
+    opacity: .55;
+}
+
+.e2-award-tile__caption {
+    font-size: .875rem;
+    line-height: 1.4;
+    color: var(--e2-muted);
+    overflow-wrap: anywhere;
+}
+
+/* ---- Awards: zoom modal (scoped to .e2-award-modal) ----------- */
+.e2-award-modal .modal-content {
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+    box-shadow: var(--e2-elev-3);
+    color: var(--e2-ink);
+}
+
+.e2-award-modal .modal-header {
+    border-bottom: 1px solid var(--e2-border);
+    padding: 1rem 1.25rem;
+}
+
+.e2-award-modal .modal-title {
+    margin: 0;
+    color: var(--e2-ink);
+    font-weight: 700;
+}
+
+.e2-award-modal .btn-close {
+    margin: 0;
+    padding: .5rem;
+}
+
+.e2-award-modal .btn-close:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+}
+
+.e2-award-modal__body {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.e2-award-modal__image {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .e2-award-tile__trigger {
+        transition: none;
+    }
+}
