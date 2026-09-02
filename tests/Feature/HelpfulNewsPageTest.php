@@ -111,6 +111,32 @@ class HelpfulNewsPageTest extends TestCase
     }
 
     /**
+     * E2-A5-I1: страница списка новостей должна публиковать ровно одну ссылку
+     * RSS-автообнаружения в <head>, указывающую на route('news.rss'). Ссылка
+     * добавляется через общий layout-хук @yield('head_extra'); сам RSS-фид и
+     * его контроллер/шаблон при этом не редактируются.
+     */
+    public function test_listing_page_advertises_rss_autodiscovery_link(): void
+    {
+        $this->makeNews('Rss Discovery News', 'rss-disc', '2024-01-01 10:00:00');
+
+        $response = $this->get('/helpful_information/news');
+        $response->assertOk();
+
+        $previous = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $response->getContent());
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $xpath = new \DOMXPath($dom);
+        $links = $xpath->query('//head/link[@rel="alternate" and @type="application/rss+xml"]');
+
+        $this->assertSame(1, $links->length, 'News listing must expose exactly one RSS autodiscovery link');
+        $this->assertSame(route('news.rss'), $links->item(0)->getAttribute('href'));
+    }
+
+    /**
      * Снимок всех строк news (включая soft-deleted) по значимым атрибутам.
      *
      * @return array<int,array<string,mixed>>

@@ -34,7 +34,7 @@
     <!-- Open Graph теги для улучшения отображения при расшаривании в социальных сетях -->
     <meta property="og:title"
           content="@yield('og_title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="{{ $pageCanonicalUrl }}">
     <meta property="og:image" content="https://avilona.ru/img/logo.png">
     <meta property="og:description"
@@ -71,6 +71,7 @@
     <link rel="stylesheet" href="{{ asset('css/unified.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style_min.css') }}">
     @yield('styles')
+    @yield('head_extra')
 </head>
 <body onload="initMap()">
 @include('includes.cookie-consent')

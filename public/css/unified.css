@@ -2694,3 +2694,222 @@ html {
         transition: none;
     }
 }
+
+/* =========================================================================
+   E2-A5 — Editorial (News / Articles): listings + detail
+   -------------------------------------------------------------------------
+   Additive, scoped continuation of the E2 layer. Reuses the existing
+   --e2-* tokens and primitives (.e2-card, .e2-card--link, .e2-grid,
+   .e2-page-hero, .e2-breadcrumb, .e2-prose, .e2-btn, .e2-cta-band,
+   .e2-detail-media, .e2-media-placeholder). No existing rule is edited;
+   E2-A3 (discovery) and E2-A4 (About / trust) behaviour is untouched;
+   style_min.css is untouched. Selectors are scoped to .e2-editorial-*.
+   Responsive targets exercised: 390 / 768 / 992 / 1200 / 1440.
+   ========================================================================= */
+
+/* ---- Listing grid rhythm (no .e2-section head needed) ---------------- */
+.e2-editorial-list {
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+/* ---- Editorial card (extends .e2-card / .e2-card--link) -------------
+   1 col <576, 2 col >=576, 3 col >=992 via .e2-grid--3. Consistent media
+   aspect + clamped title/teaser so a long feed headline or excerpt never
+   makes one card tower over its row. */
+.e2-editorial-card .e2-card__media {
+    aspect-ratio: 16 / 10;
+}
+
+.e2-editorial-card .e2-card__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.e2-editorial-card .e2-card__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.e2-editorial-card__date {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.e2-editorial-card__date > i {
+    color: var(--e2-sea);
+}
+
+/* ---- Pagination wrapper -------------------------------------------------
+   The Laravel paginator view already emits its own semantic <nav>; this is
+   a plain <div> that only adds vertical rhythm and centring (the shared
+   `.pagination` rule near the top of this file already flex-wraps/centres
+   the list). No nested <nav>. */
+.e2-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(1.75rem, 1.4rem + 2vw, 2.75rem);
+}
+
+.e2-pagination nav {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* ---- Compact date filter (News list only) --------------------------- */
+.e2-editorial-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: .75rem 1rem;
+    padding: clamp(.9rem, .75rem + 1vw, 1.35rem);
+    margin-bottom: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+}
+
+.e2-editorial-filter__field {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.e2-editorial-filter__field label {
+    font-weight: 600;
+    font-size: .875rem;
+    color: var(--e2-ink);
+}
+
+.e2-editorial-filter__field input {
+    min-height: 44px;
+    padding: .55rem .75rem;
+    font: inherit;
+    color: var(--e2-ink);
+    background: var(--e2-surface);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+}
+
+.e2-editorial-filter__field input:focus {
+    outline: none;
+    border-color: var(--e2-sea);
+    box-shadow: var(--e2-focus-ring);
+}
+
+.e2-editorial-filter__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.e2-editorial-filter__hint {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: .8125rem;
+    color: var(--e2-muted);
+}
+
+/* ---- Editorial detail: centred, deliberately broad reading measure ---
+   NOT the generic .e2-prose 68ch cap, NOT edge-to-edge. Below 992px the
+   column uses the full container width; above it grows to a broad but
+   intentional measure, always centred via margin-inline:auto. No
+   contextual rail (declined) — nothing to fill a one-sided gap because
+   the column itself is centred. */
+.e2-editorial-detail {
+    margin-top: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+.e2-editorial-detail__inner {
+    margin-inline: auto;
+    max-width: 100%;
+}
+
+@media (min-width: 992px) {
+    .e2-editorial-detail__inner {
+        max-width: 84ch;
+    }
+}
+
+@media (min-width: 1200px) {
+    .e2-editorial-detail__inner {
+        max-width: 88ch;
+    }
+}
+
+/* The prose wrapper fills the bounded reading column (override the generic
+   68ch measure for editorial pages only). */
+.e2-editorial-detail__inner .e2-prose {
+    max-width: none;
+    margin: 1.5rem 0 0;
+    font-size: 1.03rem;
+}
+
+/* Editorial headline: a full sentence, left-aligned, wider than the generic
+   .e2-page-hero__title 24ch cap but still a headline measure. */
+.e2-editorial-hero .e2-page-hero__title {
+    max-width: 46ch;
+}
+
+/* Meta row directly under the H1 (News publication date). */
+.e2-editorial-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem .75rem;
+    margin: .4rem 0 0;
+    font-size: .9rem;
+    color: var(--e2-muted);
+}
+
+.e2-editorial-meta > i {
+    color: var(--e2-sea);
+}
+
+/* Action row (back-to-list / external source). */
+.e2-editorial-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+}
+
+/* ---- Rich-body hardening for markup that survives NewsHtmlSanitizer ---
+   (p, h2/h3/h4, ul/ol, blockquote, a, img). Scoped to editorial prose so
+   E2-A3 discovery-detail and E2-A4 About rules are not touched. Tables are
+   stripped by the frozen sanitizer — no fake table support here. */
+.e2-editorial-detail__inner .e2-prose > :first-child {
+    margin-top: 0;
+}
+
+.e2-editorial-detail__inner .e2-prose h4 {
+    margin: 1.4rem 0 .5rem;
+    font-size: 1.05rem;
+    color: var(--e2-ink);
+}
+
+.e2-editorial-detail__inner .e2-prose blockquote {
+    margin: 1.25rem 0;
+    padding: .35rem 0 .35rem 1rem;
+    border-left: 3px solid var(--e2-primary);
+    color: var(--e2-muted);
+}
+
+.e2-editorial-detail__inner .e2-prose img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 1.25rem 0;
+    border-radius: var(--e2-radius-md);
+}
+
+/* Long unbroken tokens (URLs pasted as text) must not push the page wide. */
+.e2-editorial-detail__inner .e2-prose {
+    overflow-wrap: anywhere;
+}

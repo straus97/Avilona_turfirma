@@ -229,4 +229,93 @@ class NewsPublicRenderSanitizationTest extends TestCase
         $response->assertSee('Sanitization Marker News | avilona.ru', false);
         $response->assertSee('Последние новости о Sanitization Marker News', false);
     }
+
+    // -----------------------------------------------------------------------
+    // E2-A5-I1: публичное действие «Источник новости» — отдельная граница
+    // рендера для поля News.link (НЕ description). News.link на приёме из RSS
+    // проверяется только на непустоту/длину (RssNewsSyncService, вне слайса).
+    // Публичная страница обязана показывать ссылку-источник только для
+    // валидного внешнего http/https URL и никогда — для javascript:/data:/
+    // vbscript:/protocol-трюков. NewsHtmlSanitizer этим не занимается и не
+    // меняется; эти тесты фиксируют именно рендер-границу link.
+    // -----------------------------------------------------------------------
+
+    private function domFromResponse(string $html): \DOMDocument
+    {
+        $previous = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        return $dom;
+    }
+
+    public function test_news_detail_renders_source_action_for_a_safe_external_https_url(): void
+    {
+        News::create([
+            'title' => 'Safe Source Link News',
+            'slug' => 'safe-source-link-news',
+            'link' => 'https://example.test/source',
+            'description' => '<p>Readable safe-source body marker.</p>',
+            'image' => null,
+            'pub_date' => '2024-01-01 10:00:00',
+        ]);
+
+        $response = $this->get(route('helpful_news_id.index', ['slug' => 'safe-source-link-news']));
+        $response->assertOk();
+        $response->assertSee('Readable safe-source body marker.', false);
+
+        $dom = $this->domFromResponse($response->getContent());
+        $xpath = new \DOMXPath($dom);
+
+        $main = $xpath->query('//main')->item(0);
+        $this->assertInstanceOf(\DOMElement::class, $main);
+
+        $sourceLinks = iterator_to_array($xpath->query('.//a[@href="https://example.test/source"]', $main));
+        $this->assertCount(1, $sourceLinks, 'a safe external https URL must render exactly one source action');
+
+        /** @var \DOMElement $link */
+        $link = $sourceLinks[0];
+        $this->assertSame('_blank', $link->getAttribute('target'));
+
+        $rel = preg_split('/\s+/', strtolower(trim($link->getAttribute('rel')))) ?: [];
+        $this->assertContains('noopener', $rel, 'source action must carry rel="noopener"');
+        $this->assertContains('noreferrer', $rel, 'source action must carry rel="noreferrer"');
+    }
+
+    public function test_news_detail_does_not_render_javascript_scheme_link_as_a_source_action(): void
+    {
+        News::create([
+            'title' => 'Unsafe Source Link News',
+            'slug' => 'unsafe-source-link-news',
+            'link' => 'javascript:alert(1)',
+            'description' => '<p>Readable unsafe-source body marker.</p>',
+            'image' => null,
+            'pub_date' => '2024-01-01 10:00:00',
+        ]);
+
+        $response = $this->get(route('helpful_news_id.index', ['slug' => 'unsafe-source-link-news']));
+        $response->assertOk();
+        // Страница по-прежнему рендерится, читаемый текст на месте.
+        $response->assertSee('Readable unsafe-source body marker.', false);
+
+        // Опасная схема не появляется в разметке вообще.
+        $this->assertStringNotContainsString('javascript:alert(1)', $response->getContent());
+
+        $dom = $this->domFromResponse($response->getContent());
+        $xpath = new \DOMXPath($dom);
+
+        $main = $xpath->query('//main')->item(0);
+        $this->assertInstanceOf(\DOMElement::class, $main);
+
+        foreach ($xpath->query('.//a[@href]', $main) as $a) {
+            /** @var \DOMElement $a */
+            $this->assertStringStartsNotWith(
+                'javascript:',
+                strtolower(trim($a->getAttribute('href'))),
+                'no javascript:-scheme href may be rendered as a link'
+            );
+        }
+    }
 }

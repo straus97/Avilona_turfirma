@@ -121,6 +121,49 @@ class PublicDynamicSocialMetadataConsistencyTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 6. E2-A5-I1: editorial detail pages declare og:type="article"
+    //    (list pages keep the shared default "website" — not asserted here).
+    // -----------------------------------------------------------------------
+
+    public function test_news_detail_declares_article_open_graph_type(): void
+    {
+        News::create([
+            'title' => 'OG Type Marker News 7781',
+            'slug' => 'og-type-marker-news-7781',
+            'link' => 'https://example.com/news/og-type-marker-news-7781',
+            'description' => 'News body for og:type check',
+            'image' => null,
+            'pub_date' => now(),
+        ]);
+
+        $response = $this->get(route('helpful_news_id.index', ['slug' => 'og-type-marker-news-7781']));
+        $response->assertOk();
+
+        $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
+        $ogType = $xpath->query('//meta[@property="og:type"]')->item(0);
+        $this->assertNotNull($ogType);
+        $this->assertSame('article', $ogType->getAttribute('content'));
+    }
+
+    public function test_article_detail_declares_article_open_graph_type(): void
+    {
+        Article::create([
+            'title' => 'OG Type Marker Article 7782',
+            'slug' => 'og-type-marker-article-7782',
+            'content' => 'Article body for og:type check',
+            'image' => null,
+        ]);
+
+        $response = $this->get(route('helpful_information.show_interesting_news', ['slug' => 'og-type-marker-article-7782']));
+        $response->assertOk();
+
+        $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
+        $ogType = $xpath->query('//meta[@property="og:type"]')->item(0);
+        $this->assertNotNull($ogType);
+        $this->assertSame('article', $ogType->getAttribute('content'));
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 

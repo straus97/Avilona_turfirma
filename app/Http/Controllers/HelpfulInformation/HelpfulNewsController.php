@@ -15,9 +15,13 @@ class HelpfulNewsController extends Controller
         // Синхронизация RSS вынесена в отдельную artisan-команду news:sync-rss
         // (см. App\Services\News\RssNewsSyncService), чтобы GET-запрос не выполнял
         // внешних сетевых обращений и не писал в базу.
+        // E2-A5-I1: pub_date DESC остаётся первичным ключом сортировки; id DESC
+        // добавлен как детерминированный вторичный порядок, чтобы записи с
+        // одинаковым pub_date не «прыгали» между страницами пагинации.
         $query = News::select('id', 'title', 'slug', 'link', 'image', 'description', 'pub_date')
-            ->orderBy('pub_date', 'desc');
-        
+            ->orderBy('pub_date', 'desc')
+            ->orderBy('id', 'desc');
+
         $newsFilter = new NewsFilter($request->all());
         $newsFilter->apply($query);
         
