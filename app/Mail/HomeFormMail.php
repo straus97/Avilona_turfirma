@@ -23,9 +23,27 @@ class HomeFormMail extends Mailable
         $this->validatedData = $validatedData;
     }
 
+    /**
+     * E2-A6-I1: «Тема» — необязательное поле формы. Если посетитель оставил
+     * его пустым (или поле вовсе не пришло), тема письма не может стать
+     * пустой/невалидной: используется детерминированный фолбэк, выведенный из
+     * назначения формы, а не выдуманная клиентская семантика.
+     */
+    public const DEFAULT_SUBJECT = 'Новое сообщение с главной страницы — avilona.ru';
+
+    private function resolvedSubject(): string
+    {
+        $subject = trim((string) ($this->validatedData['subject'] ?? ''));
+
+        return $subject !== '' ? $subject : self::DEFAULT_SUBJECT;
+    }
+
     public function build()
     {
-        return $this->markdown('emails.contact-form-home')->with('validatedData', $this->validatedData);
+        return $this->markdown('emails.contact-form-home')->with([
+            'validatedData' => $this->validatedData,
+            'subjectLine' => $this->resolvedSubject(),
+        ]);
     }
 
     /**
@@ -36,7 +54,7 @@ class HomeFormMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            subject: $this->validatedData['subject'],
+            subject: $this->resolvedSubject(),
         );
     }
 }

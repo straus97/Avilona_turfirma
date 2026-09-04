@@ -24,7 +24,10 @@ class SendHomeRequest extends FormRequest
         return [
             'name' => 'required',
             'email' => 'required|email',
-            'subject' => '',
+            // E2-A6-I1: «Тема» остаётся необязательным полем (посетитель может
+            // оставить его пустым), но теперь детерминированно ограничено по
+            // длине, чтобы свободный текст не попадал без границ в тему письма.
+            'subject' => 'nullable|string|max:150',
             'message' => 'required|min:50',
             'captcha' => 'required|captcha',
             'agree' => 'accepted',

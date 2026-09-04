@@ -33,7 +33,7 @@
                     <td colspan="2" style="padding: 5px 50px;">
                         <p><strong>Имя:</strong> {{ $validatedData['name'] }}</p>
                         <p><strong>Email:</strong> {{ $validatedData['email'] }}</p>
-                        <p><strong>Тема:</strong> {{ $validatedData['subject'] }}</p>
+                        <p><strong>Тема:</strong> {{ $subjectLine }}</p>
                         <p><strong>Сообщение:</strong></p>
                         <p class="user-message">{{ $validatedData['message'] }}</p>
                     </td>

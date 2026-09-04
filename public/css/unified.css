@@ -2913,3 +2913,194 @@ html {
 .e2-editorial-detail__inner .e2-prose {
     overflow-wrap: anywhere;
 }
+
+/* =========================================================================
+   E2-A6-I1 — Public contact & support surfaces (Contacts / Reviews)
+   -------------------------------------------------------------------------
+   Reuses the E2-A1/A2 primitives already in this file: --e2-* tokens,
+   .e2-section, .e2-page-hero, .e2-breadcrumb, .e2-contact-cols,
+   .e2-contact-block, .e2-contact-list, .e2-form, .e2-alert, .e2-map,
+   .e2-cta-band, .e2-pagination, .e2-review__*. Only the few genuinely
+   missing pieces are added here; no parallel design system.
+   ========================================================================= */
+
+/* Neutral (non success / non error) alert — moderation notice on Reviews. */
+.e2-alert--info {
+    background: rgba(2, 119, 189, .08);
+    border-color: rgba(2, 119, 189, .28);
+    color: var(--e2-ink);
+}
+
+/* Callout for the non-public consent-evidence fields inside .e2-form. */
+.e2-form__note {
+    margin: 0 0 1rem;
+    padding: .75rem .9rem;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--e2-muted);
+}
+
+/* ---- Reviews listing --------------------------------------------------
+   Browser-QA polish: on wide desktop a single-column list of full-width
+   cards produced huge, mostly-empty rectangles for short reviews. Reviews
+   now form a natural 2-column grid at >= 992px; below that (tablet + mobile)
+   they stay single-column, since review length is unpredictable and a
+   forced tablet 2-up risks cramped text. `align-items: start` stops a
+   short card from being stretched to match a taller neighbour in the same
+   row — cards size to their own content, no fixed/min-height. Normal DOM
+   order (1,2 / 3,4) is unchanged; CSS grid auto-placement never reorders
+   items, so read/pagination order stays exactly as returned by the query. */
+.e2-review-list {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 992px) {
+    .e2-review-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+        align-items: start;
+    }
+}
+
+/* Each review card carries the legacy `row mb-4` tokens (frozen test anchor);
+   neutralise the Bootstrap grid-row box model so it behaves as a plain card. */
+.e2-review-item.row {
+    --bs-gutter-x: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.e2-review-item {
+    margin-bottom: 0;
+}
+
+/* Review cards are not interactive — drop the card hover lift. */
+.e2-review-item:hover {
+    transform: none;
+    box-shadow: var(--e2-elev-1);
+}
+
+/* Name + publication date read as one compact identity cluster beside the
+   avatar, instead of the date floating as a separate block near the
+   bottom of the card. */
+.e2-review__identity {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+
+.e2-review__date {
+    margin: 0;
+    font-size: .8125rem;
+    color: var(--e2-muted);
+}
+
+/* "Читать полностью" / "Скрыть отзыв": a lightweight text-style action
+   rather than a full tertiary button chip, so it stays discoverable
+   without visually dominating a compact card. */
+.e2-review-item .read-more {
+    min-height: auto;
+    padding: 0;
+    font-size: .875rem;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    align-self: flex-start;
+}
+
+.e2-review-item .read-more:hover,
+.e2-review-item .read-more:focus-visible {
+    background: transparent;
+    text-decoration: underline;
+}
+
+/* Neutral avatar fallback for reviews without an uploaded image — no gender
+   guessed from the name, one shared silhouette. Reuses .e2-review__avatar's
+   existing 44px circle sizing; a cool sea tint keeps it inside the existing
+   E2 palette (no additional peach/orange surface). */
+.e2-review__avatar--placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 119, 189, .12);
+    color: var(--e2-sea-strong);
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+/* ---- Contacts: legal/offer document list -------------------------- */
+.e2-doc-list {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: .85rem;
+}
+
+.e2-doc-list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .1rem .6rem;
+    align-items: start;
+}
+
+.e2-doc-list li > i {
+    grid-row: 1 / span 2;
+    color: #b3202b;
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+.e2-doc-list__date {
+    grid-column: 2;
+    font-size: .8125rem;
+    color: var(--e2-muted);
+}
+
+/* Contact list values that are links (tel:/mailto:/external) stay readable. */
+.e2-contact-list dd a {
+    color: var(--e2-sea-strong);
+    text-decoration: none;
+}
+
+.e2-contact-list dd a:hover {
+    color: var(--e2-primary-strong);
+    text-decoration: underline;
+}
+
+/* ---- Contacts: «Реквизиты компании» two-column desktop composition -----
+   Browser-QA polish: at >= 992px the requisites card lays its identifiers/
+   bank details (left) and the three offer/policy PDFs (right) side by side,
+   so the section is materially shorter and the right half is not left blank.
+   Below 992px (tablet + mobile) it stays a single vertical column — bank
+   numbers and long PDF titles are never squeezed into half-width. */
+@media (min-width: 992px) {
+    .e2-requisites {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+            "title title"
+            "reqs  docs";
+        column-gap: clamp(1.75rem, 1rem + 3vw, 3.5rem);
+        align-items: start;
+    }
+
+    .e2-requisites > .e2-section__title {
+        grid-area: title;
+    }
+
+    .e2-requisites > .e2-contact-list {
+        grid-area: reqs;
+    }
+
+    .e2-requisites > .e2-doc-list {
+        grid-area: docs;
+        margin-top: 0;
+        align-content: start;
+    }
+}

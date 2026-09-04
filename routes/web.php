@@ -188,10 +188,17 @@ Route::group(['namespace' => 'Destination'], function () {
 Route::group(['namespace' => 'Contact'], function () {
     Route::get('/contacts', "IndexController")->name("contact.index")->middleware('cache.response');
 //Отправка формы "контактная информация" на почту
-    Route::post('/contact/send_home', 'SendHomeController')->name('contact.send_home'); //отправка с главной страницы
-    Route::post('/contact/send_contact', 'SendContactController')->name(
-        'contact.send_contact'
-    ); //отправка с контактной страницы
+    // E2-A6-I1: публичные POST-эндпоинты обратной связи ограничены частотой
+    // (Laravel-native throttle) поверх капчи. GET /contacts не затрагивается,
+    // остальные публичные маршруты — тоже. Лимит подобран так, чтобы обычный
+    // посетитель (в т.ч. повторная отправка после ошибки валидации) его не
+    // достигал, а автоматизированный флуд — достигал.
+    Route::post('/contact/send_home', 'SendHomeController')
+        ->name('contact.send_home')
+        ->middleware('throttle:8,1'); //отправка с главной страницы
+    Route::post('/contact/send_contact', 'SendContactController')
+        ->name('contact.send_contact')
+        ->middleware('throttle:8,1'); //отправка с контактной страницы
 });
 
 Route::group(['namespace' => 'Review'], function () {
