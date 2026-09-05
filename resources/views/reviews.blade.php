@@ -131,7 +131,7 @@
                     </div>
 
                     @if ($errors->any())
-                        <div class="alert alert-danger" role="alert">
+                        <div class="e2-alert e2-alert--error" role="alert">
                             Отзыв не отправлен. Проверьте выделенные поля и попробуйте ещё раз.
                         </div>
                     @endif

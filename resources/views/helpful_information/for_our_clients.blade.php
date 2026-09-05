@@ -53,11 +53,9 @@
                     @endforeach
                 </div>
 
-                <nav class="d-flex justify-content-center mt-4" aria-label="Навигация по страницам">
-                    <ul class="pagination">
-                        {{ $special->appends(request()->query())->links() }}
-                    </ul>
-                </nav>
+                <div class="e2-pagination">
+                    {{ $special->appends(request()->query())->links() }}
+                </div>
             @else
                 <section class="e2-cta-band" aria-labelledby="e2-specials-empty-title">
                     <h2 id="e2-specials-empty-title" class="e2-cta-band__title">Не нашли подходящий вариант?</h2>

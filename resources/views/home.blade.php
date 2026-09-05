@@ -22,29 +22,29 @@
 .modern-select:focus,
 .modern-input:focus {
     background: white;
-    border-color: #01466f;
+    border-color: var(--e2-sea-strong);
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7);
     outline: none;
 }
 
-/* E2-A1-I1: кнопка поиска приведена к первичной кнопке E2 — сплошной
-   «закатный» оранжевый, без цветного свечения и без принудительного
-   верхнего регистра. Механика поиска не затрагивается. */
+/* E2-A7: кнопка поиска использует токены E2 — основной синий (--e2-primary),
+   без цветного свечения и без принудительного верхнего регистра. Механика
+   поиска не затрагивается. */
 .modern-btn {
-    background: #b8500f;
+    background: var(--e2-primary);
     border: none;
     border-radius: 10px;
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: 0.2px;
-    color: #fff;
+    color: var(--e2-primary-ink);
     transition: background-color 0.15s ease, box-shadow 0.15s ease;
     box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
 }
 
 .modern-btn:hover {
-    background: #98410b;
-    color: #fff;
+    background: var(--e2-primary-strong);
+    color: var(--e2-primary-ink);
     box-shadow: 0 4px 12px rgba(16, 24, 40, 0.18);
 }
 

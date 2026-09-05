@@ -213,8 +213,8 @@ a:hover {
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.25rem rgba(255, 152, 0, 0.25);
+    border-color: var(--e2-sea);
+    box-shadow: var(--e2-focus-ring);
     outline: none;
 }
 
@@ -444,18 +444,37 @@ html {
    style_min.css are left untouched; where they would otherwise win, the
    selectors below are scoped tightly enough (.e2-header ...) to override
    without !important.
+
+   E2-A7 — Final public palette polish. --e2-primary, --e2-surface-warm and
+   --e2-border were repointed from the original warm orange and cream values
+   to the accessible sea blue and a cool neutral, per the site-wide palette
+   audit and review. The original orange is kept as a deliberately restrained
+   accent pair (--e2-accent, --e2-accent-strong) for the handful of
+   decorative, non-CTA uses called out below. Success and danger alert
+   colors are unchanged, only tokenized.
    ========================================================================= */
 :root {
     --e2-ink: #1f2933;
     --e2-muted: #52606d;              /* ~4.8:1 on #fff */
     --e2-surface: #ffffff;
-    --e2-surface-warm: #fbf6f0;
-    --e2-border: #e4ded4;
-    --e2-primary: #b8500f;            /* «закатный» оранжевый, сплошная заливка; белый текст ~5:1 */
-    --e2-primary-strong: #98410b;
+    --e2-surface-warm: #eef2f5;
+    --e2-border: #dce3e8;
+    --e2-primary: #0277bd;            /* E2-A7: доступный «морской» синий — основной CTA/интерактивный цвет; белый текст ~4.8:1 */
+    --e2-primary-strong: #01466f;
     --e2-primary-ink: #ffffff;
     --e2-sea: #0277bd;               /* доступный «морской» синий; текст на белом ~5.2:1 */
     --e2-sea-strong: #01466f;
+    --e2-sea-soft: rgba(2, 119, 189, .08);
+    --e2-accent: #b8500f;             /* E2-A7: бывший --e2-primary — сдержанный тёплый акцент только для декоративных элементов; белый текст ~5:1 */
+    --e2-accent-strong: #98410b;
+    --e2-accent-soft: rgba(184, 80, 15, .1);
+    --e2-accent-glow: rgba(184, 80, 15, .14);
+    --e2-success-bg: #e7f4ec;
+    --e2-success-border: #a7d3b6;
+    --e2-success-text: #1c5732;
+    --e2-danger-bg: #fdecec;
+    --e2-danger-border: #f0b4b4;
+    --e2-danger-text: #8a2020;
     --e2-radius-sm: 6px;
     --e2-radius-md: 10px;
     --e2-radius-lg: 16px;
@@ -572,7 +591,7 @@ html {
 
 .e2-header .e2-nav .nav-link:hover {
     color: var(--e2-sea-strong);
-    background: rgba(2, 119, 189, .08);
+    background: var(--e2-sea-soft);
 }
 
 .e2-header .e2-nav .nav-link.active {
@@ -599,7 +618,7 @@ html {
 
 .e2-header .dropdown-item:hover,
 .e2-header .dropdown-item:focus {
-    background: rgba(2, 119, 189, .08);
+    background: var(--e2-sea-soft);
     color: var(--e2-sea-strong);
 }
 
@@ -686,7 +705,7 @@ html {
     margin-top: 1.5rem;
     padding: clamp(1.5rem, 1rem + 3vw, 3rem);
     background:
-        radial-gradient(130% 150% at 88% 0%, rgba(184, 80, 15, .14) 0%, rgba(184, 80, 15, 0) 55%),
+        radial-gradient(130% 150% at 88% 0%, var(--e2-accent-glow) 0%, rgba(184, 80, 15, 0) 55%),
         var(--e2-surface-warm);
     border: 1px solid var(--e2-border);
     border-radius: var(--e2-radius-lg);
@@ -745,8 +764,8 @@ html {
     width: 40px;
     height: 40px;
     border-radius: var(--e2-radius-md);
-    background: rgba(184, 80, 15, .1);
-    color: var(--e2-primary);
+    background: var(--e2-accent-soft);
+    color: var(--e2-accent);
     font-size: 1.15rem;
 }
 
@@ -828,7 +847,7 @@ html {
 }
 
 .e2-btn--secondary:hover {
-    background: rgba(2, 119, 189, .08);
+    background: var(--e2-sea-soft);
     color: var(--e2-sea-strong);
 }
 
@@ -866,7 +885,7 @@ html {
 
 .e2-search-card {
     overflow: visible;
-    background: linear-gradient(135deg, #0277bd 0%, #01466f 100%);
+    background: linear-gradient(135deg, var(--e2-sea) 0%, var(--e2-sea-strong) 100%);
     border-radius: var(--e2-radius-lg);
     box-shadow: var(--e2-elev-2);
 }
@@ -1318,6 +1337,22 @@ html {
     border-radius: var(--e2-radius-sm);
 }
 
+.e2-form__captcha .refresh-captcha {
+    color: var(--e2-sea-strong);
+    border-color: var(--e2-sea);
+    background: transparent;
+}
+
+.e2-form__captcha .refresh-captcha:hover {
+    background: var(--e2-sea-soft);
+    color: var(--e2-sea-strong);
+}
+
+.e2-form__captcha .refresh-captcha:focus-visible {
+    outline: none;
+    box-shadow: var(--e2-focus-ring);
+}
+
 .e2-form__actions {
     margin-top: .5rem;
 }
@@ -1342,15 +1377,15 @@ html {
 }
 
 .e2-alert--success {
-    background: #e7f4ec;
-    border-color: #a7d3b6;
-    color: #1c5732;
+    background: var(--e2-success-bg);
+    border-color: var(--e2-success-border);
+    color: var(--e2-success-text);
 }
 
 .e2-alert--error {
-    background: #fdecec;
-    border-color: #f0b4b4;
-    color: #8a2020;
+    background: var(--e2-danger-bg);
+    border-color: var(--e2-danger-border);
+    color: var(--e2-danger-text);
 }
 
 /* ---- Map panel ------------------------------------------------- */
@@ -2106,7 +2141,7 @@ html {
     margin: 1.5rem 0;
     background: var(--e2-surface-warm);
     border: 1px solid var(--e2-border);
-    border-left: 4px solid var(--e2-primary);
+    border-left: 4px solid var(--e2-accent);
     border-radius: var(--e2-radius-md);
 }
 
@@ -2119,7 +2154,7 @@ html {
 
 .e2-doc-callout__icon {
     font-size: 1.4rem;
-    color: var(--e2-primary-strong);
+    color: var(--e2-accent-strong);
 }
 
 .e2-doc-callout a {
@@ -2441,8 +2476,8 @@ html {
     width: 40px;
     height: 40px;
     border-radius: var(--e2-radius-md);
-    background: rgba(184, 80, 15, .1);
-    color: var(--e2-primary);
+    background: var(--e2-accent-soft);
+    color: var(--e2-accent);
     font-size: 1.15rem;
 }
 
@@ -2932,7 +2967,7 @@ html {
 .e2-editorial-detail__inner .e2-prose blockquote {
     margin: 1.25rem 0;
     padding: .35rem 0 .35rem 1rem;
-    border-left: 3px solid var(--e2-primary);
+    border-left: 3px solid var(--e2-accent);
     color: var(--e2-muted);
 }
 

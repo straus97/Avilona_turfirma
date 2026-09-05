@@ -26,10 +26,6 @@ h1 {
     background-color: #2779bd
 }
 
-body {
-    background: snow
-}
-
 #button-up {
     display: none;
     position: fixed;

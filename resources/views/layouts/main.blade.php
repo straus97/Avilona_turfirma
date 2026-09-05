@@ -173,7 +173,7 @@
                 <div class="e2-header__account">
                     @auth
                         <div class="dropdown">
-                            <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="userMenuDropdown"
+                            <button class="btn e2-btn e2-btn--secondary e2-btn--sm dropdown-toggle" type="button" id="userMenuDropdown"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
                             </button>
@@ -223,10 +223,10 @@
                             </ul>
                         </div>
                     @else
-                        <a class="btn btn-outline-primary btn-sm" href="{{ route('login') }}">
+                        <a class="btn e2-btn e2-btn--secondary e2-btn--sm" href="{{ route('login') }}">
                             <i class="bi bi-box-arrow-in-right"></i> Войти
                         </a>
-                        <a class="btn btn-success btn-sm" href="{{ route('register') }}">
+                        <a class="btn e2-btn e2-btn--primary e2-btn--sm" href="{{ route('register') }}">
                             <i class="bi bi-person-plus"></i> Регистрация
                         </a>
                     @endauth

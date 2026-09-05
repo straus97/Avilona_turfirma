@@ -259,7 +259,7 @@ class PublicReviewSubmissionHygieneTest extends TestCase
         // (сами поля при этом штатно восстанавливаются через old(...)).
         $this->assertSame(
             1,
-            preg_match_all('/<div class="alert alert-danger" role="alert">(.*?)<\/div>/s', $response->getContent(), $matches),
+            preg_match_all('/<div class="e2-alert e2-alert--error" role="alert">(.*?)<\/div>/s', $response->getContent(), $matches),
             'The validation error summary alert must be rendered exactly once'
         );
         $this->assertStringNotContainsString('Submitting Tourist Full Name', $matches[1][0]);
