@@ -1917,6 +1917,41 @@ html {
     border-radius: var(--e2-radius-sm);
 }
 
+/* ---- Shared desktop reading measure (browser QA: E2-A6-I2 recheck #2) --
+   First pass (768/992/1200 -> 78/82/86ch) kept the same assumption that
+   ordinary desktop content needs a narrow reading column of its own inside
+   the already-bounded Bootstrap `.container` (960px lg / 1140px xl). Browser
+   QA confirmed that assumption itself is wrong for this site: legal prose,
+   generic hero/section intros and H1s still wasted roughly a third to a
+   half of the container. The `.container` already sets the outer desktop
+   width and margins, so generic content does not need a second cap on top
+   of it -> at >=992px these three simply use the parent's full width.
+   Tablet (768-991px) keeps the earlier moderate widening (still narrower
+   than the container there, and not flagged as a problem). Mobile is
+   untouched. Page-specific overrides that already exist (`.e2-about`,
+   `.e2-editorial-detail__inner`, `.e2-discovery-detail__main`,
+   `.e2-error-page`, `.e2-glossary*`) are higher-specificity descendant
+   selectors and keep winning exactly as before, so editorial's deliberately
+   bounded long-form measure and the compact 404 are unaffected. */
+@media (min-width: 768px) {
+    .e2-page-hero__title { max-width: 32ch; }
+
+    .e2-page-hero__intro,
+    .e2-section__intro,
+    .e2-prose {
+        max-width: 78ch;
+    }
+}
+
+@media (min-width: 992px) {
+    .e2-page-hero__title,
+    .e2-page-hero__intro,
+    .e2-section__intro,
+    .e2-prose {
+        max-width: none;
+    }
+}
+
 /* ---- Countries GET filter bar ----------------------------------- */
 .e2-filter-bar {
     display: grid;
@@ -3103,4 +3138,125 @@ html {
         margin-top: 0;
         align-content: start;
     }
+}
+
+/* =========================================================================
+   E2-A6-I2 — Travel Dictionary glossary + public 404
+   -------------------------------------------------------------------------
+   Additive, scoped continuation of the E2 layer. Reuses --e2-* tokens and
+   .e2-section / .e2-prose / .e2-page-hero / .e2-btn. Two primitives are new:
+
+     .e2-glossary        a <details>/<summary> disclosure list for the
+                          abbreviation groups. No JS: <details> is natively
+                          keyboard-operable (Enter/Space, focusable), so no
+                          second Bootstrap/jQuery collapse layer is needed.
+     .e2-glossary-terms  a multi-column reading layout for the long
+                          alphabetical term list, so it uses the desktop
+                          width freed up by removing the legacy sidebar
+                          instead of staying single-column and very tall.
+   ========================================================================= */
+.e2-glossary {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    margin-bottom: clamp(1.5rem, 1.2rem + 2vw, 2.25rem);
+}
+
+.e2-glossary__item {
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-md);
+    background: var(--e2-surface);
+    overflow: hidden;
+}
+
+.e2-glossary__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem 1.1rem;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--e2-ink);
+    cursor: pointer;
+    list-style: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.e2-glossary__summary::-webkit-details-marker { display: none; }
+.e2-glossary__summary::marker { content: ""; }
+
+.e2-glossary__summary::after {
+    content: "\002B";
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--e2-sea-strong);
+}
+
+.e2-glossary__item[open] > .e2-glossary__summary::after {
+    content: "\2212";
+}
+
+.e2-glossary__summary:hover {
+    background: var(--e2-surface-warm);
+}
+
+.e2-glossary__summary:focus-visible {
+    outline: none;
+    box-shadow: inset var(--e2-focus-ring);
+}
+
+.e2-glossary__body {
+    padding: 0 1.1rem 1.1rem;
+}
+
+.e2-glossary__body.e2-prose {
+    max-width: none;
+    margin: 0;
+}
+
+.e2-glossary-terms {
+    max-width: none;
+}
+
+@media (min-width: 768px) {
+    .e2-glossary-terms {
+        column-width: 24rem;
+        column-gap: 2.5rem;
+    }
+
+    .e2-glossary-terms p {
+        break-inside: avoid;
+    }
+}
+
+/* ---- Public 404 ----------------------------------------------------- */
+.e2-error-page {
+    max-width: 40rem;
+    margin: clamp(2rem, 1.5rem + 3vw, 4rem) auto;
+    padding: 0 1rem;
+    text-align: center;
+}
+
+.e2-error-page__image {
+    max-width: 280px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1.5rem;
+}
+
+.e2-error-page .e2-page-hero__title,
+.e2-error-page .e2-page-hero__intro {
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.e2-error-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .75rem;
+    margin-top: 1.5rem;
 }

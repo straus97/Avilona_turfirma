@@ -14,7 +14,7 @@ class IndexController extends Controller
                 $query->whereNotNull('withdrawn_at');
             })
             ->orderBy('id', 'desc')
-            ->paginate(4); // показать все записи
+            ->paginate(6); // E2-A6-I2: 2-колоночная десктопная сетка -> 3 ровных ряда
         return view('reviews', compact('reviews'));
     }
 }
