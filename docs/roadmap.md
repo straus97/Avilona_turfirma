@@ -1,21 +1,26 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-09-02**
+Актуализировано: **2026-09-05**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `ad6e9c23986d479cbbbf6f511e96bc139ae26576`**
-- Subject: `feat: redesign public News + Articles editorial experience (E2-A5-I1)`
+- **Current authoritative application HEAD: `35f91b9e270cf68654877d42fc8b0d0d59d12458`**
+- Subject: `feat: finalize public visual system palette (E2-A7)`
+- Direct parent of current HEAD: `baf7487b5fe03c978cbc101ad2b7e6c72481c610` (`feat: complete public informational pages redesign (E2-A6-I2)`)
+- Documentation checkpoint after E2-A5: `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — previous docs-only commit, NOT the current HEAD
 - Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
 - Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
 - Stage 0–13: ✅ CLOSED
 - E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
-- **Current phase: E2 — Public UX / UI / Design Redesign — 🔄 IN PROGRESS** (E2-A1…E2-A5 completed; next slice not yet selected)
-- Full verified baseline: **1006 tests / 7037 assertions** (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
-  - historical E1-closure baseline was **1001 tests / 7013 assertions**; E2-A5 intentionally added 5 regression tests (2× News.link render-safety, 2× editorial og:type=article, 1× News RSS autodiscovery) — expected, not a regression
+- **E2 — Public UX / UI / Design Redesign — ✅ COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
+- **Next major phase: E3 — Cabinet UX/UI/Design Modernization**
+- Full verified baseline: **1051 tests / 7180 assertions**, exit 0 (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
+  - after E2-A5 the baseline was **1006 tests / 7037 assertions**; historical E1-closure baseline was **1001 tests / 7013 assertions**; E2-A6 and E2-A7 added public E2-redesign regression tests (Reviews/Contacts E2, Reviews pagination = 6, Travel Dictionary E2, legal pages E2, public 404 E2) — expected, not a regression
 - Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Project Sources: the active external set is still the **historical E1-closure set for `0be9044e35ec5be670c8f9bb33de020491214423`** (`docs: close E1 and prepare E2`) — now **STALE**; refresh required after this docs-only slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD is not known and must not be invented.
+- Browser QA: PASS for the final E2 public visual system at this stage; the user explicitly accepted the E2-A7 palette / visual system for this stage. The finished site will later be shown to company management; any resulting design feedback is a later polish/follow-up, not an open blocker for E2 closure.
+- The new documentation closure HEAD created after this task will be newer than the application checkpoint `35f91b9e…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
+- Project Sources: the active external set was generated from `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (after E2-A5) and is now **STALE** — E2-A6 and E2-A7 completed after it. Refresh is required after this docs-only E2-closure slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD and the future source-archive filename are not known and must not be invented.
 
 ## Completed stages
 
@@ -150,7 +155,7 @@ Evidence:
 
 Historical finding: Admin and Manager had asymmetric legacy review cache clearing.
 
-Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup decision over unnecessary parity code. Not resolved by the Stage 13 docs closure — kept explicitly open, tracked outside Stage 13. Not reopened as an E1 defect; carry into E3 (cabinet pass) as a read-only relevance check unless a concrete live defect appears earlier.
+Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup/no-op decision over unnecessary parity code. Not resolved by the Stage 13 docs closure or by E2 — kept explicitly open. Not reopened as an E1/E2 defect; **carried into E3** (cabinet pass) as a READ-ONLY relevance check unless a concrete live defect appears earlier. Do not automatically implement parity.
 
 ### S13-R3 — public registration consent/policy
 ✅ COMPLETE — `1cef8d2642b3785e3ab759d5eedbc1ddd65b9cf9`, `a3824554033f92c0ef8723c6ab1cdc2a5c6eaa0f`
@@ -170,7 +175,7 @@ Full PHPUnit (917 / 4012), Stage 13 migration/schema inventory (4 migrations, al
 ### S13-R6 — Stage 13 closure docs
 ✅ COMPLETE (this checkpoint)
 
-Documentation closure recorded in `docs/README.md` and this file. Project Sources refresh is a separate required follow-up (see Current state) and must be generated from the new docs closure HEAD, not from `dba20e2c`.
+Documentation closure for Stage 13 was recorded in `docs/README.md` and this file at that time. This has since been superseded by the E1 closure docs and the E2-closure docs (this update). Project Sources refresh remains a separate required follow-up (see Current state) generated from the newest docs closure HEAD.
 
 ## Endgame after Stage 13 — E1…E6
 
@@ -191,18 +196,20 @@ Closed slices (details — `docs/README.md` §5A):
 
 Intentionally deferred (NOT defects — do not "fix" accidentally):
 
-- `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 vs contacts 11:00–20:00 by prior appointment; no authoritative decision; must be resolved before final production release (E6). Still unresolved.
+- `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 weekdays vs contacts 11:00–20:00 weekdays by appointment plus current weekend wording; no authoritative decision; **still unresolved** after E2; must be resolved before final production release (E6).
 - Per-page `og:type=article` refinement — ✅ resolved in E2-A5 (News detail + Article detail declare `og:type=article`; `layouts/main` now `@yield('og_type', 'website')`).
-- Temporary public tour-search widget stays until E5 — still temporary; it is only visually integrated into E2 surfaces.
+- Temporary public tour-search solution stays until E5 — still temporary; E2 (incl. E2-A7) only made the surrounding UI visually coherent; the `/tours` legacy widget was deliberately not recolored in E2-A7.
 - News RSS scheduling — verify real production cron in E6; do not add Laravel scheduling blindly. E2-A5 added only HTML autodiscovery on the News listing; production scheduling is NOT verified.
 - Future-risk raw HTML (`Best_offer` / `OurClient` / `Countries_image` / `Destination_image`) — no current untrusted web write path; do not reopen unless a CMS/write path is added.
 
 ### E2 — public-site UX/UI/design modernization
-🔄 **IN PROGRESS** — E2-A1…E2-A5 completed; E2 is **not** globally complete.
+✅ **COMPLETE / CLOSED at application level** — E2-A1…E2-A7.
 
-Not merely a cosmetic recolor — treat the public site as a coherent modern tourism website: information architecture, header/navigation, home-page hierarchy, typography, spacing, colour system, buttons/forms, cards, responsive behaviour, mobile navigation, visual consistency, destinations/countries, company pages, employees, awards, articles/news/special offers/reviews, contacts, empty/error states, consent UI, accessibility, trust/credibility, conversion paths, CTA consistency, image treatment, desktop/tablet/mobile.
+Not merely a cosmetic recolor — the public site was treated as a coherent modern tourism website: information architecture, header/navigation, home-page hierarchy, typography, spacing, colour system, buttons/forms, cards, responsive behaviour, mobile navigation, visual consistency, destinations/countries, company pages, employees, awards, articles/news/special offers/reviews, contacts, empty/error states, consent UI, accessibility, trust/credibility, conversion paths, CTA consistency, image treatment, desktop/tablet/mobile. E2-A7 landed the final public visual system and a single authoritative E2 token system for the public shell.
 
-Do not redesign final tour-search mechanics; the current widget is visually accommodated as a temporary component, its final provider/architecture belongs to E5.
+The final tour-search mechanics were deliberately NOT redesigned; the current widget is visually accommodated as a temporary component, its final provider/architecture belongs to E5.
+
+The finished public site will later be shown to company management; any resulting design feedback is a later polish/follow-up, not an open blocker for E2 closure.
 
 #### E2-A1 — public header / home first screen
 ✅ COMPLETE — `43a073e676d441021445f73f38733fa70a0e1463` (`feat: redesign public header and home first screen`)
@@ -212,7 +219,7 @@ Do not redesign final tour-search mechanics; the current widget is visually acco
 - temporary tour-search widget visually integrated — tour-search architecture deliberately NOT redesigned (E5).
 
 #### E2-A2 — home below-the-fold / shared public shell
-✅ COMPLETE — `72202ab7d35b064ab4b0c66147bfff21357e5343` (`feat: redesign home and shared public shell`), `eaa2093f5f406e7a5fbd73c6fe3a1897802852a` (`refactor: unify public manager interactions`)
+✅ COMPLETE — `72202ab7d35b064ab4b0c66147bfff21357e5343` (`feat: redesign home and shared public shell`), `eaa2093f5f406e7a5fbd73c6fe3a1897802852a5` (`refactor: unify public manager interactions`)
 
 - shared public shell; redesigned home below-the-fold; footer cleanup;
 - header/footer phone interaction no longer causes page jump;
@@ -238,7 +245,7 @@ Do not redesign final tour-search mechanics; the current widget is visually acco
 - Populated QA: 10 employees, 22 awards. Final E2-A4 browser QA passed.
 
 #### E2-A5 — News + Articles editorial experience
-✅ COMPLETE — `ad6e9c23986d479cbbbf6f511e96bc139ae26576` (`feat: redesign public News + Articles editorial experience (E2-A5-I1)`) — current authoritative application HEAD
+✅ COMPLETE — `ad6e9c23986d479cbbbf6f511e96bc139ae26576` (`feat: redesign public News + Articles editorial experience (E2-A5-I1)`). Docs checkpoint after E2-A5: `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa`.
 
 - Scope: News listing/detail, Articles listing/detail, shared `includes/e2-editorial-card` partial, editorial CSS, deterministic News pagination ordering, safe public rendering boundary for News source links, regression tests.
 - **News listing:** legacy sidebar removed; E2 breadcrumb + page hero; one H1; responsive 1/2/3 card grid; title links instead of repeated "Подробнее"; `pub_date` shown on cards; date filter preserved; old AJAX pagination removed → normal server-side pagination; RSS HTML autodiscovery `<link>` added; `#news-container`, `.card-text`, escaped first-paragraph excerpt contract retained.
@@ -249,24 +256,44 @@ Do not redesign final tour-search mechanics; the current widget is visually acco
 - **Shared layout (surgical):** `resources/views/layouts/main.blade.php` — hard-coded `og:type` website → `@yield('og_type', 'website')`; added `@yield('head_extra')`. Not a general shared-layout redesign.
 - **HelpfulNewsController:** primary ordering `pub_date DESC` + deterministic secondary `id DESC`. No cache-policy change, no page-size change, no recent/related News query introduced.
 
-#### E2 — remaining
-The remaining public routes/page families (likely candidates: Reviews, Contacts, other helper/content/error/empty surfaces) will be audited **read-only** before the next coherent E2 slice is selected. The next E2-A number and slice are NOT yet chosen.
+#### E2-A6-I1 — Reviews + Contacts
+✅ COMPLETE — `1de95ad88092e2fad482949a9cd19fb80682d674` (`feat: redesign public reviews and contacts experience (E2-A6-I1)`)
 
-After analysis, improve coherent design system and individual pages/components:
+- **Reviews:** modern responsive review cards; neutral avatar fallback where no real image exists; 2-column compact desktop review grid, one column on mobile; long-review teaser / expand behaviour; moderator-edit disclosure preserved; Stage 13 moderation/consent/privacy contracts preserved; public escaped output; modern review form; empty state; pagination later updated to 6 in I2.
+- **Contacts:** modern E2 page layout; feedback-form UX; optional "Тема" field bounded `nullable|string|max:150` (`SendContactRequest`, `SendHomeRequest`); current public physical address; historical/legal registered address kept distinct where required; requisites recomposed into balanced desktop columns; existing PDFs preserved; "Как нас найти" treatment; POST throttling `throttle:8,1` (8 requests/minute) on the approved `contact.send` / `home.send` routes; internal form recipient stays `straus97@mail.ru` (`SendContactController` / `SendHomeController`); public email stays `avilonatur@bk.ru`. The two email roles must not be conflated.
 
-- layout/grid;
-- visual hierarchy;
-- typography;
-- spacing;
-- navigation/header/footer;
-- forms/cards/tables/alerts/modals;
-- iconography;
-- color scheme and semantic states;
-- responsive composition;
-- consistency across public pages.
+#### E2-A6-I2 — Informational / Legal / 404
+✅ COMPLETE — `baf7487b5fe03c978cbc101ad2b7e6c72481c610` (`feat: complete public informational pages redesign (E2-A6-I2)`) — direct parent of the current HEAD
+
+- **Travel Dictionary:** legacy sidebar removed; exactly one rendered H1; E2 breadcrumbs/hero; native `details/summary` disclosure; content preserved; desktop multi-column Terms treatment; responsive mobile behaviour.
+- **Five legal pages** (`cookies`, `personal-data-consent`, `registration-personal-data-consent`, `review-personal-data-consent`, `review-publication-consent`): E2 presentation; legal copy preserved (no modernization/rewrite); breadcrumbs / H1 / readability improvements.
+- **404:** existing public 404 redesigned into shared E2 presentation; actual HTTP 404 behaviour preserved; no 403/419/429/500/503 pages were added — those remain an E4 resilience/stabilization consideration, not an E2 omission.
+- **Reviews:** pagination changed from 4 to 6 per page (`Review/IndexController::paginate(6)`); publication ordering/filter/withdrawal semantics preserved.
+- **Shared desktop width:** generic E2 informational prose/hero/title no longer uses an unnecessarily narrow desktop character-width cap; on desktop it uses the available parent/container width; mobile behaviour unchanged; user explicitly approved this direction.
+
+#### E2-A7 — final public visual system
+✅ COMPLETE — `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — current authoritative application HEAD
+
+- User rejected the old dominant cream/peach/warm surfaces, warm tan borders and brown/orange primary CTA system.
+- Final accepted current-stage direction: white main-page base; cool light blue-gray alternate surfaces; cool neutral borders; sea-blue / blue primary actions; darker blue hover/strong states; orange retained only as a restrained decorative accent; consistent E2 button/form/alert/header/footer treatment.
+- Legacy `body { background: snow }` bleed-through from `style_min.css` removed; the shared E2 token system is authoritative for the public shell; header auth actions normalized into E2 presentation; Home active search/widget colours aligned to E2 tokens without changing search mechanics; Reviews validation presentation normalized; public special-offers pagination aligned.
+- `/tours` legacy widget deliberately NOT recolored/redesigned — final tour-search architecture remains E5.
+- During browser QA an accidental CSS comment terminator temporarily invalidated the E2 `:root` token block; it was corrected before commit, full tests passed and the final committed checkpoint is healthy. Final browser QA and recovery passed.
+- Baseline after E2-A6…A7: **1051 tests / 7180 assertions**, exit 0.
+
+#### E2 closure
+E2 is complete at application level. The public shell and the completed public
+E2 pages/surfaces (header/footer/shell, home, travel discovery, company/trust,
+news/articles, reviews, contacts, informational/legal/404) are unified under the
+E2 presentation and the final E2-A7 visual system. **Explicitly excluded:** the
+temporary `/tours` search/widget block (`resources/views/tours/index.blade.php`)
+was deliberately left out of E2-A7 and remains temporary until E5. Remaining
+public concerns (extra system error surfaces 403/419/429/500/503, final
+tour-search mechanics) are carried by E4 and E5 respectively. Design feedback
+from the later management review is a polish/follow-up, not an E2 blocker.
 
 ### E3 — cabinet UX/UI/design modernization
-⬜ PLANNED
+⬜ **NEXT MAJOR PHASE**
 
 Separate deep pass for tourist/manager/admin cabinets:
 
@@ -274,22 +301,39 @@ Separate deep pass for tourist/manager/admin cabinets:
 - navigation/sidebars/headers;
 - dashboard priorities;
 - action placement;
-- cards/tables/forms;
+- tables/forms/cards;
+- status presentation;
 - icons/statuses/color system;
 - visual hierarchy and density;
-- mobile/tablet/desktop behavior.
+- mobile/tablet/desktop behavior;
+- visual consistency with the completed public E2 system where appropriate.
 
 Design decisions must follow findings, not blanket restyling.
 
-### E4 — post-redesign stabilization
+**Carried item: S13-R2 — Manager review cache parity relevance check.** Begins
+**READ-ONLY** in E3. Historical concern: Admin and Manager once had asymmetric
+legacy review cache clearing. Current evidence says old public review cache
+layers may no longer make this relevant. First re-establish whether a live
+defect still exists; if no live path depends on it, prefer removal/cleanup/no-op
+over unnecessary parity code. Do not automatically implement parity.
+
+### E4 — post-redesign stabilization / regression / browser-device / resilience
 ⬜ PLANNED
 
-Full tests + browser/device regression + production-readiness repeat.
+- full regression;
+- browser/device QA;
+- accessibility;
+- remaining visual inconsistencies;
+- existing/missing system error behaviour including 403/419/429/500/503 where appropriate (404 already handled in E2-A6-I2);
+- production-readiness repeat.
 
 ### E5 — TOUR SEARCH / AGGREGATION — FINAL PRODUCT BLOCK
 ⬜ DELIBERATELY LAST
 
-The current homepage and `/tours` search widget remains temporary until this stage.
+The current homepage and `/tours` search solution is **temporary**. E2 only made
+the surrounding UI visually coherent; it did not touch search mechanics and did
+not mark tour search complete. Final search/provider/aggregation architecture is
+this stage.
 
 Compare:
 
@@ -297,7 +341,7 @@ Compare:
 - tour-operator/API integrations;
 - own aggregation/search implementation.
 
-Decision criteria: cost, stability, contract/legal terms, UX, mobile, booking/cabinet/CRM integration, caching/rate limits and maintenance.
+Decision criteria: cost; reliability; contractual/legal terms; UX/mobile; booking/cabinet/CRM integration; caching/rate limits; maintenance burden.
 
 ### E6 — final release / deploy / production smoke
 ⬜ PLANNED
@@ -305,8 +349,9 @@ Decision criteria: cost, stability, contract/legal terms, UX, mobile, booking/ca
 After the final selected tour-search solution and stabilization:
 
 - guarded production deploy;
-- migrations only through dedicated plan;
-- smoke checks;
+- migrations only through a dedicated approved plan;
+- production smoke checks;
+- production RSS scheduling / cron verification;
 - final handoff.
 
 An intermediate deployment for validation may be planned separately, but it does not replace the final post-redesign/post-tour-search release.
