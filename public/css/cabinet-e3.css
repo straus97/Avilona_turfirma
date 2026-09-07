@@ -1,0 +1,863 @@
+/**
+ * cabinet-e3.css — Общая визуальная система личного кабинета (E3-A1).
+ *
+ * Назначение: единый слой стилей для всех трёх ролей кабинета
+ * (турист / менеджер / администратор). Загружается из
+ * resources/views/cabinet/layouts/app.blade.php после Bootstrap 5 и
+ * шрифтов/иконок. Bootstrap остаётся структурной сеткой и утилитами.
+ *
+ * Визуально система родственна публичному оформлению E2 (морской синий
+ * #0277bd как основной интерактивный цвет, сдержанный тёплый акцент),
+ * но это отдельная система для авторизованного рабочего приложения:
+ * белая база страницы, прохладные голубовато-серые поверхности,
+ * компактная, но комфортная плотность, читаемые таблицы и формы.
+ *
+ * Файл public/css/cabinet.css (устаревший, не подключён) намеренно не
+ * трогается в этом срезе.
+ */
+
+/* ==================================================================
+   1. Токены
+   ================================================================== */
+
+:root {
+    /* Поверхности и фон */
+    --cabinet-bg: #eef2f7;              /* прохладный голубовато-серый фон приложения */
+    --cabinet-surface: #ffffff;         /* белая основная поверхность страниц/карточек */
+    --cabinet-surface-alt: #f4f7fb;     /* вторичная поверхность: шапки таблиц, ховеры */
+    --cabinet-surface-sunken: #e9eef4;  /* «утопленные» зоны */
+
+    /* Границы */
+    --cabinet-border: #d6dee8;          /* прохладная нейтральная граница */
+    --cabinet-border-strong: #c0cbd8;
+
+    /* Текст */
+    --cabinet-text: #1f2b38;            /* прохладный тёмный основной текст */
+    --cabinet-heading: #16212e;
+    --cabinet-muted: #5b6a7c;           /* приглушённый текст, подписи */
+
+    /* Основной интерактивный цвет — «морской» синий, родственный E2 */
+    --cabinet-primary: #0277bd;
+    --cabinet-primary-strong: #01466f;  /* ховер/активное состояние — темнее */
+    --cabinet-primary-soft: #e3f1f9;    /* мягкая заливка активного пункта меню */
+    --cabinet-primary-contrast: #ffffff;
+
+    /* Сдержанный тёплый декоративный акцент (не для основных действий) */
+    --cabinet-accent: #b8500f;
+    --cabinet-accent-strong: #98410b;
+    --cabinet-accent-soft: #fbeadd;
+
+    /* Семантические цвета */
+    --cabinet-success: #1e7d4f;
+    --cabinet-success-soft: #d8f0e3;
+    --cabinet-warning: #a5620a;
+    --cabinet-warning-soft: #fbeccb;
+    --cabinet-danger: #c22f38;
+    --cabinet-danger-soft: #fbe0e2;
+    --cabinet-info: #0277bd;
+    --cabinet-info-soft: #e3f1f9;
+
+    /* Фокус */
+    --cabinet-focus: #0277bd;
+    --cabinet-focus-ring: 0 0 0 0.2rem rgba(2, 119, 189, 0.35);
+
+    /* Метрики оболочки */
+    --cabinet-sidebar-width: 264px;
+    --cabinet-header-height: 60px;
+
+    /* Скругления */
+    --cabinet-radius-sm: 6px;
+    --cabinet-radius-md: 10px;
+    --cabinet-radius-lg: 14px;
+    --cabinet-radius-pill: 999px;
+
+    /* Тени */
+    --cabinet-shadow-sm: 0 1px 2px rgba(16, 40, 64, 0.06), 0 1px 3px rgba(16, 40, 64, 0.08);
+    --cabinet-shadow-md: 0 4px 14px rgba(16, 40, 64, 0.10);
+    --cabinet-shadow-lg: 0 14px 38px rgba(16, 40, 64, 0.18);
+
+    /* Переходы */
+    --cabinet-transition: 160ms ease;
+
+    /* -----------------------------------------------------------------
+       Обратная совместимость: устаревшие имена переменных, на которые
+       ещё опираются blade-компоненты кабинета (stat-card, booking-card
+       через status-badge и т. п.). Не удалять в этом срезе — иначе
+       появятся неопределённые CSS custom properties.
+       ----------------------------------------------------------------- */
+    --primary-color: var(--cabinet-primary);
+    --secondary-color: var(--cabinet-muted);
+    --success-color: var(--cabinet-success);
+    --danger-color: var(--cabinet-danger);
+    --warning-color: var(--cabinet-warning);
+    --info-color: var(--cabinet-info);
+    --light-color: var(--cabinet-surface-alt);
+    --dark-color: var(--cabinet-text);
+    --sidebar-width: var(--cabinet-sidebar-width);
+    --header-height: var(--cabinet-header-height);
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/* ==================================================================
+   2. База
+   ================================================================== */
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--cabinet-text);
+    background-color: var(--cabinet-bg);
+}
+
+/* Блокировка прокрутки фона — только в режиме выдвижного меню (узкий экран).
+   На десктопе сайдбар постоянный, поэтому даже если sidebarOpen осталось true
+   после ресайза, прокрутка страницы не должна оставаться заблокированной. */
+@media (max-width: 991.98px) {
+    body.cabinet-no-scroll {
+        overflow: hidden;
+    }
+}
+
+/* Единое поведение фокуса для клавиатурной навигации */
+.cabinet-shell a:focus-visible,
+.cabinet-shell button:focus-visible,
+.cabinet-shell .btn:focus-visible,
+.cabinet-shell .form-control:focus-visible,
+.cabinet-shell .form-select:focus-visible,
+.cabinet-shell .dropdown-item:focus-visible,
+.cabinet-shell [tabindex]:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: var(--cabinet-focus-ring);
+    border-radius: var(--cabinet-radius-sm);
+}
+
+/* ==================================================================
+   3. Skip-link
+   ================================================================== */
+
+.cabinet-skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 2000;
+    padding: 0.625rem 1rem;
+    background: var(--cabinet-primary);
+    color: var(--cabinet-primary-contrast);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--cabinet-radius-sm);
+    box-shadow: var(--cabinet-shadow-md);
+    transform: translateY(-150%);
+    transition: transform var(--cabinet-transition);
+}
+
+.cabinet-skip-link:focus {
+    transform: translateY(0);
+    color: var(--cabinet-primary-contrast);
+}
+
+/* ==================================================================
+   4. Шапка
+   ================================================================== */
+
+.cabinet-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--cabinet-header-height);
+    background: var(--cabinet-surface);
+    border-bottom: 1px solid var(--cabinet-border);
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.25rem;
+    box-shadow: var(--cabinet-shadow-sm);
+}
+
+.header-brand {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--cabinet-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-brand:hover {
+    color: var(--cabinet-primary-strong);
+}
+
+.header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-notifications {
+    position: relative;
+}
+
+.header-notifications > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--cabinet-radius-md);
+    color: var(--cabinet-muted);
+}
+
+.header-notifications > button:hover {
+    background: var(--cabinet-surface-alt);
+    color: var(--cabinet-primary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cabinet-danger);
+    color: #fff;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    border-radius: var(--cabinet-radius-pill);
+    border: 2px solid var(--cabinet-surface);
+}
+
+/* Триггер меню пользователя — нативный <button>; убираем браузерный хром
+   кнопки локально, без глобального сброса всех кнопок. */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    margin: 0;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    border-radius: var(--cabinet-radius-md);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    text-align: left;
+    transition: background var(--cabinet-transition);
+}
+
+.header-user:hover {
+    background: var(--cabinet-surface-alt);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--cabinet-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.cabinet-header .dropdown-menu {
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-md);
+    box-shadow: var(--cabinet-shadow-md);
+    padding: 0.375rem;
+}
+
+.cabinet-header .dropdown-item {
+    border-radius: var(--cabinet-radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Кнопка бургер-меню — только на узких экранах */
+.sidebar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: var(--cabinet-radius-md);
+    font-size: 1.5rem;
+    color: var(--cabinet-text);
+    cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+    background: var(--cabinet-surface-alt);
+}
+
+/* ==================================================================
+   5. Сайдбар / боковая навигация
+   ================================================================== */
+
+.cabinet-sidebar {
+    position: fixed;
+    top: var(--cabinet-header-height);
+    left: 0;
+    width: var(--cabinet-sidebar-width);
+    height: calc(100vh - var(--cabinet-header-height));
+    background: var(--cabinet-surface);
+    border-right: 1px solid var(--cabinet-border);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 1025;
+    transition: transform 240ms ease;
+}
+
+.sidebar-menu {
+    padding: 1rem 0 2rem;
+}
+
+.menu-section {
+    margin-bottom: 1.25rem;
+}
+
+.menu-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--cabinet-muted);
+    padding: 0 1.25rem;
+    margin-bottom: 0.375rem;
+    letter-spacing: 0.6px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    color: var(--cabinet-text);
+    text-decoration: none;
+    font-weight: 500;
+    line-height: 1.3;
+    transition: background var(--cabinet-transition), color var(--cabinet-transition);
+    position: relative;
+}
+
+.menu-item > i {
+    width: 20px;
+    flex-shrink: 0;
+    font-size: 18px;
+    text-align: center;
+    color: var(--cabinet-muted);
+    transition: color var(--cabinet-transition);
+}
+
+.menu-item > span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.menu-item:hover {
+    background: var(--cabinet-surface-alt);
+    color: var(--cabinet-primary-strong);
+}
+
+.menu-item:hover > i {
+    color: var(--cabinet-primary-strong);
+}
+
+.menu-item.active {
+    background: var(--cabinet-primary-soft);
+    color: var(--cabinet-primary-strong);
+    font-weight: 600;
+}
+
+.menu-item.active > i {
+    color: var(--cabinet-primary-strong);
+}
+
+.menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--cabinet-primary);
+    border-radius: 0 3px 3px 0;
+}
+
+.menu-badge {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 1px 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cabinet-danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    border-radius: var(--cabinet-radius-pill);
+}
+
+/* Подложка выдвижного меню (видима только на узких экранах) */
+.cabinet-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1024;
+    background: rgba(16, 32, 48, 0.45);
+    border: 0;
+    display: none;
+}
+
+.cabinet-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cabinet-sidebar::-webkit-scrollbar-thumb {
+    background: var(--cabinet-border-strong);
+    border-radius: 3px;
+}
+
+/* ==================================================================
+   6. Основная область
+   ================================================================== */
+
+.cabinet-main {
+    margin-left: var(--cabinet-sidebar-width);
+    margin-top: var(--cabinet-header-height);
+    padding: 1.75rem;
+    min-height: calc(100vh - var(--cabinet-header-height));
+}
+
+.cabinet-main:focus {
+    outline: none;
+}
+
+/* ==================================================================
+   7. Заголовок страницы
+   ================================================================== */
+
+.page-header {
+    margin-bottom: 1.75rem;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--cabinet-heading);
+    margin-bottom: 0.375rem;
+}
+
+.page-subtitle {
+    color: var(--cabinet-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 1rem;
+}
+
+/* ==================================================================
+   8. Карточки
+   ================================================================== */
+
+.card-custom {
+    background: var(--cabinet-surface);
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-lg);
+    box-shadow: var(--cabinet-shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header-custom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--cabinet-border);
+}
+
+.card-title-custom {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--cabinet-heading);
+    margin: 0;
+}
+
+.card-body-custom {
+    padding: 0;
+}
+
+.card-footer-custom {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cabinet-border);
+}
+
+/* Карточка заявки — «растянутая ссылка» + мягкий подъём при наведении */
+.booking-card {
+    position: relative;
+    transition: transform var(--cabinet-transition), box-shadow var(--cabinet-transition);
+}
+
+.booking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--cabinet-shadow-md);
+}
+
+.booking-card:focus-within {
+    box-shadow: var(--cabinet-focus-ring);
+}
+
+/* ==================================================================
+   9. Кнопки (тонкая настройка поверх Bootstrap)
+   ================================================================== */
+
+.btn {
+    border-radius: var(--cabinet-radius-sm);
+    font-weight: 500;
+    transition: background-color var(--cabinet-transition), border-color var(--cabinet-transition), color var(--cabinet-transition);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--cabinet-primary);
+    --bs-btn-border-color: var(--cabinet-primary);
+    --bs-btn-hover-bg: var(--cabinet-primary-strong);
+    --bs-btn-hover-border-color: var(--cabinet-primary-strong);
+    --bs-btn-active-bg: var(--cabinet-primary-strong);
+    --bs-btn-active-border-color: var(--cabinet-primary-strong);
+    --bs-btn-disabled-bg: var(--cabinet-primary);
+    --bs-btn-disabled-border-color: var(--cabinet-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--cabinet-primary-strong);
+    --bs-btn-border-color: var(--cabinet-primary);
+    --bs-btn-hover-bg: var(--cabinet-primary);
+    --bs-btn-hover-border-color: var(--cabinet-primary);
+    --bs-btn-active-bg: var(--cabinet-primary-strong);
+    --bs-btn-active-border-color: var(--cabinet-primary-strong);
+}
+
+.btn-link {
+    --bs-btn-color: var(--cabinet-primary);
+    --bs-btn-hover-color: var(--cabinet-primary-strong);
+}
+
+/* ==================================================================
+   10. Статус-бейджи
+   ================================================================== */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--cabinet-radius-pill);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.status-badge > i {
+    font-size: 0.85em;
+}
+
+.status-new {
+    background: var(--cabinet-info-soft);
+    color: #0b4f77;
+}
+
+.status-progress {
+    background: var(--cabinet-warning-soft);
+    color: #7a4708;
+}
+
+.status-confirmed {
+    background: var(--cabinet-success-soft);
+    color: #14603c;
+}
+
+.status-cancelled {
+    background: var(--cabinet-danger-soft);
+    color: #8f2129;
+}
+
+.status-completed {
+    background: #e2e8f5;
+    color: #33417a;
+}
+
+/* ==================================================================
+   11. Формы
+   ================================================================== */
+
+.form-control,
+.form-select {
+    border-radius: var(--cabinet-radius-sm);
+    border-color: var(--cabinet-border-strong);
+    color: var(--cabinet-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cabinet-primary);
+    box-shadow: var(--cabinet-focus-ring);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--cabinet-heading);
+    margin-bottom: 0.375rem;
+}
+
+.form-text {
+    color: var(--cabinet-muted);
+}
+
+.input-group-text {
+    background: var(--cabinet-surface-alt);
+    border-color: var(--cabinet-border-strong);
+    color: var(--cabinet-muted);
+}
+
+/* ==================================================================
+   12. Таблицы (читаемость)
+   ================================================================== */
+
+.card-custom .table,
+.cabinet-main .table {
+    color: var(--cabinet-text);
+}
+
+.cabinet-main .table > thead th {
+    background: var(--cabinet-surface-alt);
+    border-bottom: 2px solid var(--cabinet-border);
+    color: var(--cabinet-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.cabinet-main .table > tbody td {
+    vertical-align: middle;
+}
+
+/* ==================================================================
+   13. Флэш-сообщения и ошибки валидации (общая область)
+   ================================================================== */
+
+.cabinet-flash {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.cabinet-flash:empty {
+    display: none;
+}
+
+.cabinet-flash-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 0.875rem 2.5rem 0.875rem 1rem;
+    border: 1px solid var(--cabinet-border);
+    border-left-width: 4px;
+    border-radius: var(--cabinet-radius-md);
+    background: var(--cabinet-surface);
+    color: var(--cabinet-text);
+    font-size: 0.9rem;
+}
+
+.cabinet-flash-item > i {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+
+.cabinet-flash-item--success {
+    border-left-color: var(--cabinet-success);
+    background: var(--cabinet-success-soft);
+}
+
+.cabinet-flash-item--success > i {
+    color: var(--cabinet-success);
+}
+
+.cabinet-flash-item--danger {
+    border-left-color: var(--cabinet-danger);
+    background: var(--cabinet-danger-soft);
+}
+
+.cabinet-flash-item--danger > i {
+    color: var(--cabinet-danger);
+}
+
+.cabinet-flash-item--warning {
+    border-left-color: var(--cabinet-warning);
+    background: var(--cabinet-warning-soft);
+}
+
+.cabinet-flash-item--warning > i {
+    color: var(--cabinet-warning);
+}
+
+.cabinet-flash-item--info {
+    border-left-color: var(--cabinet-info);
+    background: var(--cabinet-info-soft);
+}
+
+.cabinet-flash-item--info > i {
+    color: var(--cabinet-info);
+}
+
+.cabinet-flash-title {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.cabinet-flash-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.cabinet-flash-item .btn-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+}
+
+.cabinet-flash-item.alert-dismissible {
+    position: relative;
+}
+
+/* Устаревший контейнер тостов из прежнего layout — на случай, если
+   отдельные страницы ещё его используют через @push. */
+.toast-container {
+    position: fixed;
+    top: calc(var(--cabinet-header-height) + 1rem);
+    right: 1rem;
+    z-index: 1050;
+}
+
+/* ==================================================================
+   14. Прочее
+   ================================================================== */
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+.pagination {
+    --bs-pagination-color: var(--cabinet-primary-strong);
+    --bs-pagination-hover-color: var(--cabinet-primary-strong);
+    --bs-pagination-hover-bg: var(--cabinet-surface-alt);
+    --bs-pagination-focus-color: var(--cabinet-primary-strong);
+    --bs-pagination-focus-box-shadow: var(--cabinet-focus-ring);
+    --bs-pagination-active-bg: var(--cabinet-primary);
+    --bs-pagination-active-border-color: var(--cabinet-primary);
+    margin-top: 1.5rem;
+}
+
+/* ==================================================================
+   15. Адаптив / выдвижное меню
+   ================================================================== */
+
+@media (max-width: 991.98px) {
+    .sidebar-toggle {
+        display: inline-flex;
+    }
+
+    /* Закрытый выдвижной сайдбар не только уезжает за экран, но и
+       становится visibility:hidden — так его ссылки исчезают из
+       последовательной клавиатурной навигации и дерева доступности.
+       visibility переключается с задержкой, равной длительности анимации
+       закрытия, чтобы сохранить плавный уход. На десктопе (>= 992px) это
+       правило не применяется — постоянный сайдбар остаётся доступным. */
+    .cabinet-sidebar {
+        transform: translateX(-100%);
+        visibility: hidden;
+        box-shadow: var(--cabinet-shadow-lg);
+        transition: transform 240ms ease, visibility 0s linear 240ms;
+    }
+
+    .cabinet-sidebar.is-open {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform 240ms ease, visibility 0s linear 0s;
+    }
+
+    .cabinet-sidebar-backdrop {
+        display: block;
+    }
+
+    .cabinet-main {
+        margin-left: 0;
+        padding: 1.25rem;
+    }
+
+    .header-brand {
+        font-size: 1.2rem;
+    }
+
+    .page-title {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .cabinet-header {
+        padding: 0 0.875rem;
+    }
+
+    .cabinet-main {
+        padding: 1rem;
+    }
+
+    .card-custom {
+        padding: 1.15rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cabinet-sidebar,
+    .cabinet-skip-link,
+    .btn,
+    .menu-item,
+    .header-user {
+        transition: none;
+    }
+}

@@ -1,18 +1,30 @@
+@php
+    /**
+     * Активность пункта меню считается по тем же маршрутным шаблонам, что и
+     * раньше; добавлено лишь единообразное выставление aria-current="page"
+     * для активного пункта. Назначение и состав пунктов не меняются.
+     */
+    $navActive = fn (string ...$patterns): bool => request()->routeIs(...$patterns);
+@endphp
+
 <div class="menu-section">
     <div class="menu-section-title">Основное</div>
-    <a href="{{ route('cabinet.dashboard') }}" class="menu-item {{ request()->routeIs('cabinet.dashboard') ? 'active' : '' }}">
-        <i class="bi bi-speedometer2"></i>
+    @php($isActive = $navActive('cabinet.dashboard'))
+    <a href="{{ route('cabinet.dashboard') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-speedometer2" aria-hidden="true"></i>
         <span>Главная</span>
     </a>
-    <a href="{{ route('cabinet.bookings') }}" class="menu-item {{ request()->routeIs('cabinet.bookings*') ? 'active' : '' }}">
-        <i class="bi bi-journal-text"></i>
+    @php($isActive = $navActive('cabinet.bookings*'))
+    <a href="{{ route('cabinet.bookings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-journal-text" aria-hidden="true"></i>
         <span>Мои заявки</span>
         @if(isset($pendingBookingsCount) && $pendingBookingsCount > 0)
             <span class="menu-badge">{{ $pendingBookingsCount }}</span>
         @endif
     </a>
-    <a href="{{ route('cabinet.chat') }}" class="menu-item {{ request()->routeIs('cabinet.chat*') ? 'active' : '' }}">
-        <i class="bi bi-chat-dots"></i>
+    @php($isActive = $navActive('cabinet.chat*'))
+    <a href="{{ route('cabinet.chat') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
         <span>Чат с менеджером</span>
         @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
             <span class="menu-badge">{{ $unreadMessagesCount }}</span>
@@ -22,36 +34,42 @@
 
 <div class="menu-section">
     <div class="menu-section-title">Документы</div>
-    <a href="{{ route('cabinet.documents.personal') }}" class="menu-item {{ request()->routeIs('cabinet.documents.personal') ? 'active' : '' }}">
-        <i class="bi bi-file-earmark-person"></i>
+    @php($isActive = $navActive('cabinet.documents.personal'))
+    <a href="{{ route('cabinet.documents.personal') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-file-earmark-person" aria-hidden="true"></i>
         <span>Мои документы</span>
     </a>
-    <a href="{{ route('cabinet.documents.bookings') }}" class="menu-item {{ request()->routeIs('cabinet.documents.bookings') ? 'active' : '' }}">
-        <i class="bi bi-file-earmark-text"></i>
+    @php($isActive = $navActive('cabinet.documents.bookings'))
+    <a href="{{ route('cabinet.documents.bookings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
         <span>Документы по заявкам</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Дополнительно</div>
-    <a href="{{ route('cabinet.bonus') }}" class="menu-item {{ request()->routeIs('cabinet.bonus') ? 'active' : '' }}">
-        <i class="bi bi-gift"></i>
+    @php($isActive = $navActive('cabinet.bonus'))
+    <a href="{{ route('cabinet.bonus') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-gift" aria-hidden="true"></i>
         <span>Бонусы</span>
     </a>
-    <a href="{{ route('cabinet.wishlist') }}" class="menu-item {{ request()->routeIs('cabinet.wishlist') ? 'active' : '' }}">
-        <i class="bi bi-heart"></i>
+    @php($isActive = $navActive('cabinet.wishlist'))
+    <a href="{{ route('cabinet.wishlist') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-heart" aria-hidden="true"></i>
         <span>Избранное</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Настройки</div>
-    <a href="{{ route('cabinet.profile') }}" class="menu-item {{ request()->routeIs('cabinet.profile') ? 'active' : '' }}">
-        <i class="bi bi-person"></i>
+    @php($isActive = $navActive('cabinet.profile'))
+    <a href="{{ route('cabinet.profile') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-person" aria-hidden="true"></i>
         <span>Мой профиль</span>
     </a>
-    <a href="{{ route('cabinet.settings') }}" class="menu-item {{ request()->routeIs('cabinet.settings') ? 'active' : '' }}">
-        <i class="bi bi-gear"></i>
+    @php($isActive = $navActive('cabinet.settings'))
+    <a href="{{ route('cabinet.settings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-gear" aria-hidden="true"></i>
         <span>Настройки</span>
     </a>
 </div>

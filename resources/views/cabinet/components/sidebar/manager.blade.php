@@ -1,22 +1,35 @@
+@php
+    /**
+     * Активность пункта меню считается по тем же маршрутным шаблонам, что и
+     * раньше; добавлено лишь единообразное выставление aria-current="page"
+     * для активного пункта. Назначение и состав пунктов не меняются.
+     */
+    $navActive = fn (string ...$patterns): bool => request()->routeIs(...$patterns);
+@endphp
+
 <div class="menu-section">
     <div class="menu-section-title">Основное</div>
-    <a href="{{ route('cabinet.manager.dashboard') }}" class="menu-item {{ request()->routeIs('cabinet.manager.dashboard') ? 'active' : '' }}">
-        <i class="bi bi-speedometer2"></i>
+    @php($isActive = $navActive('cabinet.manager.dashboard'))
+    <a href="{{ route('cabinet.manager.dashboard') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-speedometer2" aria-hidden="true"></i>
         <span>Главная</span>
     </a>
-    <a href="{{ route('cabinet.manager.clients') }}" class="menu-item {{ request()->routeIs('cabinet.manager.clients*') ? 'active' : '' }}">
-        <i class="bi bi-people"></i>
+    @php($isActive = $navActive('cabinet.manager.clients*'))
+    <a href="{{ route('cabinet.manager.clients') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-people" aria-hidden="true"></i>
         <span>Мои клиенты</span>
     </a>
-    <a href="{{ route('cabinet.manager.bookings') }}" class="menu-item {{ request()->routeIs('cabinet.manager.bookings*') ? 'active' : '' }}">
-        <i class="bi bi-journal-text"></i>
+    @php($isActive = $navActive('cabinet.manager.bookings*'))
+    <a href="{{ route('cabinet.manager.bookings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-journal-text" aria-hidden="true"></i>
         <span>Мои заявки</span>
         @if(isset($pendingBookingsCount) && $pendingBookingsCount > 0)
             <span class="menu-badge">{{ $pendingBookingsCount }}</span>
         @endif
     </a>
-    <a href="{{ route('cabinet.manager.chat') }}" class="menu-item {{ request()->routeIs('cabinet.manager.chat*') ? 'active' : '' }}">
-        <i class="bi bi-chat-dots"></i>
+    @php($isActive = $navActive('cabinet.manager.chat*'))
+    <a href="{{ route('cabinet.manager.chat') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
         <span>Чаты с клиентами</span>
         @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
             <span class="menu-badge">{{ $unreadMessagesCount }}</span>
@@ -26,40 +39,46 @@
 
 <div class="menu-section">
     <div class="menu-section-title">Документы</div>
-    <a href="{{ route('cabinet.manager.documents') }}" class="menu-item {{ request()->routeIs('cabinet.manager.documents*') ? 'active' : '' }}">
-        <i class="bi bi-file-earmark-text"></i>
+    @php($isActive = $navActive('cabinet.manager.documents*'))
+    <a href="{{ route('cabinet.manager.documents') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
         <span>Мои документы</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Аналитика</div>
-    <a href="{{ route('cabinet.manager.statistics') }}" class="menu-item {{ request()->routeIs('cabinet.manager.statistics') ? 'active' : '' }}">
-        <i class="bi bi-graph-up"></i>
+    @php($isActive = $navActive('cabinet.manager.statistics'))
+    <a href="{{ route('cabinet.manager.statistics') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-graph-up" aria-hidden="true"></i>
         <span>Статистика</span>
     </a>
-    <a href="{{ route('cabinet.manager.finance') }}" class="menu-item {{ request()->routeIs('cabinet.manager.finance') ? 'active' : '' }}">
-        <i class="bi bi-cash-coin"></i>
+    @php($isActive = $navActive('cabinet.manager.finance'))
+    <a href="{{ route('cabinet.manager.finance') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-cash-coin" aria-hidden="true"></i>
         <span>Мои комиссии</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Инструменты</div>
-    <a href="{{ route('cabinet.manager.content') }}" class="menu-item {{ request()->routeIs('cabinet.manager.content*') || request()->routeIs('cabinet.manager.articles*') || request()->routeIs('cabinet.manager.reviews*') ? 'active' : '' }}">
-        <i class="bi bi-file-richtext"></i>
+    @php($isActive = $navActive('cabinet.manager.content*', 'cabinet.manager.articles*', 'cabinet.manager.reviews*'))
+    <a href="{{ route('cabinet.manager.content') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-file-richtext" aria-hidden="true"></i>
         <span>Контент</span>
     </a>
 </div>
 
 <div class="menu-section">
     <div class="menu-section-title">Настройки</div>
-    <a href="{{ route('cabinet.manager.profile') }}" class="menu-item {{ request()->routeIs('cabinet.manager.profile') ? 'active' : '' }}">
-        <i class="bi bi-person"></i>
+    @php($isActive = $navActive('cabinet.manager.profile'))
+    <a href="{{ route('cabinet.manager.profile') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-person" aria-hidden="true"></i>
         <span>Мой профиль</span>
     </a>
-    <a href="{{ route('cabinet.manager.settings') }}" class="menu-item {{ request()->routeIs('cabinet.manager.settings') ? 'active' : '' }}">
-        <i class="bi bi-gear"></i>
+    @php($isActive = $navActive('cabinet.manager.settings'))
+    <a href="{{ route('cabinet.manager.settings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-gear" aria-hidden="true"></i>
         <span>Настройки</span>
     </a>
 </div>
