@@ -5,6 +5,20 @@
      * для активного пункта. Назначение и состав пунктов не меняются.
      */
     $navActive = fn (string ...$patterns): bool => request()->routeIs(...$patterns);
+
+    /**
+     * Бейдж «Все чаты» — ТОЛЬКО сообщения, адресованные лично этому
+     * администратору: строки Message, где receiver_id = его id и is_read = false.
+     * Это его личный счётчик как назначенного обработчика заявок; он НЕ суммирует
+     * manager_unread_count чужих менеджеров (это остаётся надзорной информацией
+     * внутри списка веток, а не личным бейджем). Один ограниченный COUNT, либо
+     * авторитетное значение, если вид его уже передал.
+     */
+    $sidebarUnreadMessagesCount = $unreadMessagesCount
+        ?? \App\Models\Message::query()
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', false)
+            ->count();
 @endphp
 
 <div class="menu-section">
@@ -34,9 +48,12 @@
         <span>Все заявки</span>
     </a>
     @php($isActive = $navActive('cabinet.admin.chats*'))
-    <a href="{{ route('cabinet.admin.chats') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+    <a href="{{ route('cabinet.admin.chats') }}" data-chat-nav-unread @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-chat-dots" aria-hidden="true"></i>
         <span>Все чаты</span>
+        @if($sidebarUnreadMessagesCount > 0)
+            <span class="menu-badge">{{ $sidebarUnreadMessagesCount }}</span>
+        @endif
     </a>
     @php($isActive = $navActive('cabinet.admin.content*'))
     <a href="{{ route('cabinet.admin.content') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>

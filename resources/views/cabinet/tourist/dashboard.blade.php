@@ -8,100 +8,107 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Добро пожаловать, {{ Auth::user()->name }}!</h1>
-    <p class="page-subtitle">Управляйте своими поездками и следите за заявками</p>
-</div>
-
-<!-- Статистика -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        @include('cabinet.components.stat-card', [
-            'title' => 'Всего заявок',
-            'value' => $bookingsCount,
-            'icon' => 'bi-journal-text',
-            'color' => 'primary'
-        ])
-    </div>
-    <div class="col-md-4">
-        @include('cabinet.components.stat-card', [
-            'title' => 'Активных',
-            'value' => $activeBookings,
-            'icon' => 'bi-hourglass-split',
-            'color' => 'warning'
-        ])
-    </div>
-    <div class="col-md-4">
-        @include('cabinet.components.stat-card', [
-            'title' => 'Завершенных',
-            'value' => $completedBookings,
-            'icon' => 'bi-check-circle',
-            'color' => 'success'
-        ])
-    </div>
+    <h1 class="page-title">Здравствуйте, {{ Auth::user()->name }}!</h1>
+    <p class="page-subtitle">Обзор ваших заявок, поездок и сообщений от менеджера</p>
 </div>
 
 @if($upcomingTrip)
-<!-- Ближайшая поездка -->
-<div class="card-custom mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-    <div class="d-flex align-items-center gap-3">
-        <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-            <i class="bi bi-airplane-fill" style="font-size: 2rem;"></i>
+    {{-- Приоритет 1: подтверждённая ближайшая поездка --}}
+    <div class="tc-trip">
+        <div class="tc-trip__icon">
+            <i class="bi bi-airplane-fill" aria-hidden="true"></i>
         </div>
-        <div style="flex: 1;">
-            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.25rem;">Ближайшая поездка</div>
-            <h4 style="margin: 0; font-weight: 700;">{{ $upcomingTrip->destination_country }}@if($upcomingTrip->destination_city), {{ $upcomingTrip->destination_city }}@endif</h4>
-            <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">
-                <i class="bi bi-calendar3"></i> {{ $upcomingTrip->start_date->format('d.m.Y') }}
+        <div class="tc-trip__body">
+            <div class="tc-trip__eyebrow">Ближайшая поездка</div>
+            <h2 class="tc-trip__title">
+                {{ $upcomingTrip->destination_country }}@if($upcomingTrip->destination_city), {{ $upcomingTrip->destination_city }}@endif
+            </h2>
+            <div class="tc-trip__meta">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                Вылет {{ $upcomingTrip->start_date->format('d.m.Y') }}
+                <span class="mx-1">•</span>
+                Заявка #{{ $upcomingTrip->id }}
             </div>
         </div>
-        <a href="{{ route('bookings.show', $upcomingTrip->id) }}" class="btn btn-light">
-            Подробнее
-        </a>
+        <div class="tc-trip__action">
+            <a href="{{ route('bookings.show', $upcomingTrip->id) }}" class="btn btn-primary">
+                Подробнее о поездке
+            </a>
+        </div>
     </div>
-</div>
+@elseif($bookingsCount === 0)
+    {{-- Приоритет 1 (нет заявок): честный старт --}}
+    @include('cabinet.components.empty-state', [
+        'icon' => 'bi-compass',
+        'title' => 'Начните планировать поездку',
+        'description' => 'У вас пока нет заявок. Оставьте заявку — менеджер подберёт тур и свяжется с вами.',
+        'actionUrl' => route('bookings.create'),
+        'actionText' => 'Оставить заявку',
+    ])
 @endif
 
-<!-- Быстрые действия -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">Быстрые действия</h5>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('bookings.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Новая заявка
-                </a>
-                <a href="{{ route('cabinet.bookings') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-journal-text"></i> Мои заявки
-                </a>
-                @if($unreadMessagesCount > 0)
-                    <a href="{{ route('cabinet.chat') }}" class="btn btn-outline-danger">
-                        <i class="bi bi-chat-dots"></i> Непрочитанные сообщения 
-                        <span class="badge bg-danger">{{ $unreadMessagesCount }}</span>
-                    </a>
-                @else
-                    <a href="{{ route('cabinet.chat') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-chat-dots"></i> Чат с менеджером
-                    </a>
-                @endif
-                <a href="{{ route('cabinet.documents.personal') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-file-earmark-person"></i> Мои документы
-                </a>
-            </div>
+{{-- Приоритет 2: ключевые показатели --}}
+<div class="tc-summary">
+    <div class="tc-metric">
+        <div class="tc-metric__icon"><i class="bi bi-journal-text" aria-hidden="true"></i></div>
+        <div>
+            <div class="tc-metric__value">{{ $bookingsCount }}</div>
+            <div class="tc-metric__label">Всего заявок</div>
+        </div>
+    </div>
+    <div class="tc-metric">
+        <div class="tc-metric__icon tc-metric__icon--warning"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
+        <div>
+            <div class="tc-metric__value">{{ $activeBookings }}</div>
+            <div class="tc-metric__label">В работе</div>
+        </div>
+    </div>
+    <div class="tc-metric">
+        <div class="tc-metric__icon tc-metric__icon--success"><i class="bi bi-check-circle" aria-hidden="true"></i></div>
+        <div>
+            <div class="tc-metric__value">{{ $completedBookings }}</div>
+            <div class="tc-metric__label">Завершённых поездок</div>
         </div>
     </div>
 </div>
 
-<!-- Последние заявки -->
+{{-- Приоритет 3: что можно сделать сейчас --}}
 <div class="card-custom">
     <div class="card-header-custom">
-        <h5 class="card-title-custom">Последние заявки</h5>
-        <a href="{{ route('cabinet.bookings') }}" class="btn btn-sm btn-outline-primary">
-            Все заявки
+        <h2 class="card-title-custom">Быстрые действия</h2>
+    </div>
+    <div class="tc-quick-actions">
+        <a href="{{ route('bookings.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle" aria-hidden="true"></i> Новая заявка
+        </a>
+        @if($unreadMessagesCount > 0)
+            <a href="{{ route('cabinet.chat') }}" class="btn btn-outline-primary">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                Непрочитанные сообщения
+                <span class="badge bg-danger ms-1">{{ $unreadMessagesCount }}</span>
+            </a>
+        @else
+            <a href="{{ route('cabinet.chat') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-chat-dots" aria-hidden="true"></i> Чат с менеджером
+            </a>
+        @endif
+        <a href="{{ route('cabinet.documents.personal') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-person" aria-hidden="true"></i> Мои документы
         </a>
     </div>
-    
+</div>
+
+{{-- Приоритет 4: последние заявки --}}
+<div class="card-custom">
+    <div class="card-header-custom">
+        <h2 class="card-title-custom">Последние заявки</h2>
+        @if($latestBookings->count() > 0)
+            <a href="{{ route('cabinet.bookings') }}" class="btn btn-sm btn-outline-primary">
+                Все заявки
+            </a>
+        @endif
+    </div>
+
     @if($latestBookings->count() > 0)
         <div class="row">
             @foreach($latestBookings as $booking)
@@ -111,13 +118,10 @@
             @endforeach
         </div>
     @else
-        @include('cabinet.components.empty-state', [
-            'icon' => 'bi-journal-plus',
-            'title' => 'У вас пока нет заявок',
-            'description' => 'Создайте первую заявку и начните планировать свой отпуск',
-            'actionUrl' => route('bookings.create'),
-            'actionText' => 'Создать заявку'
-        ])
+        <p class="text-muted mb-0">
+            Здесь появятся ваши заявки после оформления.
+            <a href="{{ route('bookings.create') }}">Оставить заявку</a>.
+        </p>
     @endif
 </div>
 @endsection

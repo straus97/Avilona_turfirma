@@ -18,12 +18,9 @@
     <a href="{{ route('cabinet.bookings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-journal-text" aria-hidden="true"></i>
         <span>Мои заявки</span>
-        @if(isset($pendingBookingsCount) && $pendingBookingsCount > 0)
-            <span class="menu-badge">{{ $pendingBookingsCount }}</span>
-        @endif
     </a>
     @php($isActive = $navActive('cabinet.chat*'))
-    <a href="{{ route('cabinet.chat') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+    <a href="{{ route('cabinet.chat') }}" data-chat-nav-unread @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-chat-dots" aria-hidden="true"></i>
         <span>Чат с менеджером</span>
         @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)

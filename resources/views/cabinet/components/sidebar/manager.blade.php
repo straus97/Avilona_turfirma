@@ -5,6 +5,22 @@
      * для активного пункта. Назначение и состав пунктов не меняются.
      */
     $navActive = fn (string ...$patterns): bool => request()->routeIs(...$patterns);
+
+    /**
+     * Бейдж «Чаты с клиентами» — личные непрочитанные текущего менеджера:
+     * строки Message, где receiver_id = его id и is_read = false. НЕ считаются
+     * строки уведомлений Laravel, сообщения другому менеджеру и админский надзор.
+     *
+     * Не каждое действие менеджера кладёт это значение в вид (напр. chat()), а
+     * бейдж обязан вести себя одинаково при переходах и совпадать с AJAX-обновлением
+     * после переключения ветки. Если авторитетное значение уже передано — берём
+     * его, иначе один ограниченный COUNT для аутентифицированного пользователя.
+     */
+    $sidebarUnreadMessagesCount = $unreadMessagesCount
+        ?? \App\Models\Message::query()
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', false)
+            ->count();
 @endphp
 
 <div class="menu-section">
@@ -28,11 +44,11 @@
         @endif
     </a>
     @php($isActive = $navActive('cabinet.manager.chat*'))
-    <a href="{{ route('cabinet.manager.chat') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+    <a href="{{ route('cabinet.manager.chat') }}" data-chat-nav-unread @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-chat-dots" aria-hidden="true"></i>
         <span>Чаты с клиентами</span>
-        @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-            <span class="menu-badge">{{ $unreadMessagesCount }}</span>
+        @if($sidebarUnreadMessagesCount > 0)
+            <span class="menu-badge">{{ $sidebarUnreadMessagesCount }}</span>
         @endif
     </a>
 </div>

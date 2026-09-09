@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Идентификатор текущего пользователя — только числовой id, нужен для
+         локального неймспейса черновиков чата и их очистки при выходе. --}}
+    <meta name="cabinet-user-id" content="{{ Auth::id() }}">
     <title>@yield('title', 'Личный кабинет') | Авилона</title>
 
     <!-- Fonts -->
@@ -150,7 +153,7 @@
                         <i class="bi bi-house me-2" aria-hidden="true"></i> На главную
                     </a></li>
                     <li>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-cabinet-logout>
                             @csrf
                             <button type="submit" class="dropdown-item text-danger">
                                 <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i> Выйти
@@ -193,6 +196,11 @@
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Общее прогрессивное улучшение чата кабинета (E3): очистка черновиков при
+         выходе на всех страницах + плавное переключение веток там, где есть
+         [data-chat-root]. -->
+    <script defer src="{{ asset('js/cabinet-chat.js') }}"></script>
 
     <!-- AJAX Setup -->
     <script>

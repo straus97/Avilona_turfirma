@@ -861,3 +861,544 @@ body {
         transition: none;
     }
 }
+
+/* ==================================================================
+   16. Кабинет туриста (E3-A2) — специфичные примитивы
+   ------------------------------------------------------------------
+   Namespaced-классы (tc-*) для клиентского портала туриста. Построены
+   исключительно на токенах E3-A1 из раздела 1; палитра/фреймворк не
+   меняются. Менеджерских/админских поверхностей не касаются.
+   ================================================================== */
+
+/* --- 16.1 Сводные показатели ------------------------------------- */
+.tc-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tc-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    background: var(--cabinet-surface);
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-lg);
+    box-shadow: var(--cabinet-shadow-sm);
+}
+
+.tc-metric__icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cabinet-radius-md);
+    font-size: 1.2rem;
+    background: var(--cabinet-primary-soft);
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-metric__icon--warning { background: var(--cabinet-warning-soft); color: #7a4708; }
+.tc-metric__icon--success { background: var(--cabinet-success-soft); color: #14603c; }
+.tc-metric__icon--muted   { background: var(--cabinet-surface-sunken); color: var(--cabinet-muted); }
+
+.tc-metric__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--cabinet-heading);
+}
+
+.tc-metric__label {
+    font-size: 0.8rem;
+    color: var(--cabinet-muted);
+}
+
+/* --- 16.2 Карточка ближайшей поездки / приоритета --------------- */
+.tc-trip {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.15rem;
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--cabinet-primary-soft);
+    border: 1px solid var(--cabinet-border);
+    border-left: 4px solid var(--cabinet-primary);
+    border-radius: var(--cabinet-radius-lg);
+}
+
+.tc-trip__icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cabinet-radius-md);
+    font-size: 1.6rem;
+    background: var(--cabinet-surface);
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-trip__body { flex: 1 1 auto; min-width: 0; }
+
+.tc-trip__eyebrow {
+    margin-bottom: 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-trip__title {
+    margin: 0 0 0.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--cabinet-heading);
+}
+
+.tc-trip__meta {
+    font-size: 0.875rem;
+    color: var(--cabinet-muted);
+}
+
+.tc-trip__action { margin-left: auto; flex-shrink: 0; }
+
+@media (max-width: 575.98px) {
+    .tc-trip { flex-wrap: wrap; }
+    .tc-trip__action { margin-left: 0; width: 100%; }
+    .tc-trip__action .btn { width: 100%; }
+}
+
+/* --- 16.3 Быстрые действия ------------------------------------- */
+.tc-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+}
+
+@media (max-width: 575.98px) {
+    .tc-quick-actions .btn { flex: 1 1 100%; }
+}
+
+/* --- 16.4 Панель фильтров ------------------------------------- */
+.tc-filter__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.85rem;
+    align-items: end;
+}
+
+.tc-filter__actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tc-filter__actions .btn { flex: 1 1 auto; }
+
+.tc-active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cabinet-border);
+}
+
+.tc-active-filters__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--cabinet-muted);
+}
+
+.tc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--cabinet-primary-soft);
+    color: var(--cabinet-primary-strong);
+    border-radius: var(--cabinet-radius-pill);
+}
+
+/* --- 16.5 Компактная лента метрик ---------------------------- */
+.tc-metric-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.tc-metric-strip__item {
+    padding: 0.85rem 1rem;
+    text-align: center;
+    background: var(--cabinet-surface);
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-md);
+    box-shadow: var(--cabinet-shadow-sm);
+}
+
+.tc-metric-strip__value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--cabinet-heading);
+}
+
+.tc-metric-strip__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cabinet-muted);
+}
+
+/* --- 16.6 Документы ----------------------------------------- */
+.tc-chip-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tc-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.tc-doc {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.15rem;
+    background: var(--cabinet-surface);
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-lg);
+    box-shadow: var(--cabinet-shadow-sm);
+}
+
+.tc-doc__head { display: flex; align-items: flex-start; gap: 0.85rem; }
+
+.tc-doc__icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cabinet-radius-md);
+    font-size: 1.35rem;
+    background: var(--cabinet-surface-sunken);
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-doc__name {
+    margin: 0;
+    font-weight: 600;
+    color: var(--cabinet-heading);
+    word-break: break-word;
+}
+
+.tc-doc__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--cabinet-muted);
+}
+
+.tc-doc__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.tc-doc__actions .btn { flex: 1 1 auto; }
+.tc-doc__actions form { flex: 0 0 auto; }
+
+/* --- 16.7 Чат ---------------------------------------------- */
+.tc-chat {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (max-width: 767.98px) {
+    .tc-chat { grid-template-columns: 1fr; }
+}
+
+.tc-chat__panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--cabinet-surface);
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-lg);
+    box-shadow: var(--cabinet-shadow-sm);
+}
+
+.tc-chat__panel-title {
+    margin: 0;
+    padding: 1rem 1.15rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cabinet-heading);
+    border-bottom: 1px solid var(--cabinet-border);
+}
+
+.tc-chat__threads {
+    overflow-y: auto;
+    padding: 0.65rem;
+    max-height: calc(100vh - 15rem);
+    max-height: calc(100dvh - 15rem);
+}
+
+@media (max-width: 767.98px) {
+    .tc-chat__threads { max-height: 20rem; }
+}
+
+.tc-thread {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.7rem;
+    text-decoration: none;
+    color: var(--cabinet-text);
+    border: 1px solid transparent;
+    border-radius: var(--cabinet-radius-md);
+}
+
+.tc-thread + .tc-thread { margin-top: 0.35rem; }
+.tc-thread:hover { background: var(--cabinet-surface-alt); }
+
+.tc-thread.is-active {
+    background: var(--cabinet-primary-soft);
+    border-color: var(--cabinet-primary);
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-thread__body { flex: 1 1 auto; min-width: 0; }
+.tc-thread__line { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.tc-thread__title { font-weight: 600; font-size: 0.875rem; }
+.tc-thread__sub { font-size: 0.75rem; color: var(--cabinet-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tc-chat__window {
+    height: calc(100vh - 12rem);
+    height: calc(100dvh - 12rem);
+    min-height: 26rem;
+}
+
+@media (max-width: 767.98px) {
+    .tc-chat__window { height: auto; min-height: 0; }
+}
+
+.tc-chat__header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid var(--cabinet-border);
+}
+
+.tc-chat__messages {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    overflow-y: auto;
+    padding: 1.15rem;
+}
+
+@media (max-width: 767.98px) {
+    .tc-chat__messages { max-height: 60vh; }
+}
+
+.tc-msg { max-width: min(72%, 32rem); }
+.tc-msg--own { align-self: flex-end; }
+.tc-msg--other { align-self: flex-start; }
+
+.tc-msg__sender {
+    margin-bottom: 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cabinet-muted);
+}
+
+.tc-msg--own .tc-msg__sender { text-align: right; }
+
+.tc-msg__bubble {
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-md);
+    background: var(--cabinet-surface-alt);
+    color: var(--cabinet-text);
+}
+
+.tc-msg--other .tc-msg__bubble { border-bottom-left-radius: 4px; }
+
+.tc-msg--own .tc-msg__bubble {
+    background: var(--cabinet-primary);
+    border-color: var(--cabinet-primary);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.tc-msg__attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    text-decoration: underline;
+}
+
+.tc-msg__time {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--cabinet-muted);
+}
+
+.tc-msg--own .tc-msg__time { text-align: right; }
+
+.tc-chat__composer {
+    padding: 0.9rem 1.15rem;
+    border-top: 1px solid var(--cabinet-border);
+}
+
+.tc-chat__composer-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.tc-chat__composer-row .form-control { flex: 1 1 auto; }
+
+/* Выбор вложения: input остаётся в tab-порядке и активируется с клавиатуры,
+   но визуально скрыт — видимым триггером служит связанный <label>. */
+.tc-attach { position: relative; }
+
+.tc-attach__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    opacity: 0;
+}
+
+.tc-attach:focus-within {
+    outline: 2px solid var(--cabinet-focus);
+    outline-offset: 2px;
+}
+
+/* Состояние асинхронного переключения ветки: индикация не только цветом —
+   меняются прозрачность и курсор, список веток временно неактивен, плюс
+   параллельно идёт объявление через [data-chat-status] aria-live. */
+.tc-chat--loading { cursor: progress; }
+.tc-chat--loading [data-chat-window] { opacity: 0.55; transition: opacity 0.15s ease; }
+.tc-chat--loading [data-chat-threads] { pointer-events: none; }
+
+/* --- 16.8 Пары «ключ — значение» ---------------------------- */
+.tc-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.tc-info-list__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.tc-info-list__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cabinet-muted);
+}
+
+.tc-info-list__value {
+    font-weight: 600;
+    color: var(--cabinet-heading);
+}
+
+/* --- 16.9 Переключатели уведомлений ------------------------- */
+.tc-switch {
+    padding: 0.85rem 0;
+    border-top: 1px solid var(--cabinet-border);
+}
+
+.tc-switch:first-of-type {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.tc-switch__hint {
+    margin: 0.15rem 0 0 2.5rem;
+    font-size: 0.8rem;
+    color: var(--cabinet-muted);
+}
+
+/* --- 16.10 Опасная зона ------------------------------------- */
+.card-custom.tc-danger-zone { border-color: var(--cabinet-danger); }
+
+.tc-danger-zone__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* --- 16.11 Честный информационный блок ---------------------- */
+.tc-notice {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    font-size: 0.9rem;
+    color: var(--cabinet-text);
+    background: var(--cabinet-info-soft);
+    border: 1px solid var(--cabinet-border);
+    border-left: 4px solid var(--cabinet-info);
+    border-radius: var(--cabinet-radius-md);
+}
+
+.tc-notice > i {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    color: var(--cabinet-info);
+}
+
+/* --- 16.12 Бонусный баланс --------------------------------- */
+.tc-balance {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.85rem;
+}
+
+.tc-balance__value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--cabinet-primary-strong);
+}
+
+.tc-balance__unit { font-size: 0.9rem; color: var(--cabinet-muted); }

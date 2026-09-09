@@ -46,6 +46,27 @@ class CabinetController extends Controller
 
         return null;
     }
+
+    /**
+     * Данные, общие для сайдбара туриста на всех его страницах.
+     *
+     * Пока это только счётчик непрочитанных сообщений — та же самая
+     * однозначная формула, что уже используется в touristDashboard()
+     * (сообщения, где текущий пользователь получатель и is_read = false).
+     * Вынесено сюда, чтобы бейдж «Чат с менеджером» вёл себя одинаково
+     * при переходах по кабинету, без изменения авторизации или бизнес-логики.
+     *
+     * @return array<string, int>
+     */
+    protected function touristSidebarData(): array
+    {
+        return [
+            'unreadMessagesCount' => Message::where('receiver_id', Auth::id())
+                ->where('is_read', false)
+                ->count(),
+        ];
+    }
+
     /**
      * Dashboard (главная страница кабинета)
      */
@@ -178,7 +199,7 @@ class CabinetController extends Controller
             ->where('status', Booking::STATUS_COMPLETED)
             ->count();
         
-        return view('cabinet.tourist.bookings.index', compact('bookings', 'totalCount', 'activeCount', 'confirmedCount', 'completedCount'));
+        return view('cabinet.tourist.bookings.index', compact('bookings', 'totalCount', 'activeCount', 'confirmedCount', 'completedCount') + $this->touristSidebarData());
     }
     
     /**
@@ -192,21 +213,12 @@ class CabinetController extends Controller
             return $redirect;
         }
         
-        // Получаем заявки с менеджерами и считаем непрочитанные для каждой
-        $bookings = Booking::where('user_id', $user->id)
-            ->whereNotNull('manager_id')
-            ->with(['manager', 'messages' => function($query) use ($user) {
-                $query->where('receiver_id', $user->id)->where('is_read', false);
-            }])
-            ->get()
-            ->map(function($booking) {
-                $booking->unread_count = $booking->messages->count();
-                return $booking;
-            });
-
         $messages = collect();
         $currentBooking = null;
 
+        // Сначала открываем выбранную переписку и помечаем её сообщения
+        // прочитанными — иначе список переписок и бейдж в сайдбаре покажут
+        // рассинхронизированное состояние в рамках одного ответа.
         if ($bookingId) {
             $currentBooking = Booking::where('user_id', $user->id)
                 ->where('id', $bookingId)
@@ -221,7 +233,21 @@ class CabinetController extends Controller
                 ->update(['is_read' => true]);
         }
 
-        return view('cabinet.tourist.chat.index', compact('bookings', 'messages', 'currentBooking'));
+        // Только после отметки о прочтении получаем заявки с менеджерами и
+        // считаем непрочитанные для каждой — теперь и список, и сайдбар
+        // отражают одно и то же состояние БД после открытия.
+        $bookings = Booking::where('user_id', $user->id)
+            ->whereNotNull('manager_id')
+            ->with(['manager', 'messages' => function($query) use ($user) {
+                $query->where('receiver_id', $user->id)->where('is_read', false);
+            }])
+            ->get()
+            ->map(function($booking) {
+                $booking->unread_count = $booking->messages->count();
+                return $booking;
+            });
+
+        return view('cabinet.tourist.chat.index', compact('bookings', 'messages', 'currentBooking') + $this->touristSidebarData());
     }
     
     /**
@@ -235,15 +261,22 @@ class CabinetController extends Controller
 
         $user = Auth::user();
         $type = request('type', 'all');
-        
+
         $query = UserDocument::where('user_id', $user->id);
-        
+
         if ($type !== 'all') {
             $query->where('document_type', $type);
         }
-        
+
         $documents = $query->latest()->get();
-        return view('cabinet.tourist.documents.personal', compact('documents'));
+
+        // Нужно только для того, чтобы страница различала «нет документов совсем»
+        // и «нет документов выбранного типа». Владелец-скоуп тот же (user_id).
+        $hasAnyDocuments = $type === 'all'
+            ? $documents->isNotEmpty()
+            : UserDocument::where('user_id', $user->id)->exists();
+
+        return view('cabinet.tourist.documents.personal', compact('documents', 'hasAnyDocuments') + $this->touristSidebarData());
     }
     
     /**
@@ -258,11 +291,11 @@ class CabinetController extends Controller
         $user = Auth::user();
         $bookingsWithDocuments = Booking::where('user_id', $user->id)
             ->whereHas('bookingDocuments')
-            ->with('bookingDocuments')
+            ->with(['bookingDocuments', 'manager'])
             ->latest()
             ->get();
 
-        return view('cabinet.tourist.documents.bookings', compact('bookingsWithDocuments'));
+        return view('cabinet.tourist.documents.bookings', compact('bookingsWithDocuments') + $this->touristSidebarData());
     }
 
     /**
@@ -359,9 +392,8 @@ class CabinetController extends Controller
             ]
         );
         $transactions = $bonusAccount->transactions()->latest()->paginate(10);
-        $referralsCount = 0; // TODO: реализовать подсчет рефералов
-        
-        return view('cabinet.tourist.bonus.index', compact('bonusAccount', 'transactions', 'referralsCount'));
+
+        return view('cabinet.tourist.bonus.index', compact('bonusAccount', 'transactions') + $this->touristSidebarData());
     }
     
     /**
@@ -373,9 +405,10 @@ class CabinetController extends Controller
             return $redirect;
         }
 
-        $user = Auth::user();
-        $wishlistItems = collect(); // TODO: реализовать wishlist
-        return view('cabinet.tourist.wishlist.index', compact('wishlistItems'));
+        // Избранное как функциональность пока не реализовано (нет модели/схемы);
+        // маршрут и пункт навигации сохраняются, страница показывает честное
+        // состояние «раздел недоступен» — см. cabinet.tourist.wishlist.index.
+        return view('cabinet.tourist.wishlist.index', $this->touristSidebarData());
     }
     
     /**
@@ -387,7 +420,7 @@ class CabinetController extends Controller
             return $redirect;
         }
 
-        return view('cabinet.tourist.profile.edit');
+        return view('cabinet.tourist.profile.edit', $this->touristSidebarData());
     }
     
     /**
@@ -446,7 +479,7 @@ class CabinetController extends Controller
             return $redirect;
         }
 
-        return view('cabinet.tourist.settings.index');
+        return view('cabinet.tourist.settings.index', $this->touristSidebarData());
     }
     
     /**

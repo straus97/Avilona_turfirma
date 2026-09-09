@@ -766,6 +766,41 @@ class AdminController extends Controller
      */
     public function chats(Request $request, $bookingId = null): View
     {
+        $adminId = (int) Auth::id();
+
+        $currentBooking = null;
+        $messages = collect();
+
+        // По существующим бизнес-правилам назначенным обработчиком заявки может
+        // быть и администратор (booking.manager_id указывает на него, в т.ч.
+        // самоназначение). Только для ТАКОЙ ветки администратор — реальный
+        // участник переписки: показываем композер и помечаем адресованные ему
+        // сообщения прочитанными. Для чужих заявок он остаётся наблюдателем
+        // (режим A) — состояние прочтения не меняем.
+        $isAssignedHandler = false;
+
+        if ($bookingId) {
+            $currentBooking = Booking::with(['user', 'manager', 'messages.sender'])
+                ->where('id', $bookingId)
+                ->firstOrFail();
+
+            $isAssignedHandler = $currentBooking->manager_id !== null
+                && (int) $currentBooking->manager_id === $adminId;
+
+            if ($isAssignedHandler) {
+                // Помечаем ДО подсчёта бейджей — как у менеджера, по получателю.
+                Message::where('booking_id', $currentBooking->id)
+                    ->where('receiver_id', $adminId)
+                    ->where('is_read', false)
+                    ->update(['is_read' => true, 'read_at' => now()]);
+            }
+
+            $messages = $currentBooking->messages()
+                ->with(['sender', 'receiver'])
+                ->orderBy('created_at', 'asc')
+                ->get();
+        }
+
         // Бейджи непрочитанных считаются одним batched-запросом через
         // коррелированные withCount-подзапросы, а не Message::count() на
         // каждую заявку в цикле — иначе количество запросов росло бы
@@ -784,20 +819,6 @@ class AdminController extends Controller
             ->latest()
             ->get();
 
-        $currentBooking = null;
-        $messages = collect();
-
-        if ($bookingId) {
-            $currentBooking = Booking::with(['user', 'manager', 'messages.sender'])
-                ->where('id', $bookingId)
-                ->firstOrFail();
-
-            $messages = $currentBooking->messages()
-                ->with(['sender', 'receiver'])
-                ->orderBy('created_at', 'asc')
-                ->get();
-        }
-
         $unreadByBooking = [];
         foreach ($bookings as $booking) {
             $unreadByBooking[$booking->id] = [
@@ -806,7 +827,13 @@ class AdminController extends Controller
             ];
         }
 
-        return view('admin.chats', compact('bookings', 'currentBooking', 'messages', 'unreadByBooking'));
+        return view('admin.chats', compact(
+            'bookings',
+            'currentBooking',
+            'messages',
+            'unreadByBooking',
+            'isAssignedHandler'
+        ));
     }
 
     /**

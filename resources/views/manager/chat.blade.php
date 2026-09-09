@@ -12,11 +12,23 @@
     <p class="page-subtitle">Общайтесь с клиентами по заявкам</p>
 </div>
 
-<div class="row">
+<div class="row"
+     data-chat-root
+     data-chat-context="manager"
+     data-chat-user-id="{{ $manager->id }}"
+     data-chat-current-booking-id="{{ $currentBooking?->id }}"
+     data-chat-messages-url="{{ route('messages.index') }}"
+     data-chat-unread-url="{{ route('messages.unread-count') }}"
+     data-chat-peer-name="{{ $currentBooking?->user?->name ?? 'Клиент' }}"
+     data-chat-poll-ms="5000">
+
+    <p class="visually-hidden" data-chat-status role="status" aria-live="polite"></p>
+
     <div class="col-md-4">
         <div class="card-custom" style="height: calc(100vh - 200px); overflow-y: auto;">
             <h5 class="mb-3">Клиенты</h5>
             @if($bookings->count() > 0)
+                <div data-chat-threads>
                 @foreach($bookings as $booking)
                     @php
                         $unreadCount = \App\Models\Message::where('booking_id', $booking->id)
@@ -25,6 +37,8 @@
                             ->count();
                     @endphp
                     <a href="{{ route('cabinet.manager.chat', ['bookingId' => $booking->id]) }}"
+                       data-chat-thread
+                       @if($currentBooking && $currentBooking->id == $booking->id) aria-current="page" @endif
                        class="d-block p-3 mb-2 rounded {{ $currentBooking && $currentBooking->id == $booking->id ? 'bg-primary text-white' : 'bg-light' }}"
                        style="text-decoration: none; transition: all 0.2s; position: relative;">
                         <div class="d-flex align-items-start gap-2">
@@ -53,6 +67,7 @@
                         </div>
                     </a>
                 @endforeach
+                </div>
             @else
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-chat-square-text" style="font-size: 3rem;"></i>
@@ -64,7 +79,7 @@
 
     <div class="col-md-8">
         @if($currentBooking)
-            <div class="card-custom" style="height: calc(100vh - 200px); display: flex; flex-direction: column;">
+            <div class="card-custom" style="height: calc(100vh - 200px); display: flex; flex-direction: column;" data-chat-window tabindex="-1">
                 <div class="d-flex align-items-center gap-3 pb-3 border-bottom">
                     <div class="user-avatar" style="width: 48px; height: 48px;">
                         {{ strtoupper(substr($currentBooking->user->name ?? 'К', 0, 1)) }}
@@ -86,7 +101,7 @@
                     </a>
                 </div>
 
-                <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1.5rem 0;">
+                <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1.5rem 0;" data-chat-messages>
                     @if($messages->count() > 0)
                         @foreach($messages as $message)
                             <div class="mb-3 d-flex {{ $message->sender_id == $manager->id ? 'justify-content-end' : 'justify-content-start' }}" data-message-id="{{ $message->id }}">
@@ -119,27 +134,29 @@
                 </div>
 
                 <div class="border-top pt-3">
-                    <form action="{{ route('messages.store') }}" method="POST" enctype="multipart/form-data">
+                    <p class="alert alert-danger py-2 px-3 mb-2 small" data-chat-error role="alert" hidden></p>
+                    <form action="{{ route('messages.store') }}" method="POST" enctype="multipart/form-data" data-chat-composer>
                         @csrf
                         <input type="hidden" name="booking_id" value="{{ $currentBooking->id }}">
                         <input type="hidden" name="receiver_id" value="{{ $currentBooking->user_id }}">
 
                         <div class="d-flex gap-2">
-                            <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." id="messageInput">
+                            <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." id="messageInput" data-chat-input autocomplete="off">
                             <label class="btn btn-outline-secondary" style="cursor: pointer;" title="Прикрепить файл">
                                 <i class="bi bi-paperclip"></i>
                                 <input type="file" name="attachment" style="display: none;" id="attachmentInput"
                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.webp"
-                                       onchange="updateFileName(this)">
+                                       data-chat-attachment>
                             </label>
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i>
                             </button>
                         </div>
-                        <div id="attachmentName" class="mt-2 text-muted small" style="display: none;">
-                            <i class="bi bi-file-earmark"></i> <span id="fileName"></span>
-                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="clearAttachment()">
+                        <div class="mt-2 text-muted small" data-chat-attachment-name hidden>
+                            <i class="bi bi-file-earmark"></i> <span data-chat-attachment-filename></span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" data-chat-attachment-clear>
                                 <i class="bi bi-x-circle"></i>
+                                <span class="visually-hidden">Убрать файл</span>
                             </button>
                         </div>
                     </form>
@@ -157,122 +174,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    const chatMessages = document.getElementById('chatMessages');
-    if (chatMessages) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    const chatConfig = {
-        bookingId: @json($currentBooking?->id),
-        currentUserId: @json($manager->id ?? null),
-        messagesUrl: @json(route('messages.index')),
-    };
-
-    function isNearBottom(container) {
-        return container.scrollHeight - container.scrollTop - container.clientHeight < 80;
-    }
-
-    function renderMessage(message) {
-        const isMine = message.sender_id === chatConfig.currentUserId;
-        const wrapper = document.createElement('div');
-        wrapper.className = `mb-3 d-flex ${isMine ? 'justify-content-end' : 'justify-content-start'}`;
-        wrapper.setAttribute('data-message-id', message.id);
-
-        const inner = document.createElement('div');
-        inner.style.maxWidth = '70%';
-
-        const bubble = document.createElement('div');
-        bubble.className = `p-3 rounded ${isMine ? 'bg-primary text-white' : 'bg-light'}`;
-
-        if (message.message) {
-            const text = document.createElement('div');
-            text.style.fontSize = '0.875rem';
-            text.textContent = message.message;
-            bubble.appendChild(text);
-        }
-
-        if (message.attachment_download_url) {
-            const attWrap = document.createElement('div');
-            attWrap.className = 'mt-2';
-            const link = document.createElement('a');
-            link.href = message.attachment_download_url;
-            link.target = '_blank';
-            link.rel = 'noopener';
-            link.className = `text-decoration-underline ${isMine ? 'text-white' : 'text-primary'}`;
-            link.innerHTML = '<i class="bi bi-paperclip"></i> Вложение';
-            attWrap.appendChild(link);
-            bubble.appendChild(attWrap);
-        }
-
-        const time = document.createElement('div');
-        time.style.fontSize = '0.75rem';
-        time.style.color = '#9ca3af';
-        time.style.marginTop = '0.25rem';
-        if (isMine) time.className = 'text-end';
-        time.textContent = new Date(message.created_at).toLocaleString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-
-        inner.appendChild(bubble);
-        inner.appendChild(time);
-        wrapper.appendChild(inner);
-
-        return wrapper;
-    }
-
-    async function pollMessages() {
-        if (!chatConfig.bookingId || !chatMessages) return;
-
-        try {
-            const res = await fetch(`${chatConfig.messagesUrl}?booking_id=${chatConfig.bookingId}`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            const lastNode = chatMessages.querySelector('[data-message-id]:last-child');
-            const lastId = lastNode ? Number(lastNode.getAttribute('data-message-id')) : 0;
-            const newItems = data.filter(m => m.id > lastId);
-            if (newItems.length === 0) return;
-
-            const shouldScroll = isNearBottom(chatMessages);
-            if (!lastNode) {
-                chatMessages.innerHTML = '';
-            }
-            newItems.forEach(m => chatMessages.appendChild(renderMessage(m)));
-            if (shouldScroll) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        } catch (e) {
-            // ignore
-        }
-    }
-
-    if (chatConfig.bookingId) {
-        setInterval(pollMessages, 5000);
-    }
-
-    function updateFileName(input) {
-        const attachmentName = document.getElementById('attachmentName');
-        const fileName = document.getElementById('fileName');
-        if (input.files && input.files[0]) {
-            fileName.textContent = input.files[0].name;
-            attachmentName.style.display = 'block';
-        }
-    }
-
-    function clearAttachment() {
-        const attachmentInput = document.getElementById('attachmentInput');
-        const attachmentName = document.getElementById('attachmentName');
-        attachmentInput.value = '';
-        attachmentName.style.display = 'none';
-    }
-
-</script>
-@endpush
