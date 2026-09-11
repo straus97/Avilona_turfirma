@@ -1402,3 +1402,256 @@ body {
 }
 
 .tc-balance__unit { font-size: 0.9rem; color: var(--cabinet-muted); }
+
+/* ==================================================================
+   17. Общие поверхности бронирования (E3-A3)
+   ------------------------------------------------------------------
+   Namespaced .booking-* примитивы для shared-страниц заявки
+   (bookings/show, bookings/edit, bookings/create). Построены
+   исключительно на токенах раздела 1; палитра/фреймворк не меняются.
+   Роль-специфичных поверхностей менеджера/админа/туриста не касаются.
+   ================================================================== */
+
+/* --- 17.1 Двухколоночная раскладка страницы заявки --------------- */
+.booking-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .booking-layout { grid-template-columns: 1fr; }
+}
+
+.booking-layout__main { min-width: 0; }
+.booking-layout__main > :last-child { margin-bottom: 0; }
+
+.booking-layout__side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+.booking-layout__side > .card-custom { margin-bottom: 0; }
+
+/* --- 17.2 Шапка заявки: идентификатор + статус + следующий шаг --- */
+.booking-hero__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.booking-hero__eyebrow {
+    margin-bottom: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cabinet-primary-strong);
+}
+
+.booking-hero__title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--cabinet-heading);
+}
+
+.booking-hero__meta {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--cabinet-muted);
+}
+
+.booking-hero__next {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    margin: 1.15rem 0 0;
+    padding: 0.9rem 1.05rem;
+    font-size: 0.9rem;
+    color: var(--cabinet-text);
+    background: var(--cabinet-primary-soft);
+    border: 1px solid var(--cabinet-border);
+    border-left: 4px solid var(--cabinet-primary);
+    border-radius: var(--cabinet-radius-md);
+}
+
+.booking-hero__next > i {
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--cabinet-primary-strong);
+}
+
+/* --- 17.3 Сетка «ключ — значение» ------------------------------- */
+.booking-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem 1.25rem;
+    margin: 0;
+}
+
+.booking-fact { min-width: 0; }
+.booking-fact--wide { grid-column: 1 / -1; }
+
+.booking-fact__label {
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cabinet-muted);
+}
+
+.booking-fact__value {
+    margin: 0;
+    font-weight: 600;
+    color: var(--cabinet-heading);
+    overflow-wrap: anywhere;
+}
+
+.booking-fact__value--muted { font-weight: 500; color: var(--cabinet-muted); }
+.booking-fact__value--price { font-size: 1.15rem; color: var(--cabinet-success); }
+
+/* --- 17.4 Абзац-подсказка внутри карточки ---------------------- */
+.booking-note {
+    margin: 0;
+    color: var(--cabinet-muted);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+/* --- 17.5 Строка с человеком (клиент / ответственный) ---------- */
+.booking-person {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.booking-person__avatar {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background: var(--cabinet-primary);
+    color: #fff;
+}
+
+.booking-person__body { min-width: 0; }
+.booking-person__name { font-weight: 600; color: var(--cabinet-heading); overflow-wrap: anywhere; }
+.booking-person__role { font-size: 0.78rem; color: var(--cabinet-muted); }
+
+/* --- 17.6 Кластеры действий ----------------------------------- */
+.booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    align-items: center;
+}
+
+.booking-actions form { margin: 0; }
+.booking-actions--split { justify-content: space-between; }
+
+.booking-actions--danger {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--cabinet-danger);
+}
+
+.booking-actions__note {
+    flex-basis: 100%;
+    display: flex;
+    gap: 0.4rem;
+    align-items: flex-start;
+    font-size: 0.82rem;
+    color: var(--cabinet-muted);
+}
+
+@media (max-width: 575.98px) {
+    .booking-actions .btn,
+    .booking-actions form { flex: 1 1 100%; }
+    .booking-actions form .btn { width: 100%; }
+    .booking-actions--split { flex-direction: column; align-items: stretch; }
+}
+
+/* --- 17.7 Список документов ----------------------------------- */
+.booking-doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.booking-doc {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--cabinet-border);
+    border-radius: var(--cabinet-radius-md);
+    background: var(--cabinet-surface);
+}
+
+.booking-doc__icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--cabinet-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    background: var(--cabinet-surface-sunken);
+    color: var(--cabinet-primary-strong);
+}
+
+.booking-doc__body { flex: 1 1 auto; min-width: 0; }
+.booking-doc__name { font-weight: 600; color: var(--cabinet-heading); overflow-wrap: anywhere; }
+
+.booking-doc__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--cabinet-muted);
+}
+
+.booking-doc__actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.booking-doc__actions form { margin: 0; }
+
+@media (max-width: 575.98px) {
+    .booking-doc { flex-wrap: wrap; }
+    .booking-doc__actions { width: 100%; }
+    .booking-doc__actions .btn { flex: 1 1 auto; }
+}
+
+/* --- 17.8 Формы заявки (create / edit) ------------------------ */
+.booking-form { max-width: 840px; }
+
+.booking-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0 1.25rem;
+}
+
+.booking-field--wide { grid-column: 1 / -1; }
+
+.booking-req { color: var(--cabinet-danger); font-weight: 700; }
+
+.booking-optional {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--cabinet-muted);
+}

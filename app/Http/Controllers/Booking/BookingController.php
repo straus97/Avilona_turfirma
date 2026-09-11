@@ -62,11 +62,29 @@ class BookingController extends Controller
         $tourId = $request->query('tour_id');
         $tour = $tourId ? Tour::findOrFail($tourId) : null;
         
-        // Получаем уникальные города вылета
-        $departureCities = Tour::select('departure_city')
-            ->distinct()
-            ->orderBy('departure_city')
-            ->pluck('departure_city');
+        // Устоявшийся набор городов вылета всегда доступен как подсказка,
+        // даже когда таблица Tour ещё пуста (например, в изолированной среде).
+        $establishedDepartureCities = [
+            'Санкт-Петербург',
+            'Москва',
+            'Екатеринбург',
+            'Новосибирск',
+            'Казань',
+        ];
+
+        $catalogDepartureCities = Tour::query()
+            ->whereNotNull('departure_city')
+            ->pluck('departure_city')
+            ->map(fn ($city) => trim((string) $city))
+            ->filter()
+            ->reject(fn (string $city) => in_array($city, $establishedDepartureCities, true))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $departureCities = collect($establishedDepartureCities)
+            ->merge($catalogDepartureCities)
+            ->values();
         
         // Получаем страны из таблицы countries_images
         $destinationCountries = \App\Models\Countries_image::orderBy('title')->pluck('title');
@@ -126,7 +144,21 @@ class BookingController extends Controller
             $rules['is_new_client'] = 'nullable|boolean';
         }
 
-        $validated = $request->validate($rules);
+        $attributeLabels = [
+            'departure_city'      => 'Город вылета',
+            'destination_country' => 'Страна',
+            'destination_city'    => 'Курорт / город',
+            'start_date'          => 'Дата вылета (с)',
+            'start_date_end'      => 'Дата вылета (по)',
+            'nights'              => 'Ночей (от)',
+            'nights_max'          => 'Ночей (до)',
+            'adults'              => 'Взрослых',
+            'children'            => 'Детей',
+            'children_ages.*'     => 'Возраст ребёнка',
+            'notes'               => 'Дополнительная информация',
+        ];
+
+        $validated = $request->validate($rules, [], $attributeLabels);
 
         // Данные клиента валидируются только для менеджера/админа и только
         // в том режиме, который подтверждён валидированным is_new_client.
@@ -139,6 +171,9 @@ class BookingController extends Controller
                 'client_email' => 'nullable|email|max:255|unique:users,email',
             ], [
                 'client_email.unique' => 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.',
+            ], [
+                'client_name'  => 'Имя клиента',
+                'client_email' => 'Email клиента',
             ]);
         } elseif ($isStaff) {
             $clientData = $request->validate([
@@ -151,6 +186,8 @@ class BookingController extends Controller
                         }
                     },
                 ],
+            ], [], [
+                'client_id' => 'Клиент',
             ]);
         }
 

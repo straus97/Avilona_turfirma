@@ -1,406 +1,373 @@
-@php
-    $layout = auth()->check() ? 'cabinet.layouts.app' : 'layouts.main';
-@endphp
+@extends('cabinet.layouts.app')
 
-@extends($layout)
-
-@section('title', auth()->check() ? 'Создать заявку' : 'Создать заявку - Авилона')
+@section('title', 'Новая заявка на тур')
 @section('meta_description', 'Создание заявки на тур')
 
-@auth
-    @section('sidebar')
-        @if(Auth::user()->isAdmin())
-            @include('cabinet.components.sidebar.admin')
-        @elseif(Auth::user()->isManager())
-            @include('cabinet.components.sidebar.manager')
-        @elseif(Auth::user()->isTourist())
-            @include('cabinet.components.sidebar.tourist')
-        @endif
-    @endsection
-@endauth
-
-@section('content')
-    @auth
-        <div class="page-header">
-            <h1 class="page-title">Создать заявку на тур</h1>
-            <p class="page-subtitle">Заполните форму ниже</p>
-        </div>
-
-        <div class="card-custom">
-            @if($tour)
-                <div class="alert alert-info border-left-info mb-4">
-                    <i class="bi bi-info-circle-fill"></i>
-                    Вы создаете заявку на тур: <strong>{{ $tour->title }}</strong>
-                </div>
-            @endif
-
-            <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
-                @csrf
-
-                @if($tour)
-                    <input type="hidden" name="tour_id" value="{{ $tour->id }}">
-                @endif
-
-                <!-- Информация о клиенте (только для менеджеров и админов) -->
-                @if(Auth::user()->hasAnyRole(['manager', 'admin']))
-                <div class="card-custom mb-4">
-                    <div class="card-header-custom">
-                        <div class="card-title-custom"><i class="bi bi-person-circle"></i> Информация о клиенте</div>
-                    </div>
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="isNewClient">
-                                            <strong>Новый клиент</strong> (клиента нет в базе)
-                                        </label>
-                                    </div>
-
-                                    @error('client_email')
-                                        <div class="alert alert-danger">
-                                            <i class="bi bi-exclamation-triangle"></i>
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-
-                                    <div id="existingClientBlock">
-                                        <label for="client_id" class="form-label">
-                                            Выберите клиента <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select @error('client_id') is-invalid @enderror"
-                                                id="client_id"
-                                                name="client_id">
-                                            <option value="">-- Выберите клиента --</option>
-                                            @foreach($clients as $client)
-                                                <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                                                    {{ $client->name }} ({{ $client->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('client_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div id="newClientBlock" style="display: none;">
-                                        <div class="mb-3">
-                                            <label for="client_name" class="form-label">
-                                                ФИО нового клиента <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control @error('client_name') is-invalid @enderror"
-                                                   id="client_name"
-                                                   name="client_name"
-                                                   value="{{ old('client_name') }}"
-                                                   placeholder="Иванов Иван Иванович">
-                                            @error('client_name')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="client_email" class="form-label">
-                                                Email клиента (опционально)
-                                            </label>
-                                            <input type="email"
-                                                   class="form-control @error('client_email') is-invalid @enderror"
-                                                   id="client_email"
-                                                   name="client_email"
-                                                   value="{{ old('client_email') }}"
-                                                   placeholder="client@example.com">
-                                            @error('client_email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                ФИО и email будут сохранены. После регистрации клиента в системе, заявка автоматически привяжется к его аккаунту
-                                            </small>
-                                        </div>
-                                    </div>
-            </div>
-            @endif
-
-            <!-- Направление -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div class="card-title-custom"><i class="bi bi-geo-alt-fill"></i> Направление</div>
-                </div>
-                                    <div class="row mb-3">
-                                        <div class="col-md-4">
-                                            <label for="departure_city" class="form-label">
-                                                Город вылета <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control @error('departure_city') is-invalid @enderror"
-                                                   id="departure_city"
-                                                   name="departure_city"
-                                                   value="{{ old('departure_city', $tour->departure_city ?? 'Санкт-Петербург') }}"
-                                                   list="departureCitiesList"
-                                                   required>
-                                            <datalist id="departureCitiesList">
-                                                @foreach($departureCities as $city)
-                                                    <option value="{{ $city }}">
-                                                @endforeach
-                                            </datalist>
-                                            @error('departure_city')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label for="destination_country" class="form-label">
-                                                Страна <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control @error('destination_country') is-invalid @enderror"
-                                                   id="destination_country"
-                                                   name="destination_country"
-                                                   value="{{ old('destination_country', $tour->destination_country ?? '') }}"
-                                                   list="destinationCountriesList"
-                                                   required>
-                                            <datalist id="destinationCountriesList">
-                                                @foreach($destinationCountries as $country)
-                                                    <option value="{{ $country }}">
-                                                @endforeach
-                                            </datalist>
-                                            @error('destination_country')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label for="destination_city" class="form-label">
-                                                Курорт/Город
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control @error('destination_city') is-invalid @enderror"
-                                                   id="destination_city"
-                                                   name="destination_city"
-                                                   value="{{ old('destination_city', $tour->destination_city ?? '') }}"
-                                                   list="destinationCitiesList"
-                                                   placeholder="Сначала выберите страну">
-                                            <datalist id="destinationCitiesList">
-                                                <!-- Будет заполнено динамически через JS -->
-                                            </datalist>
-                                            @error('destination_city')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                Выберите из списка или введите свой вариант
-                                            </small>
-                                        </div>
-                                    </div>
-            </div>
-
-            <!-- Даты и ночи -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div class="card-title-custom"><i class="bi bi-calendar-event-fill"></i> Даты поездки</div>
-                </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="start_date" class="form-label">
-                                                Дата вылета (с) <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="date"
-                                                   class="form-control @error('start_date') is-invalid @enderror"
-                                                   id="start_date"
-                                                   name="start_date"
-                                                   value="{{ old('start_date', $tour->start_date ?? '') }}"
-                                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                                   required>
-                                            @error('start_date')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                Начало диапазона дат
-                                            </small>
-                                        </div>
-
-                                        <div class="col-md-6 mb-3">
-                                            <label for="start_date_end" class="form-label">
-                                                Дата вылета (по)
-                                            </label>
-                                            <input type="date"
-                                                   class="form-control @error('start_date_end') is-invalid @enderror"
-                                                   id="start_date_end"
-                                                   name="start_date_end"
-                                                   value="{{ old('start_date_end') }}"
-                                                   min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                                            @error('start_date_end')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                Конец диапазона (необязательно)
-                                            </small>
-                                        </div>
-
-                                        <div class="col-md-6 mb-3">
-                                            <label for="nights" class="form-label">
-                                                Количество ночей (от) <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="number"
-                                                   class="form-control @error('nights') is-invalid @enderror"
-                                                   id="nights"
-                                                   name="nights"
-                                                   value="{{ old('nights', $tour->nights ?? 7) }}"
-                                                   min="1"
-                                                   max="30"
-                                                   required>
-                                            @error('nights')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                Минимальное количество
-                                            </small>
-                                        </div>
-
-                                        <div class="col-md-6 mb-3">
-                                            <label for="nights_max" class="form-label">
-                                                Количество ночей (до)
-                                            </label>
-                                            <input type="number"
-                                                   class="form-control @error('nights_max') is-invalid @enderror"
-                                                   id="nights_max"
-                                                   name="nights_max"
-                                                   value="{{ old('nights_max') }}"
-                                                   min="1"
-                                                   max="30">
-                                            @error('nights_max')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <small class="form-text text-muted">
-                                                Максимальное (необязательно)
-                                            </small>
-                                        </div>
-                                    </div>
-            </div>
-
-            <!-- Туристы -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div class="card-title-custom"><i class="bi bi-people-fill"></i> Количество туристов</div>
-                </div>
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <label for="adults" class="form-label">
-                                                Взрослых <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="number"
-                                                   class="form-control @error('adults') is-invalid @enderror"
-                                                   id="adults"
-                                                   name="adults"
-                                                   value="{{ old('adults', 2) }}"
-                                                   min="1"
-                                                   max="10"
-                                                   required>
-                                            @error('adults')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <label for="children_count" class="form-label">
-                                                Детей
-                                            </label>
-                                            <select class="form-select @error('children') is-invalid @enderror"
-                                                    id="children_count"
-                                                    name="children">
-                                                @for($i = 0; $i <= 5; $i++)
-                                                    <option value="{{ $i }}" {{ old('children', 0) == $i ? 'selected' : '' }}>
-                                                        {{ $i }}
-                                                    </option>
-                                                @endfor
-                                            </select>
-                                            @error('children')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Возраст детей -->
-                                    <div id="childrenAgesBlock" style="display: none;">
-                                        <label class="form-label">Возраст детей на момент окончания поездки</label>
-                                        <div id="childrenAgesContainer" class="row"></div>
-                                    </div>
-            </div>
-
-            <!-- Дополнительные пожелания -->
-            <div class="card-custom mb-4">
-                <div class="card-header-custom">
-                    <div class="card-title-custom"><i class="bi bi-chat-left-text-fill"></i> Дополнительная информация</div>
-                </div>
-                                    <label for="notes" class="form-label">
-                                        Пожелания и комментарии
-                                    </label>
-                                    <textarea class="form-control @error('notes') is-invalid @enderror"
-                                              id="notes"
-                                              name="notes"
-                                              rows="4"
-                                              placeholder="Укажите ваши пожелания по отелю, питанию, расположению, трансферу и другие важные детали...">{{ old('notes') }}</textarea>
-                                    @error('notes')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-            </div>
-
-                            <!-- Информация -->
-                            <div class="alert alert-info border-left-info">
-                                <i class="bi bi-info-circle-fill"></i>
-                                <strong>Обратите внимание:</strong> После создания заявки наш менеджер свяжется с вами в течение 24 часов для уточнения деталей и подтверждения бронирования.
-                            </div>
-
-                            <!-- Кнопки -->
-                            <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ route('cabinet.bookings') }}" class="btn btn-secondary btn-lg">
-                                    <i class="bi bi-arrow-left"></i> Отмена
-                                </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-check-circle-fill"></i> Создать заявку
-                                </button>
-                            </div>
-            </form>
-        </div>
-    @endauth
+@section('sidebar')
+    @if(Auth::user()->isAdmin())
+        @include('cabinet.components.sidebar.admin')
+    @elseif(Auth::user()->isManager())
+        @include('cabinet.components.sidebar.manager')
+    @elseif(Auth::user()->isTourist())
+        @include('cabinet.components.sidebar.tourist')
+    @endif
 @endsection
 
-@push('styles')
-<style>
-.form-label .text-danger {
-    font-size: 1.2em;
-}
+@section('content')
+@php
+    $isStaffCreator = Auth::user()->hasAnyRole(['manager', 'admin']);
+@endphp
 
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+<div class="page-header">
+    <h1 class="page-title">Новая заявка на тур</h1>
+    <p class="page-subtitle">
+        @if($isStaffCreator)
+            Заполните параметры поездки и данные клиента. Это заявка-обращение, а не бронирование в реальном времени.
+        @else
+            Опишите желаемую поездку — после отправки заявки ответственный сотрудник уточнит детали. Это заявка-обращение, а не бронирование в реальном времени.
+        @endif
+    </p>
+</div>
 
-.border-left-info {
-    border-left: 4px solid #36b9cc;
-}
+<div class="booking-form">
+    @if($tour)
+        <div class="tc-notice mb-4">
+            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+            <span>Заявка создаётся по каталожному туру: <strong>{{ $tour->title }}</strong></span>
+        </div>
+    @endif
 
-.card {
-    border-radius: 10px;
-    border: none;
-}
+    <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" novalidate>
+        @csrf
 
-.card-header {
-    border-radius: 10px 10px 0 0 !important;
-}
+        @if($tour)
+            <input type="hidden" name="tour_id" value="{{ $tour->id }}">
+        @endif
 
-.shadow-lg {
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
-}
+        {{-- Клиент — только для менеджера и администратора --}}
+        @if($isStaffCreator)
+            <section class="card-custom" aria-labelledby="create-client-title">
+                <div class="card-header-custom">
+                    <h2 class="card-title-custom" id="create-client-title">
+                        <i class="bi bi-person-circle" aria-hidden="true"></i> Клиент
+                    </h2>
+                </div>
 
-.child-age-input {
-    margin-bottom: 10px;
-}
-</style>
-@endpush
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="isNewClient">
+                        <strong>Новый клиент</strong> — его ещё нет в базе
+                    </label>
+                </div>
+
+                @error('client_email')
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ $message }}
+                    </div>
+                @enderror
+
+                <div id="existingClientBlock">
+                    <label for="client_id" class="form-label">
+                        Выберите клиента <span class="booking-req">*</span>
+                    </label>
+                    <select class="form-select @error('client_id') is-invalid @enderror" id="client_id" name="client_id">
+                        <option value="">— Выберите клиента —</option>
+                        @foreach($clients as $client)
+                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
+                                {{ $client->name }} ({{ $client->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('client_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div id="newClientBlock" style="display: none;">
+                    <div class="mb-3">
+                        <label for="client_name" class="form-label">
+                            ФИО нового клиента <span class="booking-req">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control @error('client_name') is-invalid @enderror"
+                               id="client_name"
+                               name="client_name"
+                               value="{{ old('client_name') }}"
+                               placeholder="Иванов Иван Иванович">
+                        @error('client_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="client_email" class="form-label">
+                            Email клиента <span class="booking-optional">— необязательно</span>
+                        </label>
+                        <input type="email"
+                               class="form-control @error('client_email') is-invalid @enderror"
+                               id="client_email"
+                               name="client_email"
+                               value="{{ old('client_email') }}"
+                               placeholder="client@example.com">
+                        @error('client_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">
+                            ФИО и email сохранятся. После регистрации клиента заявка привяжется к его аккаунту.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        @endif
+
+        {{-- Направление --}}
+        <section class="card-custom" aria-labelledby="create-direction-title">
+            <div class="card-header-custom">
+                <h2 class="card-title-custom" id="create-direction-title">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Направление
+                </h2>
+            </div>
+
+            <div class="booking-form-grid">
+                <div class="mb-3">
+                    <label for="departure_city" class="form-label">
+                        Город вылета <span class="booking-req">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control @error('departure_city') is-invalid @enderror"
+                           id="departure_city"
+                           name="departure_city"
+                           value="{{ old('departure_city', $tour->departure_city ?? 'Санкт-Петербург') }}"
+                           list="departureCitiesList"
+                           required>
+                    <datalist id="departureCitiesList">
+                        @foreach($departureCities as $city)
+                            <option value="{{ $city }}">
+                        @endforeach
+                    </datalist>
+                    @error('departure_city')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="destination_country" class="form-label">
+                        Страна <span class="booking-req">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control @error('destination_country') is-invalid @enderror"
+                           id="destination_country"
+                           name="destination_country"
+                           value="{{ old('destination_country', $tour->destination_country ?? '') }}"
+                           list="destinationCountriesList"
+                           required>
+                    <datalist id="destinationCountriesList">
+                        @foreach($destinationCountries as $country)
+                            <option value="{{ $country }}">
+                        @endforeach
+                    </datalist>
+                    @error('destination_country')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="destination_city" class="form-label">
+                        Курорт / город <span class="booking-optional">— необязательно</span>
+                    </label>
+                    <input type="text"
+                           class="form-control @error('destination_city') is-invalid @enderror"
+                           id="destination_city"
+                           name="destination_city"
+                           value="{{ old('destination_city', $tour->destination_city ?? '') }}"
+                           list="destinationCitiesList"
+                           placeholder="Сначала выберите страну">
+                    <datalist id="destinationCitiesList">
+                        <!-- Заполняется через JS по выбранной стране -->
+                    </datalist>
+                    @error('destination_city')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Выберите из списка или введите свой вариант.</div>
+                </div>
+            </div>
+        </section>
+
+        {{-- Даты и длительность --}}
+        <section class="card-custom" aria-labelledby="create-dates-title">
+            <div class="card-header-custom">
+                <h2 class="card-title-custom" id="create-dates-title">
+                    <i class="bi bi-calendar-event-fill" aria-hidden="true"></i> Даты и длительность
+                </h2>
+            </div>
+
+            <div class="booking-form-grid">
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">
+                        Дата вылета (с) <span class="booking-req">*</span>
+                    </label>
+                    <input type="date"
+                           class="form-control @error('start_date') is-invalid @enderror"
+                           id="start_date"
+                           name="start_date"
+                           value="{{ old('start_date', $tour->start_date ?? '') }}"
+                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                           required>
+                    @error('start_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Начало диапазона желаемых дат.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="start_date_end" class="form-label">
+                        Дата вылета (по) <span class="booking-optional">— необязательно</span>
+                    </label>
+                    <input type="date"
+                           class="form-control @error('start_date_end') is-invalid @enderror"
+                           id="start_date_end"
+                           name="start_date_end"
+                           value="{{ old('start_date_end') }}"
+                           min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+                    @error('start_date_end')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">Конец диапазона, если даты гибкие.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="nights" class="form-label">
+                        Ночей (от) <span class="booking-req">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @error('nights') is-invalid @enderror"
+                           id="nights"
+                           name="nights"
+                           value="{{ old('nights', $tour->nights ?? 7) }}"
+                           min="1"
+                           max="30"
+                           required>
+                    @error('nights')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="nights_max" class="form-label">
+                        Ночей (до) <span class="booking-optional">— необязательно</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @error('nights_max') is-invalid @enderror"
+                           id="nights_max"
+                           name="nights_max"
+                           value="{{ old('nights_max') }}"
+                           min="1"
+                           max="30">
+                    @error('nights_max')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </section>
+
+        {{-- Туристы --}}
+        <section class="card-custom" aria-labelledby="create-tourists-title">
+            <div class="card-header-custom">
+                <h2 class="card-title-custom" id="create-tourists-title">
+                    <i class="bi bi-people-fill" aria-hidden="true"></i> Туристы
+                </h2>
+            </div>
+
+            <div class="booking-form-grid">
+                <div class="mb-3">
+                    <label for="adults" class="form-label">
+                        Взрослых <span class="booking-req">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control @error('adults') is-invalid @enderror"
+                           id="adults"
+                           name="adults"
+                           value="{{ old('adults', 2) }}"
+                           min="1"
+                           max="10"
+                           required>
+                    @error('adults')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="children_count" class="form-label">
+                        Детей
+                    </label>
+                    <select class="form-select @error('children') is-invalid @enderror" id="children_count" name="children">
+                        @for($i = 0; $i <= 5; $i++)
+                            <option value="{{ $i }}" {{ old('children', 0) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                        @endfor
+                    </select>
+                    @error('children')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div id="childrenAgesBlock" style="display: none;">
+                <label class="form-label">Возраст детей на момент окончания поездки</label>
+                <div id="childrenAgesContainer" class="booking-form-grid"></div>
+            </div>
+        </section>
+
+        {{-- Дополнительно --}}
+        <section class="card-custom" aria-labelledby="create-notes-title">
+            <div class="card-header-custom">
+                <h2 class="card-title-custom" id="create-notes-title">
+                    <i class="bi bi-chat-left-text-fill" aria-hidden="true"></i> Пожелания и комментарии
+                </h2>
+            </div>
+
+            <div class="mb-1">
+                <label for="notes" class="form-label">
+                    Дополнительная информация <span class="booking-optional">— необязательно</span>
+                </label>
+                <textarea class="form-control @error('notes') is-invalid @enderror"
+                          id="notes"
+                          name="notes"
+                          rows="4"
+                          placeholder="Пожелания по отелю, питанию, расположению, трансферу и другие важные детали">{{ old('notes') }}</textarea>
+                @error('notes')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </section>
+
+        <div class="tc-notice mb-4">
+            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+            <span>
+                @if($isStaffCreator)
+                    После создания заявка будет доступна для дальнейшей работы.
+                @else
+                    После отправки заявки сотрудник свяжется с вами для уточнения деталей.
+                @endif
+            </span>
+        </div>
+
+        <div class="booking-actions booking-actions--split">
+            <a href="{{ route('cabinet.bookings') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Отправить заявку
+            </button>
+        </div>
+    </form>
+</div>
+@endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing form scripts...');
-
     // Переключение между существующим и новым клиентом
     const isNewClientCheckbox = document.getElementById('isNewClient');
-    console.log('isNewClientCheckbox found:', isNewClientCheckbox);
 
     if (isNewClientCheckbox) {
         const existingClientBlock = document.getElementById('existingClientBlock');
@@ -408,14 +375,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const clientIdSelect = document.getElementById('client_id');
         const clientNameInput = document.getElementById('client_name');
         const clientEmailInput = document.getElementById('client_email');
-
-        console.log('All elements found:', {
-            existingClientBlock,
-            newClientBlock,
-            clientIdSelect,
-            clientNameInput,
-            clientEmailInput
-        });
 
         // Синхронизация режима клиента. clearValues=false при первичной загрузке,
         // иначе значения old() затирались бы после ошибки валидации.
@@ -450,10 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Первичная синхронизация выполняется всегда, в обоих режимах.
         syncClientMode(false);
-
-        console.log('Event listener attached successfully');
-    } else {
-        console.log('isNewClientCheckbox not found - user is probably a tourist');
     }
 
     // Управление возрастом детей
@@ -476,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 for (let i = 0; i < count; i++) {
                     const col = document.createElement('div');
-                    col.className = 'col-md-4 mb-3';
+                    col.className = 'mb-3';
                     const selectedAge = oldAges[i] || '';
 
                     let optionsHtml = '<option value="">Выберите возраст</option>';
