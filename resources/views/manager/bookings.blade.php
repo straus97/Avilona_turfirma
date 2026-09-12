@@ -138,6 +138,9 @@
                                     </a>
                                     <a href="{{ route('cabinet.manager.chat', ['bookingId' => $booking->id]) }}" class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-chat"></i> Чат
+                                        @if(($unreadCounts[$booking->id] ?? 0) > 0)
+                                            <span class="badge bg-danger rounded-pill ms-1">{{ $unreadCounts[$booking->id] }}</span>
+                                        @endif
                                     </a>
                                     @if(in_array($booking->status, ['new', 'progress']))
                                         <form action="{{ route('bookings.confirm', $booking->id) }}" method="POST">

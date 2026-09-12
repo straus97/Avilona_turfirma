@@ -9,7 +9,73 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Панель менеджера</h1>
-    <p class="page-subtitle">Контролируйте заявки, клиентов и сообщения</p>
+    <p class="page-subtitle">{{ $manager->name }} — контролируйте заявки, клиентов и сообщения</p>
+</div>
+
+<!-- Требует внимания -->
+<div class="card-custom mb-4">
+    <div class="card-header-custom">
+        <div class="card-title-custom"><i class="bi bi-exclamation-circle"></i> Требует внимания</div>
+        <a href="{{ route('cabinet.manager.bookings', ['status' => 'progress']) }}" class="btn btn-sm btn-outline-primary">
+            Все в обработке
+        </a>
+    </div>
+
+    @if($attentionBookings->count() > 0)
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Клиент</th>
+                        <th>Направление</th>
+                        <th>Статус</th>
+                        <th>В ожидании</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($attentionBookings as $booking)
+                        <tr>
+                            <td><a href="{{ route('bookings.show', $booking->id) }}">#{{ $booking->id }}</a></td>
+                            <td>
+                                <div>{{ $booking->user->name ?? 'Удален' }}</div>
+                                <div class="text-muted small">{{ $booking->user->email ?? 'Нет email' }}</div>
+                            </td>
+                            <td>
+                                {{ $booking->destination_country }}
+                                @if($booking->destination_city)
+                                    <div class="text-muted small">{{ $booking->destination_city }}</div>
+                                @endif
+                            </td>
+                            <td>
+                                @include('cabinet.components.status-badge', ['status' => $booking->status])
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ $booking->created_at->diffForHumans(null, true) }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('cabinet.manager.chat', $booking->id) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-chat-dots"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        @include('cabinet.components.empty-state', [
+            'icon' => 'bi-check-circle',
+            'title' => 'Нет заявок, требующих внимания',
+            'description' => 'Все новые заявки и заявки в обработке уже разобраны',
+        ])
+    @endif
 </div>
 
 <!-- Статистика -->
@@ -55,7 +121,9 @@
             <div class="card-header-custom">
                 <div class="card-title-custom"><i class="bi bi-pie-chart"></i> Заявки по статусам</div>
             </div>
-            <canvas id="statusChart" height="200"></canvas>
+            <div class="manager-dashboard-chart">
+                <canvas id="statusChart"></canvas>
+            </div>
         </div>
     </div>
     <div class="col-md-6">
@@ -63,7 +131,9 @@
             <div class="card-header-custom">
                 <div class="card-title-custom"><i class="bi bi-graph-up"></i> Динамика заявок</div>
             </div>
-            <canvas id="bookingsChart" height="200"></canvas>
+            <div class="manager-dashboard-chart">
+                <canvas id="bookingsChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -163,14 +233,19 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const statusCtx = document.getElementById('statusChart');
     if (statusCtx && window.Chart) {
+        // Display-only wording fix to match the established E3 status label; server-side status values are untouched.
+        const statusChartLabels = {!! json_encode($chartLabels) !!}.map(function(label) {
+            return label === 'В работе' ? 'В обработке' : label;
+        });
         new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: {!! json_encode($chartLabels) !!},
+                labels: statusChartLabels,
                 datasets: [{
                     data: {!! json_encode($chartData) !!},
                     backgroundColor: ['#667eea', '#f6c23e', '#1cc88a', '#e74a3b', '#6f42c1'],
@@ -212,10 +287,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     legend: { display: false }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
-                    }
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : null;
+                            }
+                        }
+                    }]
                 }
             }
         });

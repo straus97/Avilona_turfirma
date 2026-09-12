@@ -51,7 +51,15 @@ class ManagerController extends Controller
         $unreadMessages = Message::where('receiver_id', $manager->id)
             ->where('is_read', false)
             ->count();
-        
+
+        // Заявки, требующие внимания: новые и в обработке, старейшие первыми.
+        $attentionBookings = Booking::where('manager_id', $manager->id)
+            ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
+            ->with(['user', 'tour'])
+            ->oldest()
+            ->limit(8)
+            ->get();
+
         // Последние заявки
         $recentBookings = Booking::where('manager_id', $manager->id)
             ->with(['user', 'tour'])
@@ -77,15 +85,15 @@ class ManagerController extends Controller
             Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_COMPLETED)->count(),
         ];
 
-        // Данные для графика динамики (последние 6 месяцев)
+        // Данные для графика динамики (последние 6 месяцев).
+        // Группировка выполняется на стороне PHP, а не в SQL (DATE_FORMAT
+        // недоступен на SQLite, используемом тестами) — набор дат ограничен
+        // заявками одного менеджера за 6 месяцев.
         $startMonth = Carbon::now()->subMonths(5)->startOfMonth();
         $monthlyBookings = Booking::where('manager_id', $manager->id)
             ->where('created_at', '>=', $startMonth)
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->keyBy('month');
+            ->get(['created_at'])
+            ->countBy(fn (Booking $booking) => $booking->created_at->format('Y-m'));
 
         $bookingsChartLabels = [];
         $bookingsChartData = [];
@@ -93,7 +101,7 @@ class ManagerController extends Controller
             $month = Carbon::now()->subMonths($i);
             $key = $month->format('Y-m');
             $bookingsChartLabels[] = $month->format('m.Y');
-            $bookingsChartData[] = $monthlyBookings->has($key) ? $monthlyBookings[$key]->count : 0;
+            $bookingsChartData[] = $monthlyBookings->get($key, 0);
         }
         
         return view('manager.dashboard', compact(
@@ -103,6 +111,7 @@ class ManagerController extends Controller
             'confirmedBookings',
             'completedBookings',
             'unreadMessages',
+            'attentionBookings',
             'recentBookings',
             'totalClients',
             'totalBookings',
@@ -195,7 +204,7 @@ class ManagerController extends Controller
         }
         
         $bookings = $query->latest()->paginate(15);
-        
+
         // Статистика для фильтров
         $statusCounts = [
             'all' => Booking::where('manager_id', $manager->id)->count(),
@@ -205,8 +214,17 @@ class ManagerController extends Controller
             'completed' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CANCELLED)->count(),
         ];
-        
-        return view('manager.bookings', compact('bookings', 'manager', 'statusCounts'));
+
+        // Непрочитанные сообщения по заявкам текущей страницы — один
+        // сгруппированный запрос вместо запроса на каждую строку таблицы.
+        $unreadCounts = Message::where('receiver_id', $manager->id)
+            ->where('is_read', false)
+            ->whereIn('booking_id', $bookings->pluck('id'))
+            ->selectRaw('booking_id, COUNT(*) as count')
+            ->groupBy('booking_id')
+            ->pluck('count', 'booking_id');
+
+        return view('manager.bookings', compact('bookings', 'manager', 'statusCounts', 'unreadCounts'));
     }
     
     /**
@@ -220,27 +238,40 @@ class ManagerController extends Controller
         $bookings = Booking::where('manager_id', $manager->id)
             ->with('user')
             ->get();
-        
+
+        // Непрочитанные по каждой заявке — один сгруппированный запрос вместо
+        // запроса на каждую заявку в списке переписок.
+        $unreadCounts = Message::where('receiver_id', $manager->id)
+            ->where('is_read', false)
+            ->whereIn('booking_id', $bookings->pluck('id'))
+            ->selectRaw('booking_id, COUNT(*) as count')
+            ->groupBy('booking_id')
+            ->pluck('count', 'booking_id');
+
         // Если указана заявка, получаем сообщения по ней
         $messages = collect();
         $currentBooking = null;
-        
+
         if ($bookingId) {
             $currentBooking = Booking::where('manager_id', $manager->id)
                 ->where('id', $bookingId)
                 ->with(['user', 'messages.sender'])
                 ->firstOrFail();
-            
+
             $messages = $currentBooking->messages()->with('sender')->orderBy('created_at', 'asc')->get();
-            
+
             // Отметить сообщения как прочитанные
             Message::where('booking_id', $bookingId)
                 ->where('receiver_id', $manager->id)
                 ->where('is_read', false)
                 ->update(['is_read' => true]);
+
+            // Локально отражаем то же самое, чтобы список слева не показывал
+            // устаревший счётчик по только что открытой заявке в этом ответе.
+            $unreadCounts->put($bookingId, 0);
         }
-        
-        return view('manager.chat', compact('bookings', 'messages', 'currentBooking', 'manager'));
+
+        return view('manager.chat', compact('bookings', 'messages', 'currentBooking', 'manager', 'unreadCounts'));
     }
     
     /**
@@ -264,20 +295,21 @@ class ManagerController extends Controller
             'cancelled' => Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_CANCELLED)->count(),
         ];
         
-        // Статистика по месяцам (текущий год)
+        // Статистика по месяцам (текущий год). Группировка выполняется на
+        // стороне PHP, а не в SQL (MONTH() недоступен на SQLite, используемом
+        // тестами) — набор строк ограничен заявками одного менеджера за год.
         $monthlyStats = Booking::where('manager_id', $manager->id)
             ->whereYear('created_at', date('Y'))
-            ->selectRaw('MONTH(created_at) as month, COUNT(*) as count, SUM(total_price) as revenue')
-            ->groupBy('month')
-            ->get()
-            ->keyBy('month');
-        
+            ->get(['created_at', 'total_price'])
+            ->groupBy(fn (Booking $booking) => (int) $booking->created_at->format('n'));
+
         // Заполняем пустые месяцы
         $monthlyData = [];
         for ($i = 1; $i <= 12; $i++) {
+            $monthGroup = $monthlyStats->get($i);
             $monthlyData[$i] = [
-                'count' => $monthlyStats->has($i) ? $monthlyStats[$i]->count : 0,
-                'revenue' => $monthlyStats->has($i) ? $monthlyStats[$i]->revenue : 0,
+                'count' => $monthGroup ? $monthGroup->count() : 0,
+                'revenue' => $monthGroup ? $monthGroup->sum('total_price') : 0,
             ];
         }
         

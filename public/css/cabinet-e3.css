@@ -512,6 +512,36 @@ body {
     padding: 0;
 }
 
+.manager-dashboard-chart {
+    position: relative;
+    height: 300px;
+}
+
+@media (max-width: 767.98px) {
+    .manager-dashboard-chart {
+        height: 260px;
+    }
+}
+
+.manager-statistics-chart {
+    position: relative;
+    height: 300px;
+}
+
+@media (max-width: 767.98px) {
+    .manager-statistics-chart {
+        height: 260px;
+    }
+}
+
+.manager-statistics-revenue-card .stat-card {
+    overflow: hidden;
+}
+
+.manager-statistics-revenue-card .stat-card > .d-flex > div:first-child {
+    min-width: 0;
+}
+
 .card-footer-custom {
     margin-top: 1rem;
     padding-top: 1rem;

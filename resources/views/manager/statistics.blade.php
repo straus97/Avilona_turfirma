@@ -37,10 +37,10 @@
             'color' => 'warning'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 manager-statistics-revenue-card">
         @include('cabinet.components.stat-card', [
-            'title' => 'Общий доход',
-            'value' => number_format($totalRevenue, 0, ',', ' ') . ' ₽',
+            'title' => 'Выручка (завершено)',
+            'value' => number_format($totalRevenue, 0, ',', "\u{00A0}") . "\u{00A0}₽",
             'icon' => 'bi-cash-stack',
             'color' => 'info'
         ])
@@ -53,7 +53,9 @@
             <div class="card-header-custom">
                 <div class="card-title-custom">Распределение по статусам</div>
             </div>
-            <canvas id="statusChart" style="height: 300px;"></canvas>
+            <div class="manager-statistics-chart">
+                <canvas id="statusChart"></canvas>
+            </div>
         </div>
     </div>
     <div class="col-md-6">
@@ -61,7 +63,9 @@
             <div class="card-header-custom">
                 <div class="card-title-custom">Заявки по месяцам ({{ date('Y') }})</div>
             </div>
-            <canvas id="monthlyChart" style="height: 300px;"></canvas>
+            <div class="manager-statistics-chart">
+                <canvas id="monthlyChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -185,6 +189,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
 <script>
     const statusCtx = document.getElementById('statusChart');
     if (statusCtx && window.Chart) {
@@ -229,10 +234,15 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
-                    }
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value : null;
+                            }
+                        }
+                    }]
                 }
             }
         });

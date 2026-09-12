@@ -31,10 +31,7 @@
                 <div data-chat-threads>
                 @foreach($bookings as $booking)
                     @php
-                        $unreadCount = \App\Models\Message::where('booking_id', $booking->id)
-                            ->where('receiver_id', $manager->id)
-                            ->where('is_read', false)
-                            ->count();
+                        $unreadCount = $unreadCounts->get($booking->id, 0);
                     @endphp
                     <a href="{{ route('cabinet.manager.chat', ['bookingId' => $booking->id]) }}"
                        data-chat-thread

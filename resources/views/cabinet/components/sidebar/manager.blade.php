@@ -21,6 +21,18 @@
             ->where('receiver_id', auth()->id())
             ->where('is_read', false)
             ->count();
+
+    /**
+     * Бейдж «Мои заявки» — реальные новые/в обработке заявки текущего
+     * менеджера. Тот же устойчивый паттерн, что и для непрочитанных выше:
+     * если авторитетное значение уже передано видом — берём его, иначе один
+     * ограниченный COUNT для аутентифицированного пользователя.
+     */
+    $sidebarPendingBookingsCount = $pendingBookingsCount
+        ?? \App\Models\Booking::query()
+            ->where('manager_id', auth()->id())
+            ->whereIn('status', [\App\Models\Booking::STATUS_NEW, \App\Models\Booking::STATUS_PROGRESS])
+            ->count();
 @endphp
 
 <div class="menu-section">
@@ -39,8 +51,8 @@
     <a href="{{ route('cabinet.manager.bookings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-journal-text" aria-hidden="true"></i>
         <span>Мои заявки</span>
-        @if(isset($pendingBookingsCount) && $pendingBookingsCount > 0)
-            <span class="menu-badge">{{ $pendingBookingsCount }}</span>
+        @if($sidebarPendingBookingsCount > 0)
+            <span class="menu-badge">{{ $sidebarPendingBookingsCount }}</span>
         @endif
     </a>
     @php($isActive = $navActive('cabinet.manager.chat*'))

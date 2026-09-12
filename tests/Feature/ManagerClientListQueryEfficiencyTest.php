@@ -243,7 +243,11 @@ class ManagerClientListQueryEfficiencyTest extends TestCase
         $countForFiveClients = $this->runClientsRequestAndCountBookingQueries($managerFive);
 
         $this->assertSame($countForOneClient, $countForFiveClients);
-        $this->assertSame(3, $countForOneClient);
+        // 3 queries for this slice's own client-list work (clients page +
+        // latest-booking hydration), plus 1 bounded query the sidebar
+        // partial now runs for the real "Мои заявки" pending-count badge
+        // (E3-A4) — none of the four grows with client count.
+        $this->assertSame(4, $countForOneClient);
         $this->assertNotSame(2 * 5, $countForFiveClients);
     }
 }
