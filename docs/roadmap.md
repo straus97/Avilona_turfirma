@@ -1,26 +1,32 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-09-05**
+Актуализировано: **2026-09-14**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `35f91b9e270cf68654877d42fc8b0d0d59d12458`**
-- Subject: `feat: finalize public visual system palette (E2-A7)`
-- Direct parent of current HEAD: `baf7487b5fe03c978cbc101ad2b7e6c72481c610` (`feat: complete public informational pages redesign (E2-A6-I2)`)
-- Documentation checkpoint after E2-A5: `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — previous docs-only commit, NOT the current HEAD
+- **Current authoritative application HEAD: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6`**
+- Subject: `feat: modernize admin cabinet (E3-A5)`
+- Direct parent of current HEAD: `e9440fc99e1205c7066fe0074e30f1afcb992c07` (`feat: modernize manager cabinet (E3-A4)`)
+- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `9fee7dfb` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
+- Documentation checkpoint after E2 closure: `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — previous docs-only commit, NOT the current HEAD
+- Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — predates E2-A6/E2-A7/E3, NOT the current HEAD
+- Application HEAD at E2 closure (E2-A7): `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — NOT the current HEAD
 - Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
 - Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
 - Stage 0–13: ✅ CLOSED
 - E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
-- **E2 — Public UX / UI / Design Redesign — ✅ COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
-- **Next major phase: E3 — Cabinet UX/UI/Design Modernization**
-- Full verified baseline: **1051 tests / 7180 assertions**, exit 0 (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
-  - after E2-A5 the baseline was **1006 tests / 7037 assertions**; historical E1-closure baseline was **1001 tests / 7013 assertions**; E2-A6 and E2-A7 added public E2-redesign regression tests (Reviews/Contacts E2, Reviews pagination = 6, Travel Dictionary E2, legal pages E2, public 404 E2) — expected, not a regression
+- E2 — Public UX / UI / Design Redesign — ✅ **COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
+- **E3 — Cabinet UX/UI/Design Modernization — ✅ E3-A1…E3-A5 CLOSED at application level** (Foundation, Tourist, Shared Booking, Manager, Admin)
+- S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5: no live public review cache layer, parity not required
+- **Next: E3-A6 cross-cabinet polish** (open, carried-forward point items — see E3 section) **and/or E4 — Post-redesign stabilization**, before E5
+- Full verified baseline: **1233 tests / 8023 assertions**, exit 0 (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
+  - after E2 closure the baseline was **1051 tests / 7180 assertions**; historical E1-closure baseline was **1001 tests / 7013 assertions**; E3-A1…E3-A5 added cabinet-redesign regression tests across foundation/tourist/shared-booking/manager/admin — expected, not a regression
+  - the final full run required a direct PHPUnit invocation with a temporary `-d memory_limit=1024M` CLI override (this machine's default 128M CLI memory_limit is insufficient for the grown suite) — not a `php.ini`/runtime configuration change
 - Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Browser QA: PASS for the final E2 public visual system at this stage; the user explicitly accepted the E2-A7 palette / visual system for this stage. The finished site will later be shown to company management; any resulting design feedback is a later polish/follow-up, not an open blocker for E2 closure.
-- The new documentation closure HEAD created after this task will be newer than the application checkpoint `35f91b9e…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
-- Project Sources: the active external set was generated from `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (after E2-A5) and is now **STALE** — E2-A6 and E2-A7 completed after it. Refresh is required after this docs-only E2-closure slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD and the future source-archive filename are not known and must not be invented.
+- Browser QA: PASS for Admin desktop and responsive/mobile surfaces (Dashboard, Bookings + booking detail, Chat, Finance, Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared sidebar/mobile shell) at E3-A5 closure.
+- The new documentation closure HEAD created after this task will be newer than the application checkpoint `9fee7dfb…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
+- Project Sources: the active external set was generated from `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (after E2-A5) and is now **STALE** — E2-A6, E2-A7, the E2 docs-closure commit (`886bde98`), and all of E3-A1…E3-A5 completed after it. A guarded refresh package targeting `886bde98` was prepared but never executed, and is itself now stale. Refresh is required after this docs-only E3-A5-closure slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD and the future source-archive filename are not known and must not be invented.
 
 ## Completed stages
 
@@ -151,11 +157,25 @@ Evidence:
 `withdrawn_at` enforced on the public path (fails safe even if stale `is_published=true`); Admin/Manager cannot publish/re-publish withdrawn reviews; explicit unpublish still possible; dedicated operator workflow records an already-received/verified withdrawal request; first timestamp preserved on repeated action; no public self-service withdrawal introduced.
 
 ### S13-R2 — Manager review cache parity relevance check
-⬜ TODO / READ-ONLY FIRST
+✅ **CLOSED** (resolved as part of E3-A5)
 
 Historical finding: Admin and Manager had asymmetric legacy review cache clearing.
 
-Current regression says public review pages do not use old cache layers and role publish/unpublish is immediately visible. First re-establish whether any live defect remains. If no live path depends on it, prefer removal/cleanup/no-op decision over unnecessary parity code. Not resolved by the Stage 13 docs closure or by E2 — kept explicitly open. Not reopened as an E1/E2 defect; **carried into E3** (cabinet pass) as a READ-ONLY relevance check unless a concrete live defect appears earlier. Do not automatically implement parity.
+Carried READ-ONLY through E1/E2 into E3 per its original plan; resolved during
+E3-A5. Re-verification found: `AdminController::updateReview()` does call
+`Cache::forget('home_reviews')` and `Cache::forget('reviews_page_'.$page)` (the
+historical source of the asymmetry — `ManagerController::updateReview()` has no
+equivalent call), but no controller anywhere in the app ever calls
+`Cache::remember('home_reviews', ...)` or `Cache::remember('reviews_page_...',
+...)` — those keys are never populated, and public Reviews/Home read reviews
+directly from the database, uncached. The `Cache::forget()` calls in Admin are
+therefore clearing entries that never exist (a no-op), not a working live cache
+layer. Public review changes are immediately visible regardless of which role
+saved the edit. **Conclusion: no live defect, no parity implementation
+necessary.** This is a completed relevance check / obsolete historical concern,
+not an outstanding defect — do not introduce new review-cache code merely for
+symmetry. If a real review cache layer is ever introduced later, this check
+must be re-run.
 
 ### S13-R3 — public registration consent/policy
 ✅ COMPLETE — `1cef8d2642b3785e3ab759d5eedbc1ddd65b9cf9`, `a3824554033f92c0ef8723c6ab1cdc2a5c6eaa0f`
@@ -173,9 +193,9 @@ Anonymous booking confirmed unsupported; dead anonymous `StoreController` and un
 Full PHPUnit (917 / 4012), Stage 13 migration/schema inventory (4 migrations, all Ran, 0 pending on canonical local MySQL), code/schema/legal/test reconciliation PASS. Password visibility UX (login + independent registration/confirmation toggles) shipped as part of this closure pass — `7818c54ee3315e34f26fc8c1e9796b9b6417e79c`.
 
 ### S13-R6 — Stage 13 closure docs
-✅ COMPLETE (this checkpoint)
+✅ COMPLETE (historical checkpoint)
 
-Documentation closure for Stage 13 was recorded in `docs/README.md` and this file at that time. This has since been superseded by the E1 closure docs and the E2-closure docs (this update). Project Sources refresh remains a separate required follow-up (see Current state) generated from the newest docs closure HEAD.
+Documentation closure for Stage 13 was recorded in `docs/README.md` and this file at that time. This has since been superseded by the E1 closure docs, the E2-closure docs, and now the E3-A5-closure docs (this update). Project Sources refresh remains a separate required follow-up (see Current state) generated from the newest docs closure HEAD.
 
 ## Endgame after Stage 13 — E1…E6
 
@@ -293,9 +313,9 @@ tour-search mechanics) are carried by E4 and E5 respectively. Design feedback
 from the later management review is a polish/follow-up, not an E2 blocker.
 
 ### E3 — cabinet UX/UI/design modernization
-⬜ **NEXT MAJOR PHASE**
+✅ **E3-A1…E3-A5 CLOSED at application level**
 
-Separate deep pass for tourist/manager/admin cabinets:
+Deep pass for tourist/manager/admin cabinets:
 
 - information architecture;
 - navigation/sidebars/headers;
@@ -308,17 +328,172 @@ Separate deep pass for tourist/manager/admin cabinets:
 - mobile/tablet/desktop behavior;
 - visual consistency with the completed public E2 system where appropriate.
 
-Design decisions must follow findings, not blanket restyling.
+Design decisions followed findings, not blanket restyling — Manager (E3-A4) and
+Admin (E3-A5) in particular already reused the E3 shared shell/components from
+earlier slices, so those two were targeted defect-fixing passes plus real
+information-hierarchy additions, not from-scratch rewrites.
 
-**Carried item: S13-R2 — Manager review cache parity relevance check.** Begins
-**READ-ONLY** in E3. Historical concern: Admin and Manager once had asymmetric
-legacy review cache clearing. Current evidence says old public review cache
-layers may no longer make this relevant. First re-establish whether a live
-defect still exists; if no live path depends on it, prefer removal/cleanup/no-op
-over unnecessary parity code. Do not automatically implement parity.
+Current authoritative application HEAD: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6`
+(`feat: modernize admin cabinet (E3-A5)`); direct parent —
+`e9440fc99e1205c7066fe0074e30f1afcb992c07`.
+
+#### E3-A1 — Shared Cabinet Foundation
+✅ COMPLETE — `66b5628daf76cc5a7d05d4ca2ab85e8f2be74c3d` (`feat: establish shared cabinet foundation (E3-A1)`)
+
+- new token/primitive CSS system `public/css/cabinet-e3.css`, shared base for tourist/manager/admin;
+- substantially simplified `resources/views/cabinet/layouts/app.blade.php` (shared shell markup, landmark/skip-link, mobile drawer control hooks);
+- new shared `cabinet/components/flash.blade.php` — one flash region covering every existing controller flash key, dismissible Bootstrap-alert structure;
+- updated `booking-card`, `empty-state`, `stat-card`, `status-badge` components;
+- updated per-role sidebar partials (admin/manager/tourist) with `aria-current` on the active item;
+- header user-dropdown trigger is a native `<button>`;
+- password-change-required redirect preserved through the shared shell.
+- Tests: `tests/Feature/CabinetSharedShellFoundationTest.php` — contract-level checks (landmarks per role, header profile/settings links, per-role sidebar contents, `aria-current`, shared flash region per controller key, validation-error visibility, password-change-required redirect, mobile drawer hooks, dismissible flash, native dropdown button).
+
+#### E3-A2 — Tourist Cabinet and cross-role chat continuity
+✅ COMPLETE — `6fdbe8eea6fb3eb5a7309396753efb8f2ae1f9ed` (`feat: modernize tourist cabinet and cross-role chat (E3-A2)`)
+
+- 9 tourist blade views moved onto the E3 shell/tokens; new `tc-*` CSS section in `cabinet-e3.css`;
+- `CabinetController::touristSidebarData()` reuses the existing unread-message formula so the chat badge is consistent across tourist pages; added `hasAnyDocuments` view flag and a `manager` eager-load on booking documents; removed dead `pendingBookingsCount` plumbing;
+- Bonus page stripped of an invented referral program/earning rules — only real balance/level/totals/transactions remain; wishlist replaced with an honest "in development" notice (route kept);
+- shared cross-role chat continuity layer: `public/js/cabinet-chat.js` (AJAX thread switching without reload for tourist/manager/admin, History API, per-user/context/booking localStorage drafts, AJAX send, polling race guard, progressive fallback);
+- the Admin-as-assignee contract is established here and preserved through every later slice: Admin may read any booking chat; only an Admin personally assigned to `booking.manager_id` may write; a non-assigned (observer) Admin stays strictly read-only — no composer, no poll, no read-state change;
+- logout correctly clears only the current user's own chat drafts (never a blanket `localStorage.clear()`).
+- Tests: `tests/Feature/TouristCabinetE3RedesignTest.php`, `tests/Feature/CabinetChatContinuityTest.php`.
+- Carried forward: AJAX thread-switch UX polish → E3-A6/E4.
+
+#### E3-A3 — Shared Booking Surfaces
+✅ COMPLETE — `2b567f04b52ebee0085a11e195e973b621a58031` (`feat: modernize shared booking surfaces (E3-A3)`)
+
+- the three shared role-sensitive views `resources/views/bookings/{show,edit,create}.blade.php` moved onto the E3 system; new `.booking-*` CSS section (tokens only, no new palette) in `cabinet-e3.css`;
+- new reusable partial `cabinet/components/booking-facts.blade.php` (key/value `<dl>`, skips null values);
+- dropped the dead unauthenticated/guest branch from all three views (the route group is always authed);
+- status-wording normalization: the canonical label for stored status `progress` is «В обработке» (source of truth: `Booking::availableStatuses()`/`getStatusLabelAttribute()`); the single dissenting `status-badge` component was fixed; stored values and `Booking::transitionMap()` untouched;
+- role-aware chat links added to booking `show` (owner → `cabinet.chat`, assigned manager → `cabinet.manager.chat`, admin → `cabinet.admin.chats` always, including observer mode), hidden for the owner until a manager is assigned;
+- **frozen and unchanged:** `BookingPolicy`, `BookingController` (no controller change at all), routes, middleware, validation, `transitionMap`, assignment rules, `User::assignableToBookings()`, document/message authorization.
+- Tests: `tests/Feature/SharedBookingSurfacesE3Test.php`.
+
+#### E3-A4 — Manager Cabinet
+✅ COMPLETE — `e9440fc99e1205c7066fe0074e30f1afcb992c07` (`feat: modernize manager cabinet (E3-A4)`)
+
+Manager pages already reused the shared E3 shell/components from earlier
+slices, so this was a targeted fix of concrete, verified defects plus a real
+"what needs attention" hierarchy on the dashboard — not a from-scratch
+overhaul:
+
+- Chart.js was never actually loaded on the Manager dashboard/statistics pages (canvases silently blank); wired up the already-installed `public/plugins/chart.js/Chart.min.js` asset — no new dependency;
+- removed a genuine N+1 in the Manager chat thread list (one `Message::count()` query per booking in the loop) — replaced with one grouped query in `ManagerController::chat()`;
+- the sidebar "Мои заявки" badge was dead code (no controller ever passed that variable) — wired a real fallback query mirroring the existing unread-messages fallback pattern;
+- **bigger find:** `ManagerController::dashboard()`/`::statistics()` used MySQL-only raw SQL (`DATE_FORMAT()`, `MONTH()`) for monthly chart/stat grouping — those two routes therefore had zero prior Feature-test coverage and would crash under the mandated SQLite `:memory:` runtime. Rewrote both to group in PHP (`Collection::countBy`/`groupBy`) — same output, portable, now testable;
+- added an unread-chat indicator to the work queue (`bookings.blade.php`) via a bounded grouped query scoped to the current page's booking ids;
+- reworded the ambiguous statistics label "Общий доход" (read as personal income) to "Выручка (завершено)" to match what it actually sums and to match `finance.blade.php`'s existing wording — no data change;
+- added an additive dashboard "Требует внимания" section (new/progress bookings, oldest-first) above the stat cards; the existing "Последние заявки" (all-status, newest-first) section kept as-is.
+- **Deliberately left untouched** (out of the explicit primary hierarchy, no proven defect): `manager/{finance,content,articles/*,reviews/*,documents,profile,settings}.blade.php`. `/manager/knowledge` confirmed orphan-from-navigation (shares a controller/view with "Контент" but has no sidebar entry of its own) — left as-is.
+- An independent read-only review (separate session, source/diff-level audit) confirmed manager-scoping is correct everywhere by construction (attention queue, bookings, chat, sidebar badge — no cross-manager leakage possible, every `whereIn` id list is pre-scoped to the authenticated manager); the `DATE_FORMAT()`/`MONTH()` → PHP rewrite is semantically equivalent to the original MySQL; the 3→4 query-count bump in `ManagerClientListQueryEfficiencyTest` is a real, deliberate +1 from the new sidebar badge fallback, not a regression. Verdict: zero MUST-FIX findings.
+- Tests: `tests/Feature/ManagerCabinetE3RedesignTest.php` (14 new); existing `ManagerClientListQueryEfficiencyTest` updated for the real, non-regressive query-count increase.
+- Carried forward to E3-A6/E4 (non-blocking polish, no proven defect): the sidebar's duplicate pending-badge query could reuse a value the controller already computed; `attentionBookings` eager-loads an unused `tour` relation; a few test-coverage gaps (multi-year stats grouping, zero-data chart, sender-side message exclusion).
+
+#### E3-A5 — Admin Cabinet
+✅ COMPLETE — `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — current authoritative application HEAD
+
+Final E3 slice: Admin Dashboard, Bookings (+ booking detail), Chat, Finance,
+Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared
+sidebar/mobile shell. Browser QA passed for desktop and responsive/mobile on
+every surface listed.
+
+Key product/security/UX contracts locked in by this closure:
+
+- **Admin chat: read vs write.** Admin may read any booking's chat. Only an
+  Admin personally assigned as `booking.manager_id` may write; a non-assigned
+  (observer) Admin stays strictly read-only — write attempts from a
+  non-assigned Admin are denied. Assigned-Manager and Tourist-participant
+  contracts preserved unchanged.
+- **Booking assignment semantics.** Assignment targets use the single source
+  of truth `User::assignableToBookings()` (query scope `scopeAssignableToBookings`
+  in `app/Models/User.php`): active Managers and active Admins are assignable;
+  Tourists are excluded; inactive employees cannot be newly assigned; a
+  historically assigned employee who has since been deactivated remains
+  visible in the UI as inactive (not hidden or swapped out).
+- **Dashboard.** Uses the five canonical booking statuses individually (not
+  collapsed into broader buckets); the completed-revenue label is honest (not
+  conflated with total/incomplete income).
+- **Finance.** The responsible-person breakdown includes both Managers and
+  Admins (not Managers only) — reflecting that an Admin can personally run
+  bookings too.
+- **Admin Profile/System IA split.** Personal settings consolidated under
+  "Мой профиль" (single entry point for personal data/password). "Система"
+  holds runtime/system information and cache management — an operational, not
+  personal, section.
+- **Logs safety.** Logs remain Admin-only, bounded, and read-only; no
+  standalone absolute-path disclosure.
+- **N+1 correction.** The Admin bookings page now eager-loads roles and reads
+  the loaded role collection instead of repeatedly calling `hasRole()` inside
+  booking/employee loops.
+- **Responsive closure.** Known responsive issues on Dashboard and Profile are
+  closed (including the ₽-wrap card-overflow item carried forward from
+  E3-A4).
+- Faker/apostrophe flakiness found in `AdminCabinetE3RedesignTest` during the
+  session was corrected before final validation.
+
+Tests: `tests/Feature/AdminCabinetE3RedesignTest.php` (45 tests, the bulk of
+the new coverage), plus new `tests/Feature/AdminLogsTest.php` (7),
+`tests/Feature/AdminSettingsTest.php` (16), and targeted updates to existing
+`CabinetHeaderRoleLinkConsistencyTest`, `CabinetSharedShellFoundationTest`,
+`MessageParticipantAuthorizationTest` for the new Admin write contract.
+
+#### E3 test baseline
+
+**Final verified baseline at E3-A5 closure (authoritative):**
+
+```text
+PHP 8.3.32
+PHPUnit 11.5.56
+SQLite :memory:
+full: 1233 tests / 8023 assertions, 0 failures, 0 errors
+```
+
+The single PHPUnit deprecation is the pre-existing XML schema deprecation, not
+a functional/code failure. The final full run required a direct PHPUnit
+invocation with a temporary `-d memory_limit=1024M` CLI override (this
+machine's default 128M CLI memory_limit is insufficient for a suite this
+size) — not a `php.ini`/runtime configuration change. PHPUnit against
+canonical MySQL remains forbidden.
+
+Before E3 (after E2 closure, `886bde98`): 1051 tests / 7180 assertions. Growth
+to 1233 / 8023 is spread across E3-A1…E3-A5 (foundation contracts, tourist,
+shared booking, manager, admin regression coverage) — expected, not a
+regression.
+
+#### E3 closure — carried-forward E3-A6 point items (not E3-A5 defects)
+
+Known, already-recorded point polish items from E3-A1…A4 that did not block
+their own slice's closure and are not invented after the fact:
+
+- chat AJAX thread-switch UX polish (from E3-A2);
+- Manager sidebar's duplicate pending-badge query could reuse a value the
+  controller already computes instead of a second COUNT (from E3-A4);
+- Manager `attentionBookings` eager-loads an unused `tour` relation (from
+  E3-A4);
+- test-coverage gaps: Manager multi-year stats grouping, zero-data chart,
+  sender-side message exclusion (from E3-A4);
+- tourist dashboard/index metric labels still read "В работе" as an aggregate
+  category (not a per-booking status label) — left alone at E3-A3 under the
+  "don't touch tourist views" constraint for that slice; a cosmetic
+  follow-up;
+- `/manager/knowledge` route confirmed orphan-from-navigation — not removed
+  (route removal was out of scope for E3-A4, risk of scope creep).
+
+This is not a single planned "E3-A6" feature — it is an open list of point
+findings awaiting a separate guarded slice. Do not invent a large new E3 scope
+on top of them.
+
+**S13-R2 — Manager review cache parity relevance check — ✅ CLOSED.** See the
+Stage 13 closed queue above: no live public review cache layer exists (the
+Admin `Cache::forget()` calls target keys that are never populated via
+`Cache::remember()`), so no parity implementation was necessary. Completed
+relevance check, not an outstanding defect.
 
 ### E4 — post-redesign stabilization / regression / browser-device / resilience
-⬜ PLANNED
+⬜ NEXT (after any remaining E3-A6 polish)
 
 - full regression;
 - browser/device QA;
