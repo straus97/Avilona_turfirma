@@ -232,10 +232,12 @@ class MessageParticipantAuthorizationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
-    // 11. Admin can send to the booking owner
+    // 11. Non-assigned Admin (observer) cannot send to the booking owner —
+    //     E3-A2 established observer-is-read-only contract, now enforced
+    //     server-side (was previously bypassable by a crafted request).
     // -----------------------------------------------------------------------
 
-    public function test_admin_can_send_to_booking_owner(): void
+    public function test_non_assigned_admin_observer_cannot_send_to_booking_owner(): void
     {
         $owner   = $this->makeUser(Role::TOURIST);
         $manager = $this->makeUser(Role::MANAGER);
@@ -246,20 +248,16 @@ class MessageParticipantAuthorizationTest extends TestCase
             'booking_id'  => $booking->id,
             'receiver_id' => $owner->id,
             'message'     => 'Hello tourist',
-        ])->assertOk();
+        ])->assertForbidden();
 
-        $this->assertDatabaseHas('messages', [
-            'booking_id'  => $booking->id,
-            'sender_id'   => $admin->id,
-            'receiver_id' => $owner->id,
-        ]);
+        $this->assertDatabaseCount('messages', 0);
     }
 
     // -----------------------------------------------------------------------
-    // 12. Admin can send to the assigned manager
+    // 12. Non-assigned Admin (observer) cannot send to the assigned manager
     // -----------------------------------------------------------------------
 
-    public function test_admin_can_send_to_assigned_manager(): void
+    public function test_non_assigned_admin_observer_cannot_send_to_assigned_manager(): void
     {
         $owner   = $this->makeUser(Role::TOURIST);
         $manager = $this->makeUser(Role::MANAGER);
@@ -270,26 +268,22 @@ class MessageParticipantAuthorizationTest extends TestCase
             'booking_id'  => $booking->id,
             'receiver_id' => $manager->id,
             'message'     => 'Hello manager',
-        ])->assertOk();
+        ])->assertForbidden();
 
-        $this->assertDatabaseHas('messages', [
-            'booking_id'  => $booking->id,
-            'sender_id'   => $admin->id,
-            'receiver_id' => $manager->id,
-        ]);
+        $this->assertDatabaseCount('messages', 0);
     }
 
     // -----------------------------------------------------------------------
-    // 13. Admin cannot send to an unrelated user
+    // 13. Assigned Admin cannot send to an unrelated user (receiver
+    //     validation still applies once write-authorization passes)
     // -----------------------------------------------------------------------
 
     public function test_admin_cannot_send_to_unrelated_user(): void
     {
         $owner   = $this->makeUser(Role::TOURIST);
-        $manager = $this->makeUser(Role::MANAGER);
         $admin   = $this->makeUser(Role::ADMIN);
         $other   = $this->makeUser(Role::TOURIST);
-        $booking = $this->makeBookingFor($owner, $manager->id);
+        $booking = $this->makeBookingFor($owner, $admin->id);
 
         $this->actingAs($admin)->postJson(route('messages.store'), [
             'booking_id'  => $booking->id,
@@ -299,6 +293,33 @@ class MessageParticipantAuthorizationTest extends TestCase
           ->assertJsonValidationErrors('receiver_id');
 
         $this->assertDatabaseCount('messages', 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // 13b. Non-assigned Admin (observer) can still READ/view a foreign
+    //      booking's messages — write authorization is stricter than read
+    //      authorization, per the E3-A2 observer contract.
+    // -----------------------------------------------------------------------
+
+    public function test_non_assigned_admin_observer_can_view_foreign_booking_messages(): void
+    {
+        $owner   = $this->makeUser(Role::TOURIST);
+        $manager = $this->makeUser(Role::MANAGER);
+        $admin   = $this->makeUser(Role::ADMIN);
+        $booking = $this->makeBookingFor($owner, $manager->id);
+
+        Message::query()->create([
+            'booking_id'  => $booking->id,
+            'sender_id'   => $owner->id,
+            'receiver_id' => $manager->id,
+            'message'     => 'Hello manager',
+            'is_read'     => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('messages.index', ['booking_id' => $booking->id]))
+            ->assertOk()
+            ->assertJsonCount(1);
     }
 
     // -----------------------------------------------------------------------

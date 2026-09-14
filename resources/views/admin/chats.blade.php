@@ -61,28 +61,38 @@
                                 <div style="font-weight: 600; font-size: 0.875rem;">Заявка #{{ $booking->id }}</div>
                                 <div style="font-size: 0.75rem; opacity: 0.8;">
                                     {{ $booking->user->name ?? 'Клиент' }}
-                                    @if($booking->manager)
-                                        • {{ $booking->manager->name }}
+                                </div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">
+                                    @if($booking->destination_country)
+                                        {{ $booking->destination_country }}
+                                        @if($booking->destination_city)
+                                            · {{ $booking->destination_city }}
+                                        @endif
                                     @else
-                                        • Менеджер не назначен
+                                        Не указано
                                     @endif
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div style="font-size: 0.75rem; opacity: 0.8;">
+                                    @if($booking->manager)
+                                        Ответственный: {{ $booking->manager->name }}
+                                    @else
+                                        Менеджер не назначен
+                                    @endif
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mt-1" data-chat-thread-badges>
                                     @include('cabinet.components.status-badge', ['status' => $booking->status])
-                                    <div class="d-flex gap-2">
-                                        @if($counts['manager'] > 0)
-                                            @if($booking->manager_id !== null && (int) $booking->manager_id === (int) Auth::id())
-                                                {{-- Заявку лично ведёт текущий администратор: это его собственные
-                                                     непрочитанные, а не входящие другого менеджера. --}}
-                                                <span class="badge bg-primary">Мне: {{ $counts['manager'] }}</span>
-                                            @else
-                                                <span class="badge bg-danger">Менеджер: {{ $counts['manager'] }}</span>
-                                            @endif
+                                    @if($counts['manager'] > 0)
+                                        @if($booking->manager_id !== null && (int) $booking->manager_id === (int) Auth::id())
+                                            {{-- Заявку лично ведёт текущий администратор: это его собственные
+                                                 непрочитанные, а не входящие другого менеджера. --}}
+                                            <span class="badge bg-primary">Мне: {{ $counts['manager'] }}</span>
+                                        @else
+                                            <span class="badge bg-danger">Менеджер: {{ $counts['manager'] }}</span>
                                         @endif
-                                        @if($counts['tourist'] > 0)
-                                            <span class="badge bg-warning text-dark">Турист: {{ $counts['tourist'] }}</span>
-                                        @endif
-                                    </div>
+                                    @endif
+                                    @if($counts['tourist'] > 0)
+                                        <span class="badge bg-warning text-dark">Турист: {{ $counts['tourist'] }}</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

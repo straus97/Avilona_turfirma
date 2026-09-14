@@ -18,7 +18,8 @@
             'title' => 'Баланс всего',
             'value' => number_format($totalBalance, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-wallet2',
-            'color' => 'primary'
+            'color' => 'primary',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -26,7 +27,8 @@
             'title' => 'Начислено',
             'value' => number_format($totalEarned, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-plus-circle',
-            'color' => 'success'
+            'color' => 'success',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -34,7 +36,8 @@
             'title' => 'Списано',
             'value' => number_format($totalSpent, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-dash-circle',
-            'color' => 'warning'
+            'color' => 'warning',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
 </div>
@@ -55,7 +58,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($accounts as $account)
+                @forelse($accounts as $account)
                     <tr>
                         <td>{{ $account->user?->name ?? '—' }}</td>
                         <td>{{ $account->level ?? '—' }}</td>
@@ -63,7 +66,11 @@
                         <td>{{ number_format($account->total_earned ?? 0, 0, ',', ' ') }} ₽</td>
                         <td>{{ number_format($account->total_spent ?? 0, 0, ',', ' ') }} ₽</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Бонусных счетов пока нет.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -91,7 +98,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($transactions as $trx)
+                @forelse($transactions as $trx)
                     <tr>
                         <td>{{ $trx->created_at?->format('d.m.Y H:i') ?? '—' }}</td>
                         <td>{{ $trx->bonusAccount?->user?->name ?? '—' }}</td>
@@ -106,7 +113,11 @@
                         <td>{{ $trx->reason ?? '—' }}</td>
                         <td>{{ number_format($trx->balance_after ?? 0, 0, ',', ' ') }} ₽</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Операций пока нет.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

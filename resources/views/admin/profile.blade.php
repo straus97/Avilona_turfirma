@@ -12,12 +12,11 @@
     <p class="page-subtitle">Личные данные и безопасность</p>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card-custom mb-4">
-            <div class="card-header-custom">
-                <div class="card-title-custom">Данные аккаунта</div>
-            </div>
+<div class="admin-profile-layout">
+    <div class="card-custom admin-profile-layout__account">
+        <div class="card-header-custom">
+            <div class="card-title-custom">Данные аккаунта</div>
+        </div>
             @if(session('status'))
                 <div class="alert alert-success">{{ session('status') }}</div>
             @endif
@@ -93,40 +92,7 @@
             </form>
         </div>
 
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <div class="card-title-custom">Безопасность</div>
-            </div>
-            <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #ecfdf3; border: 1px solid #d1fae5;">
-                <div>
-                    <div style="font-weight: 600;">Двухфакторная аутентификация</div>
-                    <div class="text-muted small">Скоро будет доступно</div>
-                </div>
-                <span class="badge bg-secondary">Скоро</span>
-            </div>
-        </div>
-
-        <div class="card-custom mt-4" style="border-color: #fee2e2;">
-            <div class="card-header-custom">
-                <div class="card-title-custom text-danger">Удаление аккаунта</div>
-            </div>
-            <p class="text-muted">Удаление необратимо. Требуется подтверждение паролем.</p>
-            <form method="POST" action="{{ route('cabinet.admin.destroy-account') }}" onsubmit="return confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')">
-                @csrf
-                @method('DELETE')
-                <div class="mb-3">
-                    <label class="form-label">Пароль</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-danger">
-                    <i class="bi bi-trash"></i> Удалить аккаунт
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card-custom mb-4">
+        <div class="card-custom admin-profile-layout__avatar">
             <div class="text-center">
                 @if(Auth::user()->avatar_path)
                     <img src="{{ Storage::url(Auth::user()->avatar_path) }}" alt="avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
@@ -143,7 +109,7 @@
             </div>
         </div>
 
-        <div class="card-custom">
+        <div class="card-custom admin-profile-layout__info">
             <h6 class="mb-3">Информация об аккаунте</h6>
             <div class="d-flex justify-content-between mb-2">
                 <span class="text-muted">Email:</span>
@@ -162,7 +128,91 @@
                 <span class="fw-bold">{{ Auth::user()->last_login_at ? Auth::user()->last_login_at->format('d.m.Y H:i') : 'Неизвестно' }}</span>
             </div>
         </div>
-    </div>
+
+        <div class="card-custom admin-profile-layout__security">
+            <div class="card-header-custom">
+                <div class="card-title-custom">Безопасность</div>
+            </div>
+            <form method="POST" action="{{ route('cabinet.admin.settings.password') }}">
+                @csrf
+                <div class="mb-3">
+                    <label class="form-label">Текущий пароль</label>
+                    <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" required>
+                    @error('current_password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Новый пароль</label>
+                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <small class="text-muted">Минимум 8 символов</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Подтверждение пароля</label>
+                    <input type="password" name="password_confirmation" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-key"></i> Сменить пароль
+                </button>
+            </form>
+
+            <div class="d-flex align-items-center justify-content-between p-3 rounded mt-4" style="background: #ecfdf3; border: 1px solid #d1fae5;">
+                <div>
+                    <div style="font-weight: 600;">Двухфакторная аутентификация</div>
+                    <div class="text-muted small">Скоро будет доступно</div>
+                </div>
+                <span class="badge bg-secondary">Скоро</span>
+            </div>
+        </div>
+
+        <div class="card-custom admin-profile-layout__notifications">
+            <div class="card-header-custom">
+                <div class="card-title-custom">Уведомления</div>
+            </div>
+            @php
+                $notificationSettings = json_decode(Auth::user()->notification_settings ?? '{}', true);
+            @endphp
+            <form method="POST" action="{{ route('cabinet.admin.settings.notifications') }}">
+                @csrf
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="email_notifications" id="email_notifications" {{ ($notificationSettings['email_notifications'] ?? true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="email_notifications">Email-уведомления</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="booking_updates" id="booking_updates" {{ ($notificationSettings['booking_updates'] ?? true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="booking_updates">Изменения по заявкам</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" name="new_messages" id="new_messages" {{ ($notificationSettings['new_messages'] ?? true) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="new_messages">Новые сообщения</label>
+                </div>
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-check-circle"></i> Сохранить
+                </button>
+            </form>
+        </div>
+
+        <div class="card-custom admin-profile-layout__delete" style="border-color: #fee2e2;">
+            <div class="card-header-custom">
+                <div class="card-title-custom text-danger">Удаление аккаунта</div>
+            </div>
+            <p class="text-muted">Удаление необратимо. Требуется подтверждение паролем.</p>
+            <form method="POST" action="{{ route('cabinet.admin.destroy-account') }}" onsubmit="return confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')">
+                @csrf
+                @method('DELETE')
+                <div class="mb-3">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Удалить аккаунт
+                </button>
+            </form>
+        </div>
 </div>
 
 <div class="modal fade" id="avatarModal" tabindex="-1">

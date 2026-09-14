@@ -51,7 +51,10 @@ class CabinetHeaderRoleLinkConsistencyTest extends TestCase
         $html = $this->renderHeader($user);
 
         $this->assertStringContainsString('href="' . route('cabinet.admin.profile') . '"', $html);
-        $this->assertStringContainsString('href="' . route('cabinet.admin.settings') . '"', $html);
+
+        // E3-A5: Admin personal menu merges "Настройки" into "Мой профиль" —
+        // the header dropdown must not expose a second personal settings link.
+        $this->assertStringNotContainsString('href="' . route('cabinet.admin.settings') . '"', $html);
 
         $this->assertStringNotContainsString('href="' . route('cabinet.manager.profile') . '"', $html);
         $this->assertStringNotContainsString('href="' . route('cabinet.manager.settings') . '"', $html);
@@ -66,7 +69,10 @@ class CabinetHeaderRoleLinkConsistencyTest extends TestCase
         $html = $this->renderHeader($user);
 
         $this->assertStringContainsString('href="' . route('cabinet.admin.profile') . '"', $html);
-        $this->assertStringContainsString('href="' . route('cabinet.admin.settings') . '"', $html);
+
+        // Same E3-A5 admin-only merge as above applies regardless of the
+        // secondary manager role.
+        $this->assertStringNotContainsString('href="' . route('cabinet.admin.settings') . '"', $html);
 
         $this->assertStringNotContainsString('href="' . route('cabinet.manager.profile') . '"', $html);
         $this->assertStringNotContainsString('href="' . route('cabinet.manager.settings') . '"', $html);

@@ -72,10 +72,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($users as $user)
+                @forelse($users as $user)
                     <tr>
                         <td>{{ $user->id }}</td>
-                        <td>{{ $user->name }}</td>
+                        <td>
+                            {{ $user->name }}
+                            @unless($user->is_active)
+                                <span class="badge bg-secondary">Неактивен</span>
+                            @endunless
+                        </td>
                         <td>{{ $user->email }}</td>
                         <td>
                             @if($user->email_verified_at)
@@ -99,7 +104,7 @@
                         <td>
                             <form action="{{ route('cabinet.admin.user-update-role', $user->id) }}" method="POST" class="d-flex gap-2">
                                 @csrf
-                                <select name="role" class="form-select form-select-sm">
+                                <select name="role" class="form-select form-select-sm admin-quick-role-select">
                                     @foreach($roles as $role)
                                         <option value="{{ $role->name }}" {{ $user->hasRole($role->name) ? 'selected' : '' }}>
                                             {{ $role->name === 'admin' ? 'Админ' : ($role->name === 'manager' ? 'Менеджер' : 'Турист') }}
@@ -130,7 +135,11 @@
                             </div>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">Пользователи не найдены.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

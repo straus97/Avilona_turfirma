@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserDocument;
 use App\Support\NewsHtmlSanitizer;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,12 +46,18 @@ class AdminController extends Controller
         // Статистика пользователей по ролям
         $usersByRole = Role::withCount('users')->get();
         
-        // Статистика заявок по статусам
+        // Статистика заявок по статусам (одна сгруппированная агрегация вместо N запросов)
+        $bookingCountsByStatus = Booking::query()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
         $bookingsByStatus = [
-            'pending' => Booking::whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
-            'confirmed' => Booking::where('status', Booking::STATUS_CONFIRMED)->count(),
-            'completed' => Booking::where('status', Booking::STATUS_COMPLETED)->count(),
-            'cancelled' => Booking::where('status', Booking::STATUS_CANCELLED)->count(),
+            Booking::STATUS_NEW => $bookingCountsByStatus[Booking::STATUS_NEW] ?? 0,
+            Booking::STATUS_PROGRESS => $bookingCountsByStatus[Booking::STATUS_PROGRESS] ?? 0,
+            Booking::STATUS_CONFIRMED => $bookingCountsByStatus[Booking::STATUS_CONFIRMED] ?? 0,
+            Booking::STATUS_COMPLETED => $bookingCountsByStatus[Booking::STATUS_COMPLETED] ?? 0,
+            Booking::STATUS_CANCELLED => $bookingCountsByStatus[Booking::STATUS_CANCELLED] ?? 0,
         ];
         
         // Статистика контента
@@ -193,7 +200,11 @@ class AdminController extends Controller
      */
     public function bookings(Request $request): View
     {
-        $query = Booking::with(['user', 'manager']);
+        // 'tour' — только для fallback-отображения направления, когда у заявки
+        // нет собственных destination_country/destination_city (см. Blade):
+        // без eager load обращение к $booking->tour при заполненном tour_id
+        // породило бы N+1 по видимым 20 строкам страницы.
+        $query = Booking::with(['user', 'manager', 'tour']);
         
         // Фильтр по статусу
         if ($request->has('status') && $request->status !== 'all') {
@@ -224,22 +235,27 @@ class AdminController extends Controller
         }
         
         $bookings = $query->latest()->paginate(20);
-        
-        // Список менеджеров
-        $managers = User::whereHas('roles', function ($query) {
-            $query->where('name', 'manager');
-        })->get();
-        
-        // Счетчики
+
+        // Кандидаты на роль ответственного — тот же единый источник правды,
+        // что и в форме назначения (User::assignableToBookings(): активные
+        // менеджеры и администраторы). Список в UI не должен быть уже или
+        // шире реального серверного правила.
+        // 'roles' — eager load одним запросом: Blade различает Админа в
+        // подписи (как в финансовой секции ниже), а User::hasRole() всегда
+        // бьёт в БД заново и дал бы лишние запросы на каждую заявку в списке.
+        $managers = User::assignableToBookings()->with('roles')->orderBy('name')->get();
+
+        // Счетчики (статусы — как в каноническом Booking::availableStatuses())
         $statusCounts = [
             'all' => Booking::count(),
-            'pending' => Booking::whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])->count(),
+            'new' => Booking::where('status', Booking::STATUS_NEW)->count(),
+            'progress' => Booking::where('status', Booking::STATUS_PROGRESS)->count(),
             'confirmed' => Booking::where('status', Booking::STATUS_CONFIRMED)->count(),
             'completed' => Booking::where('status', Booking::STATUS_COMPLETED)->count(),
             'cancelled' => Booking::where('status', Booking::STATUS_CANCELLED)->count(),
             'unassigned' => Booking::whereNull('manager_id')->count(),
         ];
-        
+
         return view('admin.bookings', compact('bookings', 'managers', 'statusCounts'));
     }
 
@@ -585,7 +601,7 @@ class AdminController extends Controller
         $user->notification_settings = json_encode($settings);
         $user->save();
 
-        return redirect()->route('cabinet.admin.settings')->with('success', 'Настройки уведомлений обновлены.');
+        return redirect()->route('cabinet.admin.profile')->with('success', 'Настройки уведомлений обновлены.');
     }
 
     /**
@@ -609,7 +625,7 @@ class AdminController extends Controller
         $user->temp_password = null;
         $user->save();
 
-        return redirect()->route('cabinet.admin.settings')->with('success', 'Пароль успешно изменен.');
+        return redirect()->route('cabinet.admin.profile')->with('success', 'Пароль успешно изменен.');
     }
 
     /**
@@ -891,25 +907,59 @@ class AdminController extends Controller
     {
         $completedRevenue = Booking::where('status', Booking::STATUS_COMPLETED)->sum('total_price');
         $totalPaid = Booking::sum('paid_amount');
-        $totalOutstanding = Booking::sum('total_price') - $totalPaid;
+        // Отменённые заявки не формируют задолженность — их total_price не в
+        // долг перед компанией, поэтому исключаются только из этой суммы.
+        // "Оплачено всего" выше остаётся суммой по всем заявкам намеренно:
+        // реально полученные деньги не перестают быть полученными из-за
+        // последующей отмены.
+        $totalOutstanding = Booking::where('status', '!=', Booking::STATUS_CANCELLED)->sum('total_price') - $totalPaid;
 
-        $monthlyStats = Booking::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count, SUM(total_price) as revenue, SUM(paid_amount) as paid")
-            ->groupBy('month')
-            ->orderBy('month', 'desc')
-            ->limit(6)
-            ->get()
-            ->reverse();
+        // Группировка по месяцам выполняется на стороне PHP, а не в SQL
+        // (DATE_FORMAT недоступен на SQLite, используемом тестами) — тот же
+        // подход, что и в ManagerController::dashboard(). Набор дат ограничен
+        // одним запросом за последние 6 месяцев с выборкой только нужных полей.
+        $startMonth = Carbon::now()->subMonths(5)->startOfMonth();
+        $recentBookingTotals = Booking::where('created_at', '>=', $startMonth)
+            ->get(['created_at', 'total_price', 'paid_amount'])
+            ->groupBy(fn (Booking $booking) => $booking->created_at->format('Y-m'));
 
+        $monthlyStats = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $key = $month->format('Y-m');
+            $bucket = $recentBookingTotals->get($key, collect());
+
+            $monthlyStats->push((object) [
+                'month' => $key,
+                'count' => $bucket->count(),
+                'revenue' => $bucket->sum('total_price'),
+                'paid' => $bucket->sum('paid_amount'),
+            ]);
+        }
+
+        // Выручка по ответственным сотрудникам — одним запросом через
+        // коррелированные withCount/withSum-подзапросы, а не Booking::sum()
+        // на каждого сотрудника в цикле (иначе число запросов росло бы
+        // линейно с их количеством). Ответственным по заявке может быть не
+        // только менеджер, но и администратор (см. User::assignableToBookings()
+        // и уже одобренный контракт назначения) — оба должны попадать в этот
+        // разбор, иначе сумма по строкам молча разойдётся с "Выручка
+        // (завершено)" наверху. Активность (is_active) здесь намеренно не
+        // фильтруется: уже неактивный сотрудник, реально завершивший заявки
+        // в прошлом, не должен незаметно исчезать из финансовой истории.
+        // 'roles' — тоже eager load одним запросом: Blade различает
+        // Админа/Менеджера в подписи строки (как на странице заявок), а
+        // User::hasRole() всегда бьёт в БД заново и на N сотрудников дал бы
+        // N лишних запросов к roles/role_user в обход того самого batching,
+        // который эта секция явно обязана сохранить.
         $managerStats = User::whereHas('roles', function ($q) {
-            $q->where('name', 'manager');
-        })->withCount(['managedBookings as completed_bookings_count' => function ($q) {
-            $q->where('status', Booking::STATUS_COMPLETED);
-        }])->get()->map(function ($manager) {
-            $manager->completed_revenue = Booking::where('manager_id', $manager->id)
-                ->where('status', Booking::STATUS_COMPLETED)
-                ->sum('total_price');
-            return $manager;
-        });
+            $q->whereIn('name', [User::ROLE_MANAGER, User::ROLE_ADMIN]);
+        })->with('roles')
+            ->withCount(['managedBookings as completed_bookings_count' => function ($q) {
+                $q->where('status', Booking::STATUS_COMPLETED);
+            }])->withSum(['managedBookings as completed_revenue' => function ($q) {
+                $q->where('status', Booking::STATUS_COMPLETED);
+            }], 'total_price')->get();
 
         $recentBookings = Booking::with(['user', 'manager'])
             ->latest()

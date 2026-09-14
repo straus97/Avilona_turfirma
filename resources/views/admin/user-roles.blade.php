@@ -29,6 +29,16 @@
                 @if($user->roles->count() > 0)
                     <ul class="list-group list-group-flush">
                         @foreach($user->roles as $role)
+                            @php
+                                // Тот же inline-маппинг слага в читаемую метку,
+                                // что уже используется ниже для бейджа и в форме
+                                // назначения роли на этой странице — только для
+                                // текста подтверждения. Слаг ($role->name) в
+                                // запрос не передаётся: маршрут удаления адресует
+                                // роль по $role->id, эта переменная — чисто
+                                // отображение.
+                                $roleLabel = $role->name === 'admin' ? 'Администратор' : ($role->name === 'manager' ? 'Менеджер' : 'Турист');
+                            @endphp
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 @if($role->name === 'admin')
                                     <span class="badge bg-danger">Администратор</span>
@@ -37,7 +47,7 @@
                                 @else
                                     <span class="badge bg-secondary">Турист</span>
                                 @endif
-                                <form action="{{ route('cabinet.admin.remove-role', [$user->id, $role->id]) }}" method="POST">
+                                <form action="{{ route('cabinet.admin.remove-role', [$user->id, $role->id]) }}" method="POST" onsubmit="return confirm('Удалить роль «{{ $roleLabel }}» у этого пользователя?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">

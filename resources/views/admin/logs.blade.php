@@ -15,7 +15,7 @@
 <div class="card-custom">
     <div class="card-header-custom d-flex align-items-center justify-content-between">
         <div class="card-title-custom">Последние 200 строк</div>
-        <div class="text-muted small">{{ $path }}</div>
+        <div class="text-muted small">Журнал приложения</div>
     </div>
     <div class="card-body">
         @if(count($lines) > 0)

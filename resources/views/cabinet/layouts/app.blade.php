@@ -132,7 +132,9 @@
                 @php
                     if (Auth::user()->hasAnyRole(['admin'])) {
                         $headerProfileRoute = 'cabinet.admin.profile';
-                        $headerSettingsRoute = 'cabinet.admin.settings';
+                        // Admin-only: personal "Настройки" merges into "Мой профиль" (E3-A5);
+                        // "Система" stays a sidebar-only destination, not a personal menu item.
+                        $headerSettingsRoute = null;
                     } elseif (Auth::user()->hasAnyRole(['manager'])) {
                         $headerProfileRoute = 'cabinet.manager.profile';
                         $headerSettingsRoute = 'cabinet.manager.settings';
@@ -145,9 +147,11 @@
                     <li><a class="dropdown-item" href="{{ route($headerProfileRoute) }}">
                         <i class="bi bi-person me-2" aria-hidden="true"></i> Мой профиль
                     </a></li>
+                    @if($headerSettingsRoute)
                     <li><a class="dropdown-item" href="{{ route($headerSettingsRoute) }}">
                         <i class="bi bi-gear me-2" aria-hidden="true"></i> Настройки
                     </a></li>
+                    @endif
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/">
                         <i class="bi bi-house me-2" aria-hidden="true"></i> На главную

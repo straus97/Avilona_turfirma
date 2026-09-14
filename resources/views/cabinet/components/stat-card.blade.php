@@ -1,15 +1,16 @@
 @php
     $color = $color ?? 'primary';
     $trend = $trend ?? null;
+    $valueClass = $valueClass ?? '';
 @endphp
 
 <div class="card-custom stat-card" style="border-left: 4px solid var(--{{ $color }}-color);">
     <div class="d-flex align-items-center justify-content-between gap-3">
-        <div style="flex: 1;">
+        <div style="flex: 1; min-width: 0;">
             <div style="font-size: 0.75rem; color: var(--cabinet-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
                 {{ $title }}
             </div>
-            <div style="font-size: 2rem; font-weight: 700; color: var(--cabinet-heading); line-height: 1;">
+            <div class="stat-card__value {{ $valueClass }}" style="font-weight: 700; color: var(--cabinet-heading); line-height: 1;">
                 {{ $value }}
             </div>
             @if($trend)

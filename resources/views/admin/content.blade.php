@@ -57,7 +57,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($recentArticles as $article)
+                @forelse($recentArticles as $article)
                     <tr>
                         <td>{{ $article->title }}</td>
                         <td class="text-muted">{{ $article->slug }}</td>
@@ -78,7 +78,11 @@
                             </form>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">Статей пока нет.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -103,7 +107,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($recentReviews as $review)
+                @forelse($recentReviews as $review)
                     <tr>
                         <td>{{ $review->name }}</td>
                         <td>{{ Str::limit($review->content, 80) }}</td>
@@ -121,7 +125,11 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Отзывов пока нет.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

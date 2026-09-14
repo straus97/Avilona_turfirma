@@ -81,7 +81,7 @@
     @php($isActive = $navActive('cabinet.admin.settings*'))
     <a href="{{ route('cabinet.admin.settings') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-gear" aria-hidden="true"></i>
-        <span>Настройки</span>
+        <span>Система</span>
     </a>
     @php($isActive = $navActive('cabinet.admin.logs'))
     <a href="{{ route('cabinet.admin.logs') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>

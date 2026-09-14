@@ -32,8 +32,8 @@ class MessageController extends Controller
         }
         
         $booking = Booking::findOrFail($bookingId);
-        $this->authorizeBooking($booking);
-        
+        $this->authorizeBookingRead($booking);
+
         $messages = Message::byBooking($bookingId)
             ->with(['sender', 'receiver'])
             ->orderBy('created_at', 'asc')
@@ -67,7 +67,7 @@ class MessageController extends Controller
         ]);
 
         $booking = Booking::findOrFail($validated['booking_id']);
-        $this->authorizeBooking($booking);
+        $this->authorizeBookingWrite($booking);
 
         // Validate that receiver_id is an actual booking participant (not the sender)
         $senderId = (int) Auth::id();
@@ -213,7 +213,7 @@ class MessageController extends Controller
             abort(404);
         }
 
-        $this->authorizeBooking($booking);
+        $this->authorizeBookingRead($booking);
 
         if (! $message->hasAttachment()) {
             abort(404);
@@ -231,24 +231,47 @@ class MessageController extends Controller
     }
 
     /**
-     * Проверка прав доступа к заявке
+     * Проверка прав доступа к заявке на чтение переписки (E3-A2: Admin
+     * может наблюдать за любой заявкой в режиме read-only).
      */
-    private function authorizeBooking(Booking $booking)
+    private function authorizeBookingRead(Booking $booking)
     {
         $user = Auth::user();
-        
+
         if ($user->isAdmin()) {
             return;
         }
-        
+
         if ($user->isManager() && $booking->manager_id === $user->id) {
             return;
         }
-        
+
         if ($user->isTourist() && $booking->user_id === $user->id) {
             return;
         }
-        
+
+        abort(403, 'У вас нет доступа к этой заявке');
+    }
+
+    /**
+     * Проверка прав доступа к заявке на отправку сообщений. В отличие от
+     * чтения, Admin здесь не получает безусловный доступ — писать может
+     * только Admin, лично назначенный на заявку (booking.manager_id ===
+     * его id), иначе наблюдатель мог бы обойти скрытый в разметке composer
+     * прямым запросом к API.
+     */
+    private function authorizeBookingWrite(Booking $booking)
+    {
+        $user = Auth::user();
+
+        if (($user->isAdmin() || $user->isManager()) && $booking->manager_id === $user->id) {
+            return;
+        }
+
+        if ($user->isTourist() && $booking->user_id === $user->id) {
+            return;
+        }
+
         abort(403, 'У вас нет доступа к этой заявке');
     }
 }

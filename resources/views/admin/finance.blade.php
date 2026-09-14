@@ -18,7 +18,8 @@
             'title' => 'Выручка (завершено)',
             'value' => number_format($completedRevenue, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-cash-stack',
-            'color' => 'success'
+            'color' => 'success',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -26,7 +27,8 @@
             'title' => 'Оплачено всего',
             'value' => number_format($totalPaid, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-credit-card',
-            'color' => 'primary'
+            'color' => 'primary',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -34,7 +36,8 @@
             'title' => 'Задолженность',
             'value' => number_format(max($totalOutstanding, 0), 0, ',', ' ') . ' ₽',
             'icon' => 'bi-exclamation-triangle',
-            'color' => 'warning'
+            'color' => 'warning',
+            'valueClass' => 'admin-stat-value--money',
         ])
     </div>
 </div>
@@ -51,7 +54,7 @@
                         <tr>
                             <th>Месяц</th>
                             <th>Заявок</th>
-                            <th>Выручка</th>
+                            <th>Стоимость заявок</th>
                             <th>Оплачено</th>
                         </tr>
                     </thead>
@@ -73,25 +76,32 @@
     <div class="col-md-6">
         <div class="card-custom">
             <div class="card-header-custom">
-                <div class="card-title-custom">Выручка по менеджерам</div>
+                <div class="card-title-custom">Выручка по ответственным сотрудникам</div>
             </div>
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Менеджер</th>
+                            <th>Ответственный</th>
                             <th>Завершено заявок</th>
                             <th>Выручка</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($managerStats as $manager)
+                        @forelse($managerStats as $employee)
                             <tr>
-                                <td>{{ $manager->name }}</td>
-                                <td>{{ $manager->completed_bookings_count }}</td>
-                                <td>{{ number_format($manager->completed_revenue ?? 0, 0, ',', ' ') }} ₽</td>
+                                <td>
+                                    {{ $employee->name }}
+                                    @if($employee->roles->contains('name', 'admin')) (Админ) @endif
+                                </td>
+                                <td>{{ $employee->completed_bookings_count }}</td>
+                                <td class="text-nowrap">{{ number_format($employee->completed_revenue ?? 0, 0, ',', ' ') }} ₽</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Ответственных пока нет.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -109,14 +119,14 @@
                 <tr>
                     <th>#</th>
                     <th>Клиент</th>
-                    <th>Менеджер</th>
+                    <th>Ответственный</th>
                     <th>Статус</th>
                     <th>Стоимость</th>
                     <th>Оплачено</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($recentBookings as $booking)
+                @forelse($recentBookings as $booking)
                     <tr>
                         <td>#{{ $booking->id }}</td>
                         <td>{{ $booking->user->name ?? '—' }}</td>
@@ -125,7 +135,11 @@
                         <td>{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} ₽</td>
                         <td>{{ number_format($booking->paid_amount ?? 0, 0, ',', ' ') }} ₽</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Заявок пока нет.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

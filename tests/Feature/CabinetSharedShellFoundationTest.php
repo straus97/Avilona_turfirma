@@ -57,7 +57,9 @@ class CabinetSharedShellFoundationTest extends TestCase
         // admin+manager ведёт себя как администратор.
         $adminHtml = $this->renderLayoutFor($this->makeUser([Role::ADMIN, Role::MANAGER]));
         $this->assertStringContainsString('href="' . route('cabinet.admin.profile') . '"', $adminHtml);
-        $this->assertStringContainsString('href="' . route('cabinet.admin.settings') . '"', $adminHtml);
+        // E3-A5: Admin header dropdown merges "Настройки" into "Мой профиль" —
+        // it must not carry a second personal settings link.
+        $this->assertStringNotContainsString('href="' . route('cabinet.admin.settings') . '"', $adminHtml);
         $this->assertStringNotContainsString('href="' . route('cabinet.manager.profile') . '"', $adminHtml);
     }
 

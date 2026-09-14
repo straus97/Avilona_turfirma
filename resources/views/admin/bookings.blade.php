@@ -39,7 +39,7 @@
                 <option value="unassigned" {{ request('manager') === 'unassigned' ? 'selected' : '' }}>Не назначен</option>
                 @foreach($managers as $mgr)
                     <option value="{{ $mgr->id }}" {{ request('manager') == $mgr->id ? 'selected' : '' }}>
-                        {{ $mgr->name }}
+                        {{ $mgr->name }}{{ $mgr->roles->contains('name', 'admin') ? ' (Админ)' : '' }}
                     </option>
                 @endforeach
             </select>
@@ -57,10 +57,11 @@
     </div>
     <div class="d-flex flex-wrap gap-2">
         <span class="badge bg-info">Всего: {{ $statusCounts['all'] }}</span>
-        <span class="badge bg-primary">Новые: {{ $statusCounts['new'] ?? 0 }}</span>
-        <span class="badge bg-warning text-dark">В обработке: {{ $statusCounts['pending'] ?? 0 }}</span>
+        <span class="badge bg-primary">Новые: {{ $statusCounts['new'] }}</span>
+        <span class="badge bg-warning text-dark">В обработке: {{ $statusCounts['progress'] }}</span>
         <span class="badge bg-success">Подтверждено: {{ $statusCounts['confirmed'] }}</span>
         <span class="badge bg-secondary">Завершено: {{ $statusCounts['completed'] }}</span>
+        <span class="badge bg-dark">Отменено: {{ $statusCounts['cancelled'] }}</span>
         <span class="badge bg-danger">Не назначено: {{ $statusCounts['unassigned'] }}</span>
     </div>
 </div>
@@ -75,7 +76,7 @@
                 <tr>
                     <th>#</th>
                     <th>Клиент</th>
-                    <th>Тур</th>
+                    <th>Направление</th>
                     <th>Дата</th>
                     <th>Статус</th>
                     <th>Менеджер</th>
@@ -83,11 +84,22 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($bookings as $booking)
+                @forelse($bookings as $booking)
                     <tr>
                         <td><strong>#{{ $booking->id }}</strong></td>
                         <td>{{ $booking->user->name ?? 'Неизвестно' }}</td>
-                        <td>{{ Str::limit($booking->tour_name ?? 'Без названия', 30) }}</td>
+                        <td>
+                            @if($booking->destination_country)
+                                {{ $booking->destination_country }}
+                                @if($booking->destination_city)
+                                    <div class="text-muted small">{{ $booking->destination_city }}</div>
+                                @endif
+                            @elseif($booking->tour)
+                                {{ $booking->tour->title }}
+                            @else
+                                Не указано
+                            @endif
+                        </td>
                         <td>
                             @if($booking->start_date)
                                 {{ \Carbon\Carbon::parse($booking->start_date)->format('d.m.Y') }}
@@ -101,11 +113,26 @@
                         <td>
                             <form action="{{ route('bookings.assign-manager', $booking->id) }}" method="POST" class="d-flex gap-2 align-items-center">
                                 @csrf
+                                @php
+                                    // Список кандидатов — только $managers (единый источник правды,
+                                    // User::assignableToBookings()). Если текущий ответственный туда
+                                    // не входит (стал неактивен), он не пропадает из select молча —
+                                    // добавляем его отдельной disabled-опцией только для отображения:
+                                    // это не расширяет право назначения, backend всё равно
+                                    // перепроверяет допустимость независимо от разметки.
+                                    $currentAssigneeIsEligible = $booking->manager_id !== null
+                                        && $managers->contains('id', $booking->manager_id);
+                                @endphp
                                 <select name="manager_id" class="form-select form-select-sm">
                                     <option value="">Выбрать...</option>
+                                    @if($booking->manager_id !== null && ! $currentAssigneeIsEligible && $booking->manager)
+                                        <option value="{{ $booking->manager_id }}" selected disabled>
+                                            {{ $booking->manager->name }} (неактивен)
+                                        </option>
+                                    @endif
                                     @foreach($managers as $mgr)
                                         <option value="{{ $mgr->id }}" {{ $booking->manager_id == $mgr->id ? 'selected' : '' }}>
-                                            {{ $mgr->name }}
+                                            {{ $mgr->name }}{{ $mgr->roles->contains('name', 'admin') ? ' (Админ)' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -118,7 +145,11 @@
                             </a>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Заявки не найдены.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
