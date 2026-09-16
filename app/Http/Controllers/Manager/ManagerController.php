@@ -55,7 +55,7 @@ class ManagerController extends Controller
         // Заявки, требующие внимания: новые и в обработке, старейшие первыми.
         $attentionBookings = Booking::where('manager_id', $manager->id)
             ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS])
-            ->with(['user', 'tour'])
+            ->with(['user'])
             ->oldest()
             ->limit(8)
             ->get();
@@ -104,6 +104,12 @@ class ManagerController extends Controller
             $bookingsChartData[] = $monthlyBookings->get($key, 0);
         }
         
+        // Переиспользуем уже посчитанные значения для бейджей сайдбара —
+        // без них частичный вид сайдбара выполнил бы те же COUNT-запросы
+        // повторно на этой же странице.
+        $pendingBookingsCount = $pendingBookings;
+        $unreadMessagesCount = $unreadMessages;
+
         return view('manager.dashboard', compact(
             'manager',
             'assignedBookings',
@@ -118,7 +124,9 @@ class ManagerController extends Controller
             'chartLabels',
             'chartData',
             'bookingsChartLabels',
-            'bookingsChartData'
+            'bookingsChartData',
+            'pendingBookingsCount',
+            'unreadMessagesCount'
         ));
     }
     

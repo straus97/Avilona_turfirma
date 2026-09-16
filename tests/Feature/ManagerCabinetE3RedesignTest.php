@@ -565,4 +565,178 @@ class ManagerCabinetE3RedesignTest extends TestCase
         $this->assertStringContainsString('href="' . route('cabinet.manager.statistics') . '"', $html);
         $this->assertStringContainsString('href="' . route('cabinet.manager.bookings') . '"', $html);
     }
+
+    // ------------------------------------------------------------------
+    // H. E3-A6-A — dashboard/query polish
+    // ------------------------------------------------------------------
+
+    /**
+     * Extracts the numeric "data: [...]" series rendered for the statistics
+     * monthly bar chart, in month order (index 0 = January).
+     *
+     * @return array<int, int>
+     */
+    private function extractStatisticsMonthlyChartData(string $html): array
+    {
+        $this->assertMatchesRegularExpression(
+            "/label: 'Заявок',\\s*data: \\[(.*?)\\]/s",
+            $html
+        );
+
+        preg_match("/label: 'Заявок',\\s*data: \\[(.*?)\\]/s", $html, $matches);
+
+        return collect(explode(',', $matches[1]))
+            ->map(fn (string $value): string => trim($value))
+            ->filter(fn (string $value): bool => $value !== '')
+            ->map(fn (string $value): int => (int) $value)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Extracts the numeric "data: [...]" series rendered for the dashboard
+     * bookings-dynamics bar chart, in chronological (oldest-first) order.
+     *
+     * @return array<int, int>
+     */
+    private function extractDashboardBookingsChartData(string $html): array
+    {
+        $chartScriptStart = strpos($html, 'bookingsCtx');
+        $this->assertNotFalse($chartScriptStart);
+        $snippet = substr($html, $chartScriptStart);
+
+        $this->assertMatchesRegularExpression("/data:\\s*\\[(.*?)\\]/s", $snippet);
+        preg_match("/data:\\s*\\[(.*?)\\]/s", $snippet, $matches);
+
+        return collect(explode(',', $matches[1]))
+            ->map(fn (string $value): string => trim($value))
+            ->filter(fn (string $value): bool => $value !== '')
+            ->map(fn (string $value): int => (int) $value)
+            ->values()
+            ->all();
+    }
+
+    public function test_statistics_monthly_breakdown_excludes_prior_year_bookings(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+        $client = $this->createUserWithRoles([Role::TOURIST]);
+
+        $currentYear = (int) date('Y');
+
+        // Current-year booking in March must be counted in the March bucket.
+        $this->createBooking(
+            $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_NEW),
+            \Carbon\Carbon::create($currentYear, 3, 15, 12)
+        );
+        // Prior-year booking in the same calendar month must never leak into
+        // the current-year monthly breakdown.
+        $this->createBooking(
+            $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_NEW),
+            \Carbon\Carbon::create($currentYear - 1, 3, 20, 12)
+        );
+
+        $html = $this->actingAs($manager)->get(route('cabinet.manager.statistics'))->assertOk()->getContent();
+
+        $monthly = $this->extractStatisticsMonthlyChartData($html);
+
+        $this->assertCount(12, $monthly);
+        $this->assertSame(1, $monthly[2], 'March (index 2) must reflect only the current-year booking.');
+
+        $othersSum = array_sum($monthly) - $monthly[2];
+        $this->assertSame(0, $othersSum, 'No other month should contain bookings.');
+    }
+
+    public function test_statistics_zero_data_renders_valid_twelve_month_zero_series(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+
+        $html = $this->actingAs($manager)->get(route('cabinet.manager.statistics'))->assertOk()->getContent();
+
+        $monthly = $this->extractStatisticsMonthlyChartData($html);
+
+        $this->assertCount(12, $monthly);
+        $this->assertSame(array_fill(0, 12, 0), $monthly);
+        $this->assertStringContainsString('0', $html);
+    }
+
+    public function test_dashboard_zero_data_renders_valid_six_month_zero_series(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+
+        $html = $this->actingAs($manager)->get(route('cabinet.manager.dashboard'))->assertOk()->getContent();
+
+        $bookingsChart = $this->extractDashboardBookingsChartData($html);
+
+        $this->assertCount(6, $bookingsChart);
+        $this->assertSame(array_fill(0, 6, 0), $bookingsChart);
+    }
+
+    public function test_dashboard_reuses_precomputed_counts_and_avoids_duplicate_sidebar_queries(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+        $client = $this->createUserWithRoles([Role::TOURIST]);
+
+        $this->createBooking(
+            $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_NEW),
+            now()
+        );
+        $this->createBooking(
+            $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_PROGRESS),
+            now()
+        );
+        $confirmedBooking = $this->createBooking(
+            $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_CONFIRMED),
+            now()
+        );
+        $this->makeMessage($confirmedBooking, $client->id, $manager->id, false);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        try {
+            $html = $this->actingAs($manager)->get(route('cabinet.manager.dashboard'))->assertOk()->getContent();
+            $log = DB::getQueryLog();
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+
+        // Shape of the sidebar's fallback "pending bookings" COUNT: a bookings
+        // COUNT scoped by manager and an IN (...) status list. If the sidebar's
+        // fallback still ran alongside the dashboard's own identical query,
+        // this shape would appear twice.
+        $pendingCountQueries = collect($log)->filter(function (array $entry): bool {
+            $sql = strtolower($entry['query']);
+
+            return str_contains($sql, 'select count(*)')
+                && str_contains($sql, 'from "bookings"')
+                && str_contains($sql, 'manager_id')
+                && str_contains($sql, ' in (');
+        });
+
+        // Shape of the sidebar's fallback "unread messages" COUNT: a messages
+        // COUNT scoped by receiver_id and is_read = false.
+        $unreadCountQueries = collect($log)->filter(function (array $entry): bool {
+            $sql = strtolower($entry['query']);
+
+            return str_contains($sql, 'select count(*)')
+                && str_contains($sql, 'from "messages"')
+                && str_contains($sql, 'receiver_id')
+                && str_contains($sql, 'is_read');
+        });
+
+        $this->assertCount(
+            1,
+            $pendingCountQueries,
+            'Pending bookings COUNT must run exactly once per dashboard load, not once for the controller and once for the sidebar fallback.'
+        );
+        $this->assertCount(
+            1,
+            $unreadCountQueries,
+            'Unread messages COUNT must run exactly once per dashboard load, not once for the controller and once for the sidebar fallback.'
+        );
+
+        // Badge values still correctly reflect the scoped counts after reuse.
+        $this->assertMatchesRegularExpression('/menu-badge">\s*2\s*</', $html);
+    }
 }
