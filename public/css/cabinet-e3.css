@@ -1171,6 +1171,13 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    /* Без contain:layout скроллируемое содержимое .tc-chat__threads / .tc-chat__messages
+       (overflow-y:auto, max-height) визуально обрезается корректно, но их
+       НЕОБРЕЗАННАЯ высота всё равно просачивается в document.scrollHeight — грид-
+       элемент с align-items:start учитывает полный intrinsic-размер потомка при
+       подсчёте scrollable overflow страницы. overflow:hidden здесь не помогает
+       (проверено), нужна именно строгая изоляция contain:layout. */
+    contain: layout;
     background: var(--cabinet-surface);
     border: 1px solid var(--cabinet-border);
     border-radius: var(--cabinet-radius-lg);

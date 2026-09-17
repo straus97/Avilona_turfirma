@@ -524,6 +524,61 @@ class CabinetChatContinuityTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // K. Прокрутка списка веток переживает подмену [data-chat-root]
+    //    (E3-A6-B browser-QA finding: список веток прыгал вверх при
+    //    переключении переписки)
+    // ------------------------------------------------------------------
+
+    public function test_tourist_chat_exposes_thread_list_scroll_hook(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+
+        $html = $this->actingAs($tourist)->get(route('cabinet.chat', $booking->id))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-chat-thread-scroll', $html);
+    }
+
+    public function test_manager_chat_exposes_thread_list_scroll_hook(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+
+        $html = $this->actingAs($manager)
+            ->get(route('cabinet.manager.chat', ['bookingId' => $booking->id]))
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-chat-thread-scroll', $html);
+    }
+
+    public function test_admin_chat_exposes_thread_list_scroll_hook(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+        $admin = $this->makeUser(Role::ADMIN);
+
+        $html = $this->actingAs($admin)
+            ->get(route('cabinet.admin.chats', ['bookingId' => $booking->id]))
+            ->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-chat-thread-scroll', $html);
+    }
+
+    public function test_shared_chat_module_preserves_thread_list_scroll_around_root_swap(): void
+    {
+        $source = file_get_contents(public_path('js/cabinet-chat.js'));
+        $this->assertNotFalse($source);
+
+        // Захват прокрутки списка веток до подмены корня и восстановление
+        // после — привязано к тому же стабильному хуку, что и Blade-разметка.
+        $this->assertStringContainsString('data-chat-thread-scroll', $source);
+        $this->assertMatchesRegularExpression(
+            '/oldThreadScroll[\s\S]*?ctx\.root\.replaceWith\(newRoot\)[\s\S]*?newThreadScroll/',
+            $source
+        );
+
+        // Восстановление не трогает прокрутку панели сообщений.
+        $this->assertStringContainsString('scrollToBottom(messagesContainer())', $source);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 

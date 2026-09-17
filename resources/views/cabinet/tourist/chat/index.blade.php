@@ -36,7 +36,7 @@
     {{-- Список переписок --}}
     <div class="tc-chat__panel">
         <h2 class="tc-chat__panel-title">Мои заявки</h2>
-        <div class="tc-chat__threads" data-chat-threads>
+        <div class="tc-chat__threads" data-chat-threads data-chat-thread-scroll>
             @foreach($bookings as $booking)
                 <a href="{{ route('cabinet.chat', $booking->id) }}"
                    data-chat-thread

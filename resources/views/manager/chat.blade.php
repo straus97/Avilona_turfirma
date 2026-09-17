@@ -25,7 +25,7 @@
     <p class="visually-hidden" data-chat-status role="status" aria-live="polite"></p>
 
     <div class="col-md-4">
-        <div class="card-custom" style="height: calc(100vh - 200px); overflow-y: auto;">
+        <div class="card-custom" style="height: calc(100vh - 200px); overflow-y: auto;" data-chat-thread-scroll>
             <h5 class="mb-3">Клиенты</h5>
             @if($bookings->count() > 0)
                 <div data-chat-threads>

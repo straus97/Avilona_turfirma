@@ -421,6 +421,46 @@ class MessageParticipantAuthorizationTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 17. Own sent messages never inflate the sender's own unread count
+    //     (E3-A6-B): unread-count is scoped by receiver, so a sender's own
+    //     outgoing messages to the peer must not appear in their own badge.
+    // -----------------------------------------------------------------------
+
+    public function test_sender_own_sent_messages_do_not_inflate_own_unread_count(): void
+    {
+        $owner   = $this->makeUser(Role::TOURIST);
+        $manager = $this->makeUser(Role::MANAGER);
+        $booking = $this->makeBookingFor($owner, $manager->id);
+
+        // Owner sends two messages to the manager: these are unread for the
+        // manager (the receiver), never for the owner (the sender).
+        Message::query()->create([
+            'booking_id'  => $booking->id,
+            'sender_id'   => $owner->id,
+            'receiver_id' => $manager->id,
+            'message'     => 'Hello manager 1',
+            'is_read'     => false,
+        ]);
+        Message::query()->create([
+            'booking_id'  => $booking->id,
+            'sender_id'   => $owner->id,
+            'receiver_id' => $manager->id,
+            'message'     => 'Hello manager 2',
+            'is_read'     => false,
+        ]);
+
+        $this->actingAs($owner)
+            ->getJson(route('messages.unread-count'))
+            ->assertOk()
+            ->assertJson(['count' => 0]);
+
+        $this->actingAs($manager)
+            ->getJson(route('messages.unread-count'))
+            ->assertOk()
+            ->assertJson(['count' => 2]);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 

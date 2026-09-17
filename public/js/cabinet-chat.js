@@ -399,6 +399,7 @@
             if (!ctx.unreadUrl) { return; }
             var link = document.querySelector('[data-chat-nav-unread]');
             if (!link) { return; }
+            var myGeneration = ctx.generation;
             fetch(ctx.unreadUrl, {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
@@ -406,6 +407,9 @@
                 if (!res.ok) { throw new Error('unread status ' + res.status); }
                 return res.json();
             }).then(function (payload) {
+                // Устаревший ответ: навигация уже перешла на более новую ветку —
+                // не затираем бейдж значением для уже покинутого состояния.
+                if (myGeneration !== ctx.generation) { return; }
                 var count = payload && typeof payload.count !== 'undefined' ? parseInt(payload.count, 10) : 0;
                 var badge = link.querySelector('.menu-badge');
                 if (count > 0) {
@@ -428,10 +432,25 @@
             try { target.focus({ preventScroll: true }); } catch (e) { try { target.focus(); } catch (e2) { /* noop */ } }
         }
 
+        function threadScrollContainer(root) {
+            return root.querySelector('[data-chat-thread-scroll]');
+        }
+
         function applyRoot(newRoot, url, push) {
             stopPoll();
+            var oldThreadScroll = threadScrollContainer(ctx.root);
+            var threadScrollTop = oldThreadScroll ? oldThreadScroll.scrollTop : null;
+
             ctx.root.replaceWith(newRoot);
             ctx.root = newRoot;
+
+            // Список веток живёт внутри подменяемого корня, поэтому подмена сама
+            // сбрасывает его прокрутку; восстанавливаем её сразу после вставки
+            // нового фрагмента в DOM, не трогая прокрутку панели сообщений.
+            var newThreadScroll = threadScrollContainer(newRoot);
+            if (newThreadScroll && threadScrollTop !== null) {
+                newThreadScroll.scrollTop = threadScrollTop;
+            }
             ctx.bookingId = newRoot.getAttribute('data-chat-current-booking-id') || null;
             // URL опроса/непрочитанных берём строго из нового фрагмента: у
             // администратора это ветка-зависимо — назначенная ему заявка отдаёт
