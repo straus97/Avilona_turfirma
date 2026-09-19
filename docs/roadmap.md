@@ -1,14 +1,16 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-09-14**
+Актуализировано: **2026-09-19**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6`**
-- Subject: `feat: modernize admin cabinet (E3-A5)`
-- Direct parent of current HEAD: `e9440fc99e1205c7066fe0074e30f1afcb992c07` (`feat: modernize manager cabinet (E3-A4)`)
-- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `9fee7dfb` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
+- **Current authoritative application HEAD: `ed550df8989b44e7305bdce6b6f5f063b82a2616`**
+- Subject: `fix: polish cross-role chat switching (E3-A6-B)`
+- Direct parent of current HEAD: `8a5018bdf6a95658d195772c05adc3c4f557329d` (`perf: polish manager dashboard queries (E3-A6-A)`)
+- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `ed550df8` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
+- Documentation checkpoint after E3-A5 (previous docs-only commit; current Project Sources base): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — predates E3-A6-A/B, NOT the current HEAD
+- Application HEAD at E3-A5 closure: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — NOT the current HEAD
 - Documentation checkpoint after E2 closure: `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — previous docs-only commit, NOT the current HEAD
 - Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — predates E2-A6/E2-A7/E3, NOT the current HEAD
 - Application HEAD at E2 closure (E2-A7): `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — NOT the current HEAD
@@ -18,15 +20,16 @@
 - E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
 - E2 — Public UX / UI / Design Redesign — ✅ **COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
 - **E3 — Cabinet UX/UI/Design Modernization — ✅ E3-A1…E3-A5 CLOSED at application level** (Foundation, Tourist, Shared Booking, Manager, Admin)
+- **E3-A6 — cross-cabinet point-polish — ✅ CLOSED** (E3-A6-A `8a5018bd`, E3-A6-B `ed550df8`); no E3-A6-C application slice is needed
 - S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5: no live public review cache layer, parity not required
-- **Next: E3-A6 cross-cabinet polish** (open, carried-forward point items — see E3 section) **and/or E4 — Post-redesign stabilization**, before E5
-- Full verified baseline: **1233 tests / 8023 assertions**, exit 0 (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
-  - after E2 closure the baseline was **1051 tests / 7180 assertions**; historical E1-closure baseline was **1001 tests / 7013 assertions**; E3-A1…E3-A5 added cabinet-redesign regression tests across foundation/tourist/shared-booking/manager/admin — expected, not a regression
+- **Next: E4 — Post-redesign stabilization** (full regression, browser/device QA, accessibility, remaining visual inconsistencies, 403/419/429/500/503 system error behaviour, production-readiness recheck), before E5 / E6. First E4 planning target: confirm the full-regression baseline and define the browser/device QA matrix. Not started.
+- Full verified baseline: **1242 tests / 8056 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
+  - at E3-A5 closure the baseline was **1233 tests / 8023 assertions**; after E2 closure **1051 tests / 7180 assertions**; historical E1-closure baseline **1001 tests / 7013 assertions**; E3-A1…E3-A6 added cabinet-redesign / polish regression tests — expected, not a regression
   - the final full run required a direct PHPUnit invocation with a temporary `-d memory_limit=1024M` CLI override (this machine's default 128M CLI memory_limit is insufficient for the grown suite) — not a `php.ini`/runtime configuration change
 - Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Browser QA: PASS for Admin desktop and responsive/mobile surfaces (Dashboard, Bookings + booking detail, Chat, Finance, Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared sidebar/mobile shell) at E3-A5 closure.
-- The new documentation closure HEAD created after this task will be newer than the application checkpoint `9fee7dfb…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
-- Project Sources: the active external set was generated from `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (after E2-A5) and is now **STALE** — E2-A6, E2-A7, the E2 docs-closure commit (`886bde98`), and all of E3-A1…E3-A5 completed after it. A guarded refresh package targeting `886bde98` was prepared but never executed, and is itself now stale. Refresh is required after this docs-only E3-A5-closure slice is reviewed, committed, pushed and a clean new documentation HEAD exists. The future docs HEAD and the future source-archive filename are not known and must not be invented.
+- Browser QA: PASS for Admin desktop and responsive/mobile surfaces (Dashboard, Bookings + booking detail, Chat, Finance, Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared sidebar/mobile shell) at E3-A5 closure; PASS for cross-role chat (Tourist, Manager, assigned Admin, observer Admin) at E3-A6-B closure.
+- The new documentation closure HEAD created after this task will be newer than the application checkpoint `ed550df8…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
+- Project Sources: the current external set is based on `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) and is now **STALE** relative to E3-A6-A / E3-A6-B. Refresh is **required only after** this docs-only E3-A6-closure diff is reviewed, committed as a separate docs-only checkpoint, pushed, and local / tracking / live origin are aligned on that future docs HEAD. The future docs HEAD, the future source-archive filename, timestamp, SHA256 and archive size are not known and must not be invented.
 
 ## Completed stages
 
@@ -195,7 +198,7 @@ Full PHPUnit (917 / 4012), Stage 13 migration/schema inventory (4 migrations, al
 ### S13-R6 — Stage 13 closure docs
 ✅ COMPLETE (historical checkpoint)
 
-Documentation closure for Stage 13 was recorded in `docs/README.md` and this file at that time. This has since been superseded by the E1 closure docs, the E2-closure docs, and now the E3-A5-closure docs (this update). Project Sources refresh remains a separate required follow-up (see Current state) generated from the newest docs closure HEAD.
+Documentation closure for Stage 13 was recorded in `docs/README.md` and this file at that time. This has since been superseded by the E1 closure docs, the E2-closure docs, the E3-A5-closure docs, and now the E3-A6-closure docs (this update). Project Sources refresh remains a separate required follow-up (see Current state) generated from the newest docs closure HEAD.
 
 ## Endgame after Stage 13 — E1…E6
 
@@ -283,7 +286,7 @@ The finished public site will later be shown to company management; any resultin
 - **Contacts:** modern E2 page layout; feedback-form UX; optional "Тема" field bounded `nullable|string|max:150` (`SendContactRequest`, `SendHomeRequest`); current public physical address; historical/legal registered address kept distinct where required; requisites recomposed into balanced desktop columns; existing PDFs preserved; "Как нас найти" treatment; POST throttling `throttle:8,1` (8 requests/minute) on the approved `contact.send` / `home.send` routes; internal form recipient stays `straus97@mail.ru` (`SendContactController` / `SendHomeController`); public email stays `avilonatur@bk.ru`. The two email roles must not be conflated.
 
 #### E2-A6-I2 — Informational / Legal / 404
-✅ COMPLETE — `baf7487b5fe03c978cbc101ad2b7e6c72481c610` (`feat: complete public informational pages redesign (E2-A6-I2)`) — direct parent of the current HEAD
+✅ COMPLETE — `baf7487b5fe03c978cbc101ad2b7e6c72481c610` (`feat: complete public informational pages redesign (E2-A6-I2)`) — direct parent of E2-A7
 
 - **Travel Dictionary:** legacy sidebar removed; exactly one rendered H1; E2 breadcrumbs/hero; native `details/summary` disclosure; content preserved; desktop multi-column Terms treatment; responsive mobile behaviour.
 - **Five legal pages** (`cookies`, `personal-data-consent`, `registration-personal-data-consent`, `review-personal-data-consent`, `review-publication-consent`): E2 presentation; legal copy preserved (no modernization/rewrite); breadcrumbs / H1 / readability improvements.
@@ -292,7 +295,7 @@ The finished public site will later be shown to company management; any resultin
 - **Shared desktop width:** generic E2 informational prose/hero/title no longer uses an unnecessarily narrow desktop character-width cap; on desktop it uses the available parent/container width; mobile behaviour unchanged; user explicitly approved this direction.
 
 #### E2-A7 — final public visual system
-✅ COMPLETE — `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — current authoritative application HEAD
+✅ COMPLETE — `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — authoritative application HEAD at E2 closure (superseded by E3)
 
 - User rejected the old dominant cream/peach/warm surfaces, warm tan borders and brown/orange primary CTA system.
 - Final accepted current-stage direction: white main-page base; cool light blue-gray alternate surfaces; cool neutral borders; sea-blue / blue primary actions; darker blue hover/strong states; orange retained only as a restrained decorative accent; consistent E2 button/form/alert/header/footer treatment.
@@ -313,7 +316,7 @@ tour-search mechanics) are carried by E4 and E5 respectively. Design feedback
 from the later management review is a polish/follow-up, not an E2 blocker.
 
 ### E3 — cabinet UX/UI/design modernization
-✅ **E3-A1…E3-A5 CLOSED at application level**
+✅ **E3-A1…E3-A5 CLOSED at application level; E3-A6 point-polish (A + B) CLOSED**
 
 Deep pass for tourist/manager/admin cabinets:
 
@@ -333,9 +336,9 @@ Admin (E3-A5) in particular already reused the E3 shared shell/components from
 earlier slices, so those two were targeted defect-fixing passes plus real
 information-hierarchy additions, not from-scratch rewrites.
 
-Current authoritative application HEAD: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6`
-(`feat: modernize admin cabinet (E3-A5)`); direct parent —
-`e9440fc99e1205c7066fe0074e30f1afcb992c07`.
+Current authoritative application HEAD: `ed550df8989b44e7305bdce6b6f5f063b82a2616`
+(`fix: polish cross-role chat switching (E3-A6-B)`); direct parent —
+`8a5018bdf6a95658d195772c05adc3c4f557329d` (`perf: polish manager dashboard queries (E3-A6-A)`).
 
 #### E3-A1 — Shared Cabinet Foundation
 ✅ COMPLETE — `66b5628daf76cc5a7d05d4ca2ab85e8f2be74c3d` (`feat: establish shared cabinet foundation (E3-A1)`)
@@ -393,9 +396,9 @@ overhaul:
 - Carried forward to E3-A6/E4 (non-blocking polish, no proven defect): the sidebar's duplicate pending-badge query could reuse a value the controller already computed; `attentionBookings` eager-loads an unused `tour` relation; a few test-coverage gaps (multi-year stats grouping, zero-data chart, sender-side message exclusion).
 
 #### E3-A5 — Admin Cabinet
-✅ COMPLETE — `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — current authoritative application HEAD
+✅ COMPLETE — `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — application HEAD at E3-A5 closure (superseded by E3-A6-A/B)
 
-Final E3 slice: Admin Dashboard, Bookings (+ booking detail), Chat, Finance,
+Final E3 redesign slice: Admin Dashboard, Bookings (+ booking detail), Chat, Finance,
 Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared
 sidebar/mobile shell. Browser QA passed for desktop and responsive/mobile on
 every surface listed.
@@ -440,16 +443,50 @@ the new coverage), plus new `tests/Feature/AdminLogsTest.php` (7),
 `CabinetHeaderRoleLinkConsistencyTest`, `CabinetSharedShellFoundationTest`,
 `MessageParticipantAuthorizationTest` for the new Admin write contract.
 
+#### E3-A6 — Cross-cabinet point-polish
+✅ **CLOSED** — two application slices (E3-A6-A, E3-A6-B); no further application commit required.
+
+Closes the point items carried forward from E3-A2 / E3-A3 / E3-A4 (not an invented new E3 scope).
+
+##### E3-A6-A — Manager dashboard / query polish
+✅ COMPLETE — `8a5018bdf6a95658d195772c05adc3c4f557329d` (`perf: polish manager dashboard queries (E3-A6-A)`)
+
+- the Manager dashboard now reuses its already-computed pending/unread values for the sidebar instead of triggering duplicate `COUNT` queries; the sidebar fallback for other Manager pages is intact;
+- the unused `tour` eager-load was removed only from the dashboard `attentionBookings` query;
+- regression coverage added: current-year monthly-stat exclusion, zero-data dashboard/statistics, query-count.
+- Tests: `tests/Feature/ManagerCabinetE3RedesignTest.php`.
+
+##### E3-A6-B — Cross-role chat UX polish
+✅ COMPLETE — `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — current authoritative application HEAD
+
+- shared AJAX chat thread switching (`public/js/cabinet-chat.js`) now preserves the thread-list `scrollTop`; Tourist / Manager / Admin use explicit stable `data-chat-thread-scroll` hooks;
+- browser Back/Forward stays on the same shared switch path;
+- `refreshNavUnread` stale-response race hardened using the existing generation model;
+- sender-side unread regression coverage added;
+- Admin observer / assigned-Admin security and UI contracts preserved unchanged;
+- Tourist chat page-level blank vertical overflow fixed with a narrow `.tc-chat__panel { contain: layout; }`; Manager/Admin chat layouts were measured and unaffected.
+- Browser QA PASS: Tourist, Manager, assigned Admin, observer Admin — scroll preservation, rapid switching, Back/Forward, draft, polling, unread behaviour, observer read-only and assigned-Admin composer behaviour.
+- Tests: `tests/Feature/CabinetChatContinuityTest.php`, `tests/Feature/MessageParticipantAuthorizationTest.php`.
+
+##### E3-A6 closure
+
+E3-A6 is **CLOSED**. **No E3-A6-C application slice is needed.** Two audited tails remain, both deliberately not changed:
+
+- **Tourist «В работе» wording.** The tourist aggregate metric counts `NEW` + `PROGRESS`; the filter option with the same wording maps only to `PROGRESS`; canonical `PROGRESS` wording elsewhere is «В обработке». No status/query semantics are wrong — this is cosmetic terminology consistency only. Deferred to E4 "remaining visual inconsistencies". A final replacement wording has **not** been decided.
+- **`/manager/knowledge`.** The legacy `/manager/knowledge` route is a GET redirect; the real `/cabinet/manager/knowledge` aliases `ManagerController::content()`; current sidebar/navigation uses «Контент». The route is functional and harmless — **left as-is**, not a defect requiring removal. Optional redirect/alias hygiene may be reconsidered during E4.
+
 #### E3 test baseline
 
-**Final verified baseline at E3-A5 closure (authoritative):**
+**Final verified baseline at E3-A6 closure (authoritative):**
 
 ```text
 PHP 8.3.32
 PHPUnit 11.5.56
 SQLite :memory:
-full: 1233 tests / 8023 assertions, 0 failures, 0 errors
+full: 1242 tests / 8056 assertions, 0 failures, 0 errors
 ```
+
+(At E3-A5 closure the baseline was 1233 tests / 8023 assertions.)
 
 The single PHPUnit deprecation is the pre-existing XML schema deprecation, not
 a functional/code failure. The final full run required a direct PHPUnit
@@ -459,32 +496,20 @@ size) — not a `php.ini`/runtime configuration change. PHPUnit against
 canonical MySQL remains forbidden.
 
 Before E3 (after E2 closure, `886bde98`): 1051 tests / 7180 assertions. Growth
-to 1233 / 8023 is spread across E3-A1…E3-A5 (foundation contracts, tourist,
-shared booking, manager, admin regression coverage) — expected, not a
-regression.
+to 1233 / 8023 (E3-A5) and 1242 / 8056 (E3-A6) is spread across E3-A1…E3-A6
+(foundation contracts, tourist, shared booking, manager, admin, dashboard-query
+and chat-polish regression coverage) — expected, not a regression.
 
-#### E3 closure — carried-forward E3-A6 point items (not E3-A5 defects)
+#### E3 closure — carried-forward point items: disposition
 
-Known, already-recorded point polish items from E3-A1…A4 that did not block
-their own slice's closure and are not invented after the fact:
+The point items carried forward from E3-A2…A4 are resolved as follows:
 
-- chat AJAX thread-switch UX polish (from E3-A2);
-- Manager sidebar's duplicate pending-badge query could reuse a value the
-  controller already computes instead of a second COUNT (from E3-A4);
-- Manager `attentionBookings` eager-loads an unused `tour` relation (from
-  E3-A4);
-- test-coverage gaps: Manager multi-year stats grouping, zero-data chart,
-  sender-side message exclusion (from E3-A4);
-- tourist dashboard/index metric labels still read "В работе" as an aggregate
-  category (not a per-booking status label) — left alone at E3-A3 under the
-  "don't touch tourist views" constraint for that slice; a cosmetic
-  follow-up;
-- `/manager/knowledge` route confirmed orphan-from-navigation — not removed
-  (route removal was out of scope for E3-A4, risk of scope creep).
-
-This is not a single planned "E3-A6" feature — it is an open list of point
-findings awaiting a separate guarded slice. Do not invent a large new E3 scope
-on top of them.
+- chat AJAX thread-switch UX polish (E3-A2) — ✅ done in E3-A6-B;
+- Manager sidebar duplicate pending-badge query (E3-A4) — ✅ done in E3-A6-A;
+- Manager `attentionBookings` unused `tour` eager-load (E3-A4) — ✅ done in E3-A6-A;
+- test-coverage gaps: Manager stats month grouping / zero-data / sender-side message exclusion (E3-A4) — ✅ covered in E3-A6-A / E3-A6-B;
+- tourist «В работе» aggregate wording — cosmetic, **deferred to E4** (no final wording decided);
+- `/manager/knowledge` — **left as-is**; optional alias hygiene may be reconsidered in E4.
 
 **S13-R2 — Manager review cache parity relevance check — ✅ CLOSED.** See the
 Stage 13 closed queue above: no live public review cache layer exists (the
@@ -493,14 +518,18 @@ Admin `Cache::forget()` calls target keys that are never populated via
 relevance check, not an outstanding defect.
 
 ### E4 — post-redesign stabilization / regression / browser-device / resilience
-⬜ NEXT (after any remaining E3-A6 polish)
+⬜ **NEXT** (E3-A6 is closed; E4 not started)
 
 - full regression;
 - browser/device QA;
 - accessibility;
-- remaining visual inconsistencies;
+- remaining visual inconsistencies (includes the deferred tourist «В работе» wording tail; final copy not decided);
 - existing/missing system error behaviour including 403/419/429/500/503 where appropriate (404 already handled in E2-A6-I2);
 - production-readiness repeat.
+
+Optional hygiene that may be reconsidered here: legacy `/manager/knowledge` redirect/alias (functional and harmless today, not a defect).
+
+First E4 planning target: confirm the full-regression baseline (1242 / 8056) and define the browser/device QA matrix. No implementation has started.
 
 ### E5 — TOUR SEARCH / AGGREGATION — FINAL PRODUCT BLOCK
 ⬜ DELIBERATELY LAST
