@@ -114,7 +114,7 @@
                     <img src="{{ Storage::url(Auth::user()->avatar_path) }}" alt="avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
                 @else
                     <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        {{ Str::upper(Str::substr(Auth::user()->name, 0, 1)) }}
                     </div>
                 @endif
                 <h5>{{ Auth::user()->name }}</h5>

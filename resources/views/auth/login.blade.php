@@ -1,4 +1,4 @@
-<x-guest-layout>
+<x-guest-layout heading="Вход">
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -20,6 +20,7 @@
                 <x-text-input id="password" class="block w-full pr-10"
                                 type="password"
                                 x-bind:type="showPassword ? 'text' : 'password'"
+                                data-custom-reveal
                                 name="password"
                                 required autocomplete="current-password" />
 

@@ -40,7 +40,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px;">
-                                        {{ strtoupper(substr($client->name, 0, 1)) }}
+                                        {{ Str::upper(Str::substr($client->name, 0, 1)) }}
                                     </div>
                                     <strong>{{ $client->name }}</strong>
                                 </div>

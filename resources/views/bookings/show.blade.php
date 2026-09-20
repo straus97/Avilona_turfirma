@@ -216,7 +216,7 @@
                 </div>
                 <div class="booking-person">
                     <span class="booking-person__avatar" aria-hidden="true">
-                        {{ mb_strtoupper(mb_substr($booking->user?->name ?? '—', 0, 1)) }}
+                        {{ Str::upper(Str::substr($booking->user?->name ?? '—', 0, 1)) }}
                     </span>
                     <div class="booking-person__body">
                         <div class="booking-person__name">{{ $booking->user?->name ?? 'Пользователь удалён' }}</div>
@@ -538,7 +538,7 @@
             @if($booking->manager)
                 <div class="booking-person mb-3">
                     <span class="booking-person__avatar" aria-hidden="true">
-                        {{ mb_strtoupper(mb_substr($booking->manager->name, 0, 1)) }}
+                        {{ Str::upper(Str::substr($booking->manager->name, 0, 1)) }}
                     </span>
                     <div class="booking-person__body">
                         <div class="booking-person__name">{{ $booking->manager->name }}</div>

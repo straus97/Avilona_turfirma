@@ -55,7 +55,7 @@
     @if($booking->manager)
         <div class="d-flex align-items-center gap-2 pt-3 border-top">
             <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px;">
-                {{ strtoupper(substr($booking->manager->name, 0, 1)) }}
+                {{ Str::upper(Str::substr($booking->manager->name, 0, 1)) }}
             </div>
             <div style="flex: 1;">
                 <div style="font-size: 0.75rem; color: var(--cabinet-muted);">Менеджер</div>

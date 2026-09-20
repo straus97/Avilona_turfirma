@@ -1,4 +1,4 @@
-<x-guest-layout>
+<x-guest-layout heading="Регистрация">
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -24,6 +24,7 @@
                 <x-text-input id="password" class="block w-full pr-10"
                                 type="password"
                                 x-bind:type="showPassword ? 'text' : 'password'"
+                                data-custom-reveal
                                 name="password"
                                 required autocomplete="new-password" />
 
@@ -52,6 +53,7 @@
                 <x-text-input id="password_confirmation" class="block w-full pr-10"
                                 type="password"
                                 x-bind:type="showPassword ? 'text' : 'password'"
+                                data-custom-reveal
                                 name="password_confirmation" required autocomplete="new-password" />
 
                 <button type="button" @click="showPassword = !showPassword"

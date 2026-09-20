@@ -44,7 +44,7 @@
                    @if($currentBooking && $currentBooking->id === $booking->id) aria-current="page" @endif>
                     @if($booking->manager)
                         <span class="user-avatar" style="width: 40px; height: 40px;" aria-hidden="true">
-                            {{ strtoupper(mb_substr($booking->manager->name, 0, 1)) }}
+                            {{ Str::upper(Str::substr($booking->manager->name, 0, 1)) }}
                         </span>
                     @else
                         <span class="user-avatar" style="width: 40px; height: 40px; background: var(--cabinet-muted);" aria-hidden="true">
@@ -79,7 +79,7 @@
             <div class="tc-chat__header">
                 @if($currentBooking->manager)
                     <span class="user-avatar" style="width: 44px; height: 44px;" aria-hidden="true">
-                        {{ strtoupper(mb_substr($currentBooking->manager->name, 0, 1)) }}
+                        {{ Str::upper(Str::substr($currentBooking->manager->name, 0, 1)) }}
                     </span>
                     <div style="flex: 1; min-width: 0;">
                         <h2 class="mb-0" style="font-size: 1rem; font-weight: 600;">{{ $currentBooking->manager->name }}</h2>

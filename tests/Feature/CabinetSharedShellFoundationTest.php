@@ -236,6 +236,37 @@ class CabinetSharedShellFoundationTest extends TestCase
         $this->assertStringContainsString('keydown.escape.window', $html);
     }
 
+    public function test_mobile_drawer_manages_focus_and_isolates_background_while_open(): void
+    {
+        $html = $this->renderLayoutFor($this->makeUser([Role::TOURIST]));
+
+        // Опенер запоминается, фокус входит в меню и возвращается при закрытии.
+        $this->assertStringContainsString('drawerOpener', $html);
+        $this->assertStringContainsString('x-ref="sidebarToggle"', $html);
+        $this->assertStringContainsString('x-ref="sidebarNav"', $html);
+        $this->assertStringContainsString('closeSidebar(restoreFocus = true)', $html);
+
+        // Фон (main, шапка, skip-link) становится inert, пока меню открыто.
+        $this->assertSame(4, substr_count($html, ':inert="sidebarOpen"'));
+        $this->assertMatchesRegularExpression('/<main[^>]*id="cabinet-main-content"[^>]*:inert="sidebarOpen"/s', $html);
+
+        // Сам сайдбар и переключатель не inert.
+        $this->assertDoesNotMatchRegularExpression('/<aside[^>]*:inert/s', $html);
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*sidebar-toggle[^>]*:inert/s', $html);
+    }
+
+    public function test_cyrillic_user_name_renders_a_whole_avatar_initial_in_the_shared_header(): void
+    {
+        $user = $this->makeUser([Role::TOURIST]);
+        $user->forceFill(['name' => 'иван Петров'])->save();
+
+        $html = $this->renderLayoutFor($user);
+
+        $this->assertStringContainsString('>И<', preg_replace('/\s+/u', '', $html));
+        $this->assertStringNotContainsString("ï¿½", $html);
+        $this->assertTrue(mb_check_encoding($html, 'UTF-8'));
+    }
+
     // ------------------------------------------------------------------
     // H. Общий флэш-элемент несёт полную структуру закрытия Bootstrap-alert
     // ------------------------------------------------------------------

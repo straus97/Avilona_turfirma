@@ -50,6 +50,18 @@ class PublicCookieConsentTest extends TestCase
     // 1. Cookie information page
     // -----------------------------------------------------------------------
 
+    public function test_mobile_cookie_banner_text_does_not_keep_desktop_flex_basis(): void
+    {
+        $css = file_get_contents(public_path('css/unified.css'));
+
+        // Внутри @media (max-width: 768px) текстовый блок не должен сохранять flex-basis 320px,
+        // иначе в колонке он превращается в высоту.
+        $this->assertSame(1, preg_match(
+            '/@media \(max-width: 768px\)\s*\{.*?\.cookie-consent-banner__text\s*\{\s*flex:\s*0 0 auto;/s',
+            $css
+        ));
+    }
+
     public function test_cookies_info_page_renders_expected_heading(): void
     {
         $response = $this->get(route('cookies.info'));

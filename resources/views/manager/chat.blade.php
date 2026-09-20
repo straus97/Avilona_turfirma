@@ -40,7 +40,7 @@
                        style="text-decoration: none; transition: all 0.2s; position: relative;">
                         <div class="d-flex align-items-start gap-2">
                             <div class="user-avatar" style="width: 40px; height: 40px;">
-                                {{ strtoupper(substr($booking->user->name ?? 'К', 0, 1)) }}
+                                {{ Str::upper(Str::substr($booking->user->name ?? 'К', 0, 1)) }}
                             </div>
                             <div style="flex: 1; min-width: 0;">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
@@ -79,7 +79,7 @@
             <div class="card-custom" style="height: calc(100vh - 200px); display: flex; flex-direction: column;" data-chat-window tabindex="-1">
                 <div class="d-flex align-items-center gap-3 pb-3 border-bottom">
                     <div class="user-avatar" style="width: 48px; height: 48px;">
-                        {{ strtoupper(substr($currentBooking->user->name ?? 'К', 0, 1)) }}
+                        {{ Str::upper(Str::substr($currentBooking->user->name ?? 'К', 0, 1)) }}
                     </div>
                     <div style="flex: 1;">
                         <h5 class="mb-0">{{ $currentBooking->user->name ?? 'Клиент' }}</h5>

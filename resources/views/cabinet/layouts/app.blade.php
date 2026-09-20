@@ -30,23 +30,41 @@
 <body class="cabinet-shell"
       x-data="{
           sidebarOpen: false,
-          closeSidebar() { this.sidebarOpen = false; },
-          toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; }
+          drawerOpener: null,
+          openSidebar() {
+              this.drawerOpener = document.activeElement;
+              this.sidebarOpen = true;
+              this.$nextTick(() => {
+                  const target = this.$refs.sidebarNav.querySelector('a[href], button:not([disabled])');
+                  if (target) { target.focus(); }
+              });
+          },
+          closeSidebar(restoreFocus = true) {
+              if (!this.sidebarOpen) { return; }
+              this.sidebarOpen = false;
+              if (restoreFocus) {
+                  const back = this.drawerOpener && this.drawerOpener.isConnected ? this.drawerOpener : this.$refs.sidebarToggle;
+                  this.$nextTick(() => back.focus());
+              }
+              this.drawerOpener = null;
+          },
+          toggleSidebar() { this.sidebarOpen ? this.closeSidebar() : this.openSidebar(); }
       }"
       x-init="
           const cabinetDesktopQuery = window.matchMedia('(min-width: 992px)');
-          const closeDrawerOnDesktop = (event) => { if (event.matches) { sidebarOpen = false; } };
+          const closeDrawerOnDesktop = (event) => { if (event.matches) { closeSidebar(false); } };
           cabinetDesktopQuery.addEventListener('change', closeDrawerOnDesktop);
       "
       x-effect="document.body.classList.toggle('cabinet-no-scroll', sidebarOpen)"
       @keydown.escape.window="closeSidebar()">
 
-    <a class="cabinet-skip-link" href="#cabinet-main-content">Перейти к основному содержимому</a>
+    <a class="cabinet-skip-link" href="#cabinet-main-content" :inert="sidebarOpen">Перейти к основному содержимому</a>
 
     <!-- Header -->
     <header class="cabinet-header" role="banner">
         <button type="button"
                 class="sidebar-toggle"
+                x-ref="sidebarToggle"
                 aria-label="Открыть меню"
                 :aria-label="sidebarOpen ? 'Закрыть меню' : 'Открыть меню'"
                 aria-controls="cabinet-sidebar"
@@ -55,12 +73,12 @@
             <i class="bi bi-list" aria-hidden="true"></i>
         </button>
 
-        <a href="/" class="header-brand">
+        <a href="/" class="header-brand" :inert="sidebarOpen">
             <i class="bi bi-airplane-fill" aria-hidden="true"></i>
             Авилона
         </a>
 
-        <div class="header-actions">
+        <div class="header-actions" :inert="sidebarOpen">
 
             <!-- Notifications -->
             @php
@@ -113,7 +131,7 @@
             <div class="dropdown">
                 <button type="button" class="header-user" data-bs-toggle="dropdown" aria-label="Меню пользователя">
                     <span class="user-avatar">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        {{ Str::upper(Str::substr(Auth::user()->name, 0, 1)) }}
                     </span>
                     <span class="d-none d-md-block">
                         <span style="display: block; font-weight: 600; font-size: 0.875rem;">{{ Auth::user()->name }}</span>
@@ -182,14 +200,15 @@
            class="cabinet-sidebar"
            :class="{ 'is-open': sidebarOpen }">
         <nav class="sidebar-menu"
+             x-ref="sidebarNav"
              aria-label="Разделы кабинета"
-             @click="if ($event.target.closest('a')) closeSidebar()">
+             @click="if ($event.target.closest('a')) closeSidebar(false)">
             @yield('sidebar')
         </nav>
     </aside>
 
     <!-- Main Content -->
-    <main id="cabinet-main-content" class="cabinet-main" role="main" tabindex="-1">
+    <main id="cabinet-main-content" class="cabinet-main" role="main" tabindex="-1" :inert="sidebarOpen">
         @include('cabinet.components.flash')
 
         @yield('content')

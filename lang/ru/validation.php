@@ -175,7 +175,10 @@ return [
     */
 
     'attributes' => [
+        'name' => 'имя',
+        'email' => 'электронная почта',
         'password' => 'пароль',
+        'password_confirmation' => 'подтверждение пароля',
         'failed' => 'ошибка',
         'reset' => 'сбросить',
         'sent' => 'отправить',

@@ -135,7 +135,7 @@
                      style="width: 112px; height: 112px; object-fit: cover;">
             @else
                 <div class="user-avatar mx-auto mb-3" style="width: 112px; height: 112px; font-size: 2.75rem;" aria-hidden="true">
-                    {{ strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}
+                    {{ Str::upper(Str::substr(Auth::user()->name, 0, 1)) }}
                 </div>
             @endif
             <h2 style="font-size: 1.05rem; font-weight: 600;">{{ Auth::user()->name }}</h2>
