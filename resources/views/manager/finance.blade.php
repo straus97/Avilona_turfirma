@@ -18,7 +18,8 @@
             'title' => 'Выручка (завершено)',
             'value' => number_format($completedRevenue, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-cash-stack',
-            'color' => 'success'
+            'color' => 'success',
+            'valueClass' => 'stat-card__value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -26,7 +27,8 @@
             'title' => 'Оплачено',
             'value' => number_format($totalPaid, 0, ',', ' ') . ' ₽',
             'icon' => 'bi-credit-card',
-            'color' => 'primary'
+            'color' => 'primary',
+            'valueClass' => 'stat-card__value--money',
         ])
     </div>
     <div class="col-md-4">
@@ -34,7 +36,8 @@
             'title' => 'Задолженность',
             'value' => number_format(max($totalOutstanding, 0), 0, ',', ' ') . ' ₽',
             'icon' => 'bi-exclamation-triangle',
-            'color' => 'warning'
+            'color' => 'warning',
+            'valueClass' => 'stat-card__value--money',
         ])
     </div>
 </div>

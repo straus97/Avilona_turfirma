@@ -118,7 +118,7 @@
                     </div>
                 @endif
                 <h5>{{ Auth::user()->name }}</h5>
-                <div class="text-muted small mb-3">{{ Auth::user()->email }}</div>
+                <div class="text-muted small mb-3 text-break">{{ Auth::user()->email }}</div>
                 <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#avatarModal">
                     <i class="bi bi-camera"></i> Изменить фото
                 </button>
@@ -127,9 +127,9 @@
 
         <div class="card-custom">
             <h6 class="mb-3">Информация об аккаунте</h6>
-            <div class="d-flex justify-content-between mb-2">
+            <div class="d-flex justify-content-between gap-2 mb-2">
                 <span class="text-muted">Email:</span>
-                <span class="fw-bold">{{ Auth::user()->email }}</span>
+                <span class="fw-bold text-break text-end">{{ Auth::user()->email }}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span class="text-muted">Подтвержден:</span>

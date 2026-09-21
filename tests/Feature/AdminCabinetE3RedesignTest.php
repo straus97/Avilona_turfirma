@@ -414,15 +414,90 @@ class AdminCabinetE3RedesignTest extends TestCase
         $componentSource = file_get_contents(resource_path('views/cabinet/components/stat-card.blade.php'));
         $this->assertNotFalse($componentSource);
 
+        // E4-D2: размеры иконки переехали из инлайн-стиля в CSS-класс, чтобы
+        // их можно было менять по ширине карточки (@container). Инвариант тот
+        // же — иконка не сжимается — и он проверяется на CSS-правиле.
+        $this->assertStringContainsString('class="stat-card__icon"', $componentSource);
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        preg_match('/\.stat-card__icon\s*\{([^}]*)\}/s', $css, $iconRule);
+        $this->assertNotEmpty($iconRule, 'Could not locate the base .stat-card__icon rule.');
         $this->assertMatchesRegularExpression(
-            '/width:\s*60px[^"]*flex-shrink:\s*0/s',
-            $componentSource,
-            'The icon wrapper must keep flex-shrink:0 so a long money value cannot compress it and slide underneath.'
+            '/flex:\s*0 0 auto;/',
+            $iconRule[1],
+            'The icon wrapper must not shrink so a long money value cannot compress it and slide underneath.'
         );
+        $this->assertMatchesRegularExpression('/width:\s*60px;/', $iconRule[1]);
         $this->assertMatchesRegularExpression(
             '/d-flex align-items-center justify-content-between gap-3/',
             $componentSource,
             'The value/icon row must keep an explicit gap so the value column never touches the icon.'
+        );
+    }
+
+    /**
+     * E4-D2 (F-04): карточка — контейнер размера; при узкой ширине иконка
+     * уменьшается, а затем скрывается, а колонка текста может сжиматься
+     * (min-width:0). Без этого метка/сумма наезжали на иконку на 768-1300px
+     * в 3-4-колоночных раскладках Manager/Admin.
+     */
+    public function test_stat_card_adapts_to_its_own_width_instead_of_overlapping_the_icon(): void
+    {
+        $componentSource = file_get_contents(resource_path('views/cabinet/components/stat-card.blade.php'));
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($componentSource);
+        $this->assertNotFalse($css);
+
+        $this->assertStringContainsString('class="stat-card__body"', $componentSource);
+        $this->assertStringContainsString('class="stat-card__label"', $componentSource);
+
+        $this->assertMatchesRegularExpression('/\.stat-card\s*\{[^}]*container:\s*stat-card\s*\/\s*inline-size;/s', $css);
+        $this->assertMatchesRegularExpression('/\.stat-card__body\s*\{[^}]*min-width:\s*0;/s', $css);
+        $this->assertMatchesRegularExpression(
+            '/@container stat-card \(max-width:[^)]*\)\s*\{[^@]*\.stat-card__icon\s*\{\s*display:\s*none;/s',
+            $css,
+            'A very narrow stat-card must hide the decorative icon instead of overlapping it with the text.'
+        );
+    }
+
+    /**
+     * E4-D2 (F-06): кнопки фильтров админских списков больше не w-100 в узкой
+     * col-md-2 — блок кнопок переносится, «Сбросить» не выходит за карточку.
+     */
+    public function test_admin_filter_rows_wrap_their_action_buttons(): void
+    {
+        $admin = $this->createUserWithRoles([Role::ADMIN]);
+
+        foreach ([route('cabinet.admin.bookings'), route('cabinet.admin.users')] as $url) {
+            $html = $this->actingAs($admin)->get($url)->assertOk()->getContent();
+
+            $this->assertStringContainsString('admin-filter-actions', $html, $url);
+            $this->assertStringContainsString('Сбросить', $html, $url);
+            $this->assertDoesNotMatchRegularExpression(
+                '/class="btn btn-outline-secondary w-100"[^>]*>\s*<i class="bi bi-x-circle">/',
+                $html,
+                "Reset button on {$url} must not be forced to w-100 inside a narrow column."
+            );
+        }
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        $this->assertMatchesRegularExpression('/\.admin-filter-actions\s*\{[^}]*flex-wrap:\s*wrap;/s', $css);
+    }
+
+    /**
+     * E4-D2 (F-07): длинный email в сводке профиля должен переноситься, а не
+     * выталкивать карточку и страницу (Manager и Admin делят один паттерн).
+     */
+    public function test_profile_email_can_break_inside_its_card(): void
+    {
+        $admin = $this->createUserWithRoles([Role::ADMIN]);
+
+        $html = $this->actingAs($admin)->get(route('cabinet.admin.profile'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<span class="fw-bold text-break[^"]*">\s*' . preg_quote($admin->email, '/') . '\s*<\/span>/',
+            $html
         );
     }
 

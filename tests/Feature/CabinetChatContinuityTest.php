@@ -579,6 +579,79 @@ class CabinetChatContinuityTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // L. Адаптивная стабилизация чата (E4-D2: F-02, F-09, F-15)
+    // ------------------------------------------------------------------
+
+    public function test_manager_and_admin_chat_panes_share_the_viewport_height_token_not_inline_calc(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+        $admin = $this->makeUser(Role::ADMIN);
+
+        $pages = [
+            'manager' => $this->actingAs($manager)
+                ->get(route('cabinet.manager.chat', ['bookingId' => $booking->id]))->assertOk()->getContent(),
+            'admin' => $this->actingAs($admin)
+                ->get(route('cabinet.admin.chats', ['bookingId' => $booking->id]))->assertOk()->getContent(),
+        ];
+
+        foreach ($pages as $role => $html) {
+            $this->assertStringContainsString('cabinet-chat-pane--list', $html, $role);
+            $this->assertStringContainsString('cabinet-chat-pane--window', $html, $role);
+            // Инлайновый calc(100vh - 200px) не учитывал margin карточки и заголовок
+            // страницы — из-за него документ вылезал за окно на 8-28px (F-15).
+            $this->assertStringNotContainsString('calc(100vh', $html, $role);
+        }
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        $this->assertMatchesRegularExpression('/\.cabinet-chat-pane\s*\{[^}]*height:\s*var\(--cabinet-chat-height\);/s', $css);
+        // Тот же токен у туристской панели — три роли не расходятся по высоте.
+        $this->assertMatchesRegularExpression(
+            '/\.tc-chat__panel\s*\{[^}]*height:\s*var\(--cabinet-chat-height\);/s',
+            $css
+        );
+    }
+
+    public function test_thread_status_row_has_a_layout_hook_so_narrow_lists_do_not_clip_it(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+        $admin = $this->makeUser(Role::ADMIN);
+
+        $managerHtml = $this->actingAs($manager)
+            ->get(route('cabinet.manager.chat', ['bookingId' => $booking->id]))->assertOk()->getContent();
+        $adminHtml = $this->actingAs($admin)
+            ->get(route('cabinet.admin.chats', ['bookingId' => $booking->id]))->assertOk()->getContent();
+
+        foreach (['manager' => $managerHtml, 'admin' => $adminHtml] as $role => $html) {
+            $this->assertStringContainsString('chat-thread__row', $html, $role);
+            $this->assertStringContainsString('chat-thread__body', $html, $role);
+            $this->assertStringContainsString('chat-thread__status', $html, $role);
+        }
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        // На средних ширинах строка статусов занимает всю ширину ветки (F-09).
+        $this->assertMatchesRegularExpression(
+            '/\.chat-thread__body\s*>\s*\.chat-thread__status\s*\{\s*grid-column:\s*1\s*\/\s*-1;/s',
+            $css
+        );
+    }
+
+    public function test_tourist_chat_grid_can_shrink_below_its_content_on_narrow_screens(): void
+    {
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+
+        // 1fr = minmax(auto, 1fr): nowrap-строки веток раздували колонку до
+        // ~404px на вьюпорте 360px (F-02). Должно быть minmax(0, 1fr).
+        $this->assertMatchesRegularExpression(
+            '/@media \(max-width:\s*767\.98px\)\s*\{\s*\.tc-chat\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\);/s',
+            $css
+        );
+        $this->assertMatchesRegularExpression('/\.tc-chat__panel\s*\{[^}]*min-width:\s*0;/s', $css);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 

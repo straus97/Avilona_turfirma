@@ -5,9 +5,9 @@
 @endphp
 
 <div class="card-custom stat-card" style="border-left: 4px solid var(--{{ $color }}-color);">
-    <div class="d-flex align-items-center justify-content-between gap-3">
-        <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.75rem; color: var(--cabinet-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+    <div class="stat-card__row d-flex align-items-center justify-content-between gap-3">
+        <div class="stat-card__body">
+            <div class="stat-card__label">
                 {{ $title }}
             </div>
             <div class="stat-card__value {{ $valueClass }}" style="font-weight: 700; color: var(--cabinet-heading); line-height: 1;">
@@ -20,8 +20,8 @@
                 </div>
             @endif
         </div>
-        <div style="width: 60px; height: 60px; border-radius: var(--cabinet-radius-md); background: rgba(var(--bs-{{ $color }}-rgb), 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i class="bi {{ $icon }}" style="font-size: 1.75rem; color: var(--{{ $color }}-color);" aria-hidden="true"></i>
+        <div class="stat-card__icon" style="background: rgba(var(--bs-{{ $color }}-rgb), 0.12);">
+            <i class="bi {{ $icon }}" style="color: var(--{{ $color }}-color);" aria-hidden="true"></i>
         </div>
     </div>
 </div>

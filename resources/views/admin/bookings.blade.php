@@ -17,7 +17,7 @@
         <div class="card-title-custom">Фильтры</div>
     </div>
     <form action="{{ route('cabinet.admin.bookings') }}" method="GET" class="row g-2 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-6 col-xl-3">
             <label class="form-label">Поиск</label>
             <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
         </div>
@@ -44,9 +44,9 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Поиск</button>
-            <a href="{{ route('cabinet.admin.bookings') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i> Сбросить</a>
+        <div class="col-12 col-sm-auto admin-filter-actions">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Поиск</button>
+            <a href="{{ route('cabinet.admin.bookings') }}" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Сбросить</a>
         </div>
     </form>
 </div>

@@ -66,6 +66,28 @@ class TouristCabinetE3RedesignTest extends TestCase
         $response->assertSee(route('bookings.show', $trip->id), false);
     }
 
+    /**
+     * E4-D2 (F-08): шапка карточки заявки — переносимая строка с колонкой
+     * названия min-width:0, а не жёсткий d-flex justify-content-between, из-за
+     * которого бейдж статуса вылезал за край карточки на 992-1200px.
+     */
+    public function test_dashboard_booking_card_header_wraps_status_badge_instead_of_overflowing(): void
+    {
+        $tourist = $this->makeTourist();
+        $manager = $this->makeUser(Role::MANAGER);
+        $this->makeBooking($tourist, $manager->id, Booking::STATUS_PROGRESS);
+
+        $html = $this->actingAs($tourist)->get(route('cabinet.dashboard'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('booking-card__head', $html);
+        $this->assertStringContainsString('booking-card__title', $html);
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        $this->assertMatchesRegularExpression('/\.booking-card__head\s*\{[^}]*flex-wrap:\s*wrap;/s', $css);
+        $this->assertMatchesRegularExpression('/\.booking-card__title\s*\{[^}]*min-width:\s*0;/s', $css);
+    }
+
     // ------------------------------------------------------------------
     // B. Список заявок
     // ------------------------------------------------------------------

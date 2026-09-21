@@ -525,6 +525,76 @@ class ManagerCabinetE3RedesignTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // E4-D2 — адаптивная стабилизация (F-04, F-05, F-07)
+    // ------------------------------------------------------------------
+
+    public function test_money_stat_cards_opt_into_container_aware_sizing(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+
+        $financeHtml = $this->actingAs($manager)->get(route('cabinet.manager.finance'))->assertOk()->getContent();
+        $this->assertSame(3, substr_count($financeHtml, 'stat-card__value--money'));
+
+        $statisticsHtml = $this->actingAs($manager)->get(route('cabinet.manager.statistics'))->assertOk()->getContent();
+        $this->assertSame(1, substr_count($statisticsHtml, 'stat-card__value--money'));
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+        preg_match('/\.stat-card__value--money\s*\{([^}]*)\}/s', $css, $rule);
+        $this->assertNotEmpty($rule, 'Could not locate the .stat-card__value--money rule.');
+        $this->assertStringContainsString('white-space: nowrap;', $rule[1]);
+        $this->assertStringContainsString('cqw', $rule[1], 'Money size must follow the card width, not the viewport.');
+    }
+
+    public function test_dashboard_and_statistics_stat_cards_use_two_columns_below_xl(): void
+    {
+        foreach (['dashboard', 'statistics'] as $view) {
+            $source = file_get_contents(resource_path("views/manager/{$view}.blade.php"));
+            $this->assertNotFalse($source);
+
+            $this->assertStringContainsString('col-md-6 col-xl-3', $source, $view);
+            $this->assertDoesNotMatchRegularExpression(
+                '/<div class="col-md-3[ "]/',
+                $source,
+                "{$view}: a bare col-md-3 forces four ~150px stat-cards from 768px and the icon overlaps the label."
+            );
+        }
+    }
+
+    public function test_bookings_price_cannot_split_between_digit_groups_and_currency(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+        $client = $this->createUserWithRoles([Role::TOURIST]);
+
+        $this->createBooking(
+            array_merge(
+                $this->baseBookingAttributes($client->id, $manager->id, Booking::STATUS_PROGRESS),
+                ['total_price' => 2450000]
+            ),
+            now()
+        );
+
+        $html = $this->actingAs($manager)->get(route('cabinet.manager.bookings'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<strong class="text-nowrap">\s*2 450 000 ₽\s*<\/strong>/u',
+            $html
+        );
+    }
+
+    public function test_profile_email_can_break_inside_its_card(): void
+    {
+        $manager = $this->createUserWithRoles([Role::MANAGER]);
+
+        $html = $this->actingAs($manager)->get(route('cabinet.manager.profile'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<span class="fw-bold text-break[^"]*">\s*' . preg_quote($manager->email, '/') . '\s*<\/span>/',
+            $html
+        );
+    }
+
+    // ------------------------------------------------------------------
     // F. Clients — scoping remains intact
     // ------------------------------------------------------------------
 

@@ -80,7 +80,7 @@
 
 <!-- Статистика -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'Всего заявок',
             'value' => $totalBookings,
@@ -88,7 +88,7 @@
             'color' => 'primary'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'В обработке',
             'value' => $pendingBookings,
@@ -96,7 +96,7 @@
             'color' => 'warning'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'Мои клиенты',
             'value' => $totalClients,
@@ -104,7 +104,7 @@
             'color' => 'success'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'Непрочитанные',
             'value' => $unreadMessages,

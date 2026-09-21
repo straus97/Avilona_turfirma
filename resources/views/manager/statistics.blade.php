@@ -13,7 +13,7 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'Всего заявок',
             'value' => $totalBookings,
@@ -21,7 +21,7 @@
             'color' => 'primary'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'Завершено',
             'value' => $statusStats['completed'],
@@ -29,7 +29,7 @@
             'color' => 'success'
         ])
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
             'title' => 'В работе',
             'value' => $statusStats['pending'] + $statusStats['confirmed'],
@@ -37,12 +37,13 @@
             'color' => 'warning'
         ])
     </div>
-    <div class="col-md-3 manager-statistics-revenue-card">
+    <div class="col-md-6 col-xl-3 manager-statistics-revenue-card">
         @include('cabinet.components.stat-card', [
             'title' => 'Выручка (завершено)',
             'value' => number_format($totalRevenue, 0, ',', "\u{00A0}") . "\u{00A0}₽",
             'icon' => 'bi-cash-stack',
-            'color' => 'info'
+            'color' => 'info',
+            'valueClass' => 'stat-card__value--money',
         ])
     </div>
 </div>
@@ -152,7 +153,7 @@
         <div class="card-title-custom">Подробная статистика</div>
     </div>
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-6 col-xl-3">
             @include('cabinet.components.stat-card', [
                 'title' => 'В обработке',
                 'value' => $statusStats['pending'],
@@ -160,7 +161,7 @@
                 'color' => 'warning'
             ])
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6 col-xl-3">
             @include('cabinet.components.stat-card', [
                 'title' => 'Подтверждено',
                 'value' => $statusStats['confirmed'],
@@ -168,7 +169,7 @@
                 'color' => 'info'
             ])
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6 col-xl-3">
             @include('cabinet.components.stat-card', [
                 'title' => 'Завершено',
                 'value' => $statusStats['completed'],
@@ -176,7 +177,7 @@
                 'color' => 'success'
             ])
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6 col-xl-3">
             @include('cabinet.components.stat-card', [
                 'title' => 'Отменено',
                 'value' => $statusStats['cancelled'],

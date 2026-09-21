@@ -554,6 +554,27 @@ body {
     transition: transform var(--cabinet-transition), box-shadow var(--cabinet-transition);
 }
 
+/* Шапка карточки заявки: название слева, статус справа. Колонка названия
+   имеет min-width:0 и базис, а строка переносится (flex-wrap) — на узкой
+   карточке (dashboard 992-1200px, 3 колонки) бейдж уходит на следующую строку,
+   а не вылезает за край карточки (E4-D2, F-08). */
+.booking-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+}
+
+.booking-card__title {
+    flex: 1 1 min-content;
+    min-width: 0;
+}
+
+.booking-card__head > .status-badge {
+    flex: 0 0 auto;
+}
+
 .booking-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--cabinet-shadow-md);
@@ -1156,6 +1177,27 @@ body {
 .tc-doc__actions form { flex: 0 0 auto; }
 
 /* --- 16.7 Чат ---------------------------------------------- */
+
+/* Высота рабочей области чата (E4-D2, F-15). Раньше высоты были разбросаны по
+   разметке и считались от разных «магических» вычитаемых (12rem / 15rem /
+   200px), не учитывающих шапку, отступы <main> и заголовок страницы, — на
+   десктопе документ вылезал за окно на 8-28px и появлялся лишний скролл
+   страницы. Теперь один токен для всех трёх ролей: 100vh минус то, что реально
+   стоит над и под чатом — фиксированная шапка (60px), padding <main>
+   сверху/снизу (2 x 1.75rem) и блок .page-header (заголовок + подзаголовок +
+   отступ, ~88px) с небольшим запасом на разницу метрик шрифта между
+   браузерами. min-height не даёт панели схлопнуться на низких окнах — там
+   страница законно прокручивается. */
+:root {
+    --cabinet-chat-height: calc(100vh - 13.25rem);
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --cabinet-chat-height: calc(100dvh - 13.25rem);
+    }
+}
+
 .tc-chat {
     display: grid;
     grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
@@ -1163,13 +1205,17 @@ body {
     align-items: start;
 }
 
+/* minmax(0, 1fr), а не 1fr: у 1fr минимум — min-content дорожки, и nowrap-строки
+   веток (.tc-thread__sub) раздували колонку до ~404px при вьюпорте 360px —
+   отсюда горизонтальный скролл страницы (E4-D2, F-02). */
 @media (max-width: 767.98px) {
-    .tc-chat { grid-template-columns: 1fr; }
+    .tc-chat { grid-template-columns: minmax(0, 1fr); }
 }
 
 .tc-chat__panel {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     min-height: 0;
     /* Без contain:layout скроллируемое содержимое .tc-chat__threads / .tc-chat__messages
        (overflow-y:auto, max-height) визуально обрезается корректно, но их
@@ -1193,15 +1239,26 @@ body {
     border-bottom: 1px solid var(--cabinet-border);
 }
 
+/* Две панели десктопного чата (список веток и окно переписки) одной высоты и
+   ровно по высоте рабочей области: список скроллится внутри панели, а не
+   тянет страницу (E4-D2, F-15). На мобильной ширине панели идут стопкой и
+   высота определяется содержимым. */
+@media (min-width: 768px) {
+    .tc-chat__panel {
+        height: var(--cabinet-chat-height);
+        min-height: 26rem;
+    }
+}
+
 .tc-chat__threads {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     padding: 0.65rem;
-    max-height: calc(100vh - 15rem);
-    max-height: calc(100dvh - 15rem);
 }
 
 @media (max-width: 767.98px) {
-    .tc-chat__threads { max-height: 20rem; }
+    .tc-chat__threads { flex: 0 1 auto; max-height: 20rem; }
 }
 
 .tc-thread {
@@ -1227,16 +1284,6 @@ body {
 .tc-thread__line { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .tc-thread__title { font-weight: 600; font-size: 0.875rem; }
 .tc-thread__sub { font-size: 0.75rem; color: var(--cabinet-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.tc-chat__window {
-    height: calc(100vh - 12rem);
-    height: calc(100dvh - 12rem);
-    min-height: 26rem;
-}
-
-@media (max-width: 767.98px) {
-    .tc-chat__window { height: auto; min-height: 0; }
-}
 
 .tc-chat__header {
     display: flex;
@@ -1350,6 +1397,100 @@ body {
 .tc-chat--loading { cursor: progress; }
 .tc-chat--loading [data-chat-window] { opacity: 0.55; transition: opacity 0.15s ease; }
 .tc-chat--loading [data-chat-threads] { pointer-events: none; }
+
+/* --- 16.7b Чат менеджера и администратора (E4-D2) ------------
+   Обе роли используют одну разметку `.row > .col-md-4 / .col-md-8` с картами
+   .card-custom. Высоты панелей раньше были инлайновыми calc(100vh - 200px) и
+   не учитывали нижний margin карты (1.5rem) и заголовок страницы — отсюда
+   8-28px лишнего скролла документа (F-15). Теперь панели берут общий токен
+   --cabinet-chat-height; на md+ панели стоят рядом, нижний margin обнуляется,
+   на мобильной ширине панели идут стопкой и сохраняют прежний отступ между
+   собой. */
+.cabinet-chat-pane {
+    height: var(--cabinet-chat-height);
+    min-height: 26rem;
+}
+
+.cabinet-chat-pane--list {
+    overflow-y: auto;
+}
+
+.cabinet-chat-pane--window {
+    display: flex;
+    flex-direction: column;
+}
+
+.cabinet-chat-pane--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+    .cabinet-chat-pane {
+        margin-bottom: 0;
+    }
+}
+
+/* Строка ветки в списке менеджера/администратора. Аватар + текст в ряд; на
+   средних ширинах (768-1399px) список узкий (208-300px), и колонка текста
+   рядом с аватаром была 78-97px — статус-бейдж (до ~145px) обрезался у правого
+   края (F-09). Там строка переключается на сетку: аватар остаётся слева от
+   заголовка, а строка статусов занимает ВСЮ ширину ветки под ними. */
+.chat-thread {
+    padding: 1rem;
+    /* длинное имя без пробелов (двойная фамилия, транслит) не должно
+       раздвигать flex-элемент и давать горизонтальный скролл списка */
+    overflow-wrap: anywhere;
+}
+
+.chat-thread__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.chat-thread__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chat-thread .status-badge {
+    max-width: 100%;
+}
+
+@media (min-width: 768px) and (max-width: 1399.98px) {
+    .cabinet-chat-pane--list {
+        padding: 1rem;
+    }
+
+    .chat-thread {
+        padding: 0.5rem 0.625rem;
+    }
+
+    .chat-thread__row {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        column-gap: 0.5rem;
+    }
+
+    .chat-thread__row > .user-avatar {
+        grid-row: 1 / span 2;
+    }
+
+    .chat-thread__body {
+        display: contents;
+    }
+
+    .chat-thread__body > * {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .chat-thread__body > .chat-thread__status {
+        grid-column: 1 / -1;
+    }
+}
 
 /* --- 16.8 Пары «ключ — значение» ---------------------------- */
 .tc-info-list {
@@ -1700,6 +1841,45 @@ body {
 /* Базовый размер значения .stat-card вынесен из инлайн-стиля сюда, чтобы
    модификаторы (например, .admin-stat-value--money) могли переопределять
    его обычным каскадом — инлайн-стиль всегда выигрывал бы у любого класса. */
+/* Структура .stat-card (E4-D2, F-04). Раньше иконка/колонка текста были
+   заданы инлайн-стилями и не могли адаптироваться: иконка 60x60 забирала
+   ~76px из карточки шириной 150-230px, колонка текста сжималась до 9-98px и
+   метка/сумма наезжали на иконку. Теперь карточка — контейнер размера
+   (@container), а сжатие зависит от ЕЁ ширины, а не от вьюпорта: одна и та
+   же карточка стоит в 2, 3 и 4 колонки на разных страницах и ролях. */
+.stat-card {
+    container: stat-card / inline-size;
+    --stat-icon-space: 76px; /* иконка 60px + gap-3 (16px) */
+}
+
+.stat-card__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.stat-card__label {
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--cabinet-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    overflow-wrap: anywhere; /* крайний случай: слово шире колонки не наезжает на иконку */
+}
+
+.stat-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--cabinet-radius-md);
+}
+
+.stat-card__icon > i {
+    font-size: 1.75rem;
+}
+
 .stat-card__value {
     font-size: 2rem;
 }
@@ -1752,6 +1932,43 @@ body {
 @media (min-width: 768px) and (max-width: 1199.98px) {
     .admin-stat-value--money {
         font-size: 1.75rem;
+    }
+}
+
+/* E4-D2 (F-04): адаптация карточки по ширине ЕЁ контейнера. Пороги —
+   ширина содержимого карточки (без padding 1.5rem и границ):
+   - >= 200px: без изменений (иконка 60px, текст >= ~124px);
+   - 172-199.98px: иконка 40px, подпись мельче — текст остаётся >= ~116px;
+   - < 172px: иконка скрывается (она декоративная, aria-hidden), а вся
+     ширина отдаётся тексту — метка и сумма никогда не наезжают на иконку. */
+@container stat-card (max-width: 199.98px) {
+    .stat-card__row { --stat-icon-space: 56px; }
+    .stat-card__icon { width: 40px; height: 40px; }
+    .stat-card__icon > i { font-size: 1.25rem; }
+    .stat-card__label { font-size: 0.6875rem; letter-spacing: 0.3px; }
+}
+
+@container stat-card (max-width: 171.98px) {
+    .stat-card__row { --stat-icon-space: 0px; }
+    .stat-card__icon { display: none; }
+}
+
+/* Денежные значения: размер пропорционален ширине, реально доступной
+   тексту (ширина карточки минус иконка), поэтому сумма не переносится по
+   цифровым группам, не обрезается и не заходит под иконку. Делитель 7.2 —
+   ширина самой длинной реальной строки вида "14 416 054 ₽" в em (с запасом);
+   верхняя граница равна прежнему базовому размеру, так что на широком
+   экране вид не меняется. Для Admin-класса правило действует только в
+   узких карточках (там прежние media-размеры и давали наезд); в широких
+   остаются прежние значения. */
+.stat-card__value--money {
+    white-space: nowrap;
+    font-size: clamp(0.875rem, calc((100cqw - var(--stat-icon-space)) / 7.2), 2rem);
+}
+
+@container stat-card (max-width: 299.98px) {
+    .admin-stat-value--money {
+        font-size: clamp(0.875rem, calc((100cqw - var(--stat-icon-space)) / 7.2), 1.75rem);
     }
 }
 
@@ -1814,3 +2031,19 @@ body {
 .admin-profile-layout__security { grid-area: security; }
 .admin-profile-layout__notifications { grid-area: notifications; }
 .admin-profile-layout__delete { grid-area: delete; }
+
+/* Кнопки фильтров админских списков («Поиск» / «Сбросить», E4-D2, F-06).
+   Раньше обе кнопки были w-100 в узкой col-md-2 и «Сбросить» выходила за
+   правый край карточки (страница получала горизонтальный скролл на 768/992px).
+   Теперь блок кнопок переносится, каждая кнопка не сжимается ниже своего
+   текста и делит доступную ширину. */
+.admin-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.admin-filter-actions > .btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+}

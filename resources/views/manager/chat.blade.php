@@ -25,7 +25,7 @@
     <p class="visually-hidden" data-chat-status role="status" aria-live="polite"></p>
 
     <div class="col-md-4">
-        <div class="card-custom" style="height: calc(100vh - 200px); overflow-y: auto;" data-chat-thread-scroll>
+        <div class="card-custom cabinet-chat-pane cabinet-chat-pane--list" data-chat-thread-scroll>
             <h5 class="mb-3">Клиенты</h5>
             @if($bookings->count() > 0)
                 <div data-chat-threads>
@@ -36,13 +36,13 @@
                     <a href="{{ route('cabinet.manager.chat', ['bookingId' => $booking->id]) }}"
                        data-chat-thread
                        @if($currentBooking && $currentBooking->id == $booking->id) aria-current="page" @endif
-                       class="d-block p-3 mb-2 rounded {{ $currentBooking && $currentBooking->id == $booking->id ? 'bg-primary text-white' : 'bg-light' }}"
+                       class="chat-thread d-block mb-2 rounded {{ $currentBooking && $currentBooking->id == $booking->id ? 'bg-primary text-white' : 'bg-light' }}"
                        style="text-decoration: none; transition: all 0.2s; position: relative;">
-                        <div class="d-flex align-items-start gap-2">
+                        <div class="chat-thread__row">
                             <div class="user-avatar" style="width: 40px; height: 40px;">
                                 {{ Str::upper(Str::substr($booking->user->name ?? 'К', 0, 1)) }}
                             </div>
-                            <div style="flex: 1; min-width: 0;">
+                            <div class="chat-thread__body">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <div style="font-weight: 600; font-size: 0.875rem;">
                                         {{ $booking->user->name ?? 'Неизвестно' }}
@@ -57,7 +57,7 @@
                                         • {{ $booking->destination_city }}
                                     @endif
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div class="chat-thread__status d-flex justify-content-between align-items-center mt-1">
                                     @include('cabinet.components.status-badge', ['status' => $booking->status])
                                 </div>
                             </div>
@@ -76,7 +76,7 @@
 
     <div class="col-md-8">
         @if($currentBooking)
-            <div class="card-custom" style="height: calc(100vh - 200px); display: flex; flex-direction: column;" data-chat-window tabindex="-1">
+            <div class="card-custom cabinet-chat-pane cabinet-chat-pane--window" data-chat-window tabindex="-1">
                 <div class="d-flex align-items-center gap-3 pb-3 border-bottom">
                     <div class="user-avatar" style="width: 48px; height: 48px;">
                         {{ Str::upper(Str::substr($currentBooking->user->name ?? 'К', 0, 1)) }}
@@ -160,7 +160,7 @@
                 </div>
             </div>
         @else
-            <div class="card-custom text-center" style="height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center;">
+            <div class="card-custom text-center cabinet-chat-pane cabinet-chat-pane--empty">
                 <div>
                     <i class="bi bi-chat-square-text" style="font-size: 4rem; color: #d1d5db;"></i>
                     <h4 class="mt-4">Выберите заявку</h4>

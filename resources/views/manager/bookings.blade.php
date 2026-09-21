@@ -120,7 +120,7 @@
                             </td>
                             <td>
                                 @if($booking->total_price)
-                                    <strong>{{ number_format($booking->total_price, 0, ',', ' ') }} ₽</strong>
+                                    <strong class="text-nowrap">{{ number_format($booking->total_price, 0, ',', ' ') }} ₽</strong>
                                 @else
                                     <span class="text-muted">Не указана</span>
                                 @endif

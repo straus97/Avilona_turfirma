@@ -7,8 +7,8 @@
     Назначение перехода — то же (bookings.show).
 --}}
 <div class="card-custom booking-card">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
+    <div class="booking-card__head mb-3">
+        <div class="booking-card__title">
             <h5 class="mb-1" style="font-weight: 600; color: var(--cabinet-heading);">
                 <a href="{{ route('bookings.show', $booking->id) }}" class="stretched-link text-reset text-decoration-none">
                     {{ $booking->destination_country }}
