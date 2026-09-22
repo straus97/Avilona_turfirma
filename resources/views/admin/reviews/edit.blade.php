@@ -44,8 +44,8 @@
         </div>
         @endif
         <div class="mb-3">
-            <label class="form-label">Тема (необязательно)</label>
-            <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $review->title) }}">
+            <label class="form-label" for="admin-review-title">Тема (необязательно)</label>
+            <input type="text" id="admin-review-title" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $review->title) }}">
             @error('title')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -75,8 +75,8 @@
             @enderror
         </div>
         <div class="mb-3">
-            <label class="form-label">Отзыв</label>
-            <textarea name="content" rows="6" class="form-control @error('content') is-invalid @enderror" required>{{ old('content', $review->content) }}</textarea>
+            <label class="form-label" for="admin-review-content">Отзыв</label>
+            <textarea id="admin-review-content" name="content" rows="6" class="form-control @error('content') is-invalid @enderror" required>{{ old('content', $review->content) }}</textarea>
             @error('content')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

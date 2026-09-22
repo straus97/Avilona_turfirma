@@ -971,17 +971,13 @@
                 event.stopPropagation();
                 event.preventDefault();
             }
-            console.log('Toggle tourist dropdown clicked');
             const dropdown = document.getElementById('touristDropdown');
-            console.log('Dropdown element:', dropdown);
-            console.log('Current display:', dropdown.style.display);
-            
+
             if (dropdown.style.display === 'none' || dropdown.style.display === '') {
                 dropdown.style.display = 'block';
             } else {
                 dropdown.style.display = 'none';
             }
-            console.log('New display:', dropdown.style.display);
         };
 
         window.closeTouristDropdown = function() {

@@ -20,30 +20,30 @@
     <form method="POST" action="{{ route('cabinet.admin.articles.store') }}">
         @csrf
         <div class="mb-3">
-            <label class="form-label">Заголовок</label>
-            <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" required>
+            <label class="form-label" for="admin-article-title">Заголовок</label>
+            <input type="text" id="admin-article-title" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" required>
             @error('title')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
         <div class="mb-3">
-            <label class="form-label">Slug (необязательно)</label>
-            <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}">
+            <label class="form-label" for="admin-article-slug">Slug (необязательно)</label>
+            <input type="text" id="admin-article-slug" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug') }}">
             @error('slug')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
             <small class="text-muted">Если не указать, будет сгенерирован автоматически.</small>
         </div>
         <div class="mb-3">
-            <label class="form-label">Изображение (URL)</label>
-            <input type="url" name="image" class="form-control @error('image') is-invalid @enderror" value="{{ old('image') }}" placeholder="https://...">
+            <label class="form-label" for="admin-article-image">Изображение (URL)</label>
+            <input type="url" id="admin-article-image" name="image" class="form-control @error('image') is-invalid @enderror" value="{{ old('image') }}" placeholder="https://...">
             @error('image')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
         <div class="mb-3">
-            <label class="form-label">Контент</label>
-            <textarea name="content" rows="8" class="form-control @error('content') is-invalid @enderror" required>{{ old('content') }}</textarea>
+            <label class="form-label" for="admin-article-content">Контент</label>
+            <textarea id="admin-article-content" name="content" rows="8" class="form-control @error('content') is-invalid @enderror" required>{{ old('content') }}</textarea>
             @error('content')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

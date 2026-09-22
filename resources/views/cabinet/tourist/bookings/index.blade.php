@@ -10,7 +10,7 @@
 @php
     $statusLabels = [
         'new' => 'Новые',
-        'progress' => 'В работе',
+        'progress' => 'В обработке',
         'confirmed' => 'Подтверждены',
         'completed' => 'Завершены',
         'cancelled' => 'Отменены',
@@ -46,7 +46,7 @@
         </div>
         <div class="tc-metric-strip__item">
             <div class="tc-metric-strip__value">{{ $activeCount }}</div>
-            <div class="tc-metric-strip__label">В работе</div>
+            <div class="tc-metric-strip__label">Активные</div>
         </div>
         <div class="tc-metric-strip__item">
             <div class="tc-metric-strip__value">{{ $confirmedCount }}</div>

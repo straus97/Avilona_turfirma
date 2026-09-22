@@ -63,8 +63,8 @@
                             <tr>
                                 <td>{{ $row->month }}</td>
                                 <td>{{ $row->count }}</td>
-                                <td>{{ number_format($row->revenue ?? 0, 0, ',', ' ') }} ₽</td>
-                                <td>{{ number_format($row->paid ?? 0, 0, ',', ' ') }} ₽</td>
+                                <td class="text-nowrap">{{ number_format($row->revenue ?? 0, 0, ',', ' ') }} ₽</td>
+                                <td class="text-nowrap">{{ number_format($row->paid ?? 0, 0, ',', ' ') }} ₽</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -132,8 +132,8 @@
                         <td>{{ $booking->user->name ?? '—' }}</td>
                         <td>{{ $booking->manager?->name ?? '—' }}</td>
                         <td>@include('cabinet.components.status-badge', ['status' => $booking->status])</td>
-                        <td>{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} ₽</td>
-                        <td>{{ number_format($booking->paid_amount ?? 0, 0, ',', ' ') }} ₽</td>
+                        <td class="text-nowrap">{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} ₽</td>
+                        <td class="text-nowrap">{{ number_format($booking->paid_amount ?? 0, 0, ',', ' ') }} ₽</td>
                     </tr>
                 @empty
                     <tr>

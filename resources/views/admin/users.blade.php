@@ -31,12 +31,12 @@
     </div>
     <form action="{{ route('cabinet.admin.users') }}" method="GET" class="row g-2 align-items-end">
         <div class="col-md-8 col-xl-5">
-            <label class="form-label">Поиск</label>
-            <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
+            <label class="form-label" for="admin-users-search">Поиск</label>
+            <input type="text" id="admin-users-search" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
         </div>
         <div class="col-md-4">
-            <label class="form-label">Роль</label>
-            <select name="role" class="form-select">
+            <label class="form-label" for="admin-users-role">Роль</label>
+            <select id="admin-users-role" name="role" class="form-select">
                 <option value="all" {{ request('role', 'all') === 'all' ? 'selected' : '' }}>Все роли</option>
                 @foreach($roles as $role)
                     <option value="{{ $role->name }}" {{ request('role') === $role->name ? 'selected' : '' }}>
@@ -117,18 +117,18 @@
                         <td>{{ $user->created_at ? $user->created_at->format('d.m.Y') : '—' }}</td>
                         <td>
                             <div class="d-flex gap-2">
-                                <a href="{{ route('cabinet.admin.user-show', $user->id) }}" class="btn btn-sm btn-outline-success" title="Карточка пользователя">
-                                    <i class="bi bi-person-badge"></i>
+                                <a href="{{ route('cabinet.admin.user-show', $user->id) }}" class="btn btn-sm btn-outline-success" title="Карточка пользователя" aria-label="Карточка пользователя {{ $user->name }}">
+                                    <i class="bi bi-person-badge" aria-hidden="true"></i>
                                 </a>
-                                <a href="{{ route('cabinet.admin.user-roles', $user->id) }}" class="btn btn-sm btn-outline-primary" title="Управление ролями">
-                                    <i class="bi bi-key"></i>
+                                <a href="{{ route('cabinet.admin.user-roles', $user->id) }}" class="btn btn-sm btn-outline-primary" title="Управление ролями" aria-label="Управление ролями пользователя {{ $user->name }}">
+                                    <i class="bi bi-key" aria-hidden="true"></i>
                                 </a>
                                 @if($user->id !== Auth::id())
                                     <form action="{{ route('cabinet.admin.delete-user', $user->id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этого пользователя?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить" aria-label="Удалить пользователя {{ $user->name }}">
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 @endif

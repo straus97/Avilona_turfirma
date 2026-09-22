@@ -82,14 +82,16 @@
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('cabinet.manager.bookings', ['search' => $client->email]) }}"
                                        class="btn btn-sm btn-outline-primary"
-                                       title="Заявки клиента">
-                                        <i class="bi bi-bookmark"></i>
+                                       title="Заявки клиента"
+                                       aria-label="Заявки клиента {{ $client->name }}">
+                                        <i class="bi bi-bookmark" aria-hidden="true"></i>
                                     </a>
                                     @if($client->latest_booking)
                                         <a href="{{ route('cabinet.manager.chat', ['bookingId' => $client->latest_booking->id]) }}"
                                            class="btn btn-sm btn-outline-success"
-                                           title="Написать в чат">
-                                            <i class="bi bi-chat"></i>
+                                           title="Написать в чат"
+                                           aria-label="Написать в чат клиенту {{ $client->name }}">
+                                            <i class="bi bi-chat" aria-hidden="true"></i>
                                         </a>
                                     @endif
                                 </div>

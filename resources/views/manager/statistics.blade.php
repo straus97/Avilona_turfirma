@@ -31,7 +31,7 @@
     </div>
     <div class="col-md-6 col-xl-3">
         @include('cabinet.components.stat-card', [
-            'title' => 'В работе',
+            'title' => 'Активные заявки',
             'value' => $statusStats['pending'] + $statusStats['confirmed'],
             'icon' => 'bi-hourglass-split',
             'color' => 'warning'
@@ -197,7 +197,7 @@
         new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: ['В работе', 'Подтверждено', 'Завершено', 'Отменено'],
+                labels: ['В обработке', 'Подтверждено', 'Завершено', 'Отменено'],
                 datasets: [{
                     data: [
                         {{ $statusStats['pending'] }},

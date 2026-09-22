@@ -28,30 +28,30 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Имя</label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name) }}" required>
+                            <label class="form-label" for="admin-profile-name">Имя</label>
+                            <input type="text" id="admin-profile-name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name) }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', Auth::user()->email) }}" required>
+                            <label class="form-label" for="admin-profile-email">Email</label>
+                            <input type="email" id="admin-profile-email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', Auth::user()->email) }}" required>
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">При смене email потребуется повторное подтверждение.</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Телефон</label>
+                            <label class="form-label" for="phone">Телефон</label>
                             <input type="text" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', Auth::user()->phone) }}" placeholder="+7 (___) ___-__-__">
                             @error('phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Дата рождения</label>
-                            <input type="date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', Auth::user()->birth_date) }}">
+                            <label class="form-label" for="admin-profile-birth-date">Дата рождения</label>
+                            <input type="date" id="admin-profile-birth-date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', Auth::user()->birth_date) }}">
                             @error('birth_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -59,29 +59,29 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Паспорт (серия и номер)</label>
+                            <label class="form-label" for="passport_number">Паспорт (серия и номер)</label>
                             <input type="text" id="passport_number" name="passport_number" class="form-control @error('passport_number') is-invalid @enderror" value="{{ old('passport_number', Auth::user()->passport_number) }}" placeholder="__ __ ______">
                             @error('passport_number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Дата выдачи</label>
-                            <input type="date" name="passport_issued_date" class="form-control @error('passport_issued_date') is-invalid @enderror" value="{{ old('passport_issued_date', Auth::user()->passport_issued_date) }}">
+                            <label class="form-label" for="admin-profile-passport-issued-date">Дата выдачи</label>
+                            <input type="date" id="admin-profile-passport-issued-date" name="passport_issued_date" class="form-control @error('passport_issued_date') is-invalid @enderror" value="{{ old('passport_issued_date', Auth::user()->passport_issued_date) }}">
                             @error('passport_issued_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Кем выдан</label>
-                            <input type="text" name="passport_issued_by" class="form-control @error('passport_issued_by') is-invalid @enderror" value="{{ old('passport_issued_by', Auth::user()->passport_issued_by) }}">
+                            <label class="form-label" for="admin-profile-passport-issued-by">Кем выдан</label>
+                            <input type="text" id="admin-profile-passport-issued-by" name="passport_issued_by" class="form-control @error('passport_issued_by') is-invalid @enderror" value="{{ old('passport_issued_by', Auth::user()->passport_issued_by) }}">
                             @error('passport_issued_by')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Роль</label>
-                            <input type="text" class="form-control" value="Администратор" disabled>
+                            <label class="form-label" for="admin-profile-role">Роль</label>
+                            <input type="text" id="admin-profile-role" class="form-control" value="Администратор" disabled>
                         </div>
                     </div>
                 </div>
@@ -136,23 +136,23 @@
             <form method="POST" action="{{ route('cabinet.admin.settings.password') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Текущий пароль</label>
-                    <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" required>
+                    <label class="form-label" for="admin-profile-current-password">Текущий пароль</label>
+                    <input type="password" id="admin-profile-current-password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" autocomplete="current-password" required>
                     @error('current_password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Новый пароль</label>
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+                    <label class="form-label" for="admin-profile-new-password">Новый пароль</label>
+                    <input type="password" id="admin-profile-new-password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" required>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                     <small class="text-muted">Минимум 8 символов</small>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Подтверждение пароля</label>
-                    <input type="password" name="password_confirmation" class="form-control" required>
+                    <label class="form-label" for="admin-profile-password-confirmation">Подтверждение пароля</label>
+                    <input type="password" id="admin-profile-password-confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
@@ -205,8 +205,8 @@
                 @csrf
                 @method('DELETE')
                 <div class="mb-3">
-                    <label class="form-label">Пароль</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <label class="form-label" for="admin-profile-delete-password">Пароль</label>
+                    <input type="password" id="admin-profile-delete-password" name="password" class="form-control" required>
                 </div>
                 <button type="submit" class="btn btn-danger">
                     <i class="bi bi-trash"></i> Удалить аккаунт
@@ -225,7 +225,8 @@
             <form action="{{ route('cabinet.admin.profile.avatar') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
-                    <input type="file" name="avatar" class="form-control" accept="image/*" required>
+                    <label class="form-label" for="admin-profile-avatar">Файл фотографии</label>
+                    <input type="file" id="admin-profile-avatar" name="avatar" class="form-control" accept="image/*" required>
                     <small class="text-muted">Максимум 2 МБ. Форматы: JPG, PNG</small>
                 </div>
                 <div class="modal-footer">

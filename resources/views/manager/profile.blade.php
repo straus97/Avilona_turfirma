@@ -29,30 +29,30 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Имя</label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name) }}" required>
+                            <label class="form-label" for="manager-profile-name">Имя</label>
+                            <input type="text" id="manager-profile-name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name) }}" required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', Auth::user()->email) }}" required>
+                            <label class="form-label" for="manager-profile-email">Email</label>
+                            <input type="email" id="manager-profile-email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', Auth::user()->email) }}" required>
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">При смене email потребуется повторное подтверждение.</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Телефон</label>
+                            <label class="form-label" for="phone">Телефон</label>
                             <input type="text" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', Auth::user()->phone) }}" placeholder="+7 (___) ___-__-__">
                             @error('phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Дата рождения</label>
-                            <input type="date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', Auth::user()->birth_date) }}">
+                            <label class="form-label" for="manager-profile-birth-date">Дата рождения</label>
+                            <input type="date" id="manager-profile-birth-date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', Auth::user()->birth_date) }}">
                             @error('birth_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -60,29 +60,29 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label class="form-label">Паспорт (серия и номер)</label>
+                            <label class="form-label" for="passport_number">Паспорт (серия и номер)</label>
                             <input type="text" id="passport_number" name="passport_number" class="form-control @error('passport_number') is-invalid @enderror" value="{{ old('passport_number', Auth::user()->passport_number) }}" placeholder="__ __ ______">
                             @error('passport_number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Дата выдачи</label>
-                            <input type="date" name="passport_issued_date" class="form-control @error('passport_issued_date') is-invalid @enderror" value="{{ old('passport_issued_date', Auth::user()->passport_issued_date) }}">
+                            <label class="form-label" for="manager-profile-passport-issued-date">Дата выдачи</label>
+                            <input type="date" id="manager-profile-passport-issued-date" name="passport_issued_date" class="form-control @error('passport_issued_date') is-invalid @enderror" value="{{ old('passport_issued_date', Auth::user()->passport_issued_date) }}">
                             @error('passport_issued_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Кем выдан</label>
-                            <input type="text" name="passport_issued_by" class="form-control @error('passport_issued_by') is-invalid @enderror" value="{{ old('passport_issued_by', Auth::user()->passport_issued_by) }}">
+                            <label class="form-label" for="manager-profile-passport-issued-by">Кем выдан</label>
+                            <input type="text" id="manager-profile-passport-issued-by" name="passport_issued_by" class="form-control @error('passport_issued_by') is-invalid @enderror" value="{{ old('passport_issued_by', Auth::user()->passport_issued_by) }}">
                             @error('passport_issued_by')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Роль</label>
-                            <input type="text" class="form-control" value="Менеджер" disabled>
+                            <label class="form-label" for="manager-profile-role">Роль</label>
+                            <input type="text" id="manager-profile-role" class="form-control" value="Менеджер" disabled>
                         </div>
                     </div>
                 </div>
@@ -158,7 +158,8 @@
             <form action="{{ route('cabinet.manager.profile.avatar') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
-                    <input type="file" name="avatar" class="form-control" accept="image/*" required>
+                    <label class="form-label" for="manager-profile-avatar">Файл фотографии</label>
+                    <input type="file" id="manager-profile-avatar" name="avatar" class="form-control" accept="image/*" required>
                     <small class="text-muted">Максимум 2 МБ. Форматы: JPG, PNG</small>
                 </div>
                 <div class="modal-footer">

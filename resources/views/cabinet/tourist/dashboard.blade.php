@@ -60,7 +60,7 @@
         <div class="tc-metric__icon tc-metric__icon--warning"><i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
         <div>
             <div class="tc-metric__value">{{ $activeBookings }}</div>
-            <div class="tc-metric__label">В работе</div>
+            <div class="tc-metric__label">Активные заявки</div>
         </div>
     </div>
     <div class="tc-metric">

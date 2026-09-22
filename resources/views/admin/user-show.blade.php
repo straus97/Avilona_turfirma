@@ -96,8 +96,8 @@
                                     <td>@include('cabinet.components.status-badge', ['status' => $booking->status])</td>
                                     <td>{{ $booking->created_at ? $booking->created_at->format('d.m.Y') : '—' }}</td>
                                     <td>
-                                        <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
+                                        <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Просмотреть заявку №{{ $booking->id }}">
+                                            <i class="bi bi-eye" aria-hidden="true"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -132,8 +132,8 @@
                                     <td>{{ $document->document_type }}</td>
                                     <td>{{ number_format($document->file_size / 1024, 1, '.', ' ') }} KB</td>
                                     <td>
-                                        <a href="{{ route('cabinet.admin.user-document.download', [$user, $document]) }}" target="_blank" class="btn btn-sm btn-outline-primary" rel="noopener">
-                                            <i class="bi bi-paperclip"></i>
+                                        <a href="{{ route('cabinet.admin.user-document.download', [$user, $document]) }}" target="_blank" class="btn btn-sm btn-outline-primary" rel="noopener" aria-label="Скачать документ «{{ $document->name }}»">
+                                            <i class="bi bi-paperclip" aria-hidden="true"></i>
                                         </a>
                                     </td>
                                 </tr>

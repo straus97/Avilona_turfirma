@@ -53,7 +53,7 @@
     
     <!-- Заглушка для предотвращения ошибок Google Maps и других API -->
     <script>
-        window.initMap = window.initMap || function() { console.log('initMap stub called'); };
+        window.initMap = window.initMap || function() {};
     </script>
     
     <!-- Bootstrap CSS -->

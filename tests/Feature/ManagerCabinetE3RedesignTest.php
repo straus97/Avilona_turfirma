@@ -197,16 +197,15 @@ class ManagerCabinetE3RedesignTest extends TestCase
         $html = $this->actingAs($manager)->get(route('cabinet.manager.dashboard'))->assertOk()->getContent();
 
         // The status doughnut must display the same "В обработке" wording used
-        // elsewhere on this dashboard, not the raw controller label "В работе".
-        $this->assertStringContainsString("'В работе' ? 'В обработке' : label", $html);
-
-        $chartScriptStart = strpos($html, "const statusChartLabels");
+        // elsewhere on this dashboard. The controller now supplies the canonical
+        // label directly (E4-D3), so no display-only JS remap is needed — the
+        // json_encode()'d chart labels carry the \uXXXX-escaped form.
         $chartScriptEnd = strpos($html, 'new Chart(statusCtx');
-        $this->assertNotFalse($chartScriptStart);
         $this->assertNotFalse($chartScriptEnd);
 
-        $labelMappingSnippet = substr($html, $chartScriptStart, $chartScriptEnd - $chartScriptStart);
-        $this->assertStringContainsString('В обработке', $labelMappingSnippet);
+        $labelSnippet = substr($html, $chartScriptEnd, 400);
+        $this->assertStringContainsString(json_encode('В обработке'), $labelSnippet);
+        $this->assertStringNotContainsString("'В работе' ? 'В обработке'", $html);
     }
 
     // ------------------------------------------------------------------

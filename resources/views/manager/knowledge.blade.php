@@ -31,8 +31,8 @@
                         <td>{{ $article->title }}</td>
                         <td>{{ $article->created_at ? $article->created_at->format('d.m.Y') : '—' }}</td>
                         <td>
-                            <a href="{{ route('helpful_information.show_interesting_news', $article->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
-                                <i class="bi bi-eye"></i>
+                            <a href="{{ route('helpful_information.show_interesting_news', $article->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" aria-label="Просмотреть статью «{{ $article->title }}»">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
                         </td>
                     </tr>

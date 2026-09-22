@@ -24,15 +24,15 @@
         @csrf
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Название</label>
-                <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" required>
+                <label class="form-label" for="manager-document-name">Название</label>
+                <input type="text" id="manager-document-name" name="name" class="form-control @error('name') is-invalid @enderror" required>
                 @error('name')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Тип документа</label>
-                <select name="document_type" class="form-select">
+                <label class="form-label" for="manager-document-type">Тип документа</label>
+                <select id="manager-document-type" name="document_type" class="form-select">
                     <option value="other">Другое</option>
                     <option value="passport">Паспорт РФ</option>
                     <option value="foreign_passport">Загранпаспорт</option>
@@ -42,8 +42,8 @@
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Файл</label>
-            <input type="file" name="file" class="form-control @error('file') is-invalid @enderror" required>
+            <label class="form-label" for="manager-document-file">Файл</label>
+            <input type="file" id="manager-document-file" name="file" class="form-control @error('file') is-invalid @enderror" required>
             @error('file')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -88,17 +88,17 @@
                             <td>{{ $document->created_at->format('d.m.Y') }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="bi bi-eye"></i>
+                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-primary" target="_blank" aria-label="Просмотреть документ «{{ $document->name }}»">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
                                     </a>
-                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-secondary" download>
-                                        <i class="bi bi-download"></i>
+                                    <a href="{{ route('cabinet.manager.documents.download', $document) }}" class="btn btn-sm btn-outline-secondary" download aria-label="Скачать документ «{{ $document->name }}»">
+                                        <i class="bi bi-download" aria-hidden="true"></i>
                                     </a>
                                     <form method="POST" action="{{ route('cabinet.manager.documents.delete', $document) }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить документ?')">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить документ?')" aria-label="Удалить документ «{{ $document->name }}»">
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                 </div>

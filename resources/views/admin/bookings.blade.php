@@ -18,12 +18,12 @@
     </div>
     <form action="{{ route('cabinet.admin.bookings') }}" method="GET" class="row g-2 align-items-end">
         <div class="col-md-6 col-xl-3">
-            <label class="form-label">Поиск</label>
-            <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
+            <label class="form-label" for="admin-bookings-search">Поиск</label>
+            <input type="text" id="admin-bookings-search" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
         </div>
         <div class="col-md-3">
-            <label class="form-label">Статус</label>
-            <select name="status" class="form-select">
+            <label class="form-label" for="admin-bookings-status">Статус</label>
+            <select id="admin-bookings-status" name="status" class="form-select">
                 <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>Все статусы</option>
                 <option value="new" {{ request('status') === 'new' ? 'selected' : '' }}>Новые</option>
                 <option value="progress" {{ request('status') === 'progress' ? 'selected' : '' }}>В обработке</option>
@@ -33,8 +33,8 @@
             </select>
         </div>
         <div class="col-md-3">
-            <label class="form-label">Менеджер</label>
-            <select name="manager" class="form-select">
+            <label class="form-label" for="admin-bookings-manager">Менеджер</label>
+            <select id="admin-bookings-manager" name="manager" class="form-select">
                 <option value="all" {{ request('manager', 'all') === 'all' ? 'selected' : '' }}>Все менеджеры</option>
                 <option value="unassigned" {{ request('manager') === 'unassigned' ? 'selected' : '' }}>Не назначен</option>
                 @foreach($managers as $mgr)
@@ -123,7 +123,7 @@
                                     $currentAssigneeIsEligible = $booking->manager_id !== null
                                         && $managers->contains('id', $booking->manager_id);
                                 @endphp
-                                <select name="manager_id" class="form-select form-select-sm">
+                                <select name="manager_id" class="form-select form-select-sm" aria-label="Менеджер для заявки №{{ $booking->id }}">
                                     <option value="">Выбрать...</option>
                                     @if($booking->manager_id !== null && ! $currentAssigneeIsEligible && $booking->manager)
                                         <option value="{{ $booking->manager_id }}" selected disabled>
@@ -140,8 +140,8 @@
                             </form>
                         </td>
                         <td>
-                            <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i>
+                            <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Просмотреть заявку №{{ $booking->id }}">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
                         </td>
                     </tr>

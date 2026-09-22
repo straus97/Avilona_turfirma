@@ -43,17 +43,17 @@
                         <td class="text-muted">{{ $article->slug }}</td>
                         <td>{{ $article->created_at ? $article->created_at->format('d.m.Y') : '—' }}</td>
                         <td class="d-flex gap-2">
-                            <a href="{{ route('helpful_information.show_interesting_news', $article->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
-                                <i class="bi bi-eye"></i>
+                            <a href="{{ route('helpful_information.show_interesting_news', $article->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" aria-label="Просмотреть статью «{{ $article->title }}»">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
-                            <a href="{{ route('cabinet.manager.articles.edit', $article->id) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
+                            <a href="{{ route('cabinet.manager.articles.edit', $article->id) }}" class="btn btn-sm btn-outline-secondary" aria-label="Редактировать статью «{{ $article->title }}»">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
                             </a>
                             <form action="{{ route('cabinet.manager.articles.delete', $article->id) }}" method="POST" onsubmit="return confirm('Удалить статью?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Удалить статью «{{ $article->title }}»">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
                                 </button>
                             </form>
                         </td>

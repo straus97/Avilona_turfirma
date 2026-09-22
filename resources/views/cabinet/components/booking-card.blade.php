@@ -27,11 +27,11 @@
     </div>
 
     <div class="row g-3 mb-3" style="font-size: 0.875rem;">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-xl-3">
             <div style="color: var(--cabinet-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Город вылета</div>
             <div style="font-weight: 500;">{{ $booking->departure_city }}</div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-xl-3">
             <div style="color: var(--cabinet-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Ночей</div>
             <div style="font-weight: 500;">
                 {{ $booking->nights }}
@@ -40,12 +40,12 @@
                 @endif
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-xl-3">
             <div style="color: var(--cabinet-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Взрослых</div>
             <div style="font-weight: 500;">{{ $booking->adults }}</div>
         </div>
         @if($booking->children > 0)
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-xl-3">
                 <div style="color: var(--cabinet-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Детей</div>
                 <div style="font-weight: 500;">{{ $booking->children }}</div>
             </div>

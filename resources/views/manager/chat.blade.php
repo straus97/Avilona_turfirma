@@ -138,21 +138,24 @@
                         <input type="hidden" name="receiver_id" value="{{ $currentBooking->user_id }}">
 
                         <div class="d-flex gap-2">
+                            <label for="messageInput" class="visually-hidden">Текст сообщения</label>
                             <input type="text" name="message" class="form-control" placeholder="Введите сообщение..." id="messageInput" data-chat-input autocomplete="off">
-                            <label class="btn btn-outline-secondary" style="cursor: pointer;" title="Прикрепить файл">
-                                <i class="bi bi-paperclip"></i>
+                            <label for="attachmentInput" class="btn btn-outline-secondary mb-0" style="cursor: pointer;" title="Прикрепить файл">
+                                <i class="bi bi-paperclip" aria-hidden="true"></i>
+                                <span class="visually-hidden">Прикрепить файл</span>
                                 <input type="file" name="attachment" style="display: none;" id="attachmentInput"
                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.webp"
                                        data-chat-attachment>
                             </label>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send"></i>
+                                <i class="bi bi-send" aria-hidden="true"></i>
+                                <span class="visually-hidden">Отправить</span>
                             </button>
                         </div>
                         <div class="mt-2 text-muted small" data-chat-attachment-name hidden>
-                            <i class="bi bi-file-earmark"></i> <span data-chat-attachment-filename></span>
+                            <i class="bi bi-file-earmark" aria-hidden="true"></i> <span data-chat-attachment-filename></span>
                             <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" data-chat-attachment-clear>
-                                <i class="bi bi-x-circle"></i>
+                                <i class="bi bi-x-circle" aria-hidden="true"></i>
                                 <span class="visually-hidden">Убрать файл</span>
                             </button>
                         </div>

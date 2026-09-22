@@ -45,7 +45,7 @@ class TouristCabinetE3RedesignTest extends TestCase
 
         // Три сводных показателя туриста.
         $response->assertSee('Всего заявок');
-        $response->assertSee('В работе');
+        $response->assertSee('Активные заявки');
         $response->assertSee('Завершённых поездок');
 
         // Нет заявок — честный пустой стейт с ведущим действием, без выдуманной поездки.

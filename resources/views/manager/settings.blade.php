@@ -23,23 +23,23 @@
     <form method="POST" action="{{ route('cabinet.manager.settings.password') }}">
         @csrf
         <div class="mb-3">
-            <label class="form-label">Текущий пароль</label>
-            <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" required>
+            <label class="form-label" for="manager-settings-current-password">Текущий пароль</label>
+            <input type="password" id="manager-settings-current-password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" autocomplete="current-password" required>
             @error('current_password')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
         <div class="mb-3">
-            <label class="form-label">Новый пароль</label>
-            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+            <label class="form-label" for="manager-settings-new-password">Новый пароль</label>
+            <input type="password" id="manager-settings-new-password" name="password" class="form-control @error('password') is-invalid @enderror" autocomplete="new-password" required>
             @error('password')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
             <small class="text-muted">Минимум 8 символов</small>
         </div>
         <div class="mb-3">
-            <label class="form-label">Подтверждение пароля</label>
-            <input type="password" name="password_confirmation" class="form-control" required>
+            <label class="form-label" for="manager-settings-password-confirmation">Подтверждение пароля</label>
+            <input type="password" id="manager-settings-password-confirmation" name="password_confirmation" class="form-control" autocomplete="new-password" required>
         </div>
 
         <button type="submit" class="btn btn-primary">
@@ -97,8 +97,8 @@
         @csrf
         @method('DELETE')
         <div class="mb-3">
-            <label class="form-label">Пароль</label>
-            <input type="password" name="password" class="form-control" required>
+            <label class="form-label" for="manager-settings-delete-password">Пароль</label>
+            <input type="password" id="manager-settings-delete-password" name="password" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-danger">
             <i class="bi bi-trash"></i> Удалить аккаунт

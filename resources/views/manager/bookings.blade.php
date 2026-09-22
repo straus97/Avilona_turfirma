@@ -17,6 +17,7 @@
         <div class="card-title-custom"><i class="bi bi-funnel"></i> Фильтры и поиск</div>
     </div>
     <form action="{{ route('cabinet.manager.bookings') }}" method="GET" class="d-flex flex-wrap gap-2">
+        <label for="search" class="visually-hidden">Поиск по заявкам</label>
         <input type="text"
                name="search"
                id="search"

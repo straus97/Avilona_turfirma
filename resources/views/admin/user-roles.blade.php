@@ -73,8 +73,8 @@
                 <form action="{{ route('cabinet.admin.assign-role', $user->id) }}" method="POST">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label">Выберите роль</label>
-                        <select name="role" class="form-select" required>
+                        <label class="form-label" for="admin-assign-role">Выберите роль</label>
+                        <select id="admin-assign-role" name="role" class="form-select" required>
                             @foreach($allRoles as $role)
                                 <option value="{{ $role->name }}">
                                     {{ $role->name === 'admin' ? 'Администратор' : ($role->name === 'manager' ? 'Менеджер' : 'Турист') }}

@@ -619,6 +619,21 @@ body {
     --bs-btn-hover-color: var(--cabinet-primary-strong);
 }
 
+/* Bootstrap's default warning outline text (~#ffc107 on white, ~1.6:1) fails
+   contrast (E4-C F-16). Reuse the existing --cabinet-warning token, already
+   validated for readable text on light backgrounds (status-progress badge),
+   which measures ~4.8:1 on white. */
+.btn-outline-warning {
+    --bs-btn-color: var(--cabinet-warning);
+    --bs-btn-border-color: var(--cabinet-warning);
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: var(--cabinet-warning);
+    --bs-btn-hover-border-color: var(--cabinet-warning);
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: var(--cabinet-warning);
+    --bs-btn-active-border-color: var(--cabinet-warning);
+}
+
 /* ==================================================================
    10. Статус-бейджи
    ================================================================== */

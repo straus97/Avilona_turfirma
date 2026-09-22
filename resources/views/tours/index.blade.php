@@ -1080,14 +1080,12 @@ function updateResorts() {
     
     fetch(`/api/tours/resorts?country=${encodeURIComponent(country)}`)
         .then(response => {
-            console.log('Resorts API response:', response);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Resorts data:', data);
             if (data.success && data.data.length > 0) {
                 let html = '';
                 data.data.forEach(resort => {
@@ -1122,13 +1120,10 @@ function updateSort(sortBy) {
 }
 
 function resetFilters() {
-    console.log('Reset filters clicked');
-    
     // Сбрасываем все поля формы
     const form = document.getElementById('tourSearchForm');
     if (form) {
         form.reset();
-        console.log('Form reset');
     } else {
         console.error('Form not found');
     }
@@ -1151,7 +1146,6 @@ function resetFilters() {
     // Восстанавливаем курорты если страна выбрана
     const countrySelect = document.querySelector('select[name="destination_country"]');
     if (countrySelect && countrySelect.value) {
-        console.log('Restoring resorts for country:', countrySelect.value);
         updateResorts();
     }
     
@@ -1176,7 +1170,6 @@ function resetFilters() {
     updatePopupSummary();
     
     // Перезагружаем страницу для полного сброса
-    console.log('Redirecting to tours index');
     window.location.href = '{{ route("tours.index") }}';
 }
 
@@ -1203,7 +1196,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Загружаем курорты если страна уже выбрана при загрузке страницы
         if (countrySelect.value) {
-            console.log('Loading resorts for initial country:', countrySelect.value);
             updateResorts();
         }
     }
@@ -1225,17 +1217,13 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
             event.preventDefault();
         }
-        console.log('Toggle tourist dropdown clicked');
         const dropdown = document.getElementById('touristDropdown');
-        console.log('Dropdown element:', dropdown);
-        console.log('Current display:', dropdown.style.display);
-        
+
         if (dropdown.style.display === 'none' || dropdown.style.display === '') {
             dropdown.style.display = 'block';
         } else {
             dropdown.style.display = 'none';
         }
-        console.log('New display:', dropdown.style.display);
     };
 
     window.closeTouristDropdown = function() {

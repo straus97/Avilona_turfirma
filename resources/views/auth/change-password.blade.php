@@ -36,9 +36,10 @@
                                 </label>
                                 <input type="password" 
                                        class="form-control @error('current_password') is-invalid @enderror" 
-                                       id="current_password" 
-                                       name="current_password" 
-                                       required 
+                                       id="current_password"
+                                       name="current_password"
+                                       autocomplete="current-password"
+                                       required
                                        autofocus>
                                 @error('current_password')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -55,8 +56,9 @@
                                 </label>
                                 <input type="password" 
                                        class="form-control @error('password') is-invalid @enderror" 
-                                       id="password" 
-                                       name="password" 
+                                       id="password"
+                                       name="password"
+                                       autocomplete="new-password"
                                        required>
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -73,8 +75,9 @@
                                 </label>
                                 <input type="password" 
                                        class="form-control" 
-                                       id="password_confirmation" 
-                                       name="password_confirmation" 
+                                       id="password_confirmation"
+                                       name="password_confirmation"
+                                       autocomplete="new-password"
                                        required>
                                 <small class="form-text text-muted">
                                     Введите пароль еще раз

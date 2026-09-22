@@ -76,7 +76,7 @@ class ManagerController extends Controller
         $totalBookings = $assignedBookings;
 
         // Данные для графика по статусам
-        $chartLabels = ['Новые', 'В работе', 'Подтверждены', 'Отменены', 'Завершены'];
+        $chartLabels = ['Новые', 'В обработке', 'Подтверждены', 'Отменены', 'Завершены'];
         $chartData = [
             Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_NEW)->count(),
             Booking::where('manager_id', $manager->id)->where('status', Booking::STATUS_PROGRESS)->count(),

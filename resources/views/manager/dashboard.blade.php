@@ -56,11 +56,11 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
+                                    <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Просмотреть заявку №{{ $booking->id }}">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
                                     </a>
-                                    <a href="{{ route('cabinet.manager.chat', $booking->id) }}" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-chat-dots"></i>
+                                    <a href="{{ route('cabinet.manager.chat', $booking->id) }}" class="btn btn-sm btn-outline-success" aria-label="Открыть чат по заявке №{{ $booking->id }}">
+                                        <i class="bi bi-chat-dots" aria-hidden="true"></i>
                                     </a>
                                 </div>
                             </td>
@@ -182,11 +182,11 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
+                                    <a href="{{ route('bookings.show', $booking->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Просмотреть заявку №{{ $booking->id }}">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
                                     </a>
-                                    <a href="{{ route('cabinet.manager.chat', $booking->id) }}" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-chat-dots"></i>
+                                    <a href="{{ route('cabinet.manager.chat', $booking->id) }}" class="btn btn-sm btn-outline-success" aria-label="Открыть чат по заявке №{{ $booking->id }}">
+                                        <i class="bi bi-chat-dots" aria-hidden="true"></i>
                                     </a>
                                 </div>
                             </td>
@@ -238,14 +238,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const statusCtx = document.getElementById('statusChart');
     if (statusCtx && window.Chart) {
-        // Display-only wording fix to match the established E3 status label; server-side status values are untouched.
-        const statusChartLabels = {!! json_encode($chartLabels) !!}.map(function(label) {
-            return label === 'В работе' ? 'В обработке' : label;
-        });
         new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: statusChartLabels,
+                labels: {!! json_encode($chartLabels) !!},
                 datasets: [{
                     data: {!! json_encode($chartData) !!},
                     backgroundColor: ['#667eea', '#f6c23e', '#1cc88a', '#e74a3b', '#6f42c1'],

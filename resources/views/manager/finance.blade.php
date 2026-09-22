@@ -63,8 +63,8 @@
                         <td>#{{ $booking->id }}</td>
                         <td>{{ $booking->user?->name ?? '—' }}</td>
                         <td>@include('cabinet.components.status-badge', ['status' => $booking->status])</td>
-                        <td>{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} ₽</td>
-                        <td>{{ number_format($booking->paid_amount ?? 0, 0, ',', ' ') }} ₽</td>
+                        <td class="text-nowrap">{{ number_format($booking->total_price ?? 0, 0, ',', ' ') }} ₽</td>
+                        <td class="text-nowrap">{{ number_format($booking->paid_amount ?? 0, 0, ',', ' ') }} ₽</td>
                     </tr>
                 @endforeach
             </tbody>
