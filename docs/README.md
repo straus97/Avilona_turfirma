@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-09-19**
+Дата актуализации содержания: **2026-09-23**
 
 ## 1. Текущий checkpoint
 
@@ -8,18 +8,20 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| **Текущий authoritative application HEAD** | **`ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`)** |
-| Прямой parent текущего HEAD | `8a5018bdf6a95658d195772c05adc3c4f557329d` (`perf: polish manager dashboard queries (E3-A6-A)`) |
-| Documentation checkpoint для этого application HEAD | **ЕЩЁ НЕ СУЩЕСТВУЕТ.** Будет создан отдельным docs-only commit **поверх** `ed550df8` (этот файл + `docs/roadmap.md`). Тот будущий HEAD определяется Git, не известен заранее и не зашивается в этот файл. |
-| Documentation/source checkpoint после E3-A5 (предыдущий docs-only commit; база текущего Project Sources) | `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — предшествует E3-A6-A/B, НЕ текущий HEAD |
+| **Текущий authoritative application HEAD** | **`55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`)** |
+| Прямой parent текущего application HEAD | `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`) |
+| Documentation checkpoint для этого application HEAD | **ЕЩЁ НЕ СУЩЕСТВУЕТ.** Будет создан отдельным docs-only commit **поверх** `55a9fcaf` (этот файл + `docs/roadmap.md`). Тот будущий HEAD определяется Git, не известен заранее и не зашивается в этот файл. |
+| Documentation/source checkpoint после E3-A6 / входа в E4 (предыдущий docs-only commit; база текущего Project Sources) | `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — предшествует всей серии E4-A…E4-E1, НЕ текущий HEAD |
+| Application HEAD на момент закрытия E3-A6 | `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — НЕ текущий HEAD |
+| Documentation/source checkpoint после E3-A5 (историческое) | `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — предшествует E3-A6-A/B, НЕ текущий HEAD |
 | Application HEAD на момент закрытия E3-A5 | `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — НЕ текущий HEAD |
-| Documentation/source checkpoint после закрытия E2 | `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — предыдущий docs-only commit, НЕ текущий HEAD |
+| Documentation/source checkpoint после закрытия E2 (историческое) | `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — НЕ текущий HEAD |
 | Documentation/source checkpoint после E2-A5 (историческое) | `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — предшествует E2-A6/E2-A7/E3, НЕ текущий HEAD |
 | Application HEAD на момент закрытия E2 (E2-A7) | `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — НЕ текущий HEAD |
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
-| Активный внешний documentation/source (Project Sources) checkpoint | набор основан на `20cde21dda2c38682c796214fbb2401e3f1f7804` (после E3-A5) — сейчас **STALE** относительно E3-A6-A/B; refresh обязателен только после review → отдельный docs-only commit → push → выравнивание local/tracking/live на будущем docs HEAD (см. §8.1) |
-| Full PHPUnit baseline | **1242 tests / 8056 assertions**, 0 failures, 0 errors (на закрытии E3-A5 было 1233 / 8023; после закрытия E2 — 1051 / 7180; историческое E1-closure значение: 1001 / 7013) |
+| Активный внешний documentation/source (Project Sources) checkpoint | набор основан на `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (вход в E4, до E4-A…E4-E1) — сейчас **STALE** относительно полного закрытия E4; refresh обязателен только после review → отдельный docs-only commit → push → выравнивание local/tracking/live на новом docs HEAD (см. §8.1) |
+| Full PHPUnit baseline | **1286 tests / 8628 assertions**, 0 failures, 0 errors (на входе в E4, checkpoint `c89e923f`, было 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; историческое E1-closure значение: 1001 / 7013) |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
@@ -29,30 +31,33 @@
 | E2 — Public UX / UI / Design Redesign | ✅ **COMPLETE / CLOSED на уровне приложения** (E2-A1…E2-A7; см. §9B) |
 | E3 — Cabinet UX/UI/Design Modernization | ✅ **CLOSED на уровне приложения** — E3-A1…E3-A5 (Foundation, Tourist, Shared Booking, Manager, Admin) + **E3-A6 point-polish (A + B) ✅ CLOSED**; E3-A6-C не требуется (см. §9C) |
 | S13-R2 (Manager review cache parity relevance check) | ✅ **CLOSED** — нет живого public review cache layer, parity не требуется (см. §5.7) |
-| Следующий шаг | **E4 — Post-redesign stabilization** — ⬜ NEXT, не начат (см. §9.4, `docs/roadmap.md`). Первая цель планирования E4: подтвердить full-regression baseline и определить матрицу browser/device QA. |
-| E5 / E6 | PENDING, позже E4 (см. §9, §10) |
+| **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** после этой документационной правки (E4-A…E4-E1; см. §9.4). Технический baseline: 1286 / 8628, 0 failures, 0 errors. Блокеров релиза уровня приложения не осталось. |
+| Следующий шаг | **E5 — Final Tour Search / Aggregation Solution** — ⬜ NEXT, реализация/закупка ещё не начата. Первый шаг — независимое research-прохождение через ChatGPT Work/Astra (см. §10). |
+| E6 | PENDING, после E5 (см. §9, §10) |
 
 Единственная PHPUnit deprecation — это pre-existing XML schema deprecation; это не функциональный/кодовый сбой.
 
-Baseline 1242 / 8056 — финальный верифицированный E3-A6 closure baseline (§9C.5).
-Финальный полный прогон выполнялся напрямую через PHPUnit с
-`-d memory_limit=1024M` (дефолтный 128M CLI memory_limit этой машины
-недостаточен для полного набора после роста E3); это не изменение
-`php.ini`/runtime-конфигурации проекта — временный CLI-override для одного
-прогона. PHPUnit против canonical MySQL остаётся запрещён.
+Baseline 1286 / 8628 — финальный верифицированный E4-E1 (final technical
+closure) baseline. Локальный `php artisan test --compact` на этом прогоне
+упёрся в дефолтный 128M CLI memory_limit ближе к концу набора — **это не
+дефект приложения и не провал тестов**, это ограничение локального PHP CLI
+runner'а. Полный историчный PHPUnit-style запуск с `memory_limit=512M` прошёл
+целиком: **1286 tests / 8628 assertions, 0 failures, 0 errors**. У приложения
+нет memory leak; тестовый набор не является упавшим. PHPUnit против canonical
+MySQL остаётся запрещён.
 
-Application checkpoint = `ed550df8989b44e7305bdce6b6f5f063b82a2616`. Этот файл и
-`docs/roadmap.md` фиксируются отдельным docs-only commit **поверх** этого
+Application checkpoint = `55a9fcaf6371ef0c749bb668c9b27783d1df358c`. Этот файл
+и `docs/roadmap.md` фиксируются отдельным docs-only commit **поверх** этого
 application HEAD. Documentation closure HEAD после того commit будет новее
 application commit и определяется Git — он **не** известен заранее и не
 зашивается в этот файл.
 
 Project Sources ещё не обновлён под этот checkpoint — активен набор,
-основанный на `20cde21d` (после E3-A5); он устарел относительно E3-A6-A/B — см. §8.1.
-Refresh **обязателен только после** review этого docs-only diff, отдельного
-docs-only commit, push и выравнивания local/tracking/live на новом docs HEAD;
-генерироваться он должен из **того нового чистого pushed documentation HEAD**,
-а не из `ed550df8` напрямую.
+основанный на `c89e923f` (вход в E4, до E4-A…E4-E1); он устарел относительно
+полного закрытия E4 — см. §8.1. Refresh **обязателен только после** review
+этого docs-only diff, отдельного docs-only commit, push и выравнивания
+local/tracking/live на новом docs HEAD; генерироваться он должен из **того
+нового чистого pushed documentation HEAD**, а не из `55a9fcaf` напрямую.
 
 ## 2. Источники истины
 
@@ -414,22 +419,22 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 
 Активный (внешний) Project Sources набор устарел относительно текущего repo:
 
-- активный Project Sources набор основан на `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`);
-- после него завершены E3-A6-A (`8a5018bd`) и E3-A6-B (`ed550df8`) — набор **STALE**;
-- Project Sources refresh **обязателен только после**: (1) review этого docs-only E3-A6-closure diff; (2) отдельного docs-only commit; (3) push; (4) выравнивания local / tracking / live origin на этом будущем docs HEAD;
-- refresh должен генерироваться из **этого нового чистого docs closure HEAD** (поверх `ed550df8`), а не из application HEAD `ed550df8` до docs commit; будущий docs HEAD пока неизвестен и не выдумывается; имя будущего source-архива, timestamp, SHA256 и размер архива тоже не выдумываются;
+- активный Project Sources набор основан на `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — момент входа в E4, до всей серии E4-A…E4-E1;
+- после него завершены E4-B (`511282e3`), E4-D1 (`16b71c6a`), E4-D2 (`46a97f3d`), E4-D3 (`c1ad29cb`), E4-E1 (`55a9fcaf`) — набор **STALE** относительно полного закрытия E4;
+- Project Sources refresh **обязателен только после**: (1) review этого docs-only E4-closure diff; (2) отдельного docs-only commit; (3) push; (4) выравнивания local / tracking / live origin на этом будущем docs HEAD;
+- refresh должен генерироваться из **этого нового чистого docs closure HEAD** (поверх `55a9fcaf`), а не из application HEAD `55a9fcaf` до docs commit; будущий docs HEAD пока неизвестен и не выдумывается; имя будущего source-архива, timestamp, SHA256 и размер архива тоже не выдумываются;
 - предыдущий активный набор файлов **не трогать** до верификации нового сгенерированного пакета; после refresh предыдущий набор сохраняется в `archive/`, не удаляется;
-- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне этого репозитория, под `C:\Avilona_private\`), запускается пользователем из чистого pushed HEAD; publish с backup предыдущего набора в `archive/`. Любой ранее подготовленный per-checkpoint wrapper нужно пересоздать/перенацелить на новый docs HEAD, а не запускать как есть.
+- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне этого репозитория, под `C:\Avilona_private\`), запускается из чистого pushed HEAD; publish с backup предыдущего набора в `archive/`. Установленный паттерн (см. `Avilona_E3_A6_Closure_Project_Sources_Refresh_v1`) — для каждого нового checkpoint копируется предыдущий `_v1` wrapper-пакет в новую `_v1`-директорию и переписывается заново (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются на месте.
 
-Правильная последовательность:
+Правильная последовательность (E4-E2 closure task):
 
 1. обновить `docs/README.md` + `docs/roadmap.md` (этот slice);
-2. оставить их uncommitted для review;
-3. после одобрения — docs-only commit/push;
-4. верифицировать чистый pushed documentation HEAD;
-5. отдельно регенерировать/promote Project Sources из нового docs HEAD (guarded PowerShell-скрипт, вне этого репозитория, требует своего собственного guarded-плана).
+2. review diff (docs-only, `git diff --check` чист);
+3. docs-only commit/push;
+4. верифицировать чистый pushed documentation HEAD (local = tracking = live origin);
+5. только после этого — регенерировать Project Sources из нового docs HEAD: скопировать `Avilona_E3_A6_Closure_Project_Sources_Refresh_v1` в новую `_v1`-директорию для этого checkpoint, переписать config-блок/шаблоны/canonical-хэши/self-digest под новый docs HEAD (не редактировать исторический wrapper на месте), выполнить, независимо валидировать сгенерированный ZIP/Handoff/Roadmap/New Chat Prompt/CSV.
 
-Refresh выполняется отдельным guarded шагом ПОСЛЕ docs commit. Пакет сейчас НЕ генерируется в этой задаче. Патчинг приватных generation-скриптов **не входит** в эту задачу.
+Refresh выполняется отдельным guarded шагом ПОСЛЕ docs commit, но в рамках той же E4-E2 closure-задачи. Патчинг разрешён только внутри нового per-checkpoint wrapper-пакета (вне этого репозитория); shared `Create-Avilona-ChatGPT-SourceArchive.ps1` не рефакторится.
 
 ## 9. Endgame roadmap — E1…E6
 
@@ -440,9 +445,9 @@ Refresh выполняется отдельным guarded шагом ПОСЛЕ 
 | E1 | Comprehensive Audit | ✅ TECHNICALLY CLOSED (§5A) |
 | E2 | Public UX / UI / Design Redesign | ✅ **COMPLETE / CLOSED на уровне приложения** — E2-A1…E2-A7 (§9B) |
 | **E3** | **Cabinet UX/UI/Design Modernization** (Tourist / Manager / Admin) | ✅ **E3-A1…E3-A5 CLOSED на уровне приложения** (§9C); **E3-A6 point-polish (A + B) ✅ CLOSED** |
-| **E4** | Post-redesign stabilization / regression / browser-device / resilience QA | ⬜ **NEXT** (E3-A6 закрыт; E4 не начат) |
-| E5 | Final Tour Search / Aggregation Product Block | PENDING (намеренно один из последних крупных блоков) |
-| E6 | Final Release / Deploy / Production Smoke | PENDING |
+| **E4** | Post-redesign stabilization / regression / browser-device / resilience QA | ✅ **CLOSED** (E4-A…E4-E1; §9.4) |
+| **E5** | Final Tour Search / Aggregation Product Block | ⬜ **NEXT** — research-only (ChatGPT Work/Astra) перед любой реализацией/закупкой (§10) |
+| E6 | Final Release / Deploy / Production Smoke | PENDING, после E5 |
 
 Предыдущая рабочая фаза завершена на уровне приложения: **E3 (Foundation → Tourist
 → Shared Booking → Manager → Admin, E3-A1…E3-A5, плюс точечная полировка E3-A6)
@@ -857,21 +862,119 @@ historical relevance check.
 
 Точечная полировка E3-A6 (A + B) закрыта; оставшиеся «хвосты» — §9C.6 (перенесены в E4 / оставлены как есть), не блокируют закрытие E3.
 
-### 9.4 Post-redesign stabilization / resilience (E4) — ⬜ NEXT
+### 9.4 Post-redesign stabilization / resilience (E4) — ✅ CLOSED
 
-E3-A6 закрыт (§9C); E4 — следующая стадия проекта, ещё не начата:
+E4 продолжил закрытый E3-A6 (application HEAD на входе — `ed550df8`, docs
+checkpoint входа — `c89e923f`). E4 полностью закрыт на уровне приложения этой
+серией slices, завершается настоящей документационной правкой (E4-E2).
 
-- full regression;
-- browser / device QA;
-- accessibility;
-- оставшиеся визуальные несоответствия (включая отложенный «хвост» tourist «В работе»; итоговая формулировка не выбрана);
-- существующее/отсутствующее поведение системных error-страниц, включая
-  403 / 419 / 429 / 500 / 503 там, где уместно (404 уже переведена в E2-A6-I2);
-- повтор production-readiness.
+**Итоговый application HEAD E4: `55a9fcaf6371ef0c749bb668c9b27783d1df358c`
+(`fix: close final E4 application polish`).**
 
-Опциональная гигиена, которая может быть пересмотрена здесь: legacy-redirect `/manager/knowledge` (рабочий и безвредный, не дефект).
+#### E4-A — baseline confirmation / QA matrix
+✅ CLOSED — планирование, без отдельного application-коммита.
 
-Первая цель планирования E4: подтвердить full-regression baseline (1242 / 8056) и определить матрицу browser/device QA. Реализация не начата.
+Подтверждён full-regression baseline на входе в E4 (1242 / 8056, checkpoint
+`c89e923f`) и определена матрица browser/device/keyboard/accessibility QA,
+использованная в E4-C.
+
+#### E4-B — branded system error pages
+✅ CLOSED — `511282e38f05b63871d4e1d9fcb154a8fa63df56` (`feat: add branded system error pages (E4-B)`)
+
+Добавлены недостающие брендированные системные error-страницы
+(403/419/429/500/503; 404 уже была переведена на E2-презентацию в
+E2-A6-I2) — закрывает пункт, перенесённый из E2-A6-I2/E3.
+
+#### E4-C — Browser / Device / Keyboard / Accessibility QA
+✅ CLOSED — QA-проход без отдельного application-коммита; findings закрыты в E4-D1…E4-D3.
+
+Большой QA-проход по браузерам/устройствам/клавиатуре/accessibility.
+Evidence: `C:\Avilona_private\E4\E4-C_Browser_Device_Accessibility_QA\20260920-150303\`
+(включая persistent QA SQLite `qa.sqlite`) — сохраняется, не удаляется/не
+сбрасывается.
+
+Найденные и впоследствии закрытые дефекты (F-01…F-16 — все
+**FIXED_VERIFIED**) устранены в E4-D1/E4-D2/E4-D3. Итоговые P-классификации
+(P-01…P-13) — см. §9.4.5 ниже.
+
+#### E4-D1 — shared shell and auth UX stabilization
+✅ CLOSED / PUSHED — `16b71c6a51064737007b0645214c919462e40f17` (`fix: stabilize shared shell and auth UX (E4-D1)`)
+
+#### E4-D2 — cabinet responsive layout stabilization
+✅ CLOSED / PUSHED — `46a97f3d241ab1f53663651f7b5e9147d00f9ec7` (`fix: stabilize cabinet responsive layouts (E4-D2)`)
+
+#### E4-D3 — stabilization findings closure
+✅ CLOSED / PUSHED / VERIFIED — `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`)
+
+Reconciliation-статус: `REPORTING_COUNT_ERROR_ONLY` — расхождение было
+исключительно в отчётном подсчёте находок, не в фактическом application-
+поведении.
+
+Evidence: `C:\Avilona_private\E4\E4-D3_Browser_QA\20260922-121234\`.
+
+#### E4-E1 — final technical closure
+✅ TECHNICALLY CLOSED / PUSHED — `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`)
+
+Финальный полный PHPUnit: **1286 tests / 8628 assertions, 0 failures, 0
+errors** (SQLite `:memory:`; canonical MySQL не затронут). Локальный
+`php artisan test --compact` упёрся в дефолтный 128M CLI memory_limit ближе к
+концу набора — это ограничение локального PHP CLI runner'а, **не** дефект
+приложения и **не** провал теста; полный исторический прогон с
+`memory_limit=512M` прошёл целиком с тем же результатом (1286 / 8628, 0 / 0).
+
+Evidence: `C:\Avilona_private\E4\E4-E1_Final_Technical_Closure\20260923-015901\`.
+
+Результат: `READY_FOR_E4_DOCUMENTATION_CLOSURE`. Блокеров релиза уровня
+приложения не осталось.
+
+#### 9.4.5 — Итоговые находки E4 (F / P)
+
+Все **F-01…F-16 — FIXED_VERIFIED**.
+
+Итоговые P-классификации:
+
+- **P-01** FIXED_VERIFIED — public focus indication исправлен и верифицирован кросс-браузерно.
+- **P-02** FIXED_VERIFIED — public skip link добавлен и верифицирован.
+- **P-03** FIXED_VERIFIED на уровне шаблона — у изображений CAPTCHA теперь есть accessible alt-текст. **Остаточное ограничение (не блокер релиза, non-blocking accessibility debt):** визуальная image CAPTCHA сама по себе остаётся принципиально сложной/недоступной для части пользователей assistive technology без нетекстовой/невизуальной альтернативы вызова; alt-текст **не делает** CAPTCHA универсально доступной — это ограничение сохраняется как известный backlog, не как решённая проблема.
+- **P-04** FIXED_VERIFIED — ошибки логина теперь раскрываются через alert-семантику.
+- **P-05** Общего release-blocking дефекта заголовков не найдено. Единственный реальный оставшийся экземпляр — **`/tours`**: временная страница поиска туров не имеет желаемой структуры H1/main. Это **не** общий public accessibility debt — переносится в E5 исключительно потому, что именно эта страница целенаправленно перестраивается/заменяется в рамках E5 Tour Search.
+- **P-06** FIXED_VERIFIED — public mobile toggler: accessible name/state/Esc-поведение.
+- **P-07** FIXED_VERIFIED — reduced motion.
+- **P-08** FIXED_VERIFIED — фокус после Accept на cookie-баннере.
+- **P-09** FIXED_VERIFIED — read-only уведомление Admin observer.
+- **P-10** Не блокер релиза. Целевое text/reflow-тестирование не выявило page-level горизонтального overflow. Внутренний скролл `.table-responsive` — ожидаемое поведение. Сохраняется в backlog только как non-blocking polish-заметка (без обязательного немедленного действия).
+- **P-11** NOT_REPRODUCED — 320px page-level overflow Admin-чата не воспроизведён.
+- **P-12** FIXED_VERIFIED — password autocomplete-семантика.
+- **P-13** **KNOWN_POLISH_BACKLOG** — responsive table wrappers не имеют контекстных accessible-имён; сами таблицы сохраняют собственную `<th>`-семантику и остаются пригодны для использования. Правильное решение — осмысленный per-table label, а не слепое массовое добавление generic-подписей. **Не реализовывать P-13 в E4-E2** (документационная задача); остаётся в non-blocking polish backlog для последующей отдельной slice.
+
+#### 9.4.6 — E4 QA evidence (сохранить, не трогать)
+
+- `C:\Avilona_private\E4\E4-C_Browser_Device_Accessibility_QA\20260920-150303\` (включая persistent QA SQLite `qa.sqlite`);
+- `C:\Avilona_private\E4\E4-D3_Browser_QA\20260922-121234\`;
+- `C:\Avilona_private\E4\E4-E1_Final_Technical_Closure\20260923-015901\`.
+
+Эти директории и QA SQLite — не удалять/не сбрасывать/не пересеивать. QA-сервер, если он ещё запущен, не останавливать только ради документационного закрытия.
+
+#### 9.4.7 — non-blocking polish backlog (перенесено дальше E4, не E5)
+
+Ниже — общий accessibility/UX polish backlog, явно **не** относящийся к E5
+(так как не связан с заменой `/tours`):
+
+- P-13 — responsive table wrapper accessible naming (см. выше);
+- CAPTCHA residual accessibility limitation (см. P-03 выше) — известное
+  ограничение image-CAPTCHA для части assistive-technology пользователей;
+- P-10 cosmetic/internal table-tightness — только как non-blocking заметка, не отдельная обязательная задача;
+- tourist «В работе» терминологическая консистентность (перенесено из E3-A6, §9C.6) — итоговая формулировка всё ещё не выбрана;
+- опциональная `/manager/knowledge` redirect/alias-гигиена (перенесено из E3-A6) — route рабочий и безвредный.
+
+Опциональная гигиена, ранее упомянутая для E4: legacy-redirect `/manager/knowledge` (рабочий и безвредный, не дефект) — осталась нетронутой, может быть пересмотрена в будущей non-blocking polish-slice.
+
+#### E4 closure
+
+E4 объявляется **CLOSED** этой документационной правкой (E4-E2) поверх
+application-checkpoint `55a9fcaf`. Технический closure (E4-E1) уже был PASS
+до этой правки; настоящая правка фиксирует это на уровне документации и не
+меняет код приложения.
 
 ## 9A. Канонические факты компании
 
@@ -914,7 +1017,10 @@ E3-A6 закрыт (§9C); E4 — следующая стадия проекта
 Текущее решение поиска туров на homepage и `/tours` — **ВРЕМЕННОЕ**. E2 (включая
 E2-A7) сделал окружающий UI визуально цельным, но НЕ трогал механику поиска. E2
 НЕ завершил поиск туров. В E2-A7 legacy-виджет `/tours` намеренно не
-перекрашивался и не переделывался — финальная архитектура поиска остаётся E5.
+перекрашивался и не переделывался. E4 закрыл общую стабилизацию и QA, но
+намеренно не трогал механику `/tours` — единственное сохранённое structural
+исключение `/tours` (P-05, отсутствие H1/main) переносится сюда именно потому,
+что эта страница целенаправленно перестраивается в E5 (§9.4.5).
 
 Финальная архитектура search / provider / aggregation остаётся:
 **E5 — Tour Search / Aggregation Final Product Block**.
@@ -925,12 +1031,58 @@ E2-A7) сделал окружающий UI визуально цельным, �
 - temporary `/tours` UI всё ещё содержит старую/статичную презентацию, включая placeholder «22 окт - 26 окт 25»;
 - архитектура search/widget/aggregator намеренно отложена.
 
-E5 остаётся выделенной финальной фазой поиска туров и должен сравнить готовые
-widgets/aggregators, прямые API туроператоров и собственный aggregation/search
-layer — с учётом стоимости, стабильности, contracts/legal terms, mobile UX,
-интеграции с cabinet/booking/CRM, caching, rate limits и стоимости поддержки.
+### 10.1 Немедленный следующий шаг E5 — research, не реализация
 
-Не выбирать решение до завершения основной стабилизации и design audit.
+Сразу после закрытия E4 (эта документационная правка) следующее действие —
+**независимый глубокий research-проход через ChatGPT Work/Astra**, ДО начала
+любого кодирования E5. Ничего не покупается и не реализуется на этом шаге.
+
+Приоритет research:
+
+1. бесплатные/прямые опции туроператоров;
+2. агентские/партнёрские API;
+3. возможности multi-operator агрегации;
+4. недорогие сторонние сервисы;
+5. Tourvisor — модуль для сайта;
+6. Tourvisor — API;
+7. прочие жизнеспособные альтернативы.
+
+Первый приоритет пользователя — выяснить, можно ли реализовать настоящий
+multi-operator поиск **бесплатно или без отдельной регулярной платформенной
+подписки**, используя агентский/операторский доступ, который Avilona может
+получить напрямую от туроператоров.
+
+Исследовать:
+
+- operator APIs; agency/partner APIs; фиды; affiliate APIs;
+- real-time цены; availability;
+- легальность/коммерческие ограничения агрегации;
+- rate limits; caching;
+- права на изображения/описания;
+- booking/deep links;
+- интеграцию в существующий Laravel booking/cabinet workflow Avilona.
+
+Публичный scraping сайтов операторов **не** рассматривается как нормальное
+production-решение.
+
+Если бесплатная/прямая интеграция практически нежизнеспособна — сравнить
+платные варианты. Explicitly требуется research **Tourvisor**:
+
+- возможности website search-модуля;
+- покрытие/операторы;
+- текущая модель ценообразования;
+- Tourvisor API;
+- API vs готовый модуль;
+- могут ли выбранные туры/заявки попадать в **собственную** Laravel-систему
+  Avilona, или менеджеры будут вынуждены работать в отдельной внешней CRM;
+- свобода UX;
+- интеграция с кабинетом;
+- vendor lock-in;
+- fallback/migration path.
+
+Ничего не покупается на этом шаге.
+
+### 10.2 Сравнение решений (после research)
 
 Последним крупным product block сравнить:
 
@@ -945,9 +1097,23 @@ layer — с учётом стоимости, стабильности, contract
 - UX and mobile integration;
 - booking/cabinet/CRM integration;
 - caching/rate limits;
-- operational maintenance cost.
+- operational maintenance cost;
+- vendor lock-in / fallback/migration path.
 
-Реальные external provider calls — только по отдельному guarded plan.
+Реальные external provider calls — только по отдельному guarded plan. Ничего
+не реализуется и не покупается в рамках E4-E2 (документационная задача).
+
+### 10.3 После E5, до финального E6 — Astra Task 2 (полный независимый аудит)
+
+После E5 и до финального E6 запланирован независимый полный аудит проекта
+(Astra Task 2), охватывающий: architecture; security; performance; database;
+queries; maintainability; technical debt; modernization; UX; accessibility;
+SEO; public structure; функции для добавления/удаления; Tourist workflow;
+Manager workflow; Admin workflow; operations; design.
+
+Перед этим финальным Astra-аудитом должен быть собран **Screenshot Audit
+Pack**. Этот план сохраняется в будущих handoff/roadmap-материалах и не
+выполняется в рамках E4-E2 или E5.
 
 ## 11. Запреты без отдельного operational plan
 

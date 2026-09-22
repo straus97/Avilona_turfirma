@@ -1,17 +1,19 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-09-19**
+Актуализировано: **2026-09-23**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `ed550df8989b44e7305bdce6b6f5f063b82a2616`**
-- Subject: `fix: polish cross-role chat switching (E3-A6-B)`
-- Direct parent of current HEAD: `8a5018bdf6a95658d195772c05adc3c4f557329d` (`perf: polish manager dashboard queries (E3-A6-A)`)
-- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `ed550df8` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
-- Documentation checkpoint after E3-A5 (previous docs-only commit; current Project Sources base): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — predates E3-A6-A/B, NOT the current HEAD
+- **Current authoritative application HEAD: `55a9fcaf6371ef0c749bb668c9b27783d1df358c`**
+- Subject: `fix: close final E4 application polish`
+- Direct parent of current application HEAD: `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`)
+- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `55a9fcaf` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
+- Documentation checkpoint after E3-A6 / entering E4 (previous docs-only commit; current Project Sources base): `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — predates the whole E4-A…E4-E1 series, NOT the current HEAD
+- Application HEAD at E3-A6 closure: `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — NOT the current HEAD
+- Documentation checkpoint after E3-A5 (historical): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — predates E3-A6-A/B, NOT the current HEAD
 - Application HEAD at E3-A5 closure: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — NOT the current HEAD
-- Documentation checkpoint after E2 closure: `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — previous docs-only commit, NOT the current HEAD
+- Documentation checkpoint after E2 closure (historical): `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — NOT the current HEAD
 - Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — predates E2-A6/E2-A7/E3, NOT the current HEAD
 - Application HEAD at E2 closure (E2-A7): `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — NOT the current HEAD
 - Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
@@ -22,14 +24,17 @@
 - **E3 — Cabinet UX/UI/Design Modernization — ✅ E3-A1…E3-A5 CLOSED at application level** (Foundation, Tourist, Shared Booking, Manager, Admin)
 - **E3-A6 — cross-cabinet point-polish — ✅ CLOSED** (E3-A6-A `8a5018bd`, E3-A6-B `ed550df8`); no E3-A6-C application slice is needed
 - S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5: no live public review cache layer, parity not required
-- **Next: E4 — Post-redesign stabilization** (full regression, browser/device QA, accessibility, remaining visual inconsistencies, 403/419/429/500/503 system error behaviour, production-readiness recheck), before E5 / E6. First E4 planning target: confirm the full-regression baseline and define the browser/device QA matrix. Not started.
-- Full verified baseline: **1242 tests / 8056 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`)
-  - at E3-A5 closure the baseline was **1233 tests / 8023 assertions**; after E2 closure **1051 tests / 7180 assertions**; historical E1-closure baseline **1001 tests / 7013 assertions**; E3-A1…E3-A6 added cabinet-redesign / polish regression tests — expected, not a regression
-  - the final full run required a direct PHPUnit invocation with a temporary `-d memory_limit=1024M` CLI override (this machine's default 128M CLI memory_limit is insufficient for the grown suite) — not a `php.ini`/runtime configuration change
+- **E4 — Post-redesign stabilization / resilience QA — ✅ CLOSED** (E4-A baseline/matrix, E4-B branded error pages `511282e3`, E4-C browser/device/accessibility QA, E4-D1 `16b71c6a`, E4-D2 `46a97f3d`, E4-D3 `c1ad29cb`, E4-E1 final technical closure `55a9fcaf`). No application-level release blocker remains. See "E4 — post-redesign stabilization" below.
+- **Next: E5 — Final Tour Search / Aggregation Solution.** Immediate next action is an independent deep research pass via ChatGPT Work/Astra (operator/agency APIs, aggregation, Tourvisor, etc.) — NOT implementation or purchase. See "E5 — tour search / aggregation" below.
+- Full verified baseline: **1286 tests / 8628 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`) — final E4-E1 technical closure baseline
+  - at E4 entry (`c89e923f`) the baseline was **1242 tests / 8056 assertions**; at E3-A5 closure **1233 / 8023**; after E2 closure **1051 / 7180**; historical E1-closure baseline **1001 / 7013**; E4 added stabilization/resilience regression tests — expected, not a regression
+  - the local `php artisan test --compact` runner hit the PHP CLI default 128M memory_limit late in the E4-E1 run — **not an application failure**; the complete historical PHPUnit-style invocation with `memory_limit=512M` passed in full: 1286 / 8628, 0 failures, 0 errors. The application does not have a memory leak and the test suite did not fail.
 - Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Browser QA: PASS for Admin desktop and responsive/mobile surfaces (Dashboard, Bookings + booking detail, Chat, Finance, Users, Roles, Profile, System, Logs, Bonus, Content, article creation, shared sidebar/mobile shell) at E3-A5 closure; PASS for cross-role chat (Tourist, Manager, assigned Admin, observer Admin) at E3-A6-B closure.
-- The new documentation closure HEAD created after this task will be newer than the application checkpoint `ed550df8…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
-- Project Sources: the current external set is based on `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) and is now **STALE** relative to E3-A6-A / E3-A6-B. Refresh is **required only after** this docs-only E3-A6-closure diff is reviewed, committed as a separate docs-only checkpoint, pushed, and local / tracking / live origin are aligned on that future docs HEAD. The future docs HEAD, the future source-archive filename, timestamp, SHA256 and archive size are not known and must not be invented.
+- Browser QA: PASS for Admin desktop and responsive/mobile surfaces at E3-A5 closure; PASS for cross-role chat at E3-A6-B closure; large Browser/Device/Keyboard/Accessibility QA completed at E4-C (evidence below); E4-D3 browser QA verified with a reporting-count-only reconciliation (no application defect).
+- The new documentation closure HEAD created after this task will be newer than the application checkpoint `55a9fcaf…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
+- Project Sources: the current external set is based on `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`, entry point into E4, before E4-A…E4-E1) and is now **STALE** relative to the full E4 closure. Refresh is **required only after** this docs-only E4-closure diff is reviewed, committed as a separate docs-only checkpoint, pushed, and local / tracking / live origin are aligned on that future docs HEAD. The future docs HEAD, the future source-archive filename, timestamp, SHA256 and archive size are not known and must not be invented.
+- E4 QA evidence (preserve, do not reset/reseed): `C:\Avilona_private\E4\E4-C_Browser_Device_Accessibility_QA\20260920-150303\` (incl. persistent QA SQLite `qa.sqlite`), `C:\Avilona_private\E4\E4-D3_Browser_QA\20260922-121234\`, `C:\Avilona_private\E4\E4-E1_Final_Technical_Closure\20260923-015901\`.
+- Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — unresolved, must be decided before final production release (E6).
 
 ## Completed stages
 
@@ -518,26 +523,103 @@ Admin `Cache::forget()` calls target keys that are never populated via
 relevance check, not an outstanding defect.
 
 ### E4 — post-redesign stabilization / regression / browser-device / resilience
-⬜ **NEXT** (E3-A6 is closed; E4 not started)
+✅ **CLOSED** — entry docs checkpoint `c89e923f` (`docs: close E3-A6 and advance to E4`), final application checkpoint `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`).
 
-- full regression;
-- browser/device QA;
-- accessibility;
-- remaining visual inconsistencies (includes the deferred tourist «В работе» wording tail; final copy not decided);
-- existing/missing system error behaviour including 403/419/429/500/503 where appropriate (404 already handled in E2-A6-I2);
-- production-readiness repeat.
+#### E4-A — baseline confirmation / QA matrix
+✅ CLOSED — planning only, no dedicated application commit. Confirmed the E4-entry full-regression baseline (1242 / 8056, checkpoint `c89e923f`) and defined the browser/device/keyboard/accessibility QA matrix used in E4-C.
 
-Optional hygiene that may be reconsidered here: legacy `/manager/knowledge` redirect/alias (functional and harmless today, not a defect).
+#### E4-B — branded system error pages
+✅ CLOSED — `511282e38f05b63871d4e1d9fcb154a8fa63df56` (`feat: add branded system error pages (E4-B)`). Added the missing branded 403/419/429/500/503 system error pages (404 was already redesigned in E2-A6-I2) — closes the item carried forward from E2-A6-I2/E3.
 
-First E4 planning target: confirm the full-regression baseline (1242 / 8056) and define the browser/device QA matrix. No implementation has started.
+#### E4-C — Browser / Device / Keyboard / Accessibility QA
+✅ CLOSED — QA pass only, findings closed in E4-D1…E4-D3. Evidence: `C:\Avilona_private\E4\E4-C_Browser_Device_Accessibility_QA\20260920-150303\` (incl. persistent QA SQLite `qa.sqlite`, preserved).
+
+All findings **F-01…F-16 are FIXED_VERIFIED**. Final P-classifications:
+
+- **P-01** FIXED_VERIFIED — public focus indication corrected and verified cross-browser.
+- **P-02** FIXED_VERIFIED — public skip link added and verified.
+- **P-03** FIXED_VERIFIED at template level — CAPTCHA images now have accessible alt text. **Residual limitation (non-blocking accessibility debt):** a visual image CAPTCHA remains inherently difficult/impossible for some assistive-technology users without a non-visual challenge alternative; alt text does **not** make it universally accessible — kept as known backlog, not resolved.
+- **P-04** FIXED_VERIFIED — login errors exposed via alert semantics.
+- **P-05** No general release-blocking heading defect found. One real remaining instance is `/tours`: the temporary Tour Search page lacks the desired H1/main structure. This is **not** general public accessibility debt — it travels to E5 solely because that exact page is intentionally rebuilt/replaced there.
+- **P-06** FIXED_VERIFIED — public mobile toggler accessible name/state/Esc behaviour.
+- **P-07** FIXED_VERIFIED — reduced motion.
+- **P-08** FIXED_VERIFIED — cookie Accept focus management.
+- **P-09** FIXED_VERIFIED — Admin observer read-only notice.
+- **P-10** No release blocker — targeted text/reflow testing found zero page-level horizontal overflow; internal `.table-responsive` scrolling is expected. Kept only as a non-blocking polish note.
+- **P-11** NOT_REPRODUCED — 320px page-level Admin chat overflow not present.
+- **P-12** FIXED_VERIFIED — password autocomplete semantics.
+- **P-13** **KNOWN_POLISH_BACKLOG** — responsive table wrappers lack contextual accessible names; underlying tables retain their own `<th>` semantics and remain usable. A correct fix needs a meaningful per-table label, not blind mass-labelling. **Not implemented in E4-E2** — remains non-blocking polish backlog.
+
+#### E4-D1 — shared shell and auth UX stabilization
+✅ CLOSED / PUSHED — `16b71c6a51064737007b0645214c919462e40f17` (`fix: stabilize shared shell and auth UX (E4-D1)`)
+
+#### E4-D2 — cabinet responsive layout stabilization
+✅ CLOSED / PUSHED — `46a97f3d241ab1f53663651f7b5e9147d00f9ec7` (`fix: stabilize cabinet responsive layouts (E4-D2)`)
+
+#### E4-D3 — stabilization findings closure
+✅ CLOSED / PUSHED / VERIFIED — `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`). Reconciliation status: `REPORTING_COUNT_ERROR_ONLY` (a findings-count reporting discrepancy only, not an application-behaviour defect). Evidence: `C:\Avilona_private\E4\E4-D3_Browser_QA\20260922-121234\`.
+
+#### E4-E1 — final technical closure
+✅ TECHNICALLY CLOSED / PUSHED — `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`). Final full PHPUnit: **1286 tests / 8628 assertions, 0 failures, 0 errors** (SQLite `:memory:`; canonical MySQL untouched). Local `php artisan test --compact` hit the PHP CLI default 128M memory_limit late in the run — a local-runner limitation, not an application failure; the full historical run with `memory_limit=512M` passed completely with the same 1286 / 8628, 0 / 0 result. Evidence: `C:\Avilona_private\E4\E4-E1_Final_Technical_Closure\20260923-015901\`. Result: `READY_FOR_E4_DOCUMENTATION_CLOSURE`; no application-level release blocker remains.
+
+#### E4 — non-blocking polish backlog (carried past E4, not part of E5)
+
+- P-13 responsive table wrapper accessible naming;
+- CAPTCHA residual accessibility limitation (P-03);
+- P-10 cosmetic/internal table-tightness note (informational only);
+- tourist «В работе» aggregate wording consistency (carried from E3-A6) — final wording still not decided;
+- optional `/manager/knowledge` redirect/alias hygiene (carried from E3-A6) — route is functional and harmless, not a defect.
+
+#### E4 closure
+
+E4 is declared **CLOSED** by this documentation checkpoint (E4-E2) on top of application checkpoint `55a9fcaf`. Application-level technical closure (E4-E1) already PASSED before this documentation pass; this pass records that at the documentation level only and changes no application code.
 
 ### E5 — TOUR SEARCH / AGGREGATION — FINAL PRODUCT BLOCK
-⬜ DELIBERATELY LAST
+⬜ **NEXT** — research phase, not implementation
 
 The current homepage and `/tours` search solution is **temporary**. E2 only made
-the surrounding UI visually coherent; it did not touch search mechanics and did
-not mark tour search complete. Final search/provider/aggregation architecture is
-this stage.
+the surrounding UI visually coherent; it did not touch search mechanics. E4
+closed general stabilization/QA but deliberately did not touch `/tours`
+mechanics either — the one structural exception (`/tours` missing H1/main,
+P-05) travels here specifically because that page is intentionally rebuilt in
+E5. Final search/provider/aggregation architecture is this stage.
+
+#### E5 step 1 — independent research (immediate next action)
+
+Immediately after E4 closure, before any E5 coding: an independent deep
+research pass using ChatGPT Work/Astra. Nothing is purchased or implemented at
+this step.
+
+Research priority order:
+
+1. free/direct tour-operator options;
+2. agency/partner APIs;
+3. multi-operator aggregation possibilities;
+4. low-cost third-party services;
+5. Tourvisor — website search module;
+6. Tourvisor — API;
+7. other viable alternatives.
+
+First user preference: determine whether a genuine multi-operator search can
+be built **for free or without a separate recurring platform fee**, using
+agency/operator access Avilona can obtain directly from tour operators.
+
+Investigate: operator APIs; agency/partner APIs; feeds; affiliate APIs;
+real-time prices; availability; aggregation legality/commercial restrictions;
+rate limits; caching; image/description rights; booking/deep links;
+integration into Avilona's own Laravel booking/cabinet workflow.
+
+Public-site scraping must **not** be treated as the normal production
+solution.
+
+If free/direct integration is not practically viable, compare paid options.
+**Tourvisor must be researched explicitly**: website search module
+capabilities; coverage/operators; current pricing model; Tourvisor API; API vs
+ready-made module; whether selected tours/applications can enter Avilona's
+**own** Laravel system or would force managers into a separate external CRM;
+UX freedom; cabinet integration; vendor lock-in; fallback/migration path.
+
+#### E5 step 2 — comparison (after research)
 
 Compare:
 
@@ -545,20 +627,40 @@ Compare:
 - tour-operator/API integrations;
 - own aggregation/search implementation.
 
-Decision criteria: cost; reliability; contractual/legal terms; UX/mobile; booking/cabinet/CRM integration; caching/rate limits; maintenance burden.
+Decision criteria: cost; reliability; contractual/legal terms; UX/mobile; booking/cabinet/CRM integration; caching/rate limits; maintenance burden; vendor lock-in / fallback path.
+
+Nothing is purchased or implemented as part of E4-E2 (this documentation task).
+
+### After E5, before final E6 — Astra Task 2 (full independent project audit)
+
+Independent full-project audit covering: architecture; security; performance;
+database; queries; maintainability; technical debt; modernization; UX;
+accessibility; SEO; public structure; features to add/remove; Tourist
+workflow; Manager workflow; Admin workflow; operations; design.
+
+Before that final Astra audit, a **Screenshot Audit Pack** must be collected.
+This plan is preserved here for the future handoff/roadmap and is not executed
+as part of E4-E2 or E5.
 
 ### E6 — final release / deploy / production smoke
 ⬜ PLANNED
 
-After the final selected tour-search solution and stabilization:
+After the final selected tour-search solution, stabilization, and the Astra
+Task 2 full-project audit:
 
-- guarded production deploy;
-- migrations only through a dedicated approved plan;
+- production environment; `APP_ENV`/`APP_DEBUG` production values;
+- production DB / guarded migrations only through a dedicated approved plan;
+- production storage;
+- production mail/external-provider validation;
+- HTTPS; security headers/CSP as applicable;
+- logs; backups;
+- scheduled tasks / RSS mechanism (production cron verification);
+- runtime configuration;
+- final opening-hours business decision (`PENDING_BUSINESS_DECISION_OPENING_HOURS` must be resolved before this release);
 - production smoke checks;
-- production RSS scheduling / cron verification;
-- final handoff.
+- final handoff / release checkpoint.
 
-An intermediate deployment for validation may be planned separately, but it does not replace the final post-redesign/post-tour-search release.
+An intermediate deployment for validation may be planned separately, but it does not replace the final post-redesign/post-tour-search release. The project is not to be called fully production-ready before E6 closes.
 
 ## Guardrails
 
