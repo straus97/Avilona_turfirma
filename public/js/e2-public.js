@@ -146,11 +146,72 @@
         syncVisibility();
     }
 
+    /* ---------------------------------------------------------------------
+     * C. Цель skip-ссылки (#main-content)
+     *
+     * E4-E1/P-02: у публичного макета не было skip-ссылки, и до неё
+     * приходилось проходить всю навигацию/баннер cookie клавиатурой Tab.
+     * Каждый публичный шаблон уже сам оборачивает контент в <main> (без id),
+     * поэтому вместо правки id/tabindex в каждом из ~30 файлов представлений
+     * находим этот <main> в рантайме и один раз проставляем id + tabindex.
+     * Страницы без <main> (временный пробел /tours — уже задокументирован
+     * отдельно, вне E4) просто не получают рабочую цель для перехода —
+     * поведение не хуже текущего.
+     * ------------------------------------------------------------------- */
+    function initSkipLinkTarget() {
+        var main = document.querySelector('main');
+        if (!main) {
+            return;
+        }
+        if (!main.id) {
+            main.id = 'main-content';
+        }
+        if (!main.hasAttribute('tabindex')) {
+            main.setAttribute('tabindex', '-1');
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     * D. Мобильный переключатель навигации (.navbar-toggler)
+     *
+     * E4-E1/P-06: aria-label кнопки был статичным ("Открыть меню") и не
+     * менялся при раскрытом меню; Esc не закрывал раскрытое меню (обычный
+     * Bootstrap Collapse, в отличие от модалок/дропдаунов, сам Esc не
+     * обрабатывает). Слушаем штатные события Bootstrap Collapse, ничего в
+     * его открытии/закрытии не меняем.
+     * ------------------------------------------------------------------- */
+    function initNavbarToggler() {
+        var menu = document.getElementById('navbarSupportedContent');
+        var toggler = document.querySelector('.navbar-toggler[data-bs-target="#navbarSupportedContent"]');
+        if (!menu || !toggler) {
+            return;
+        }
+
+        menu.addEventListener('shown.bs.collapse', function () {
+            toggler.setAttribute('aria-label', 'Закрыть меню');
+        });
+        menu.addEventListener('hidden.bs.collapse', function () {
+            toggler.setAttribute('aria-label', 'Открыть меню');
+        });
+
+        menu.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape' || !menu.classList.contains('show')) {
+                return;
+            }
+            if (window.bootstrap && window.bootstrap.Collapse) {
+                window.bootstrap.Collapse.getOrCreateInstance(menu).hide();
+            }
+            toggler.focus();
+        });
+    }
+
     /* ------------------------------------------------------------------- */
 
     function init() {
         initManagerContactModal();
         initButtonUp();
+        initSkipLinkTarget();
+        initNavbarToggler();
     }
 
     if (document.readyState === 'loading') {

@@ -67,6 +67,16 @@
 
         if (banner) {
             banner.hidden = true;
+
+            // E4-E1/P-08: скрытый баннер уносит фокус с кнопки в document.body
+            // без всякой цели. #main-content (id проставляет e2-public.js на
+            // <main> страницы) — предсказуемое и всегда стабильное место для
+            // возврата фокуса. Если на странице нет <main> (см. e2-public.js),
+            // просто ничего не делаем — не хуже прежнего поведения.
+            var mainContent = document.getElementById('main-content');
+            if (mainContent) {
+                mainContent.focus();
+            }
         }
     }
 

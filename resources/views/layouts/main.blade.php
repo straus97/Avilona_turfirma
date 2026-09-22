@@ -74,6 +74,7 @@
     @yield('head_extra')
 </head>
 <body onload="initMap()">
+<a class="e2-skip-link" href="#main-content">Перейти к основному содержимому</a>
 @include('includes.cookie-consent')
 {{-- шапка сайта --}}
 @php

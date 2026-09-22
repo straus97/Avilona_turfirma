@@ -209,7 +209,7 @@
                                     <div class="form-text">Введите символы с картинки.</div>
                                 </div>
                                 <div class="input-group w-auto">
-                                    {!! Captcha::img('flat', ['class' => 'captcha-image']) !!}
+                                    {!! Captcha::img('flat', ['class' => 'captcha-image', 'alt' => 'Код с картинки для проверки капчи']) !!}
                                     <button class="btn btn-outline-secondary refresh-captcha" type="button"
                                             aria-label="Обновить изображение капчи">
                                         <i class="fas fa-sync-alt" aria-hidden="true"></i></button>

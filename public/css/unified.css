@@ -336,8 +336,32 @@ a:hover {
 }
 
 :focus-visible {
-    outline: 2px solid var(--primary);
+    /* E4-E1/P-01: var(--primary) (#FF9800) на белом даёт ~2.16:1, ниже порога
+       3:1 для нетекстового контраста (WCAG 1.4.11). --e2-primary-strong даёт
+       ~10:1 и уже используется как заливка для .e2-btn--secondary и т.п. */
+    outline: 2px solid var(--e2-primary-strong, #01466f);
     outline-offset: 2px;
+}
+
+.e2-skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 2000;
+    padding: 0.625rem 1rem;
+    background: var(--e2-primary-strong, #01466f);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(16, 24, 40, .25);
+    transform: translateY(-150%);
+    transition: transform .15s ease;
+}
+
+.e2-skip-link:focus {
+    transform: translateY(0);
+    color: #fff;
 }
 
 /* ===== Smooth Scrolling ===== */
@@ -492,7 +516,11 @@ html {
     --e2-elev-1: 0 1px 2px rgba(16, 24, 40, .06);
     --e2-elev-2: 0 4px 12px rgba(16, 24, 40, .08);
     --e2-elev-3: 0 12px 28px rgba(16, 24, 40, .12);
-    --e2-focus-ring: 0 0 0 3px rgba(2, 119, 189, .45);
+    /* E4-E1/P-01: было rgba(2, 119, 189, .45) — измерено ~1.05-1.66:1 против
+       белого на реальных компонентах (кнопки/поля/переключатель), ниже
+       порога 3:1 (WCAG 1.4.11). Непрозрачный --e2-primary-strong даёт то же
+       кольцо 3px без изменения геометрии, но гарантированно ~10:1. */
+    --e2-focus-ring: 0 0 0 3px var(--e2-primary-strong);
 }
 
 /* ---- Shared header ------------------------------------------------------ */
