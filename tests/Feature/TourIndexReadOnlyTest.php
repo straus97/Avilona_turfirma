@@ -3,592 +3,199 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
-use App\Models\Tour;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
+/**
+ * E5-A1: серверная оболочка /tours с официальным модулем Tourvisor.
+ *
+ * Удалённый JavaScript Tourvisor здесь намеренно не тестируется — проверяется
+ * только то, что отдаёт Laravel: структура страницы, контейнер и загрузчик
+ * модуля, отсутствие прежней временной формы и секретов, текст «заявка — не
+ * бронирование» и запасной путь связи.
+ */
 class TourIndexReadOnlyTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
+    private const MODULE_ID = '9981450';
+    private const LOADER_URL = 'https://tourvisor.ru/module/init.js';
+
+    private function toursHtml(): string
     {
-        parent::setUp();
-        Cache::flush();
+        return $this->get(route('tours.index'))->assertOk()->getContent();
     }
 
-    public function test_empty_catalog_shows_empty_state(): void
+    public function test_tours_route_renders_the_tours_view(): void
     {
-        $response = $this->get(route('tours.index'));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Туры не найдены');
+        $this->get(route('tours.index'))
+            ->assertOk()
+            ->assertViewIs('tours.index');
     }
 
-    public function test_active_tour_displays_complete_dates(): void
+    public function test_page_has_one_main_landmark_and_one_h1(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Grand Resort 5★',
-            'hotel_name' => 'Grand Resort Slice1',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
+        $html = $this->toursHtml();
 
-        $response = $this->get(route('tours.index'));
-
-        $response->assertOk();
-        $response->assertSee('Grand Resort Slice1');
-        $response->assertSee('10.09.2026');
-        $response->assertSee('17.09.2026');
+        $this->assertSame(1, preg_match_all('/<main[\s>]/i', $html));
+        $this->assertSame(1, preg_match_all('/<h1[\s>]/i', $html));
+        $this->assertStringContainsString('>Поиск туров</h1>', $html);
+        // id="main-content" проставляет e2-public.js в рантайме; в разметке дублей быть не должно.
+        $this->assertSame(0, preg_match_all('/id="main-content"/', $html));
+        $this->assertStringContainsString('href="#main-content"', $html);
     }
 
-    public function test_inactive_tour_is_excluded(): void
+    public function test_page_has_no_heading_level_skips(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Hidden Resort 4★',
-            'hotel_name' => 'Hidden Resort Inactive',
-            'is_active' => false,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
+        $html = $this->toursHtml();
 
-        $response = $this->get(route('tours.index'));
+        preg_match_all('/<h([1-6])[\s>]/i', $html, $matches);
+        $levels = array_map('intval', $matches[1]);
 
-        $response->assertOk();
-        $response->assertDontSee('Hidden Resort Inactive');
+        $previous = 0;
+        foreach ($levels as $level) {
+            $this->assertLessThanOrEqual($previous + 1, $level, 'Пропуск уровня заголовка: h' . $level);
+            $previous = max($previous, $level);
+        }
     }
 
-    public function test_soft_deleted_tour_is_excluded(): void
+    public function test_tourvisor_module_container_is_present_exactly_once(): void
     {
-        $tour = Tour::factory()->create([
-            'title' => 'Турция, Анталия - Deleted Resort 4★',
-            'hotel_name' => 'Deleted Resort Trashed',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
-        $tour->delete();
+        $html = $this->toursHtml();
 
-        $response = $this->get(route('tours.index'));
-
-        $response->assertOk();
-        $response->assertDontSee('Deleted Resort Trashed');
+        $this->assertSame(1, preg_match_all('/class="[^"]*\btv-search-form\b[^"]*"/', $html));
+        $this->assertSame(1, preg_match_all('/\btv-moduleid-' . self::MODULE_ID . '\b/', $html));
+        $this->assertSame(1, preg_match_all('/\btv-moduleid-\d+\b/', $html));
     }
 
-    public function test_departure_city_filter_shows_only_matching_tour(): void
+    public function test_tourvisor_loader_script_is_included_exactly_once_and_over_https(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Moscow Departure 4★',
-            'hotel_name' => 'Moscow Departure Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
+        $html = $this->toursHtml();
 
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Kazan Departure 4★',
-            'hotel_name' => 'Kazan Departure Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Казань',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
-
-        $response = $this->get(route('tours.index', ['departure_city' => 'Москва']));
-
-        $response->assertOk();
-        $response->assertSee('Moscow Departure Hotel');
-        $response->assertDontSee('Kazan Departure Hotel');
+        $this->assertSame(1, substr_count($html, 'tourvisor.ru/module/init.js'));
+        $this->assertSame(1, substr_count($html, 'src="' . self::LOADER_URL . '"'));
+        $this->assertStringNotContainsString('src="//tourvisor.ru', $html);
     }
 
-    public function test_destination_country_filter_shows_only_matching_tour(): void
+    public function test_tourvisor_loader_is_not_injected_into_other_public_pages(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Turkey Country Hotel 4★',
-            'hotel_name' => 'Turkey Country Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
+        foreach (['home.index', 'contact.index', 'countries.index', 'destination.index'] as $routeName) {
+            $this->assertStringNotContainsString(
+                'tourvisor.ru',
+                $this->get(route($routeName))->assertOk()->getContent(),
+                $routeName . ' не должна загружать Tourvisor'
+            );
+        }
+    }
 
-        Tour::factory()->create([
-            'title' => 'Египет, Хургада - Egypt Country Hotel 4★',
-            'hotel_name' => 'Egypt Country Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
+    public function test_old_temporary_search_form_is_no_longer_rendered(): void
+    {
+        $html = $this->toursHtml();
+
+        foreach ([
+            'id="tourSearchForm"',
+            'name="departure_city"',
+            'name="destination_country"',
+            'name="tour_operators[]"',
+            'name="date_range"',
+            'id="resortsContainer"',
+            'class="price-chart-widget',
+            'Найдено туров',
+            'Туры не найдены',
+            'daterangepicker',
+            'code.jquery.com',
+            'api/tours/resorts',
+        ] as $legacyMarker) {
+            $this->assertStringNotContainsString($legacyMarker, $html, 'Остаток старой формы: ' . $legacyMarker);
+        }
+    }
+
+    public function test_legacy_search_query_parameters_are_ignored_and_page_stays_single_module(): void
+    {
+        $html = $this->get(route('tours.index', [
             'departure_city' => 'Москва',
             'destination_country' => 'Египет',
-            'destination_city' => 'Хургада',
-        ]);
+            'tour_operators' => ['Coral Travel'],
+            'sort_by' => 'price_asc',
+        ]))->assertOk()->getContent();
 
-        $response = $this->get(route('tours.index', ['destination_country' => 'Египет']));
-
-        $response->assertOk();
-        $response->assertSee('Egypt Country Hotel');
-        $response->assertDontSee('Turkey Country Hotel');
+        $this->assertSame(1, substr_count($html, 'tourvisor.ru/module/init.js'));
+        $this->assertSame(1, preg_match_all('/\btv-moduleid-' . self::MODULE_ID . '\b/', $html));
+        $this->assertStringNotContainsString('id="tourSearchForm"', $html);
     }
 
-    public function test_tour_operator_form_uses_canonical_stored_values(): void
+    public function test_no_secret_or_credential_is_rendered(): void
     {
-        $response = $this->get(route('tours.index'));
+        $html = $this->toursHtml();
 
-        $response->assertOk();
-        $response->assertSee('value="Ambotis"', false);
-        $response->assertSee('value="Anex Tour"', false);
-        $response->assertSee('value="Biblio Globus"', false);
-        $response->assertSee('value="Bon Tour"', false);
-        $response->assertSee('value="BSI Group"', false);
-        $response->assertSee('value="Coral Travel"', false);
-        $response->assertSee('value="Delfin"', false);
-        $response->assertSee('value="Express Tours"', false);
-        $response->assertSee('value="Good Time"', false);
-        $response->assertSee('value="ICS"', false);
-        $response->assertSee('value="Intourist"', false);
-        $response->assertSee('value="ITM Group"', false);
-        $response->assertSee('value="Mouzenidis Travel"', false);
-        $response->assertSee('value="PAC Group"', false);
-        $response->assertSee('value="Pegas"', false);
-        $response->assertSee('value="Russian Express"', false);
-        $response->assertSee('value="Sunmar"', false);
-        $response->assertSee('value="Tez Tour"', false);
-        $response->assertSee('value="TUI"', false);
-        $response->assertSee('value="West Travel"', false);
+        $this->assertDoesNotMatchRegularExpression('/api[_-]?key|auth[_-]?key|authkey|access[_-]?token|password\s*[=:]/i', $html);
+        $this->assertStringNotContainsString('TOURVISOR', $html);
     }
 
-    public function test_tour_operator_filter_shows_only_matching_tour(): void
+    public function test_page_explains_that_inquiry_is_not_booking_and_manager_verifies(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Coral Operator Hotel 4★',
-            'hotel_name' => 'Coral Operator Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-        ]);
+        $html = $this->toursHtml();
 
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - TUI Operator Hotel 4★',
-            'hotel_name' => 'TUI Operator Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'TUI',
-        ]);
-
-        $response = $this->get(route('tours.index', ['tour_operators' => ['Coral Travel']]));
-
-        $response->assertOk();
-        $response->assertSee('Coral Operator Hotel');
-        $response->assertDontSee('TUI Operator Hotel');
+        $this->assertStringContainsString('Цены и наличие мест могут меняться', $html);
+        $this->assertStringContainsString('не бронирование и', $html);
+        $this->assertStringContainsString('менеджер Авилоны проверит', $html);
+        $this->assertStringContainsString('Заявка сама по себе тур не бронирует и ничего не оплачивает', $html);
     }
 
-    public function test_multiple_tour_operator_filter_values_are_supported(): void
+    public function test_page_makes_no_instant_booking_or_guarantee_claims(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Coral Multi Hotel 4★',
-            'hotel_name' => 'Coral Multi Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-        ]);
+        $text = mb_strtolower(strip_tags($this->toursHtml()));
 
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - TUI Multi Hotel 4★',
-            'hotel_name' => 'TUI Multi Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'TUI',
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Sunmar Multi Hotel 4★',
-            'hotel_name' => 'Sunmar Multi Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Sunmar',
-        ]);
-
-        $response = $this->get(route('tours.index', ['tour_operators' => ['Coral Travel', 'TUI']]));
-
-        $response->assertOk();
-        $response->assertSee('Coral Multi Hotel');
-        $response->assertSee('TUI Multi Hotel');
-        $response->assertDontSee('Sunmar Multi Hotel');
+        foreach (['мгновенн', 'гарантированн', 'гарантия цены', 'подтверждено наличие', 'онлайн-оплат'] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, $text, 'Недопустимое обещание: ' . $forbidden);
+        }
     }
 
-    public function test_index_request_performs_no_database_mutation(): void
+    public function test_fallback_contact_path_exists_and_is_not_an_immediate_error(): void
     {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Readonly Snapshot Hotel 4★',
-            'hotel_name' => 'Readonly Snapshot Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
+        $html = $this->toursHtml();
 
-        $before = Tour::withTrashed()->orderBy('id')->get()->toArray();
+        // Постоянный запасной путь: общая модалка менеджеров и страница контактов.
+        $this->assertMatchesRegularExpression(
+            '/data-bs-target="#managerContactModal"\s+data-manager-mode="all"/',
+            $html
+        );
+        $this->assertStringContainsString('href="' . route('contact.index') . '"', $html);
+        $this->assertStringContainsString('id="managerContactModal"', $html);
 
-        $response = $this->get(route('tours.index'));
-        $response->assertOk();
-
-        $after = Tour::withTrashed()->orderBy('id')->get()->toArray();
-
-        $this->assertEquals($before, $after);
+        // Подсказка о недогруженном модуле скрыта по умолчанию (не показываем ошибку сразу).
+        $this->assertMatchesRegularExpression('/<div[^>]*id="tourvisor-delay-notice"[^>]*\shidden[\s>]/', $html);
+        $this->assertStringContainsString('<noscript>', $html);
     }
 
-    public function test_index_request_makes_no_external_http_call(): void
-    {
-        Http::preventStrayRequests();
-
-        $response = $this->get(route('tours.index'));
-
-        $response->assertOk();
-    }
-
-    public function test_rating_sort_orders_public_catalog_by_hotel_rating_not_hotel_stars(): void
-    {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Higher Rating Lower Stars Hotel',
-            'hotel_name' => 'Public Higher Rating Lower Stars Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-            'hotel_rating' => 4.9,
-            'hotel_stars' => 3,
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Lower Rating Higher Stars Hotel',
-            'hotel_name' => 'Public Lower Rating Higher Stars Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Anex Tour',
-            'hotel_rating' => 4.1,
-            'hotel_stars' => 5,
-        ]);
-
-        $response = $this->get(route('tours.index', [
-            'sort_by' => 'rating',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Public Higher Rating Lower Stars Hotel');
-        $response->assertSee('Public Lower Rating Higher Stars Hotel');
-        $response->assertSeeInOrder([
-            'Public Higher Rating Lower Stars Hotel',
-            'Public Lower Rating Higher Stars Hotel',
-        ]);
-    }
-
-    public function test_hotel_rating_filter_shows_only_tours_meeting_minimum_rating(): void
-    {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Rating Threshold Match Hotel',
-            'hotel_name' => 'Public Rating Threshold Match Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-            'hotel_rating' => 8.4,
-            'hotel_stars' => 3,
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Rating Threshold Below Hotel',
-            'hotel_name' => 'Public Rating Threshold Below Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Anex Tour',
-            'hotel_rating' => 7.9,
-            'hotel_stars' => 5,
-        ]);
-
-        $response = $this->get(route('tours.index', [
-            'hotel_rating' => 8,
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Public Rating Threshold Match Hotel');
-        $response->assertDontSee('Public Rating Threshold Below Hotel');
-    }
-
-    public function test_beach_line_filter_shows_only_matching_tours(): void
-    {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public First Beach Line Hotel',
-            'hotel_name' => 'Public First Beach Line Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-            'beach_line' => 1,
-            'hotel_rating' => 7.5,
-            'hotel_stars' => 4,
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Second Beach Line Hotel',
-            'hotel_name' => 'Public Second Beach Line Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Anex Tour',
-            'beach_line' => 2,
-            'hotel_rating' => 9.0,
-            'hotel_stars' => 5,
-        ]);
-
-        $response = $this->get(route('tours.index', [
-            'beach_line' => 1,
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Public First Beach Line Hotel');
-        $response->assertDontSee('Public Second Beach Line Hotel');
-    }
-
-    public function test_charter_checkbox_shows_only_charter_tours(): void
-    {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Charter Flight Hotel',
-            'hotel_name' => 'Public Charter Flight Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-            'is_charter' => true,
-            'is_direct' => false,
-            'hotel_rating' => 7.5,
-            'hotel_stars' => 3,
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Scheduled Flight Hotel',
-            'hotel_name' => 'Public Scheduled Flight Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Anex Tour',
-            'is_charter' => false,
-            'is_direct' => true,
-            'hotel_rating' => 9.2,
-            'hotel_stars' => 5,
-        ]);
-
-        $response = $this->get(route('tours.index', [
-            'charter' => 'on',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Public Charter Flight Hotel');
-        $response->assertDontSee('Public Scheduled Flight Hotel');
-    }
-
-    public function test_sort_form_uses_canonical_popular_value(): void
-    {
-        $response = $this->get(route('tours.index', [
-            'sort_by' => 'popular',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('value="popular"', false);
-        $response->assertSee('value="popular" selected', false);
-        $response->assertDontSee('value="popularity"', false);
-    }
-
-    public function test_direct_checkbox_shows_only_direct_flight_tours(): void
-    {
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Direct Flight Hotel',
-            'hotel_name' => 'Public Direct Flight Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Coral Travel',
-            'is_direct' => true,
-            'is_charter' => false,
-            'hotel_rating' => 7.4,
-            'hotel_stars' => 3,
-        ]);
-
-        Tour::factory()->create([
-            'title' => 'Турция, Анталия - Public Connecting Flight Hotel',
-            'hotel_name' => 'Public Connecting Flight Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-            'tour_operator' => 'Anex Tour',
-            'is_direct' => false,
-            'is_charter' => true,
-            'hotel_rating' => 9.3,
-            'hotel_stars' => 5,
-        ]);
-
-        $response = $this->get(route('tours.index', [
-            'direct' => 'on',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertSee('Public Direct Flight Hotel');
-        $response->assertDontSee('Public Connecting Flight Hotel');
-    }
-
-    public function test_tour_cta_links_directly_to_canonical_booking_form_with_no_obsolete_modal(): void
-    {
-        $tour = Tour::factory()->create([
-            'title' => 'Турция, Анталия - Direct Booking Link Hotel',
-            'hotel_name' => 'Direct Booking Link Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
-
-        $response = $this->get(route('tours.index'));
-
-        $response->assertOk();
-        $response->assertSee(route('bookings.create', ['tour_id' => $tour->id]), false);
-        $response->assertDontSee('id="bookingModal"', false);
-        $response->assertDontSee('name="contact_name"', false);
-        $response->assertDontSee('action="' . route('bookings.store') . '"', false);
-        $response->assertDontSee('openBookingModal', false);
-    }
-
-    public function test_authenticated_tourist_sees_same_direct_booking_link_with_no_residual_modal(): void
-    {
-        $tourist = $this->makeTourist();
-
-        $tour = Tour::factory()->create([
-            'title' => 'Турция, Анталия - Authenticated Booking Link Hotel',
-            'hotel_name' => 'Authenticated Booking Link Hotel',
-            'is_active' => true,
-            'start_date' => '2026-09-10',
-            'end_date' => '2026-09-17',
-            'departure_city' => 'Москва',
-            'destination_country' => 'Турция',
-            'destination_city' => 'Анталия',
-        ]);
-
-        $response = $this->actingAs($tourist)->get(route('tours.index'));
-
-        $response->assertOk();
-        $response->assertSee(route('bookings.create', ['tour_id' => $tour->id]), false);
-        $response->assertDontSee('id="bookingModal"', false);
-        $response->assertDontSee('action="' . route('bookings.store') . '"', false);
-        $response->assertDontSee('openBookingModal', false);
-    }
-
-    public function test_search_form_does_not_expose_unsupported_nonstop_filter(): void
-    {
-        $response = $this->get(route('tours.index', [
-            'nonstop' => 'on',
-        ]));
-
-        $response->assertOk();
-        $response->assertViewIs('tours.index');
-        $response->assertDontSee('name="nonstop"', false);
-        $response->assertDontSee('id="nonstop"', false);
-        $response->assertDontSee('for="nonstop"', false);
-        $response->assertDontSee('Без стопов');
-        $response->assertSee('name="charter"', false);
-        $response->assertSee('name="direct"', false);
-    }
-
-    private function makeTourist(): User
+    public function test_authenticated_tourist_sees_the_same_single_module(): void
     {
         $role = Role::query()->firstOrCreate(
             ['name' => Role::TOURIST],
             ['description' => Role::availableRoles()[Role::TOURIST] ?? Role::TOURIST]
         );
+        $tourist = User::factory()->create();
+        $tourist->roles()->attach($role->id);
 
-        $user = User::factory()->create();
-        $user->roles()->attach($role->id);
+        $html = $this->actingAs($tourist)->get(route('tours.index'))->assertOk()->getContent();
 
-        return $user;
+        $this->assertSame(1, substr_count($html, 'tourvisor.ru/module/init.js'));
+        $this->assertSame(1, preg_match_all('/\btv-moduleid-' . self::MODULE_ID . '\b/', $html));
+        $this->assertSame(1, preg_match_all('/<main[\s>]/i', $html));
+    }
+
+    public function test_index_request_makes_no_external_http_call_and_no_tour_query(): void
+    {
+        Http::preventStrayRequests();
+        DB::enableQueryLog();
+
+        $this->get(route('tours.index'))->assertOk();
+
+        foreach (DB::getQueryLog() as $entry) {
+            $this->assertDoesNotMatchRegularExpression('/\btours\b/', $entry['query'], 'Запрос к таблице tours: ' . $entry['query']);
+        }
     }
 }

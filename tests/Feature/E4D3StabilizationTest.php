@@ -269,7 +269,8 @@ class E4D3StabilizationTest extends TestCase
 
         $tours = $this->get(route('tours.index'))->assertOk()->getContent();
         $this->assertStringNotContainsString('console.log(', $tours);
-        // console.error diagnostics for genuine failure paths must remain intact.
-        $this->assertStringContainsString('console.error(', $tours);
+        // E5-A1: the temporary Sletat-style catalog script (and its console.error
+        // failure-path diagnostics) is gone from /tours; the Tourvisor module
+        // reports its own failures, so only the diagnostic-log rule remains.
     }
 }
