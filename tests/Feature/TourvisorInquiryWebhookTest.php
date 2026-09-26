@@ -24,13 +24,21 @@ class TourvisorInquiryWebhookTest extends TestCase
     use RefreshDatabase;
 
     private const FAKE_KEY = 'SYNTHETIC-NOT-A-REAL-KEY-0002';
-    private const URL = '/api/webhooks/tourvisor/inquiries';
+    private const WEBHOOK_TOKEN = 'synthetic-webhook-token-0123456789abcdef0123456789abcdef';
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        config(['services.tourvisor.export_api_key' => self::FAKE_KEY]);
+        config([
+            'services.tourvisor.export_api_key' => self::FAKE_KEY,
+            'services.tourvisor.webhook_token' => self::WEBHOOK_TOKEN,
+        ]);
+    }
+
+    private function webhookUrl(): string
+    {
+        return '/api/webhooks/tourvisor/inquiries/' . self::WEBHOOK_TOKEN;
     }
 
     /** Чистая фабрика на каждый вызов: повторный Http::fake() не переопределяет прежние заглушки. */
@@ -49,7 +57,7 @@ class TourvisorInquiryWebhookTest extends TestCase
 
     private function notify(string $query = 'id=1688615&type=0')
     {
-        return $this->get(self::URL . '?' . $query);
+        return $this->get($this->webhookUrl() . '?' . $query);
     }
 
     public function test_valid_webhook_is_accepted_and_authoritative_data_is_fetched_server_side(): void
@@ -78,7 +86,7 @@ class TourvisorInquiryWebhookTest extends TestCase
     {
         $this->fakeExport();
 
-        $this->get(self::URL . '?id=1688615&type=0&name=Evil&phone=1&url=' . urlencode('https://evil.example/x') . '&price=1')
+        $this->get($this->webhookUrl() . '?id=1688615&type=0&name=Evil&phone=1&url=' . urlencode('https://evil.example/x') . '&price=1')
             ->assertOk();
 
         // Данные — только из авторитетной выгрузки, а не из query webhook.
@@ -117,7 +125,7 @@ class TourvisorInquiryWebhookTest extends TestCase
         $this->assertGuest();
         $this->notify()->assertOk();
 
-        $this->post(self::URL . '?id=1&type=0')->assertStatus(405);
+        $this->post($this->webhookUrl() . '?id=1&type=0')->assertStatus(405);
         $this->assertSame(1, IncomingInquiry::count());
     }
 

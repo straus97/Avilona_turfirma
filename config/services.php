@@ -42,6 +42,10 @@ return [
     // задаётся ТОЛЬКО в серверном окружении. Значения по умолчанию нет.
     'tourvisor' => [
         'export_api_key' => env('TOURVISOR_EXPORT_API_KEY'),
+        // Секрет пути callback-URL webhook. НЕ ключ Export API: задаётся нами, меняется
+        // независимо. 32–128 символов [A-Za-z0-9_-], значения по умолчанию нет
+        // (пусто/слабо → webhook закрыт, fail closed).
+        'webhook_token' => env('TOURVISOR_WEBHOOK_TOKEN'),
         'timeout' => (int) env('TOURVISOR_EXPORT_TIMEOUT', 10),
         'connect_timeout' => (int) env('TOURVISOR_EXPORT_CONNECT_TIMEOUT', 5),
     ],

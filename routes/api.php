@@ -48,9 +48,12 @@ Route::prefix('sletat')->name('sletat.')->group(function () {
     Route::get('/search/results', [SletatController::class, 'getSearchResults'])->name('search.results');
 });
 
-// Tourvisor: уведомление об обращении (GET ?id=…&type=…). Без сессии/CSRF (группа api),
-// без авторизации пользователя; данные обращения загружаются отдельным серверным запросом.
-Route::get('/webhooks/tourvisor/inquiries', TourvisorWebhookController::class)
+// Tourvisor: уведомление об обращении (GET …/{webhookToken}?id=…&type=…). Без сессии/CSRF
+// (группа api), без авторизации пользователя. Секретный токен пути (TOURVISOR_WEBHOOK_TOKEN)
+// проверяется ДО контроллера; данные обращения загружаются отдельным серверным запросом.
+// Порядок важен: сначала лимит по IP (считает и неверные токены), затем проверка токена.
+Route::get('/webhooks/tourvisor/inquiries/{webhookToken}', TourvisorWebhookController::class)
+    ->where('webhookToken', '[A-Za-z0-9_-]{1,128}')
     ->withoutMiddleware('throttle:api')
-    ->middleware('throttle:tourvisor-webhook')
+    ->middleware(['throttle:tourvisor-webhook', 'tourvisor.webhook'])
     ->name('webhooks.tourvisor.inquiries');
