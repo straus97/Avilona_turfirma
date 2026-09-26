@@ -37,4 +37,13 @@ return [
         'timeout' => env('SLETAT_TIMEOUT', 30),
     ],
 
+    // Tourvisor: экспорт заявок (входящие обращения). Публичный ID модуля
+    // (9981450) не секрет; ключ экспорта выдаётся поддержкой Tourvisor и
+    // задаётся ТОЛЬКО в серверном окружении. Значения по умолчанию нет.
+    'tourvisor' => [
+        'export_api_key' => env('TOURVISOR_EXPORT_API_KEY'),
+        'timeout' => (int) env('TOURVISOR_EXPORT_TIMEOUT', 10),
+        'connect_timeout' => (int) env('TOURVISOR_EXPORT_CONNECT_TIMEOUT', 5),
+    ],
+
 ];

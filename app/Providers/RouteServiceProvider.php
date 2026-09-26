@@ -59,5 +59,11 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Публичный webhook Tourvisor: каждое валидное уведомление может вызвать
+        // исходящий запрос к Tourvisor, поэтому частота ограничена по IP.
+        RateLimiter::for('tourvisor-webhook', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
     }
 }

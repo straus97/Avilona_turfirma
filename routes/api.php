@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\TourSearchController;
 use App\Http\Controllers\Api\SletatController;
+use App\Http\Controllers\Api\TourvisorWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,3 +47,10 @@ Route::prefix('sletat')->name('sletat.')->group(function () {
     Route::get('/search/state', [SletatController::class, 'getLoadState'])->name('search.state');
     Route::get('/search/results', [SletatController::class, 'getSearchResults'])->name('search.results');
 });
+
+// Tourvisor: уведомление об обращении (GET ?id=…&type=…). Без сессии/CSRF (группа api),
+// без авторизации пользователя; данные обращения загружаются отдельным серверным запросом.
+Route::get('/webhooks/tourvisor/inquiries', TourvisorWebhookController::class)
+    ->withoutMiddleware('throttle:api')
+    ->middleware('throttle:tourvisor-webhook')
+    ->name('webhooks.tourvisor.inquiries');

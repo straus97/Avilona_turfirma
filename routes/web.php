@@ -72,6 +72,9 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::delete('/documents/{document}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteDocument'])->name('documents.delete');
         Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'finance'])->name('finance');
         Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'knowledge'])->name('knowledge');
+        // Входящие обращения внешних провайдеров (Tourvisor). Только просмотр; это не Booking.
+        Route::get('/inquiries', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'index'])->name('inquiries');
+        Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'show'])->whereNumber('inquiry')->name('inquiries.show');
         Route::get('/content', [\App\Http\Controllers\Manager\ManagerController::class, 'content'])->name('content');
         Route::get('/articles', [\App\Http\Controllers\Manager\ManagerController::class, 'articles'])->name('articles');
         Route::get('/articles/create', [\App\Http\Controllers\Manager\ManagerController::class, 'createArticle'])->name('articles.create');
