@@ -72,9 +72,16 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::delete('/documents/{document}', [\App\Http\Controllers\Manager\ManagerController::class, 'deleteDocument'])->name('documents.delete');
         Route::get('/finance', [\App\Http\Controllers\Manager\ManagerController::class, 'finance'])->name('finance');
         Route::get('/knowledge', [\App\Http\Controllers\Manager\ManagerController::class, 'knowledge'])->name('knowledge');
-        // Входящие обращения внешних провайдеров (Tourvisor). Только просмотр; это не Booking.
+        // Входящие обращения внешних провайдеров (Tourvisor). Обращение — не Booking; заявку создаёт только явное действие сотрудника.
         Route::get('/inquiries', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'index'])->name('inquiries');
         Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'show'])->whereNumber('inquiry')->name('inquiries.show');
+        Route::post('/inquiries/{inquiry}/claim', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'claim'])->whereNumber('inquiry')->name('inquiries.claim');
+        Route::post('/inquiries/{inquiry}/reassign', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'reassign'])->whereNumber('inquiry')->name('inquiries.reassign');
+        Route::post('/inquiries/{inquiry}/client/select', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'selectClient'])->whereNumber('inquiry')->name('inquiries.client.select');
+        Route::post('/inquiries/{inquiry}/client/create', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'createClient'])->whereNumber('inquiry')->name('inquiries.client.create');
+        Route::post('/inquiries/{inquiry}/client/password-setup', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'sendPasswordSetup'])->whereNumber('inquiry')->name('inquiries.client.password-setup');
+        Route::post('/inquiries/{inquiry}/convert', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'convert'])->whereNumber('inquiry')->name('inquiries.convert');
+        Route::post('/inquiries/{inquiry}/close', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'close'])->whereNumber('inquiry')->name('inquiries.close');
         Route::get('/content', [\App\Http\Controllers\Manager\ManagerController::class, 'content'])->name('content');
         Route::get('/articles', [\App\Http\Controllers\Manager\ManagerController::class, 'articles'])->name('articles');
         Route::get('/articles/create', [\App\Http\Controllers\Manager\ManagerController::class, 'createArticle'])->name('articles.create');

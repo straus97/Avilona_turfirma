@@ -223,6 +223,12 @@
                         <div class="booking-person__role">{{ $booking->user?->email ?? 'Email не указан' }}</div>
                     </div>
                 </div>
+                @if($booking->incomingInquiry)
+                    <p class="booking-note mt-3">
+                        <i class="bi bi-inbox" aria-hidden="true"></i>
+                        Источник: <a href="{{ route('cabinet.manager.inquiries.show', $booking->incomingInquiry) }}">входящее обращение #{{ $booking->incomingInquiry->id }}</a>
+                    </p>
+                @endif
             </section>
         @endif
 

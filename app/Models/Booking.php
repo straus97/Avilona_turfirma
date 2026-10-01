@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -77,6 +78,12 @@ class Booking extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    /** Входящее обращение, из которого оформлена заявка (если есть). Показывается только сотрудникам. */
+    public function incomingInquiry(): HasOne
+    {
+        return $this->hasOne(IncomingInquiry::class, 'booking_id');
     }
 
     public function messages(): HasMany

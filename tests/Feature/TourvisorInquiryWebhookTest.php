@@ -323,9 +323,11 @@ class TourvisorInquiryWebhookTest extends TestCase
         $this->assertSame($usersBefore, User::count(), 'Пользователи не создаются');
         $this->assertSame(0, Booking::where('user_id', '!=', $sameContact->id)->count());
 
-        foreach (['user_id', 'booking_id', 'manager_id'] as $column) {
-            $this->assertFalse(Schema::hasColumn('incoming_inquiries', $column), "incoming_inquiries.$column не должна существовать в E5-A2A");
+        foreach (['user_id', 'manager_id'] as $column) {
+            $this->assertFalse(Schema::hasColumn('incoming_inquiries', $column), "incoming_inquiries.$column не должна существовать (владелец только по явному решению сотрудника, E5-A3)");
         }
+        $this->assertNull(IncomingInquiry::sole()->booking_id, 'Импорт не создаёт и не связывает Booking');
+        $this->assertNull(IncomingInquiry::sole()->client_user_id, 'Аккаунт не выводится из контактов');
         $this->assertSame('synthetic@example.test', IncomingInquiry::sole()->client_email);
     }
 

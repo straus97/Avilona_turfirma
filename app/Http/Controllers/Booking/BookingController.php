@@ -335,6 +335,12 @@ class BookingController extends Controller
 
         $booking->load(['user', 'tour', 'manager', 'messages.sender', 'messages.receiver', 'bookingDocuments.uploadedBy']);
 
+        // Источник-обращение нужен только сотрудникам (блок «Клиент» виден только им);
+        // для туриста связь не загружается вовсе.
+        if (Auth::user()->hasAnyRole(['admin', 'manager'])) {
+            $booking->load('incomingInquiry:id,booking_id');
+        }
+
         // Список кандидатов на роль ответственного нужен только админу (форма назначения
         // доступна только ему). Для остальных ролей отдаём пустую коллекцию, чтобы не
         // выполнять лишний запрос.

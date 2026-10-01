@@ -93,7 +93,7 @@ class IncomingInquiryStaffAccessTest extends TestCase
         $list->assertOk()
             ->assertSee('Входящие обращения')
             ->assertSee('Tourvisor #1688615')
-            ->assertSee('Загружено')
+            ->assertSee('Новое')
             ->assertSee('Это не бронирования');
 
         $show = $this->actingAs($manager)->get(route('cabinet.manager.inquiries.show', $inquiry->id));
