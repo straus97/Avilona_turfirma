@@ -154,7 +154,9 @@ Route::middleware(['auth', 'password.change'])->group(function () {
         ->name('bookings.assign-manager')->middleware('role:admin');
     Route::post('bookings/{booking}/confirm', [\App\Http\Controllers\Booking\BookingController::class, 'confirm'])
         ->name('bookings.confirm')->middleware('role:manager,admin');
-    Route::post('bookings/{booking}/cancel', [\App\Http\Controllers\Booking\BookingController::class, 'cancel'])
+    Route::post('bookings/{booking}/client/password-setup', [\App\Http\Controllers\Booking\BookingController::class, 'sendClientPasswordSetup'])
+        ->name('bookings.client.password-setup')->middleware('role:manager,admin');
+    Route::post('bookings/{booking}/cancel',[\App\Http\Controllers\Booking\BookingController::class, 'cancel'])
         ->name('bookings.cancel');
     Route::post('bookings/{booking}/complete', [\App\Http\Controllers\Booking\BookingController::class, 'complete'])
         ->name('bookings.complete')->middleware('role:manager,admin');

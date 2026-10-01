@@ -6,15 +6,12 @@ use App\Events\BookingCreated;
 use App\Models\Booking;
 use App\Models\DestinationCity;
 use App\Models\IncomingInquiry;
-use App\Models\Role;
 use App\Models\User;
+use App\Services\Accounts\StaffClientAccounts;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 /**
  * Бизнес-процесс обработки входящего обращения (E5-A3):
@@ -31,6 +28,10 @@ use Illuminate\Support\Str;
  */
 class IncomingInquiryWorkflow
 {
+    public function __construct(private readonly StaffClientAccounts $accounts)
+    {
+    }
+
     /**
      * Взять обращение в работу (атомарно: выигрывает ровно один сотрудник).
      *
@@ -114,12 +115,10 @@ class IncomingInquiryWorkflow
     /**
      * Создать нового туриста по данным обращения и закрепить его.
      *
-     * Безопасность учётной записи:
-     *  - пароль — случайные 64 символа, нигде не хранятся и не показываются
-     *    (temp_password не используется), войти можно только через «Забыли пароль»;
-     *  - email НЕ считается подтверждённым (email_verified_at = null);
-     *  - существующий аккаунт с таким email не изменяется и не дублируется;
-     *  - письма здесь не отправляются.
+     * Безопасность учётной записи обеспечивает общий StaffClientAccounts
+     * (хешированный случайный пароль, temp_password не используется, email не
+     * подтверждён). Существующий аккаунт с таким email не изменяется и не
+     * дублируется; письма здесь не отправляются.
      */
     public function createClient(IncomingInquiry $inquiry, User $actor, string $name, ?string $email, ?string $phone): User
     {
@@ -132,27 +131,15 @@ class IncomingInquiryWorkflow
                 $this->authorize($actor, 'process', $locked);
                 $this->assertInProgress($locked);
 
-                if ($email !== null && User::query()->whereRaw('LOWER(email) = ?', [strtolower($email)])->exists()) {
+                if ($email !== null && $this->accounts->emailExists($email)) {
                     throw new IncomingInquiryWorkflowException(
                         'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.',
                         'client_email'
                     );
                 }
 
-                $client = new User();
-                $client->forceFill([
-                    'name' => $name,
-                    'email' => $email ?? $this->technicalEmail(),
-                    'phone' => ($phone !== null && trim($phone) !== '') ? trim($phone) : null,
-                    'password' => Hash::make(Str::random(64)),
-                    'is_active' => true,
-                    'password_change_required' => false,
-                    'temp_password' => null,
-                    'email_verified_at' => null,
-                ])->save();
-
-                // firstOrFail: без роли «tourist» вся транзакция откатывается.
-                $client->assignRole(Role::TOURIST);
+                // Без роли «tourist» createTourist бросает исключение — транзакция откатывается.
+                $client = $this->accounts->createTourist($name, $email, $phone);
 
                 $this->linkClient($locked, $client, $actor);
 
@@ -185,16 +172,14 @@ class IncomingInquiryWorkflow
             throw new IncomingInquiryWorkflowException('Сначала выберите или создайте клиента.', 'client_id');
         }
 
-        if ($client->hasTechnicalEmail() || $client->email_verified_at !== null || $client->last_login_at !== null) {
+        if (! $this->accounts->canSendPasswordSetup($client)) {
             throw new IncomingInquiryWorkflowException(
                 'Ссылку установки пароля можно отправить только клиенту, который ещё не входил в кабинет и имеет настоящий email.',
                 'client_id'
             );
         }
 
-        $status = Password::broker()->sendResetLink(['email' => $client->email]);
-
-        if ($status !== Password::RESET_LINK_SENT) {
+        if (! $this->accounts->sendPasswordSetup($client)) {
             throw new IncomingInquiryWorkflowException('Не удалось отправить ссылку. Попробуйте позже.', 'client_id');
         }
     }
@@ -393,15 +378,5 @@ class IncomingInquiryWorkflow
             IncomingInquiry::WORKFLOW_CLOSED => 'Обращение уже закрыто.',
             default => 'Не удалось взять обращение в работу. Обновите страницу.',
         };
-    }
-
-    /** Технический адрес для клиента без email: недоставляемый домен + UUID (контракт User::hasTechnicalEmail()). */
-    private function technicalEmail(): string
-    {
-        do {
-            $email = 'temp_' . Str::uuid() . '@' . User::TECHNICAL_EMAIL_DOMAIN;
-        } while (User::query()->where('email', $email)->exists());
-
-        return $email;
     }
 }

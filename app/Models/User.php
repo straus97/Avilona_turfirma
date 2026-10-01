@@ -91,7 +91,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'notification_settings',
         'is_active',
         'password_change_required',
-        'temp_password',
         'avatar_path',
     ];
 
@@ -103,6 +102,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        // Устаревшая колонка: значения очищены миграцией, новые не записываются.
+        'temp_password',
     ];
 
     /**

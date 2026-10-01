@@ -223,6 +223,16 @@
                         <div class="booking-person__role">{{ $booking->user?->email ?? 'Email не указан' }}</div>
                     </div>
                 </div>
+                @error('client_password_setup')
+                    <div class="alert alert-danger mt-3" role="alert">{{ $message }}</div>
+                @enderror
+                @if($booking->user && !$booking->user->hasTechnicalEmail() && $booking->user->email_verified_at === null && $booking->user->last_login_at === null)
+                    <form method="POST" action="{{ route('bookings.client.password-setup', $booking) }}" class="mt-3" data-submit-once>
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Отправить клиенту ссылку для установки пароля</button>
+                        <span class="text-muted small d-block mt-1">Клиент ещё не входил в кабинет. Письмо уйдёт на {{ $booking->user->email }} только по вашему нажатию.</span>
+                    </form>
+                @endif
                 @if($booking->incomingInquiry)
                     <p class="booking-note mt-3">
                         <i class="bi bi-inbox" aria-hidden="true"></i>

@@ -258,7 +258,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
     // 5. New client creation
     // -----------------------------------------------------------------------
 
-    public function test_new_client_receives_the_tourist_role_and_secure_temporary_password(): void
+    public function test_new_client_receives_the_tourist_role_and_no_plaintext_password(): void
     {
         Event::fake([BookingCreated::class]);
 
@@ -275,10 +275,9 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
         $client = User::query()->where('email', 'client@example.com')->sole();
 
         $this->assertTrue($client->hasRole(Role::TOURIST));
-        $this->assertTrue((bool) $client->password_change_required);
-        $this->assertNotEmpty($client->temp_password);
-        $this->assertSame(12, strlen($client->temp_password));
-        $this->assertDoesNotMatchRegularExpression('/^AV\d{4}[0-9A-F]{4}$/', $client->temp_password);
+        $this->assertFalse((bool) $client->password_change_required);
+        $this->assertNull($client->temp_password);
+        $this->assertNull($client->email_verified_at);
     }
 
     public function test_new_client_booking_created_by_manager_gets_manager_and_progress_status(): void
@@ -508,9 +507,10 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
         $notes = Booking::query()->sole()->notes;
 
         $this->assertStringContainsString(
-            'Клиент создан автоматически. Email для отправки данных для входа: client@example.com.',
+            'Клиент создан сотрудником. Email: client@example.com. Пароль не задан',
             $notes
         );
+        $this->assertStringNotContainsString('данных для входа', $notes);
     }
 
     public function test_notes_for_a_client_without_email_do_not_claim_credentials_were_sent(): void
@@ -529,7 +529,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
         $notes = Booking::query()->sole()->notes;
 
         $this->assertStringContainsString(
-            'Клиент создан автоматически. Email не указан. Данные для входа автоматически не отправлялись.',
+            'Клиент создан сотрудником. Email не указан, вход в кабинет недоступен.',
             $notes
         );
         $this->assertStringNotContainsString('Отправлены данные для входа', $notes);

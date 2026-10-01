@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\Tour;
 use App\Models\User;
 use App\Models\DestinationCity;
+use App\Services\Accounts\StaffClientAccounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BookingController extends Controller
 {
-    public function __construct()
+    public function __construct(private readonly StaffClientAccounts $accounts)
     {
         $this->middleware('auth');
     }
@@ -168,10 +169,18 @@ class BookingController extends Controller
         if ($isStaff && $isNewClient) {
             $clientData = $request->validate([
                 'client_name'  => 'required|string|max:255',
-                'client_email' => 'nullable|email|max:255|unique:users,email',
-            ], [
-                'client_email.unique' => 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.',
-            ], [
+                'client_email' => [
+                    'nullable',
+                    'email',
+                    'max:255',
+                    // Без учёта регистра: «Client@…» и «client@…» — один и тот же аккаунт.
+                    function (string $attribute, $value, \Closure $fail): void {
+                        if ($this->accounts->emailExists((string) $value)) {
+                            $fail('Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.');
+                        }
+                    },
+                ],
+            ], [], [
                 'client_name'  => 'Имя клиента',
                 'client_email' => 'Email клиента',
             ]);
@@ -277,53 +286,55 @@ class BookingController extends Controller
     }
 
     /**
-     * Создание нового клиента-туриста внутри транзакции.
+     * Создание нового клиента-туриста внутри транзакции через общий безопасный
+     * сервис: пароль не задаётся и не хранится открытым текстом, email не
+     * подтверждён, вход — только после установки пароля по стандартной ссылке.
      * Отсутствие роли "tourist" приводит к исключению и откату всей транзакции.
      */
     private function createTouristClient(string $name, ?string $email): User
     {
-        $tempPassword = Str::password(12, true, true, false, false);
-
-        $newTourist = User::create([
-            'name'                     => $name,
-            'email'                    => $email ?: $this->generateTechnicalEmail(),
-            'password'                 => bcrypt($tempPassword),
-            'password_change_required' => true,
-            'temp_password'            => $tempPassword,
-            'email_verified_at'        => null,
-        ]);
-
-        // firstOrFail: роль обязательна, молча пропустить назначение нельзя.
-        $newTourist->assignRole(Role::TOURIST);
-
-        return $newTourist;
+        return $this->accounts->createTourist($name, $email);
     }
 
     /**
-     * Технический адрес для клиента без email: недоставляемый домен + UUID.
-     */
-    private function generateTechnicalEmail(): string
-    {
-        do {
-            $email = 'temp_' . Str::uuid() . '@' . User::TECHNICAL_EMAIL_DOMAIN;
-        } while (User::where('email', $email)->exists());
-
-        return $email;
-    }
-
-    /**
-     * Пометка о созданном клиенте. Факт доставки письма не утверждается:
-     * почта только ставится в очередь и может не дойти.
+     * Пометка о созданном клиенте. Пароль не создаётся и не отправляется;
+     * ссылку установки пароля сотрудник отправляет отдельным явным действием.
      */
     private function appendNewClientNote(?string $notes, ?string $clientEmail): string
     {
         $note = $clientEmail
-            ? "Клиент создан автоматически. Email для отправки данных для входа: {$clientEmail}."
-            : 'Клиент создан автоматически. Email не указан. Данные для входа автоматически не отправлялись.';
+            ? "Клиент создан сотрудником. Email: {$clientEmail}. Пароль не задан: клиент устанавливает его по ссылке для установки пароля."
+            : 'Клиент создан сотрудником. Email не указан, вход в кабинет недоступен.';
 
         $notes = trim((string) $notes);
 
         return $notes === '' ? $note : $notes . "\n\n" . $note;
+    }
+
+    /**
+     * Явная отправка клиенту стандартной ссылки установки пароля
+     * (тот же механизм, что «Забыли пароль»). Только админ или назначенный
+     * менеджер; только клиенту, который ещё не активировал аккаунт.
+     */
+    public function sendClientPasswordSetup(Booking $booking): RedirectResponse
+    {
+        $this->authorize('update', $booking);
+
+        $client = $booking->user;
+
+        if ($client === null || !$client->hasRole(Role::TOURIST) || !$client->is_active || !$this->accounts->canSendPasswordSetup($client)) {
+            return back()->withErrors([
+                'client_password_setup' => 'Ссылку установки пароля можно отправить только клиенту, который ещё не входил в кабинет и имеет настоящий email.',
+            ]);
+        }
+
+        if (!$this->accounts->sendPasswordSetup($client)) {
+            return back()->withErrors([
+                'client_password_setup' => 'Не удалось отправить ссылку. Попробуйте позже.',
+            ]);
+        }
+
+        return back()->with('success', 'Ссылка для установки пароля отправлена клиенту.');
     }
 
     /**
