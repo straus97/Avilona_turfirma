@@ -5,7 +5,7 @@
       $listLabel — подпись для $listUrl
 
     CTA:
-      - первичная: подбор тура (только ссылка на home #tour-search, механика — E5)
+      - первичная: подбор тура (ссылка на /tours, где поиск выполняет модуль Tourvisor)
       - вторичная: общая Bootstrap-модалка менеджеров (#managerContactModal, mode=all)
       - третичная: контекстная ссылка на список
     JS не добавляет.
@@ -19,7 +19,7 @@
     <p class="e2-cta-band__text">Можно перейти к подбору тура или связаться с менеджером — поможем
         выбрать поездку под ваши даты и бюджет.</p>
     <div class="e2-cta-band__actions">
-        <a class="e2-btn e2-btn--primary" href="{{ route('home.index') }}#tour-search">Подобрать тур</a>
+        <a class="e2-btn e2-btn--primary" href="{{ route('tours.index') }}">Подобрать тур</a>
         <button type="button" class="e2-btn e2-btn--secondary"
                 data-bs-toggle="modal" data-bs-target="#managerContactModal"
                 data-manager-mode="all">Связаться с менеджером</button>

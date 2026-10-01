@@ -171,6 +171,36 @@ class TourIndexReadOnlyTest extends TestCase
         $this->assertStringContainsString('<noscript>', $html);
     }
 
+    public function test_page_discloses_tourvisor_data_flow_before_the_module(): void
+    {
+        $html = $this->toursHtml();
+
+        $text = preg_replace('/\s+/u', ' ', strip_tags($html));
+        $this->assertStringContainsString('работают на платформе Tourvisor', $text);
+        $this->assertStringContainsString('обрабатывается через Tourvisor и затем передаётся Авилоне', $text);
+        $this->assertStringContainsString('Результаты поиска предоставляются через Tourvisor', $text);
+
+        // Раскрытие стоит ДО контейнера модуля и не зависит от JavaScript.
+        $this->assertLessThan(
+            strpos($html, 'id="tourvisor-module"'),
+            strpos($html, 'e5-tours-data-note" role="note"')
+        );
+        $this->assertStringContainsString(
+            'documents/Policy_regarding_the_protection_and_processing_of_personal_data.pdf',
+            $html
+        );
+        $this->assertStringContainsString('href="' . route('cookies.info') . '"', $html);
+    }
+
+    public function test_page_does_not_call_tourvisor_a_crm_or_invent_legal_claims(): void
+    {
+        $text = mb_strtolower(strip_tags($this->toursHtml()));
+
+        foreach (['crm', 'за пределами рф', 'трансграничн', 'срок хранения', 'сертифицирован', 'на основании договора'] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, $text, 'Неподтверждённое утверждение: ' . $forbidden);
+        }
+    }
+
     public function test_authenticated_tourist_sees_the_same_single_module(): void
     {
         $role = Role::query()->firstOrCreate(

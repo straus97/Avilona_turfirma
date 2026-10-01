@@ -473,7 +473,7 @@ html {
    E2-A1-I1 — Public header / home hero / tour-search visual foundation
    -------------------------------------------------------------------------
    Additive and scoped. Introduces a small, clearly-named E2 layer for the
-   shared header, the home hero and the (temporary) tour-search container
+   shared header, the home hero and the tour-search entry container
    only. It deliberately does NOT re-theme the wider public site — later E2
    slices still need their own audit + browser validation. Legacy rules in
    style_min.css are left untouched; where they would otherwise win, the
@@ -917,27 +917,67 @@ html {
     color: var(--e2-ink);
 }
 
-/* ---- Tour-search visual container (TEMPORARY widget; mechanics = E5) -- */
-.e2-search {
-    margin-top: 1.25rem;
-}
-
-.e2-search-card {
-    overflow: visible;
+/* ---- Home tour-search entry (E5-A4) ------------------------------------
+   Честная точка входа на /tours вместо прежней временной формы: поля не
+   имитируются, потому что поиск выполняет модуль Tourvisor на /tours. */
+.e2-search-entry {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    margin: 1.25rem 0 0;
+    padding: clamp(1.25rem, 1rem + 2vw, 2rem);
     background: linear-gradient(135deg, var(--e2-sea) 0%, var(--e2-sea-strong) 100%);
     border-radius: var(--e2-radius-lg);
     box-shadow: var(--e2-elev-2);
+    color: #fff;
 }
 
-/* Базовый .card в этом файле поднимается на :hover — для контейнера поиска
-   это нежелательно (сдвигает абсолютный поповер количества туристов). */
-.e2-search-card:hover {
-    transform: none;
-    box-shadow: var(--e2-elev-2);
+.e2-search-entry__body {
+    flex: 1 1 20rem;
+    min-width: 0;
 }
 
-.e2-search-card .card-body {
-    padding: clamp(1.25rem, 1rem + 2vw, 2rem);
+.e2-search-entry__title {
+    margin: 0 0 .5rem;
+    font-size: clamp(1.25rem, 1.1rem + .8vw, 1.6rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+}
+
+.e2-search-entry__text {
+    margin: 0;
+    max-width: 62ch;
+    color: #fff;
+}
+
+.e2-search-entry__actions {
+    flex: 0 0 auto;
+}
+
+/* Белая кнопка на синем фоне: основной синий CTA здесь слился бы с заливкой. */
+.e2-search-entry__btn {
+    background: #fff;
+    color: var(--e2-sea-strong);
+    box-shadow: var(--e2-elev-1);
+}
+
+.e2-search-entry__btn:hover {
+    background: var(--e2-surface-warm);
+    color: var(--e2-sea-strong);
+}
+
+.e2-search-entry__btn:focus-visible {
+    box-shadow: 0 0 0 3px var(--e2-sea-strong), 0 0 0 6px #fff;
+}
+
+@media (max-width: 575.98px) {
+    .e2-search-entry__actions,
+    .e2-search-entry__btn {
+        width: 100%;
+    }
 }
 
 /* =========================================================================

@@ -31,12 +31,6 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'sletat' => [
-        'login' => env('SLETAT_LOGIN'),
-        'password' => env('SLETAT_PASSWORD'),
-        'timeout' => env('SLETAT_TIMEOUT', 30),
-    ],
-
     // Tourvisor: экспорт заявок (входящие обращения). Публичный ID модуля
     // (9981450) не секрет; ключ экспорта выдаётся поддержкой Tourvisor и
     // задаётся ТОЛЬКО в серверном окружении. Значения по умолчанию нет.
