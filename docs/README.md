@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-09-23**
+Дата актуализации содержания: **2026-10-01**
 
 ## 1. Текущий checkpoint
 
@@ -8,10 +8,12 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| **Текущий authoritative application HEAD** | **`55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`)** |
-| Прямой parent текущего application HEAD | `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`) |
-| Documentation checkpoint для этого application HEAD | **ЕЩЁ НЕ СУЩЕСТВУЕТ.** Будет создан отдельным docs-only commit **поверх** `55a9fcaf` (этот файл + `docs/roadmap.md`). Тот будущий HEAD определяется Git, не известен заранее и не зашивается в этот файл. |
-| Documentation/source checkpoint после E3-A6 / входа в E4 (предыдущий docs-only commit; база текущего Project Sources) | `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — предшествует всей серии E4-A…E4-E1, НЕ текущий HEAD |
+| **Текущий authoritative application HEAD** | **`c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`)** — финальный application-коммит E5 |
+| Прямой parent текущего application HEAD | `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`) |
+| Documentation checkpoint для этого application HEAD | **ЕЩЁ НЕ СУЩЕСТВУЕТ.** Будет создан отдельным docs-only commit **поверх** `c56e3306` (этот файл + `docs/roadmap.md` + корневой `README.md`). Тот будущий HEAD определяется Git, не известен заранее и не зашивается в этот файл. |
+| Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
+| Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
+| Documentation/source checkpoint после E3-A6 / входа в E4 (историческое) | `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — предшествует E4-A…E4-E1, НЕ текущий HEAD |
 | Application HEAD на момент закрытия E3-A6 | `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — НЕ текущий HEAD |
 | Documentation/source checkpoint после E3-A5 (историческое) | `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — предшествует E3-A6-A/B, НЕ текущий HEAD |
 | Application HEAD на момент закрытия E3-A5 | `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — НЕ текущий HEAD |
@@ -20,8 +22,8 @@
 | Application HEAD на момент закрытия E2 (E2-A7) | `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — НЕ текущий HEAD |
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
-| Активный внешний documentation/source (Project Sources) checkpoint | набор основан на `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (вход в E4, до E4-A…E4-E1) — сейчас **STALE** относительно полного закрытия E4; refresh обязателен только после review → отдельный docs-only commit → push → выравнивание local/tracking/live на новом docs HEAD (см. §8.1) |
-| Full PHPUnit baseline | **1286 tests / 8628 assertions**, 0 failures, 0 errors (на входе в E4, checkpoint `c89e923f`, было 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; историческое E1-closure значение: 1001 / 7013) |
+| Активный внешний documentation/source (Project Sources) checkpoint | пока что — **ИСТОРИЧЕСКИЙ набор от 2026-09-23 на `a1d72a40`** (до E5) — **STALE**; свежий набор строится из нового чистого pushed docs HEAD после этого docs-only коммита (см. §8.1) |
+| Full PHPUnit baseline | **1393 tests / 9759 assertions**, 0 failures, 0 errors (финальный E5 baseline, checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
@@ -31,33 +33,41 @@
 | E2 — Public UX / UI / Design Redesign | ✅ **COMPLETE / CLOSED на уровне приложения** (E2-A1…E2-A7; см. §9B) |
 | E3 — Cabinet UX/UI/Design Modernization | ✅ **CLOSED на уровне приложения** — E3-A1…E3-A5 (Foundation, Tourist, Shared Booking, Manager, Admin) + **E3-A6 point-polish (A + B) ✅ CLOSED**; E3-A6-C не требуется (см. §9C) |
 | S13-R2 (Manager review cache parity relevance check) | ✅ **CLOSED** — нет живого public review cache layer, parity не требуется (см. §5.7) |
-| **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** после этой документационной правки (E4-A…E4-E1; см. §9.4). Технический baseline: 1286 / 8628, 0 failures, 0 errors. Блокеров релиза уровня приложения не осталось. |
-| Следующий шаг | **E5 — Final Tour Search / Aggregation Solution** — ⬜ NEXT, реализация/закупка ещё не начата. Первый шаг — независимое research-прохождение через ChatGPT Work/Astra (см. §10). |
-| E6 | PENDING, после E5 (см. §9, §10) |
+| **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** (E4-A…E4-E1; см. §9.4). Закрыт ранее, документационный checkpoint `a1d72a40`. |
+| **E5 — Final Tour Search / Aggregation Product Block** | ✅ **CLOSED на уровне приложения** — E5-A1 … E5-A4 закрыты и запушены (см. §10). **Приложение закрыто, но production НЕ развёрнут:** production-деплоя не было, проект **не production-ready** до закрытия E6. |
+| **Следующий шаг** | **Screenshot Audit Pack → независимый полный аудит (Astra / ChatGPT Work) → утверждённые исправления по аудиту (если есть) → E6.** E5 больше не NEXT. См. §10.11. |
+| E6 | ⬜ PENDING — final production / operations stage; **production НЕ развёрнут**, чеклист — §12; инфраструктурное состояние — §13 |
 
-Единственная PHPUnit deprecation — это pre-existing XML schema deprecation; это не функциональный/кодовый сбой.
+**ПРИЛОЖЕНИЕ ЗАКРЫТО (E5) — НО PRODUCTION НЕ РАЗВЁРНУТ.** E5 закрыт на уровне
+приложения; production-деплоя не было, E5-миграции (как минимум
+`2026_10_01…` и `2026_10_02…`) не применены к canonical MySQL,
+production-секреты/webhook Tourvisor не настроены. Закрытие E5 **не**
+означает production-readiness — это задача E6 (§12).
 
-Baseline 1286 / 8628 — финальный верифицированный E4-E1 (final technical
-closure) baseline. Локальный `php artisan test --compact` на этом прогоне
-упёрся в дефолтный 128M CLI memory_limit ближе к концу набора — **это не
-дефект приложения и не провал тестов**, это ограничение локального PHP CLI
-runner'а. Полный историчный PHPUnit-style запуск с `memory_limit=512M` прошёл
-целиком: **1286 tests / 8628 assertions, 0 failures, 0 errors**. У приложения
-нет memory leak; тестовый набор не является упавшим. PHPUnit против canonical
-MySQL остаётся запрещён.
+Единственная PHPUnit deprecation (1 штука) — предупреждение PHPUnit test runner:
+«Your XML configuration validates against a deprecated schema» (`phpunit.xml`;
+вывод подтверждён запуском `--display-phpunit-deprecations`). Это не
+функциональный/кодовый сбой.
 
-Application checkpoint = `55a9fcaf6371ef0c749bb668c9b27783d1df358c`. Этот файл
-и `docs/roadmap.md` фиксируются отдельным docs-only commit **поверх** этого
-application HEAD. Documentation closure HEAD после того commit будет новее
-application commit и определяется Git — он **не** известен заранее и не
-зашивается в этот файл.
+Baseline 1393 / 9759 — финальный верифицированный E5 baseline, получен
+повторным полным прогоном в этом docs-slice на checkpoint `c56e3306`
+(`C:\wamp\bin\php\php8.3.32\php.exe -d xdebug.mode=off -d memory_limit=2048M
+vendor/bin/phpunit`, SQLite `:memory:`): **1393 tests / 9759 assertions, 0
+failures, 0 errors**. Дефолтный 128M CLI `memory_limit` для `php artisan test`
+на полном наборе недостаточен — это ограничение локального runner'а, не дефект
+приложения. PHPUnit против canonical MySQL остаётся запрещён; canonical MySQL
+`turfirma_rebuild_v4` тестами/этим slice не затрагивалась.
 
-Project Sources ещё не обновлён под этот checkpoint — активен набор,
-основанный на `c89e923f` (вход в E4, до E4-A…E4-E1); он устарел относительно
-полного закрытия E4 — см. §8.1. Refresh **обязателен только после** review
-этого docs-only diff, отдельного docs-only commit, push и выравнивания
-local/tracking/live на новом docs HEAD; генерироваться он должен из **того
-нового чистого pushed documentation HEAD**, а не из `55a9fcaf` напрямую.
+Application checkpoint = `c56e330685ffa8953b22c803d6dce5334c69e81b`. Этот файл,
+`docs/roadmap.md` и корневой `README.md` фиксируются отдельным docs-only commit
+**поверх** этого application HEAD. Documentation closure HEAD после того commit
+будет новее application commit и определяется Git — он **не** известен заранее
+и не зашивается в этот файл.
+
+Project Sources: набор от 2026-09-23 (`a1d72a40`) **ИСТОРИЧЕСКИЙ** — он
+предшествует всей реализации E5 и **не** авторитетен над текущим репозиторием.
+Авторитетны текущее дерево, `git log`, тесты, миграции и docs на pushed HEAD.
+Свежий набор генерируется из нового чистого pushed docs HEAD — см. §8.1.
 
 ## 2. Источники истины
 
@@ -69,7 +79,7 @@ local/tracking/live на новом docs HEAD; генерироваться он
 4. внешний Project Sources set, созданный из clean pushed documentation HEAD;
 5. исторические материалы под `docs/archive/` и старые Project Sources.
 
-Активный внешний source set (основан на `20cde21d`, см. §8.1) после нового refresh должен быть сохранён в archive, а не удалён.
+Исторический внешний source set (основан на `a1d72a40`, до E5; см. §8.1) после нового refresh сохраняется в archive, а не удаляется.
 
 ## 3. Workflow / guards
 
@@ -357,6 +367,7 @@ full: 1001 tests / 7013 assertions
   ВРЕМЕННЫМ. В E2 он только визуально интегрируется в новые surfaces; механика/
   архитектура не финальны. Не переделывать/заменять до E5 (выделенная фаза
   финального решения по поиску туров).
+  **[Историческая запись E1/E2; ✅ РЕШЕНО в E5 — временный поиск заменён модулем Tourvisor, см. §10.]**
 - **News RSS scheduling** — не добавлять Laravel scheduling вслепую; внешний
   production cron может уже существовать. E2-A5 добавил только HTML autodiscovery
   на listing новостей; production scheduling НЕ верифицирован. Проверить реальный
@@ -411,30 +422,17 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 - Stage 13 code/schema/legal/test reconciliation — PASS;
 - E1 closure baseline: **1001 tests / 7013 assertions**; после E2 closure: **1051 tests / 7180 assertions**; baseline на закрытии E3-A5: **1233 tests / 8023 assertions**; текущий baseline после E3-A6: **1242 tests / 8056 assertions** (§9C.5);
 - функциональных блокеров Stage 13 / E1 не осталось (см. §5A.2 про намеренно отложенные пункты);
-- E2 **завершён на уровне приложения** (E2-A1…E2-A7, §9B). Временный блок поиска/виджета `/tours` (`resources/views/tours/index.blade.php`) намеренно исключён из E2-A7 и остаётся временным до E5;
+- E2 **завершён на уровне приложения** (E2-A1…E2-A7, §9B). Временный блок поиска/виджета `/tours` (`resources/views/tours/index.blade.php`) намеренно исключён из E2-A7 и оставался временным до E5 *(историческая запись E2; заменён модулем Tourvisor в E5, §10)*;
 - E3 **Cabinet UX/UI/Design Modernization завершён на уровне приложения через E3-A5** (Foundation → Tourist → Shared Booking → Manager → Admin, §9C), точечная полировка **E3-A6 (A + B) закрыта**, E3-A6-C не требуется. S13-R2 (Manager review cache parity relevance check) закрыт как часть E3-A5 (§5.7);
-- следующий шаг — **E4 — Post-redesign stabilization** (§9.4, `docs/roadmap.md`); E5 и E6 остаются позже.
+- (историческое состояние на момент E3) тогда следующим шагом был E4; с тех пор E4 и E5 закрыты на уровне приложения — актуальный статус и следующий шаг см. §1 и §10.11.
 
-### 8.1 Project Sources — требуется refresh (после docs-only commit)
+### 8.1 Project Sources — refresh после E5 docs closure
 
-Активный (внешний) Project Sources набор устарел относительно текущего repo:
-
-- активный Project Sources набор основан на `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — момент входа в E4, до всей серии E4-A…E4-E1;
-- после него завершены E4-B (`511282e3`), E4-D1 (`16b71c6a`), E4-D2 (`46a97f3d`), E4-D3 (`c1ad29cb`), E4-E1 (`55a9fcaf`) — набор **STALE** относительно полного закрытия E4;
-- Project Sources refresh **обязателен только после**: (1) review этого docs-only E4-closure diff; (2) отдельного docs-only commit; (3) push; (4) выравнивания local / tracking / live origin на этом будущем docs HEAD;
-- refresh должен генерироваться из **этого нового чистого docs closure HEAD** (поверх `55a9fcaf`), а не из application HEAD `55a9fcaf` до docs commit; будущий docs HEAD пока неизвестен и не выдумывается; имя будущего source-архива, timestamp, SHA256 и размер архива тоже не выдумываются;
-- предыдущий активный набор файлов **не трогать** до верификации нового сгенерированного пакета; после refresh предыдущий набор сохраняется в `archive/`, не удаляется;
-- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне этого репозитория, под `C:\Avilona_private\`), запускается из чистого pushed HEAD; publish с backup предыдущего набора в `archive/`. Установленный паттерн (см. `Avilona_E3_A6_Closure_Project_Sources_Refresh_v1`) — для каждого нового checkpoint копируется предыдущий `_v1` wrapper-пакет в новую `_v1`-директорию и переписывается заново (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются на месте.
-
-Правильная последовательность (E4-E2 closure task):
-
-1. обновить `docs/README.md` + `docs/roadmap.md` (этот slice);
-2. review diff (docs-only, `git diff --check` чист);
-3. docs-only commit/push;
-4. верифицировать чистый pushed documentation HEAD (local = tracking = live origin);
-5. только после этого — регенерировать Project Sources из нового docs HEAD: скопировать `Avilona_E3_A6_Closure_Project_Sources_Refresh_v1` в новую `_v1`-директорию для этого checkpoint, переписать config-блок/шаблоны/canonical-хэши/self-digest под новый docs HEAD (не редактировать исторический wrapper на месте), выполнить, независимо валидировать сгенерированный ZIP/Handoff/Roadmap/New Chat Prompt/CSV.
-
-Refresh выполняется отдельным guarded шагом ПОСЛЕ docs commit, но в рамках той же E4-E2 closure-задачи. Патчинг разрешён только внутри нового per-checkpoint wrapper-пакета (вне этого репозитория); shared `Create-Avilona-ChatGPT-SourceArchive.ps1` не рефакторится.
+- Набор Project Sources от 2026-09-23 (`a1d72a40`, `docs: close E4 and prepare E5`) — **ИСТОРИЧЕСКИЙ**: он предшествует всей реализации E5 (E5-A1…E5-A4) и не авторитетен над текущим репозиторием;
+- свежий набор строится только из **нового чистого pushed documentation HEAD** (поверх application checkpoint `c56e3306`) после docs-only commit/push и выравнивания local = tracking = live origin; имя архива, timestamp, SHA256 и размер определяются самой генерацией и не выдумываются заранее;
+- предыдущий активный набор сохраняется в archive (не удаляется);
+- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне репозитория, `C:\Avilona_private\`): для нового checkpoint копируется предыдущий `_v1` wrapper-пакет (последний — `Avilona_E4_Closure_Project_Sources_Refresh_v1`) в новую `_v1`-директорию и переписывается (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются; shared helper не модифицируется;
+- архив — только tracked-источники проекта: без `.claude/`, `.env`, `vendor/`, `node_modules/`, приватных артефактов E5 (`C:\Avilona_private\E5\…`), секретов.
 
 ## 9. Endgame roadmap — E1…E6
 
@@ -446,13 +444,13 @@ Refresh выполняется отдельным guarded шагом ПОСЛЕ 
 | E2 | Public UX / UI / Design Redesign | ✅ **COMPLETE / CLOSED на уровне приложения** — E2-A1…E2-A7 (§9B) |
 | **E3** | **Cabinet UX/UI/Design Modernization** (Tourist / Manager / Admin) | ✅ **E3-A1…E3-A5 CLOSED на уровне приложения** (§9C); **E3-A6 point-polish (A + B) ✅ CLOSED** |
 | **E4** | Post-redesign stabilization / regression / browser-device / resilience QA | ✅ **CLOSED** (E4-A…E4-E1; §9.4) |
-| **E5** | Final Tour Search / Aggregation Product Block | ⬜ **NEXT** — research-only (ChatGPT Work/Astra) перед любой реализацией/закупкой (§10) |
-| E6 | Final Release / Deploy / Production Smoke | PENDING, после E5 |
+| **E5** | Final Tour Search / Aggregation Product Block | ✅ **CLOSED на уровне приложения** — E5-A1…E5-A4 (§10); production НЕ развёрнут |
+| — | Screenshot Audit Pack + независимый полный аудит (Astra / ChatGPT Work) | ⬜ **NEXT** — перед E6 (§10.11) |
+| E6 | Final Release / Deploy / Production Smoke | ⬜ PENDING, после аудита (§12) |
 
-Предыдущая рабочая фаза завершена на уровне приложения: **E3 (Foundation → Tourist
-→ Shared Booking → Manager → Admin, E3-A1…E3-A5, плюс точечная полировка E3-A6)
-закрыт**. Следующий шаг — **E4 — Post-redesign stabilization**. E3 не превратился
-в E5 — финальный поиск туров остаётся отдельной, намеренно последней фазой (§10).
+Текущий статус: **E1–E5 закрыты на уровне приложения** (E5 — E5-A1…E5-A4, §10).
+Следующий шаг — **Screenshot Audit Pack → независимый полный аудит → E6** (§10.11,
+§12). Production не развёрнут.
 
 ### 9.0 E2 — стартовые принципы
 
@@ -471,6 +469,8 @@ E2 началась с READ-ONLY visual/UX inventory и design-system proposal, 
 финальный provider/архитектура — это E5 (§10).
 
 ### 9B. E2 — выполненные slices (E2-A1…E2-A7) — ✅ COMPLETE
+
+> **Историческая запись E2.** Упоминания «временный `/tours` / tour-search до E5» ниже описывают состояние на момент E2. E5 закрыт на уровне приложения — актуальное состояние см. §10.
 
 E2 **завершён на уровне приложения**. Ниже — все завершённые slices. Публичный
 shell и завершённые публичные E2-страницы/surfaces (header/footer/shell, home,
@@ -1012,108 +1012,276 @@ application-checkpoint `55a9fcaf`. Технический closure (E4-E1) уже
   предварительной записи»). Авторитетного выбора нет. **Не выбирать.** Должно быть
   решено до финального production-релиза (E6).
 
-## 10. Поиск туров — самый последний продуктовый этап (E5)
+## 10. Поиск туров — E5 ✅ CLOSED на уровне приложения
 
-Текущее решение поиска туров на homepage и `/tours` — **ВРЕМЕННОЕ**. E2 (включая
-E2-A7) сделал окружающий UI визуально цельным, но НЕ трогал механику поиска. E2
-НЕ завершил поиск туров. В E2-A7 legacy-виджет `/tours` намеренно не
-перекрашивался и не переделывался. E4 закрыл общую стабилизацию и QA, но
-намеренно не трогал механику `/tours` — единственное сохранённое structural
-исключение `/tours` (P-05, отсутствие H1/main) переносится сюда именно потому,
-что эта страница целенаправленно перестраивается в E5 (§9.4.5).
+**E5 закрыт на уровне приложения** (E5-A1 … E5-A4, все коммиты запушены; финальный
+application checkpoint `c56e3306`). **Production НЕ развёрнут** — закрытие E5 не
+означает production-readiness (см. §12 — E6).
 
-Финальная архитектура search / provider / aggregation остаётся:
-**E5 — Tour Search / Aggregation Final Product Block**.
+Старое временное локальное решение поиска туров (форма фильтров на home, локальный
+поиск по таблице `tours`, Sletat public API) **больше не является ни текущей
+реализацией, ни активным планом** — оно удалено (см. §10.7).
 
-Известные local/UX факты на момент Stage 13 closure (историческое):
+`docs/E5-tour-search-research-2026-09-23.md` — исторический research-отчёт
+**до** реализации (в нём E5 ещё «NEXT»); сохранён как запись обоснования выбора, не
+как описание текущего состояния. Авторитетны текущее дерево, `git log`, тесты и
+миграции.
 
-- canonical local таблица `tours` содержит 0 строк;
-- temporary `/tours` UI всё ещё содержит старую/статичную презентацию, включая placeholder «22 окт - 26 окт 25»;
-- архитектура search/widget/aggregator намеренно отложена.
+### 10.1 Хронология E5 (из Git, полные SHA)
 
-### 10.1 Немедленный следующий шаг E5 — research, не реализация
+| Slice | Полный SHA | Subject |
+|---|---|---|
+| E5 research docs | `1476c1cc87fa83aa3d191d215a8f210f21120799` | `docs: record E5 tour search research` |
+| E5-A1 | `9005457a2bde7a5592b152ac7e601f7c22d9b61f` | `feat: add Tourvisor search module PoC (E5-A1)` |
+| E5-A2A | `c0e16ae3dc86703c019ca7fd138ab4fa658481c5` | `feat: establish Tourvisor inquiry integration foundation (E5-A2A)` |
+| E5-A2A.1 | `d59d211e518169297869dff103d87b85da0e5ea8` | `fix: harden Tourvisor webhook callback (E5-A2A.1)` |
+| E5-A2B | `0399d21fb10a9b5f69c3f2c8940a96777197bf67` | `fix: secure Tourvisor webhook registration (E5-A2B)` |
+| E5-A3 | `137f109ba46263a20af7d521a9dc32677493a031` | `feat: complete incoming inquiry booking workflow (E5-A3)` |
+| E5-A3.1 | `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` | `fix: remove plaintext staff client credentials (E5-A3.1)` |
+| **E5-A4 (финальный application checkpoint)** | `c56e330685ffa8953b22c803d6dce5334c69e81b` | `fix: complete final tour search polish (E5-A4)` |
 
-Сразу после закрытия E4 (эта документационная правка) следующее действие —
-**независимый глубокий research-проход через ChatGPT Work/Astra**, ДО начала
-любого кодирования E5. Ничего не покупается и не реализуется на этом шаге.
+Все — линейная история `a1d72a40..c56e3306` на ветке `db-rebuild-stage3`
+(восемь коммитов, сверено `git log` в этом docs-slice). E5-A2B в Git содержит
+только `TourvisorWebhookRegistrar` (+ exception и тест); живой PoC (§10.4)
+выполнялся вне репозитория, его evidence — приватные артефакты.
 
-Приоритет research:
+### 10.2 Финальная архитектура E5
 
-1. бесплатные/прямые опции туроператоров;
-2. агентские/партнёрские API;
-3. возможности multi-operator агрегации;
-4. недорогие сторонние сервисы;
-5. Tourvisor — модуль для сайта;
-6. Tourvisor — API;
-7. прочие жизнеспособные альтернативы.
+**Публичная часть:**
 
-Первый приоритет пользователя — выяснить, можно ли реализовать настоящий
-multi-operator поиск **бесплатно или без отдельной регулярной платформенной
-подписки**, используя агентский/операторский доступ, который Avilona может
-получить напрямую от туроператоров.
+```text
+Avilona /tours
+  -> Tourvisor Standard search module
+  -> обычная заявка (inquiry)
+  -> Tourvisor получает данные обращения/контакта
+  -> Tourvisor webhook-уведомление
+  -> Avilona проверяет callback (токен в пути, fail-closed)
+  -> авторитетный server-side запрос Export API
+  -> IncomingInquiry
+```
 
-Исследовать:
+**Сотрудники (Manager / Admin):**
 
-- operator APIs; agency/partner APIs; фиды; affiliate APIs;
-- real-time цены; availability;
-- легальность/коммерческие ограничения агрегации;
-- rate limits; caching;
-- права на изображения/описания;
-- booking/deep links;
-- интеграцию в существующий Laravel booking/cabinet workflow Avilona.
+```text
+IncomingInquiry
+  -> явное взятие в работу (claim) / назначение
+  -> явный выбор клиента ИЛИ безопасное создание клиента
+  -> менеджер проверяет цену и наличие
+  -> явное создание нативной Booking Avilona
+  -> существующий жизненный цикл Booking
+```
 
-Публичный scraping сайтов операторов **не** рассматривается как нормальное
-production-решение.
+**Внешнее исполнение:** менеджер Avilona позже бронирует тур вручную на сайте
+туроператора под учётными данными агентства.
 
-Если бесплатная/прямая интеграция практически нежизнеспособна — сравнить
-платные варианты. Explicitly требуется research **Tourvisor**:
+**Явно НЕТ (инварианты E5):**
 
-- возможности website search-модуля;
-- покрытие/операторы;
-- текущая модель ценообразования;
-- Tourvisor API;
-- API vs готовый модуль;
-- могут ли выбранные туры/заявки попадать в **собственную** Laravel-систему
-  Avilona, или менеджеры будут вынуждены работать в отдельной внешней CRM;
-- свобода UX;
-- интеграция с кабинетом;
-- vendor lock-in;
-- fallback/migration path.
+- НЕТ автоматического бронирования у туроператора;
+- НЕТ автоматической оплаты;
+- НЕТ автоматического создания Booking при импорте;
+- НЕТ автоматического определения владельца (User) по e-mail/телефону/имени;
+- НЕТ фиктивной локальной записи `Tour` при конвертации обращения Tourvisor.
 
-Ничего не покупается на этом шаге.
+CRM Tourvisor не является авторитетным источником: рабочий процесс остаётся в
+Avilona (Tourist / Manager / Admin, чат, документы, уведомления, жизненный цикл).
 
-### 10.2 Сравнение решений (после research)
+Ключевые компоненты (для ориентира; точные сигнатуры — в исходниках):
+`app/Services/Tourvisor/*` (`TourvisorExportClient`, `TourvisorInquiryImporter`,
+`TourvisorInquiryIntake`, `TourvisorWebhookRegistrar`),
+`app/Http/Controllers/Api/TourvisorWebhookController.php` + middleware
+`VerifyTourvisorWebhookToken` (маршрут `GET /api/webhooks/tourvisor/inquiries/{webhookToken}`,
+throttle `tourvisor-webhook`), `app/Jobs/ImportTourvisorInquiry.php`,
+`app/Models/IncomingInquiry.php`, `app/Services/IncomingInquiries/*`,
+`app/Policies/IncomingInquiryPolicy.php`, `app/Services/Accounts/StaffClientAccounts.php`,
+staff-экраны `manager/inquiries/*` (маршруты `/manager/inquiries…`).
 
-Последним крупным product block сравнить:
+### 10.3 Факты провайдера Tourvisor (только подтверждённые)
 
-1. готовые widgets/aggregators;
-2. API/integration options туроператоров;
-3. собственный search/aggregation layer.
+- Tourvisor — выбранный провайдерский путь для E5.
+- Используется существующий аккаунт Avilona в Tourvisor; домен `avilona.ru`
+  связан с аккаунтом.
+- Модуль: **Standard**. ID модуля **9981450** — публичная, **не секретная**
+  конфигурация встраивания.
+- Для заявок используется **Export API**; для уведомлений — **WebHook**.
+- Живой PoC успешно подтвердил точное поведение Export + webhook (§10.4).
+- Коммерческие данные, ранее зафиксированные в
+  `docs/E5-tour-search-research-2026-09-23.md` (addendum 2026-09-25: пробный
+  период тарифа Standard до 2026-10-04, ориентир бюджета до ~2 000 ₽/мес.,
+  окончательное коммерческое решение на тот момент не принято), **не
+  обновлялись** в этом slice; цены не пересматривались. Актуальное коммерческое
+  решение (продление/оплата тарифа) — действие владельца вне репозитория и
+  должно быть подтверждено до production.
+- Условия провайдера сверх перечисленного здесь не утверждаются.
+- Секреты (`TOURVISOR_EXPORT_API_KEY`, `TOURVISOR_WEBHOOK_TOKEN`) — только в
+  server-side `.env`; в репозитории — лишь пустые ключи в `.env.example.generated`;
+  в браузер/Blade не попадают.
 
-Оценивать не только цену/доступность, но и:
+### 10.4 E5-A2B — запись живого PoC (без секретов и персональных данных)
 
-- стабильность data source;
-- legal/contract terms;
-- UX and mobile integration;
-- booking/cabinet/CRM integration;
-- caching/rate limits;
-- operational maintenance cost;
-- vendor lock-in / fallback/migration path.
+Живой PoC доказал:
 
-Реальные external provider calls — только по отдельному guarded plan. Ничего
-не реализуется и не покупается в рамках E4-E2 (документационная задача).
+- защищённый Export API-запрос работает;
+- реальная live-структура обычной заявки совместима с текущей нормализацией;
+- регистрация webhook работает;
+- неверный callback-токен отвергается (fail-closed);
+- второй синтетический inquiry прошёл полную реальную цепочку;
+- создана ровно одна запись IncomingInquiry;
+- повтор webhook идемпотентен;
+- лишнего второго Export-запроса после состояния imported нет;
+- видимость для Manager/Admin подтверждена;
+- Tourist получает отказ;
+- webhook безопасно удалён;
+- туннель после PoC остановлен.
 
-### 10.3 После E5, до финального E6 — Astra Task 2 (полный независимый аудит)
+В документацию **не** включены: API-ключ, webhook-токен, полный callback URL,
+реальные/синтетические контактные значения. Приватные артефакты PoC:
+`C:\Avilona_private\E5\E5-A2B_Live_PoC\` (не в репозитории, не в Project Sources).
 
-После E5 и до финального E6 запланирован независимый полный аудит проекта
-(Astra Task 2), охватывающий: architecture; security; performance; database;
-queries; maintainability; technical debt; modernization; UX; accessibility;
-SEO; public structure; функции для добавления/удаления; Tourist workflow;
-Manager workflow; Admin workflow; operations; design.
+### 10.5 E5-A3 — рабочий процесс входящего обращения
 
-Перед этим финальным Astra-аудитом должен быть собран **Screenshot Audit
-Pack**. Этот план сохраняется в будущих handoff/roadmap-материалах и не
-выполняется в рамках E4-E2 или E5.
+У IncomingInquiry есть **бизнес-workflow, независимый от технического состояния
+импорта** (`state`: pending/importing/imported/failed/unsupported — техническое;
+`workflow_state` — бизнес):
+
+```text
+new -> in_progress -> converted
+                  \-> closed
+```
+
+- явное взятие в работу сотрудником (claim; Manager или Admin);
+- Admin может переназначить ответственного (reassign — только Admin); чужой
+  менеджер не обрабатывает обращение, взятое коллегой;
+- подсказки клиентов (по совпадению данных) — **не** автоматическое владение;
+- явный выбор существующего клиента из активных туристов;
+- безопасное создание клиента (см. §10.6);
+- одно обращение → не более одной Booking (`incoming_inquiries.booking_id` UNIQUE);
+- конвертация транзакционна, с блокировкой строки и перепроверкой состояния;
+- фиктивный Tour **не** создаётся; `bookings.tour_id` может оставаться null для
+  внешнего обращения;
+- итоговая цена — подтверждённая менеджером сумма (`bookings.total_price`);
+  импортированная цена Tourvisor — только справочная; сумма **не**
+  умножается на число пассажиров;
+- переиспользуется нативный начальный статус Booking;
+- закрытие без бронирования поддержано (close, с причиной);
+- происхождение (provenance) сохраняется.
+
+Миграция: `2026_10_01_000000_add_workflow_to_incoming_inquiries_table.php`.
+
+### 10.6 E5-A3.1 — исправление безопасности (plaintext credentials)
+
+Прежний staff-путь создания клиента в Booking: генерировал пароль, хранил его
+открытым текстом в `users.temp_password` и отправлял по e-mail. **E5-A3.1 убрал
+это активное поведение.** Текущий контракт:
+
+- общий сервис `StaffClientAccounts` (и для обращений, и для ручного оформления);
+- случайный пароль (64 символа) нигде не раскрывается; хранится только хеш;
+- `temp_password` остаётся `null` для новых аккаунтов; открытый пароль не
+  отправляется, не отображается, не логируется;
+- явное действие «ссылка установки пароля» — стандартная ссылка сброса Laravel
+  (Password broker), только для клиента без подтверждённого e-mail и без входа;
+- импортированный/введённый сотрудником e-mail **не** считается подтверждённым
+  (`email_verified_at = null`);
+- защита от дубликатов e-mail без учёта регистра;
+- технические адреса `.invalid` (`temp_<uuid>@no-email.avilona.invalid`) не
+  получают внешних писем со ссылкой установки.
+
+Миграция очистки: `2026_10_02_000000_clear_legacy_temp_passwords_from_users_table.php`
+(обнуляет накопленные значения `users.temp_password`; колонка остаётся, nullable;
+`down()` пустой). **Эта миграция НЕ применена к canonical MySQL.**
+
+### 10.7 E5-A4 — финальное публичное состояние
+
+**HOME:** устаревшая фиктивная форма фильтров удалена; на home — честный CTA на
+`/tours`; без имитации сохранения параметров.
+
+**TOURS:** модуль Tourvisor остаётся на `/tours`; один загрузчик (HTTPS); секретов в
+браузере нет; публичное пояснение: поиск работает через Tourvisor; цена и
+наличие могут измениться; обращение — не бронирование и не оплата; менеджер
+проверяет предложение. Страница имеет H1/main (закрывает перенесённый в E5 пункт
+P-05 для `/tours`).
+
+**РАСКРЫТИЕ ПЕРСОНАЛЬНЫХ ДАННЫХ:** `/tours` сообщает, что информация, введённая в
+модуле Tourvisor, обрабатывается через Tourvisor и затем передаётся Avilona;
+страница cookies фиксирует поведение внешнего модуля.
+
+**LEGACY:** публичный Sletat API удалён; неиспользуемый локальный `/api/tours`
+поиск удалён; неиспользуемые Sletat service/controller/command/config удалены.
+Структуры БД Tour/локального каталога **сохранены**, пока от них зависит нативная
+Booking. Более глубокая очистка (Coral / sync / seed / TourOperator) — отложена
+(§10.10).
+
+### 10.8 Ручные настройки провайдера и приватность
+
+**Подтверждено владельцем вручную (кабинет Tourvisor → Настройки → Модули):**
+«Иконка избранного для туристов» (Favorites icon for tourists) — **ВЫКЛЮЧЕНА (OFF)**.
+Ранее наблюдавшееся пересечение Favorites с cookie-баннером решено **настройкой
+провайдера, а не CSS приложения**. CSS-обходов для Favorites Tourvisor **не**
+добавлять.
+
+**Текущая видимая конфигурация приватности в аккаунте провайдера:** чекбокс
+согласия на обработку персональных данных Tourvisor — **OFF**; поля URL политик
+согласия — **пусты**. Это **не** принимается молча как финальная production-
+конфигурация. Классификация: **`PRIVACY_LEGAL_FACT_REQUIRED` / E6 PRE-PRODUCTION
+ACTION.** URL и юридические тексты не выдумываются.
+
+**Неразрешённые факты приватности до production** (решает владелец/юрист; не
+реоткрывают реализацию E5 — это pre-production требования):
+
+1. корректная идентификация оператора/провайдера Tourvisor для публичного показа;
+2. корректный URL политики конфиденциальности провайдера, если требуется;
+3. какие cookies/хранилища реально использует встроенный модуль;
+4. нужен ли addendum к существующей политике/согласию Avilona на персональные
+   данные для потока Tourvisor;
+5. семантика хранения данных (retention) у Tourvisor;
+6. должен ли модуль Tourvisor загружаться только после согласия на cookies;
+7. корректный URL для поля «согласие на обработку персональных данных» в Tourvisor;
+8. корректный URL для поля политики конфиденциальности в Tourvisor;
+9. нужно ли включить чекбокс согласия Tourvisor до production.
+
+Юридических выводов без проверенных фактов не делается.
+
+### 10.9 Тестовый baseline E5
+
+**1393 tests / 9759 assertions, 0 failures, 0 errors** (SQLite `:memory:`;
+canonical MySQL тестами не затрагивается). Одна PHPUnit deprecation — XML-схема
+`phpunit.xml` (подтверждено выводом PHPUnit), функциональным сбоем не является.
+Ход: E5-A3 → 1383 / 9682 → E5-A3.1/E5-A4 → 1393 / 9759.
+
+### 10.10 Non-blocking backlog (не блокеры E5)
+
+Проверено на `c56e3306`; решённое не переносится:
+
+- **Остаточные legacy-структуры:** `CoralTravelService` / `app/Services/TourOperators/*`,
+  sync/seed-команды (`SyncToursCommand`, `UpdateToursCommand`, `SeedTourOperatorsCommand`),
+  `TourOperator` — всё ещё существует; более глубокая очистка отложена.
+- **`Tour::scopeSearch`** (`app/Models/Tour.php`) — неиспользуемый scope, всё ещё существует.
+- **P-13** — contextual accessible names для responsive table wrappers (актуален).
+- **CAPTCHA** — остаточное ограничение визуальной image-CAPTCHA для assistive
+  technology (актуально, не решено).
+- **P-10** — косметическая/внутренняя плотность таблиц (info-only).
+- **Tourist «В работе»** — терминологическая консистентность (итоговая формулировка
+  по-прежнему не выбрана; актуально).
+- **`/manager/knowledge`** — redirect/alias-гигиена (route `/manager/knowledge`
+  всё ещё существует как редирект; безвредно).
+
+Решено и больше не переносится: P-05 для `/tours` (H1/main — E5-A4); временное
+tour-search решение (заменено).
+
+### 10.11 После E5, до E6 (утверждённый порядок)
+
+```text
+E5 documentation closure (этот slice)
+  -> свежий Project Sources
+  -> Screenshot Audit Pack
+  -> независимый полный аудит Astra / ChatGPT Work
+  -> утверждённые исправления по аудиту (если есть)
+  -> E6 production / operations
+```
+
+Объём независимого аудита (не выполняется в этом slice): architecture; security;
+performance; database; queries; maintainability; technical debt; modernization;
+UX; accessibility; SEO; public structure; функции для добавления/удаления;
+Tourist workflow; Manager workflow; Admin workflow; operations; design.
 
 ## 11. Запреты без отдельного operational plan
 
@@ -1126,3 +1294,87 @@ Pack**. Этот план сохраняется в будущих handoff/roadm
 - deletion of recovery/rollback artifacts;
 - destructive Git operations;
 - broad refactor mixed with functional/DB/docs/dependency work.
+
+## 12. E6 — финальный production / operations stage (чеклист)
+
+⬜ **PENDING.** E6 начинается только после: E5 documentation closure → свежий
+Project Sources → Screenshot Audit Pack → независимый полный аудит → утверждённые
+исправления по аудиту (§10.11). Закрытие E5 ≠ production-ready.
+
+### 12.1 Production platform
+
+- доступность/развёртывание Timeweb, когда провайдер выделит мощности (§13);
+- bootstrap Ubuntu-сервера;
+- SSH hardening; firewall;
+- Nginx; PHP-FPM; СУБД; TLS;
+- права на storage; deployment user;
+- backups; logging/rotation; monitoring.
+
+### 12.2 Runtime / dependency refresh (явное требование владельца проекта)
+
+**Перед финальным production-релизом — ОТДЕЛЬНЫЙ guarded modernization pass:**
+проверить и, где уместно, обновить НЕОБХОДИМЫЕ системные/прикладные компоненты до
+последних **СТАБИЛЬНЫХ ПОДДЕРЖИВАЕМЫХ** версий, совместимых с проектом.
+
+Аудит минимум: пакеты ОС; PHP; Composer; Laravel / PHP-зависимости; Node.js; npm;
+frontend-зависимости; сервер БД; Nginx; любые queue/scheduler/runtime-сервисы,
+которые реально используются.
+
+«Latest» **не** означает слепой major-upgrade. Требования:
+
+- поддерживаемые stable-релизы;
+- сначала совместимость;
+- обзор release notes / breaking changes;
+- один контролируемый слой за раз;
+- полные тесты после соответствующих изменений;
+- путь отката (rollback);
+- dependency modernization отделена от функциональной работы.
+
+В этом (E5 closure) docs-slice зависимости **не** обновлялись.
+
+### 12.3 Production migrations
+
+- применять все pending E5-миграции только по guarded production-плану миграций
+  (`2026_09_26_000000_create_incoming_inquiries_table`,
+  `2026_10_01_000000_add_workflow_to_incoming_inquiries_table`,
+  `2026_10_02_000000_clear_legacy_temp_passwords_from_users_table`); фактический
+  применённый статус на canonical MySQL сверить с таблицей `migrations`
+  (известно: `2026_10_01…` и `2026_10_02…` НЕ применены);
+- перед миграцией очистки `temp_password` — аудит legacy-пользователей;
+- решить вопрос об инвалидации старых «принудительных» паролей до применения.
+
+### 12.4 Tourvisor (production)
+
+- настроить production-секреты (`TOURVISOR_EXPORT_API_KEY`, `TOURVISOR_WEBHOOK_TOKEN`);
+- настроить webhook на production-домен; проверить Export API;
+- Favorites — OFF (подтверждено, перепроверить);
+- решить privacy/consent-настройки провайдера (§10.8);
+- подтвердить коммерческий тариф/продление (§10.3);
+- production-domain smoke Tourvisor.
+
+### 12.5 Production-domain smoke (перепроверить)
+
+Поиск Tourvisor; Санкт-Петербург / Москва; запросы провайдера в Firefox;
+предупреждение провайдера Yandex Maps; поведение отложенного loader'а;
+мобильный fullscreen; dropdown на узком desktop; отправка заявки; webhook;
+импорт и workflow сотрудников Avilona.
+
+### 12.6 Security / ops
+
+`APP_ENV` / `APP_DEBUG`; HTTPS; trusted proxies / `X-Forwarded-Proto`; security
+headers / CSP (по необходимости); mail; cron/scheduler; RSS scheduling; backups;
+restore test; безопасность логов; права файлов/storage.
+
+### 12.7 Business
+
+Решить `PENDING_BUSINESS_DECISION_OPENING_HOURS` (§9A) до финального релиза.
+
+## 13. Инфраструктура / хостинг — текущее состояние
+
+- **Текущий production-хостинг остаётся: REG.RU.** Миграции production не было.
+- **Будущий сервер Timeweb Cloud заказан (предзаказ): `web-prod-spb-01`** —
+  2 vCPU, 4 GB RAM, 50 GB NVMe, Санкт-Петербург. Состояние: **PREORDERED / ожидание
+  мощностей провайдера**. Это **НЕ production**.
+- Владелец создал отдельный SSH-публичный ключ для этого будущего сервера.
+  Пути к приватным ключам и секреты в документацию репозитория **не** записываются.
+- **DNS не менялся; домены остаются у REG.RU.**

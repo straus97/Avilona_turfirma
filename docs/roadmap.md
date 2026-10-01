@@ -1,39 +1,41 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-09-23**
+Актуализировано: **2026-10-01**
 
 ## Current state
 
 - Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `55a9fcaf6371ef0c749bb668c9b27783d1df358c`**
-- Subject: `fix: close final E4 application polish`
-- Direct parent of current application HEAD: `c1ad29cb5127536577545778fa8b8a79e9ddd24e` (`fix: close E4-D3 stabilization findings`)
-- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `55a9fcaf` (this file + `docs/README.md`); that future HEAD is decided by Git and is not known/invented here
-- Documentation checkpoint after E3-A6 / entering E4 (previous docs-only commit; current Project Sources base): `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — predates the whole E4-A…E4-E1 series, NOT the current HEAD
+- **Current authoritative application HEAD: `c56e330685ffa8953b22c803d6dce5334c69e81b`**
+- Subject: `fix: complete final tour search polish (E5-A4)`
+- Direct parent of current application HEAD: `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`)
+- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `c56e3306` (this file + `docs/README.md` + root `README.md`); that future HEAD is decided by Git and is not known/invented here
+- Documentation checkpoint after E4 closure / entering E5 (previous docs-only commit; base of the now-**HISTORICAL** Project Sources set of 2026-09-23): `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — predates ALL E5 implementation, NOT the current HEAD, NOT authoritative over the current repository
+- Application HEAD at E4 closure: `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — NOT the current HEAD
+- Documentation checkpoint after E3-A6 / entering E4 (historical): `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — NOT the current HEAD
 - Application HEAD at E3-A6 closure: `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — NOT the current HEAD
-- Documentation checkpoint after E3-A5 (historical): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — predates E3-A6-A/B, NOT the current HEAD
+- Documentation checkpoint after E3-A5 (historical): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — NOT the current HEAD
 - Application HEAD at E3-A5 closure: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — NOT the current HEAD
 - Documentation checkpoint after E2 closure (historical): `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — NOT the current HEAD
-- Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — predates E2-A6/E2-A7/E3, NOT the current HEAD
+- Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — NOT the current HEAD
 - Application HEAD at E2 closure (E2-A7): `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — NOT the current HEAD
 - Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
 - Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
 - Stage 0–13: ✅ CLOSED
 - E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
 - E2 — Public UX / UI / Design Redesign — ✅ **COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
-- **E3 — Cabinet UX/UI/Design Modernization — ✅ E3-A1…E3-A5 CLOSED at application level** (Foundation, Tourist, Shared Booking, Manager, Admin)
-- **E3-A6 — cross-cabinet point-polish — ✅ CLOSED** (E3-A6-A `8a5018bd`, E3-A6-B `ed550df8`); no E3-A6-C application slice is needed
-- S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5: no live public review cache layer, parity not required
-- **E4 — Post-redesign stabilization / resilience QA — ✅ CLOSED** (E4-A baseline/matrix, E4-B branded error pages `511282e3`, E4-C browser/device/accessibility QA, E4-D1 `16b71c6a`, E4-D2 `46a97f3d`, E4-D3 `c1ad29cb`, E4-E1 final technical closure `55a9fcaf`). No application-level release blocker remains. See "E4 — post-redesign stabilization" below.
-- **Next: E5 — Final Tour Search / Aggregation Solution.** Immediate next action is an independent deep research pass via ChatGPT Work/Astra (operator/agency APIs, aggregation, Tourvisor, etc.) — NOT implementation or purchase. See "E5 — tour search / aggregation" below.
-- Full verified baseline: **1286 tests / 8628 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`) — final E4-E1 technical closure baseline
-  - at E4 entry (`c89e923f`) the baseline was **1242 tests / 8056 assertions**; at E3-A5 closure **1233 / 8023**; after E2 closure **1051 / 7180**; historical E1-closure baseline **1001 / 7013**; E4 added stabilization/resilience regression tests — expected, not a regression
-  - the local `php artisan test --compact` runner hit the PHP CLI default 128M memory_limit late in the E4-E1 run — **not an application failure**; the complete historical PHPUnit-style invocation with `memory_limit=512M` passed in full: 1286 / 8628, 0 failures, 0 errors. The application does not have a memory leak and the test suite did not fail.
-- Single PHPUnit deprecation = pre-existing XML schema deprecation, not a code failure
-- Browser QA: PASS for Admin desktop and responsive/mobile surfaces at E3-A5 closure; PASS for cross-role chat at E3-A6-B closure; large Browser/Device/Keyboard/Accessibility QA completed at E4-C (evidence below); E4-D3 browser QA verified with a reporting-count-only reconciliation (no application defect).
-- The new documentation closure HEAD created after this task will be newer than the application checkpoint `55a9fcaf…`; that docs HEAD is decided by Git and must NOT be invented or pre-hardcoded.
-- Project Sources: the current external set is based on `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`, entry point into E4, before E4-A…E4-E1) and is now **STALE** relative to the full E4 closure. Refresh is **required only after** this docs-only E4-closure diff is reviewed, committed as a separate docs-only checkpoint, pushed, and local / tracking / live origin are aligned on that future docs HEAD. The future docs HEAD, the future source-archive filename, timestamp, SHA256 and archive size are not known and must not be invented.
-- E4 QA evidence (preserve, do not reset/reseed): `C:\Avilona_private\E4\E4-C_Browser_Device_Accessibility_QA\20260920-150303\` (incl. persistent QA SQLite `qa.sqlite`), `C:\Avilona_private\E4\E4-D3_Browser_QA\20260922-121234\`, `C:\Avilona_private\E4\E4-E1_Final_Technical_Closure\20260923-015901\`.
+- **E3 — Cabinet UX/UI/Design Modernization — ✅ CLOSED at application level** (E3-A1…E3-A5 + E3-A6-A/B point-polish)
+- S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5
+- **E4 — Post-redesign stabilization / resilience QA — ✅ CLOSED** (E4-A…E4-E1; final application checkpoint `55a9fcaf`)
+- **E5 — Final Tour Search / Aggregation Product Block — ✅ CLOSED at application level** (E5-A1 `9005457a`, E5-A2A `c0e16ae3`, E5-A2A.1 `d59d211e`, E5-A2B `0399d21f`, E5-A3 `137f109b`, E5-A3.1 `00ea2f04`, E5-A4 `c56e3306`; all pushed). See "E5 — tour search" below.
+- **APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.** E5 being closed does NOT mean production-ready. No production deployment/migration has happened; E5 migrations (at least `2026_10_01_000000…` and `2026_10_02_000000…`) are NOT applied to canonical MySQL `turfirma_rebuild_v4`; production Tourvisor secrets/webhook are not configured; privacy/legal provider facts are unresolved (see E5/E6 below).
+- **NEXT: Screenshot Audit Pack + independent full audit (Astra / ChatGPT Work) BEFORE E6.** Then approved audit fixes (if any), then E6. E5 is no longer NEXT.
+- Full verified baseline: **1393 tests / 9759 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`) — final E5 baseline, re-verified in the E5 documentation-closure slice (`php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit`)
+  - history: E5-A3 closure 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 closure 1233 / 8023; E2 closure 1051 / 7180; E1 closure 1001 / 7013
+  - 1 PHPUnit deprecation: the PHPUnit test-runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`) — verified in current output; not a functional failure
+  - canonical MySQL is never touched by tests
+- Infrastructure: current production hosting remains **REG.RU**. Future Timeweb Cloud server `web-prod-spb-01` (2 vCPU / 4 GB RAM / 50 GB NVMe / Saint Petersburg) is **PREORDERED / waiting for provider capacity — NOT production**. No DNS change; domains remain with REG.RU. (No private key paths/secrets are recorded in the repository.)
+- Project Sources: the external set of 2026-09-23 (`a1d72a40`) is **HISTORICAL ONLY** (predates E5). A fresh set is generated from the new clean pushed documentation HEAD after this docs-only commit. The current repository (tree, `git log`, tests, migrations, docs) is authoritative.
+- E5 private evidence (never in Project Sources): `C:\Avilona_private\E5\` (E5-A1_Browser_PoC, E5-A2B_Live_PoC, E5-A3_Browser_QA, E5-A3.1_Browser_QA, E5-A4_Browser_QA). E4 QA evidence preserved: `C:\Avilona_private\E4\…`.
 - Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — unresolved, must be decided before final production release (E6).
 
 ## Completed stages
@@ -226,7 +228,7 @@ Intentionally deferred (NOT defects — do not "fix" accidentally):
 
 - `PENDING_BUSINESS_DECISION_OPENING_HOURS` — home 10:00–20:00 weekdays vs contacts 11:00–20:00 weekdays by appointment plus current weekend wording; no authoritative decision; **still unresolved** after E2; must be resolved before final production release (E6).
 - Per-page `og:type=article` refinement — ✅ resolved in E2-A5 (News detail + Article detail declare `og:type=article`; `layouts/main` now `@yield('og_type', 'website')`).
-- Temporary public tour-search solution stays until E5 — still temporary; E2 (incl. E2-A7) only made the surrounding UI visually coherent; the `/tours` legacy widget was deliberately not recolored in E2-A7.
+- *(Historical E2-time note; ✅ resolved in E5 — replaced by the Tourvisor module, see E5 below.)* Temporary public tour-search solution stays until E5 — still temporary; E2 (incl. E2-A7) only made the surrounding UI visually coherent; the `/tours` legacy widget was deliberately not recolored in E2-A7.
 - News RSS scheduling — verify real production cron in E6; do not add Laravel scheduling blindly. E2-A5 added only HTML autodiscovery on the News listing; production scheduling is NOT verified.
 - Future-risk raw HTML (`Best_offer` / `OurClient` / `Countries_image` / `Destination_image`) — no current untrusted web write path; do not reopen unless a CMS/write path is added.
 
@@ -235,7 +237,7 @@ Intentionally deferred (NOT defects — do not "fix" accidentally):
 
 Not merely a cosmetic recolor — the public site was treated as a coherent modern tourism website: information architecture, header/navigation, home-page hierarchy, typography, spacing, colour system, buttons/forms, cards, responsive behaviour, mobile navigation, visual consistency, destinations/countries, company pages, employees, awards, articles/news/special offers/reviews, contacts, empty/error states, consent UI, accessibility, trust/credibility, conversion paths, CTA consistency, image treatment, desktop/tablet/mobile. E2-A7 landed the final public visual system and a single authoritative E2 token system for the public shell.
 
-The final tour-search mechanics were deliberately NOT redesigned; the current widget is visually accommodated as a temporary component, its final provider/architecture belongs to E5.
+The final tour-search mechanics were deliberately NOT redesigned; the current widget is visually accommodated as a temporary component, its final provider/architecture belongs to E5. *(Historical E2-time note: E5 is now closed at application level — see "E5" below.)*
 
 The finished public site will later be shown to company management; any resulting design feedback is a later polish/follow-up, not an open blocker for E2 closure.
 
@@ -575,92 +577,141 @@ All findings **F-01…F-16 are FIXED_VERIFIED**. Final P-classifications:
 E4 is declared **CLOSED** by this documentation checkpoint (E4-E2) on top of application checkpoint `55a9fcaf`. Application-level technical closure (E4-E1) already PASSED before this documentation pass; this pass records that at the documentation level only and changes no application code.
 
 ### E5 — TOUR SEARCH / AGGREGATION — FINAL PRODUCT BLOCK
-⬜ **NEXT** — research phase, not implementation
+✅ **CLOSED at application level** — final application checkpoint `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`). **Production NOT deployed.**
 
-The current homepage and `/tours` search solution is **temporary**. E2 only made
-the surrounding UI visually coherent; it did not touch search mechanics. E4
-closed general stabilization/QA but deliberately did not touch `/tours`
-mechanics either — the one structural exception (`/tours` missing H1/main,
-P-05) travels here specifically because that page is intentionally rebuilt in
-E5. Final search/provider/aggregation architecture is this stage.
+The old temporary local tour-search implementation (home filter form, local `tours` search, public Sletat API) is **no longer the active plan or implementation** — it has been removed. `docs/E5-tour-search-research-2026-09-23.md` is the historical pre-implementation research record (it still says "E5 NEXT"; it is not current state).
 
-#### E5 step 1 — independent research (immediate next action)
+#### E5 commit history (verified from Git, `a1d72a40..c56e3306`)
 
-Immediately after E4 closure, before any E5 coding: an independent deep
-research pass using ChatGPT Work/Astra. Nothing is purchased or implemented at
-this step.
+| Slice | Full SHA | Subject |
+|---|---|---|
+| E5 research docs | `1476c1cc87fa83aa3d191d215a8f210f21120799` | `docs: record E5 tour search research` |
+| E5-A1 | `9005457a2bde7a5592b152ac7e601f7c22d9b61f` | `feat: add Tourvisor search module PoC (E5-A1)` |
+| E5-A2A | `c0e16ae3dc86703c019ca7fd138ab4fa658481c5` | `feat: establish Tourvisor inquiry integration foundation (E5-A2A)` |
+| E5-A2A.1 | `d59d211e518169297869dff103d87b85da0e5ea8` | `fix: harden Tourvisor webhook callback (E5-A2A.1)` |
+| E5-A2B | `0399d21fb10a9b5f69c3f2c8940a96777197bf67` | `fix: secure Tourvisor webhook registration (E5-A2B)` |
+| E5-A3 | `137f109ba46263a20af7d521a9dc32677493a031` | `feat: complete incoming inquiry booking workflow (E5-A3)` |
+| E5-A3.1 | `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` | `fix: remove plaintext staff client credentials (E5-A3.1)` |
+| **E5-A4** | `c56e330685ffa8953b22c803d6dce5334c69e81b` | `fix: complete final tour search polish (E5-A4)` |
 
-Research priority order:
+#### Final E5 architecture
 
-1. free/direct tour-operator options;
-2. agency/partner APIs;
-3. multi-operator aggregation possibilities;
-4. low-cost third-party services;
-5. Tourvisor — website search module;
-6. Tourvisor — API;
-7. other viable alternatives.
+```text
+PUBLIC
+Avilona /tours -> Tourvisor Standard search module -> ordinary inquiry
+  -> Tourvisor receives inquiry/contact data -> Tourvisor webhook notification
+  -> Avilona validates callback -> authoritative server-side Export API fetch
+  -> IncomingInquiry
 
-First user preference: determine whether a genuine multi-operator search can
-be built **for free or without a separate recurring platform fee**, using
-agency/operator access Avilona can obtain directly from tour operators.
+STAFF
+IncomingInquiry -> explicit staff claim/assignment
+  -> explicit client selection OR safe client creation
+  -> manager verifies price / availability
+  -> explicit native Avilona Booking creation -> existing Booking lifecycle
 
-Investigate: operator APIs; agency/partner APIs; feeds; affiliate APIs;
-real-time prices; availability; aggregation legality/commercial restrictions;
-rate limits; caching; image/description rights; booking/deep links;
-integration into Avilona's own Laravel booking/cabinet workflow.
+EXTERNAL FULFILLMENT
+Avilona manager later books manually on the tour operator agent website.
+```
 
-Public-site scraping must **not** be treated as the normal production
-solution.
+Explicitly: **NO** automatic tour-operator booking; **NO** automatic payment; **NO** automatic Booking creation on import; **NO** automatic User ownership inference by e-mail/phone/name; **NO** fake local `Tour` creation for Tourvisor inquiry conversion.
 
-If free/direct integration is not practically viable, compare paid options.
-**Tourvisor must be researched explicitly**: website search module
-capabilities; coverage/operators; current pricing model; Tourvisor API; API vs
-ready-made module; whether selected tours/applications can enter Avilona's
-**own** Laravel system or would force managers into a separate external CRM;
-UX freedom; cabinet integration; vendor lock-in; fallback/migration path.
+#### Tourvisor / provider facts (confirmed only)
 
-#### E5 step 2 — comparison (after research)
+- Selected provider path for E5; existing Avilona Tourvisor account; `avilona.ru` associated with the account; **Standard** module; module ID **9981450** is public/non-secret; **Export API** for inquiries; **WebHook** for notification; live PoC verified exact Export + webhook behaviour.
+- Commercial data already documented in the research record (Standard trial until 2026-10-04, budget guidance ≤ ~2 000 ₽/month, final commercial decision not recorded) was **not refreshed** here; no pricing invented; provider terms are not claimed beyond verified information. The commercial decision/renewal is an owner action outside the repository and must be confirmed before production.
+- Secrets (`TOURVISOR_EXPORT_API_KEY`, `TOURVISOR_WEBHOOK_TOKEN`) live only in server-side `.env`.
 
-Compare:
+#### E5-A2B live PoC record (no secrets, no personal data)
 
-- ready-made widget/aggregator;
-- tour-operator/API integrations;
-- own aggregation/search implementation.
+The live PoC proved: protected Export API request works; live ordinary-inquiry payload is compatible with current normalization; webhook registration works; wrong callback token fails closed; a second synthetic inquiry completed the real chain; exactly one IncomingInquiry created; webhook replay is idempotent; no redundant second Export fetch after imported state; Manager/Admin visibility; Tourist denial; webhook safely removed; tunnel stopped after the PoC. Not recorded: API key, webhook token, full callback URL, any real/synthetic contact values.
 
-Decision criteria: cost; reliability; contractual/legal terms; UX/mobile; booking/cabinet/CRM integration; caching/rate limits; maintenance burden; vendor lock-in / fallback path.
+#### E5-A3 — incoming inquiry business workflow
 
-Nothing is purchased or implemented as part of E4-E2 (this documentation task).
+IncomingInquiry has a **business workflow independent of the technical import state** (`state` = pending/importing/imported/failed/unsupported; `workflow_state` = business): `new → in_progress → converted`, or `closed`.
 
-### After E5, before final E6 — Astra Task 2 (full independent project audit)
+- explicit staff claiming; Admin-only reassignment; another manager cannot process an inquiry claimed by a colleague;
+- client suggestions are **not** automatic ownership; explicit existing-client selection; safe client creation;
+- one inquiry → at most one Booking (`incoming_inquiries.booking_id` UNIQUE); transactional conversion;
+- no fake Tour; Booking `tour_id` may remain null for an external inquiry;
+- manager-confirmed total price (`bookings.total_price`); Tourvisor imported price is reference only; total is not multiplied by passenger count;
+- native initial Booking status reused; close-without-booking supported; provenance retained.
+- Migration: `2026_10_01_000000_add_workflow_to_incoming_inquiries_table.php`.
 
-Independent full-project audit covering: architecture; security; performance;
-database; queries; maintainability; technical debt; modernization; UX;
-accessibility; SEO; public structure; features to add/remove; Tourist
-workflow; Manager workflow; Admin workflow; operations; design.
+#### E5-A3.1 — plaintext staff client credentials removed (security)
 
-Before that final Astra audit, a **Screenshot Audit Pack** must be collected.
-This plan is preserved here for the future handoff/roadmap and is not executed
-as part of E4-E2 or E5.
+The old staff Booking client-creation path generated a password, stored it in plaintext in `users.temp_password` and e-mailed it. E5-A3.1 removed that active behaviour. Contract: shared `StaffClientAccounts` service; random credential never exposed; only the password hash is stored; `temp_password` stays null for new accounts; no plaintext password mailed/displayed/logged; explicit standard password-reset/setup-link action; imported/staff-entered e-mail is **not** automatically verified; case-insensitive duplicate-e-mail protection; technical `.invalid` addresses receive no external setup e-mail. Migration `2026_10_02_000000_clear_legacy_temp_passwords_from_users_table.php` clears legacy non-null `temp_password` values — **NOT applied to canonical MySQL**.
+
+#### E5-A4 — final public state
+
+- **HOME:** obsolete fake filter form removed; honest CTA to `/tours`; no pretend parameter preservation.
+- **TOURS:** Tourvisor module remains on `/tours`; one HTTPS loader; no secret in the browser; public explanation (search powered through Tourvisor; price/availability may change; inquiry is not booking/payment; manager verifies the offer); H1/main present (closes the P-05 `/tours` item).
+- **PRIVACY DISCLOSURE:** `/tours` discloses that information entered in the Tourvisor module is processed through Tourvisor and then passed to Avilona; the cookies page records external-module behaviour.
+- **LEGACY:** public Sletat API path removed; unused local `/api/tours` search removed; unused Sletat service/controller/command/config removed; Tour/local catalog DB structures retained where native Booking depends on them; Coral / sync / seed / TourOperator deeper cleanup deferred.
+
+#### Tourvisor manual provider settings and privacy facts
+
+- Tourvisor account → Settings → Modules → **"Favorites icon for tourists": OFF** (confirmed manually by the project owner). The earlier Favorites/cookie-banner collision is therefore resolved by provider configuration, **not** application CSS. **Do NOT add any CSS workaround** for Tourvisor Favorites.
+- Currently visible provider-account privacy configuration: Tourvisor personal-data consent checkbox **OFF**; consent-policy URL fields **empty**. NOT accepted silently as final production configuration. Classification: **`PRIVACY_LEGAL_FACT_REQUIRED` / E6 PRE-PRODUCTION ACTION.** No URLs or legal text are invented.
+- Unresolved before production (owner/legal review; these do **not** reopen E5 implementation): (1) correct Tourvisor operator/provider identification to present publicly; (2) correct provider privacy-policy URL if required; (3) which cookies/storage the embedded module actually uses; (4) whether Avilona's personal-data policy/consent needs an addendum for the Tourvisor flow; (5) retention semantics for data held by Tourvisor; (6) whether the module must be gated by cookie consent; (7) the URL for Tourvisor's "consent to personal-data processing" field; (8) the URL for Tourvisor's privacy-policy field; (9) whether the Tourvisor consent checkbox must be enabled before production.
+
+#### E5 non-blocking backlog (verified still present at `c56e3306`)
+
+- `CoralTravelService` / `app/Services/TourOperators/*` / sync / seed commands / `TourOperator` cleanup (deferred);
+- unused `Tour::scopeSearch`;
+- P-13 responsive table wrapper accessible naming;
+- residual visual CAPTCHA accessibility limitation;
+- P-10 cosmetic/internal table tightness (informational);
+- Tourist «В работе» terminology consistency (final wording not decided);
+- optional `/manager/knowledge` alias hygiene (route still exists as a harmless redirect).
+
+Already solved and NOT carried forward: P-05 for `/tours` (H1/main — E5-A4); the temporary tour-search solution (replaced).
+
+#### E5 closure
+
+E5 is declared **CLOSED at application level** by this documentation checkpoint on top of application checkpoint `c56e3306`. This pass changes no application code and updates no dependencies. **E5 closed ≠ production-ready.**
+
+### After E5, before final E6 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
+⬜ **NEXT**
+
+Approved order:
+
+```text
+E5 documentation closure -> fresh Project Sources -> Screenshot Audit Pack
+  -> independent full Astra / ChatGPT Work audit -> approved fixes from that audit (if any)
+  -> E6 production / operations
+```
+
+Independent audit scope: architecture; security; performance; database; queries; maintainability; technical debt; modernization; UX; accessibility; SEO; public structure; features to add/remove; Tourist workflow; Manager workflow; Admin workflow; operations; design. Not executed in the E5 documentation-closure slice.
 
 ### E6 — final release / deploy / production smoke
-⬜ PLANNED
+⬜ **PENDING** — final production / operations stage. Starts only after the audit above. **Production is NOT deployed.**
 
-After the final selected tour-search solution, stabilization, and the Astra
-Task 2 full-project audit:
+**Production platform**
+- Timeweb availability / provisioning when provider capacity becomes available (`web-prod-spb-01`, preordered, not production);
+- Ubuntu/server bootstrap; SSH hardening; firewall; Nginx; PHP-FPM; DB; TLS;
+- storage permissions; deployment user; backups; logging/rotation; monitoring.
 
-- production environment; `APP_ENV`/`APP_DEBUG` production values;
-- production DB / guarded migrations only through a dedicated approved plan;
-- production storage;
-- production mail/external-provider validation;
-- HTTPS; security headers/CSP as applicable;
-- logs; backups;
-- scheduled tasks / RSS mechanism (production cron verification);
-- runtime configuration;
-- final opening-hours business decision (`PENDING_BUSINESS_DECISION_OPENING_HOURS` must be resolved before this release);
-- production smoke checks;
-- final handoff / release checkpoint.
+**Runtime / dependency refresh (explicit project-owner requirement)**
+Before final production release, perform a SEPARATE guarded modernization pass to verify and, where appropriate, update REQUIRED system/application components to the latest STABLE SUPPORTED versions compatible with the project. Audit at minimum: OS packages; PHP; Composer; Laravel / PHP dependencies; Node.js; npm; frontend dependencies; database server; Nginx; any queue/scheduler/runtime services actually used. "Latest" is NOT blind major-version upgrading. Requirements: supported stable releases; compatibility first; release notes / breaking changes reviewed; one controlled layer at a time; full tests after relevant changes; rollback path; dependency modernization separate from functional work. No dependency updates in the E5 documentation-closure slice.
 
-An intermediate deployment for validation may be planned separately, but it does not replace the final post-redesign/post-tour-search release. The project is not to be called fully production-ready before E6 closes.
+**Production migrations**
+- apply all pending E5 migrations (`2026_09_26_000000_create_incoming_inquiries_table`, `2026_10_01_000000_add_workflow_to_incoming_inquiries_table`, `2026_10_02_000000_clear_legacy_temp_passwords_from_users_table`) only in a guarded production migration plan; verify actual applied state against the canonical `migrations` table first (known: `2026_10_01…` and `2026_10_02…` NOT applied);
+- audit legacy users before the `temp_password` cleanup migration;
+- decide old forced-password credential invalidation before applying it.
+
+**Tourvisor**
+- configure production secrets; configure webhook; verify Export API; Favorites OFF; privacy/consent provider settings resolved (see E5 privacy list); confirm commercial plan/renewal; production-domain Tourvisor smoke.
+
+**Production-domain smoke (recheck)**
+- Tourvisor search; Saint Petersburg / Moscow; Firefox provider requests; Yandex Maps provider warning; delayed loader behaviour; mobile fullscreen behaviour; narrow desktop dropdown behaviour; inquiry submission; webhook; Avilona staff import/workflow.
+
+**Security / ops**
+- `APP_ENV` / `APP_DEBUG`; HTTPS; trusted proxies / `X-Forwarded-Proto`; security headers / CSP as appropriate; mail; cron/scheduler; RSS scheduling; backups; restore test; log safety; file/storage permissions.
+
+**Business**
+- resolve `PENDING_BUSINESS_DECISION_OPENING_HOURS`.
+
+Also: production-ready claim is only allowed after E6 closes; final handoff / release checkpoint. An intermediate deployment for validation may be planned separately, but it does not replace the final release.
 
 ## Guardrails
 
@@ -670,3 +721,5 @@ An intermediate deployment for validation may be planned separately, but it does
 - PHPUnit only PHP 8.3.32 + SQLite `:memory:`.
 - No real provider integrations without explicit operational approval.
 - Current Project Sources must correspond to a clean pushed documentation HEAD.
+- No CSS workaround for Tourvisor provider UI (Favorites is controlled by provider account settings).
+- Dependency/runtime modernization is a separate guarded E6 pass, never mixed with functional work.

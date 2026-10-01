@@ -6,25 +6,21 @@
 
 - Project path: `C:\wamp\www\Avilona_turfirma`
 - Branch: `db-rebuild-stage3`
-- **Текущий authoritative application HEAD: `ad6e9c23986d479cbbbf6f511e96bc139ae26576` — `feat: redesign public News + Articles editorial experience (E2-A5-I1)`**
-- Историческое E1-closure application commit: `08d0626311234faa06dedf2828cb878805241990` — `fix: close final public audit gaps` (это НЕ текущий HEAD)
-- Предыдущий функциональный checkpoint (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` — `fix: remove obsolete guest booking flow`
-- Stage 0–13: ✅ CLOSED
-- E1 Comprehensive Audit: ✅ **TECHNICALLY CLOSED**
-- Текущая фаза: **E2 — Public UX / UI / Design Redesign — 🔄 IN PROGRESS** (E2-A1…E2-A5 завершены; следующий slice ещё не выбран)
-- Последний independently verified full PHPUnit baseline: **1006 tests / 7037 assertions**, PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`
-  - до E2-A5 baseline был **1001 tests / 7013 assertions** (историческое E1-closure значение); E2-A5 намеренно добавил 5 regression-тестов (+24 assertions) — это не регрессия
-- Единственная PHPUnit deprecation — pre-existing XML schema deprecation, не функциональный/кодовый сбой
+- **Текущий authoritative application HEAD: `c56e330685ffa8953b22c803d6dce5334c69e81b` — `fix: complete final tour search polish (E5-A4)`**
+- Stage 0–13: ✅ CLOSED; E1 — ✅ TECHNICALLY CLOSED; E2 — ✅ CLOSED; E3 — ✅ CLOSED; E4 — ✅ CLOSED; **E5 — ✅ CLOSED на уровне приложения** (E5-A1…E5-A4)
+- **Приложение закрыто (E5), но production НЕ развёрнут.** Закрытие E5 ≠ production-ready.
+- **Следующий шаг: Screenshot Audit Pack + независимый полный аудит (Astra / ChatGPT Work) → утверждённые исправления (если есть) → E6.**
+- Full PHPUnit baseline: **1393 tests / 9759 assertions**, 0 failures, 0 errors (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой
 
 Documentation/source checkpoint, содержащий этот файл, — docs-only commit поверх
-application HEAD `ad6e9c23` и определяется текущим Git HEAD. Будущий docs commit
-hash пока неизвестен и не зашивается заранее.
+application HEAD `c56e3306` и определяется текущим Git HEAD. Будущий docs commit
+hash заранее не зашивается.
 
-Активный внешний Project Sources набор — **исторический E1-closure набор для
-`0be9044e35ec5be670c8f9bb33de020491214423`** (`docs: close E1 and prepare E2`).
-Он **устарел (STALE)** относительно текущего application HEAD `ad6e9c23`, потому что
-E2-A1…E2-A5 выполнены позже. Refresh обязателен ПОСЛЕ review/commit/push этого
-docs-only slice и появления чистого нового documentation HEAD — см. `docs/README.md` §8.
+Внешний Project Sources набор от 2026-09-23 (`a1d72a40`) — **исторический**,
+предшествует всей реализации E5; авторитетны текущий репозиторий и docs на pushed
+HEAD. Свежий набор генерируется из нового чистого docs HEAD — см. `docs/README.md` §8.1.
+
+Подробности — `docs/README.md` (§1 checkpoint, §10 E5, §12 E6, §13 инфраструктура).
 
 ## Что закрыто
 
@@ -55,32 +51,14 @@ registration consent, password visibility UX, authenticated-only booking. Под
 | Фаза | Название | Статус |
 |---|---|---|
 | E1 | Comprehensive Audit | ✅ TECHNICALLY CLOSED |
-| **E2** | **Public UX / UI / Design Redesign** | **🔄 IN PROGRESS** (E2-A1…E2-A5 завершены) |
-| E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | PENDING |
-| E4 | Post-redesign stabilization / regression / browser-device QA | PENDING |
-| E5 | Final Tour Search Solution | PENDING (намеренно один из последних крупных блоков) |
-| E6 | Production Deployment / Operations Validation | PENDING |
+| E2 | Public UX / UI / Design Redesign | ✅ CLOSED (E2-A1…E2-A7) |
+| E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | ✅ CLOSED (E3-A1…E3-A6) |
+| E4 | Post-redesign stabilization / regression / browser-device QA | ✅ CLOSED (E4-A…E4-E1) |
+| E5 | Final Tour Search Solution (Tourvisor module → IncomingInquiry → нативная Booking) | ✅ CLOSED на уровне приложения (E5-A1…E5-A4); **production НЕ развёрнут** |
+| — | Screenshot Audit Pack + независимый полный аудит (Astra / ChatGPT Work) | ⬜ **NEXT** — до E6 |
+| E6 | Production Deployment / Operations Validation | ⬜ PENDING |
 
-E2 — не косметическая перекраска: information architecture, навигация, иерархия
-главной, типографика, spacing, цветовая система, формы/кнопки/карточки, responsive,
-мобильная навигация, страницы компании/сотрудников/awards/articles/news/reviews,
-contacts, empty/error states, consent UI, accessibility, trust, conversion paths.
-Финальная механика поиска туров в E2 не переделывается (это E5) — текущий tour-search
-widget визуально интегрируется как временный компонент.
-
-### E2 прогресс (завершённые slices)
-
-| Slice | Checkpoint | Область |
-|---|---|---|
-| E2-A1 | `43a073e676d441021445f73f38733fa70a0e1463` | Публичный header/навигация + первый экран главной, hero, один H1, CTA-иерархия, aria-current |
-| E2-A2 | `72202ab7d35b064ab4b0c66147bfff21357e5343`, `eaa2093f5f406e7a5fbd73c6fe3a1897802852a` | Home below-the-fold, shared public shell, footer cleanup, единый manager-contact слой, устранён page-jump телефона, убран сломанный Yandex-информер |
-| E2-A3 | `5e22e4b78ed6e8610d4c2b7f11043ff9e1336806` | Public travel discovery: Countries, Destinations, Specials |
-| E2-A4 | `94aedad09468d50be45e8f11c4be0a8c41dbb474` | Company/trust: About Company, Employees, Awards |
-| E2-A5 | `ad6e9c23986d479cbbbf6f511e96bc139ae26576` | News + Articles editorial experience (listing/detail, shared editorial card) |
-
-E2 глобально **не завершён**. Оставшиеся публичные маршруты (Reviews, Contacts,
-helper/content/error/empty surfaces) будут проверены read-only перед выбором
-следующего slice. Детали — `docs/README.md` §9B и `docs/roadmap.md`.
+Детали каждой фазы — `docs/README.md` §9–§13 и `docs/roadmap.md`.
 
 ## Канонические факты компании
 
