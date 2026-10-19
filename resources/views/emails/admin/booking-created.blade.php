@@ -56,8 +56,14 @@
                     Взрослых: {{ $booking->adults }}
                     @if($booking->children > 0)
                         <br>Детей: {{ $booking->children }}
-                        @if($booking->children_ages)
-                            (возраст: {{ implode(', ', json_decode($booking->children_ages, true)) }})
+                        @php
+                            // children_ages — array-cast модели Booking (не JSON-строка).
+                            $childrenAges = collect($booking->children_ages ?? [])
+                                ->filter(fn ($age) => is_scalar($age) && $age !== '')
+                                ->implode(', ');
+                        @endphp
+                        @if($childrenAges !== '')
+                            (возраст: {{ $childrenAges }})
                         @endif
                     @endif
                 </td>
