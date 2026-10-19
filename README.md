@@ -4,23 +4,17 @@
 
 ## Текущий статус
 
+> **Единственный канонический источник статуса, порядка работ и решений владельца — [`docs/roadmap.md`](docs/roadmap.md).** Этот файл — краткая сводка; при расхождении прав `docs/roadmap.md`.
+
 - Project path: `C:\wamp\www\Avilona_turfirma`
 - Branch: `db-rebuild-stage3`
-- **Текущий authoritative application HEAD: `c56e330685ffa8953b22c803d6dce5334c69e81b` — `fix: complete final tour search polish (E5-A4)`**
-- Stage 0–13: ✅ CLOSED; E1 — ✅ TECHNICALLY CLOSED; E2 — ✅ CLOSED; E3 — ✅ CLOSED; E4 — ✅ CLOSED; **E5 — ✅ CLOSED на уровне приложения** (E5-A1…E5-A4)
-- **Приложение закрыто (E5), но production НЕ развёрнут.** Закрытие E5 ≠ production-ready.
-- **Следующий шаг:** небольшие независимые исправления по аудиту (AO) → **E5.5 Agency Operations Automation (AOA)** — принято только *архитектурное решение*, реализации нет (`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`) → E6. Screenshot Audit Pack выполнен; независимый анализ Astra получен (приватный отчёт вне репозитория).
-- Full PHPUnit baseline: **1393 tests / 9759 assertions**, 0 failures, 0 errors (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой
+- **Application HEAD (последний код-коммит): `6cbdbcdab1df4b7d7605ed22cc469c53128163a3` — `fix: handle booking children ages in admin email (AO-01)`**; documentation checkpoint — docs-only commit поверх него (hash определяется Git).
+- Stage 0–13, E1, E2, E3, E4 — ✅ CLOSED; **E5 — ✅ FULLY CLOSED** (application level); **E5.5 Agency Operations Automation — 🟢 ACTIVE** (закрыты только архитектурный checkpoint E5.5-A0 и AO-FIX-01; **остальное не реализовано**); E6 — ⬜ PENDING.
+- **Production НЕ развёрнут** (используется текущий хостинг REG.RU). Закрытие приложения ≠ production-ready.
+- Full PHPUnit baseline: **1403 tests / 9799 assertions**, 0 failures, 0 errors (AO-FIX-01; PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой.
+- Следующий шаг, одобренные решения владельца (доступ Manager/Admin, назначение обращений, финансовые правила), открытые решения и план AOA — **только в [`docs/roadmap.md`](docs/roadmap.md)**.
 
-Documentation/source checkpoint, содержащий этот файл, — docs-only commit поверх
-application HEAD `c56e3306` и определяется текущим Git HEAD. Будущий docs commit
-hash заранее не зашивается.
-
-Внешний Project Sources набор от 2026-09-23 (`a1d72a40`) — **исторический**,
-предшествует всей реализации E5; авторитетны текущий репозиторий и docs на pushed
-HEAD. Свежий набор генерируется из нового чистого docs HEAD — см. `docs/README.md` §8.1.
-
-Подробности — `docs/README.md` (§1 checkpoint, §10 E5, §12 E6, §13 инфраструктура).
+Внешние Project Sources / Handoff — версионированные снимки этого репозитория, а не отдельный источник истины. Набор от 2026-09-23 (`a1d72a40`) — **исторический**. Процесс refresh — `docs/README.md` §8.1.
 
 ## Что закрыто
 
@@ -55,11 +49,11 @@ registration consent, password visibility UX, authenticated-only booking. Под
 | E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | ✅ CLOSED (E3-A1…E3-A6) |
 | E4 | Post-redesign stabilization / regression / browser-device QA | ✅ CLOSED (E4-A…E4-E1) |
 | E5 | Final Tour Search Solution (Tourvisor module → IncomingInquiry → нативная Booking) | ✅ CLOSED на уровне приложения (E5-A1…E5-A4); **production НЕ развёрнут** |
-| — | Screenshot Audit Pack + независимый анализ (Astra / ChatGPT Work) | ✅ выполнены вне репозитория; триаж AO — в документе E5.5 |
-| **E5.5** | Agency Operations Automation (AOA): Inquiry / OperatorBooking / finances / documents / Bridge / VK / e-mail | 📐 **ARCHITECTURE DECISION ONLY (2026-10-19)** — ничего не реализовано; провизорный план AOA-01…AOA-18 |
-| E6 | Production Deployment / Operations Validation | ⬜ PENDING (после E5.5) |
+| — | Screenshot Audit Pack + независимый анализ (Astra / ChatGPT Work) | ✅ выполнены вне репозитория; статус AO — в `docs/roadmap.md` §A7 |
+| **E5.5** | Agency Operations Automation (AOA): Inquiry / OperatorBooking / finances / documents / Bridge / VK / e-mail | 🟢 **ACTIVE** — закрыты только E5.5-A0 (архитектура) и AO-FIX-01; остальное не реализовано; план и решения владельца — `docs/roadmap.md` §A3–§A9 |
+| E6 | Production Deployment / Operations Validation | ⬜ PENDING (после E5.5 и финального независимого аудита) |
 
-Детали каждой фазы — `docs/README.md` §9–§13 и `docs/roadmap.md`.
+Таблица — краткая сводка. Канонический статус и план — `docs/roadmap.md`; исторические детали фаз — `docs/README.md` §9–§13.
 
 ## Канонические факты компании
 
@@ -109,9 +103,9 @@ PHPUnit никогда не запускать против canonical MySQL.
 
 ## Документация
 
-- [`docs/README.md`](docs/README.md) — operational source of truth и checkpoint ledger.
-- [`docs/roadmap.md`](docs/roadmap.md) — текущий roadmap E1…E6 (+ E5.5).
-- [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](docs/E5.5-agency-operations-automation-architecture-2026-10-19.md) — архитектурное решение E5.5 (AOA): инварианты, провизорный план, открытые решения владельца.
+- [`docs/README.md`](docs/README.md) — индекс документации, workflow/guards, checkpoint ledger (статус и NEXT — только в roadmap).
+- [`docs/roadmap.md`](docs/roadmap.md) — **канонический roadmap**: статус этапов, решения владельца, план AOA, открытые решения, NEXT, production readiness.
+- [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](docs/E5.5-agency-operations-automation-architecture-2026-10-19.md) — техническая архитектура и инварианты E5.5 (справочно; статус и план — в roadmap).
 - `docs/archive/` — исторические документы, не руководство к действию без сверки с текущим кодом.
 
 ## Жёсткие ограничения

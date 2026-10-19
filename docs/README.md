@@ -1,6 +1,8 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-10-19** (E5.5-A0: добавлено архитектурное решение, см. §10.12; остальное содержание — по состоянию E5 closure)
+Дата актуализации содержания: **2026-10-19** (ROADMAP-SYNC-01)
+
+> **Статус этапов, порядок работ (NEXT), решения владельца, открытые решения и production readiness ведутся ТОЛЬКО в [`docs/roadmap.md`](roadmap.md) — единственном каноническом источнике.** Этот файл — индекс документации, workflow/guards и checkpoint ledger; любые упоминания «следующего шага» ниже либо исторические, либо ссылаются на roadmap. При расхождении прав `docs/roadmap.md`.
 
 ## 1. Текущий checkpoint
 
@@ -8,9 +10,8 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| **Текущий authoritative application HEAD** | **`c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`)** — финальный application-коммит E5 |
-| Прямой parent текущего application HEAD | `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`) |
-| Documentation checkpoint для этого application HEAD | `c68b6814381cdd1e8921946dd7bbe153a13eb66f` (`docs: close E5 and prepare final audit`) — docs-only commit поверх `c56e3306`; затем E5.5-A0 — docs-only архитектурный checkpoint поверх него (его HEAD определяется Git). |
+| **Текущий authoritative application HEAD** | **`6cbdbcdab1df4b7d7605ed22cc469c53128163a3` (`fix: handle booking children ages in admin email (AO-01)`)** — последний код-коммит (AO-FIX-01); documentation checkpoint — docs-only commit поверх него (hash определяется Git) |
+| Предыдущие checkpoints | docs `cb6e440a` (`docs: establish E5.5 agency operations architecture`, E5.5-A0); docs `c68b6814` (`docs: close E5 and prepare final audit`); application HEAD закрытия E5 `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`) — все НЕ текущий HEAD |
 | Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
 | Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
 | Documentation/source checkpoint после E3-A6 / входа в E4 (историческое) | `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — предшествует E4-A…E4-E1, НЕ текущий HEAD |
@@ -23,7 +24,7 @@
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
 | Активный внешний documentation/source (Project Sources) checkpoint | пока что — **ИСТОРИЧЕСКИЙ набор от 2026-09-23 на `a1d72a40`** (до E5) — **STALE**; свежий набор строится из нового чистого pushed docs HEAD после этого docs-only коммита (см. §8.1) |
-| Full PHPUnit baseline | **1393 tests / 9759 assertions**, 0 failures, 0 errors (финальный E5 baseline, checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
+| Full PHPUnit baseline | **1403 tests / 9799 assertions**, 0 failures, 0 errors (AO-FIX-01 final; SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
@@ -35,8 +36,8 @@
 | S13-R2 (Manager review cache parity relevance check) | ✅ **CLOSED** — нет живого public review cache layer, parity не требуется (см. §5.7) |
 | **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** (E4-A…E4-E1; см. §9.4). Закрыт ранее, документационный checkpoint `a1d72a40`. |
 | **E5 — Final Tour Search / Aggregation Product Block** | ✅ **CLOSED на уровне приложения** — E5-A1 … E5-A4 закрыты и запушены (см. §10). **Приложение закрыто, но production НЕ развёрнут:** production-деплоя не было, проект **не production-ready** до закрытия E6. |
-| **Следующий шаг** | **Небольшие независимые исправления AO → E5.5 AOA (реализация по слайсам, только после отдельных guarded-планов) → E6.** Screenshot Audit Pack выполнен, независимый анализ Astra получен. E5 больше не NEXT. См. §10.11–§10.12. |
-| **E5.5 — Agency Operations Automation (AOA)** | 📐 **ТОЛЬКО АРХИТЕКТУРНОЕ РЕШЕНИЕ (E5.5-A0, 2026-10-19).** Ничего не реализовано; E5 остаётся CLOSED. См. §10.12 и `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. |
+| **Следующий шаг** | **См. `docs/roadmap.md` §A9 (канонический источник).** Ничего не дублируется здесь. |
+| **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE.** Закрыты только E5.5-A0 (архитектура) и AO-FIX-01; остальное не реализовано; E5 остаётся CLOSED. План, решения владельца и gaps — `docs/roadmap.md` §A3–§A9; техническая архитектура — `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. |
 | E6 | ⬜ PENDING — final production / operations stage; **production НЕ развёрнут**, чеклист — §12; инфраструктурное состояние — §13 |
 
 **ПРИЛОЖЕНИЕ ЗАКРЫТО (E5) — НО PRODUCTION НЕ РАЗВЁРНУТ.** E5 закрыт на уровне
@@ -50,8 +51,9 @@ production-секреты/webhook Tourvisor не настроены. Закры�
 вывод подтверждён запуском `--display-phpunit-deprecations`). Это не
 функциональный/кодовый сбой.
 
-Baseline 1393 / 9759 — финальный верифицированный E5 baseline, получен
-повторным полным прогоном в этом docs-slice на checkpoint `c56e3306`
+Текущий baseline 1403 / 9799 — финальный результат AO-FIX-01 (`6cbdbcda`).
+Предыдущий baseline 1393 / 9759 — финальный верифицированный E5 baseline, получен
+повторным полным прогоном в E5 docs-slice на checkpoint `c56e3306`
 (`C:\wamp\bin\php\php8.3.32\php.exe -d xdebug.mode=off -d memory_limit=2048M
 vendor/bin/phpunit`, SQLite `:memory:`): **1393 tests / 9759 assertions, 0
 failures, 0 errors**. Дефолтный 128M CLI `memory_limit` для `php artisan test`
@@ -59,9 +61,9 @@ failures, 0 errors**. Дефолтный 128M CLI `memory_limit` для `php art
 приложения. PHPUnit против canonical MySQL остаётся запрещён; canonical MySQL
 `turfirma_rebuild_v4` тестами/этим slice не затрагивалась.
 
-Application checkpoint = `c56e330685ffa8953b22c803d6dce5334c69e81b`. Этот файл,
+Application checkpoint = `6cbdbcdab1df4b7d7605ed22cc469c53128163a3`. Этот файл,
 `docs/roadmap.md` и корневой `README.md` фиксируются отдельным docs-only commit
-**поверх** этого application HEAD. Documentation closure HEAD после того commit
+**поверх** этого application HEAD. Documentation checkpoint HEAD после того commit
 будет новее application commit и определяется Git — он **не** известен заранее
 и не зашивается в этот файл.
 
@@ -74,8 +76,8 @@ Project Sources: набор от 2026-09-23 (`a1d72a40`) **ИСТОРИЧЕСК�
 
 Приоритет:
 
-1. current Git HEAD, source code и tests;
-2. `README.md`, этот файл и `docs/roadmap.md`;
+1. current Git HEAD, source code и tests (текущее поведение);
+2. **`docs/roadmap.md` — единственный канонический источник статуса этапов, порядка работ, решений владельца и production readiness**; затем `README.md` (краткая сводка) и этот файл (индекс/ledger);
 3. independently verified test/browser/DB evidence;
 4. внешний Project Sources set, созданный из clean pushed documentation HEAD;
 5. исторические материалы под `docs/archive/` и старые Project Sources.
@@ -427,14 +429,14 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 - E3 **Cabinet UX/UI/Design Modernization завершён на уровне приложения через E3-A5** (Foundation → Tourist → Shared Booking → Manager → Admin, §9C), точечная полировка **E3-A6 (A + B) закрыта**, E3-A6-C не требуется. S13-R2 (Manager review cache parity relevance check) закрыт как часть E3-A5 (§5.7);
 - (историческое состояние на момент E3) тогда следующим шагом был E4; с тех пор E4 и E5 закрыты на уровне приложения — актуальный статус и следующий шаг см. §1 и §10.11.
 
-### 8.1 Project Sources — refresh после E5 docs closure
+### 8.1 Project Sources — refresh workflow
 
-- Набор Project Sources от 2026-09-23 (`a1d72a40`, `docs: close E4 and prepare E5`) — **ИСТОРИЧЕСКИЙ**: он предшествует всей реализации E5 (E5-A1…E5-A4) и не авторитетен над текущим репозиторием;
-- свежий набор строится только из **нового чистого pushed documentation HEAD** (поверх application checkpoint `c56e3306`) после docs-only commit/push и выравнивания local = tracking = live origin; имя архива, timestamp, SHA256 и размер определяются самой генерацией и не выдумываются заранее;
-- предыдущий активный набор сохраняется в archive (не удаляется);
-- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне репозитория, `C:\Avilona_private\`): для нового checkpoint копируется предыдущий `_v1` wrapper-пакет (последний — `Avilona_E4_Closure_Project_Sources_Refresh_v1`) в новую `_v1`-директорию и переписывается (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются; shared helper не модифицируется;
-- архив — только tracked-источники проекта: без `.claude/`, `.env`, `vendor/`, `node_modules/`, приватных артефактов E5 (`C:\Avilona_private\E5\…`), секретов.
-
+- Project Sources / Handoff — **версионированные снимки** канонического репозитория, а не отдельный источник истины; авторитетны текущий Git HEAD и `docs/roadmap.md`.
+- Наборы от 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`, E5 closure) — **ИСТОРИЧЕСКИЕ**: они предшествуют AO-FIX-01 (`6cbdbcda`) и ROADMAP-SYNC-01 и не авторитетны над текущим репозиторием;
+- свежий набор строится только из **нового чистого pushed documentation HEAD** после docs-only commit/push и выравнивания local = tracking = live origin; имя архива, timestamp, SHA256 и размер определяются самой генерацией и не выдумываются заранее;
+- предыдущие наборы сохраняются (не удаляются);
+- механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне репозитория, `C:\Avilona_private\`): для нового checkpoint копируется предыдущий `_v1` wrapper-пакет в новую `_v1`-директорию и переписывается (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются; shared helper не модифицируется;
+- архив — только tracked-источники проекта: без `.claude/`, `.env`, `vendor/`, `node_modules/`, приватных артефактов (`C:\Avilona_private\…`), секретов.
 ## 9. Endgame roadmap — E1…E6
 
 Канонический roadmap после Stage 13 (детали — `docs/roadmap.md`):
@@ -447,12 +449,11 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 | **E4** | Post-redesign stabilization / regression / browser-device / resilience QA | ✅ **CLOSED** (E4-A…E4-E1; §9.4) |
 | **E5** | Final Tour Search / Aggregation Product Block | ✅ **CLOSED на уровне приложения** — E5-A1…E5-A4 (§10); production НЕ развёрнут |
 | — | Screenshot Audit Pack + независимый анализ (Astra / ChatGPT Work) | ✅ выполнены вне репозитория (§10.11) |
-| **E5.5** | Agency Operations Automation (AOA) | 📐 **ARCHITECTURE DECISION ONLY** — реализации нет (§10.12) |
-| E6 | Final Release / Deploy / Production Smoke | ⬜ PENDING, после E5.5 (§12) |
+| **E5.5** | Agency Operations Automation (AOA) | 🟢 **ACTIVE** — реализован только AO-FIX-01; план — `docs/roadmap.md` §A6 (§10.12) |
+| E6 | Final Release / Deploy / Production Smoke | ⬜ PENDING, после E5.5 и финального независимого аудита (§12) |
 
 Текущий статус: **E1–E5 закрыты на уровне приложения** (E5 — E5-A1…E5-A4, §10).
-Следующий шаг — **небольшие исправления AO → E5.5 AOA → E6** (§10.11, §10.12,
-§12). Production не развёрнут.
+Следующий шаг и порядок работ — только в `docs/roadmap.md` §A9. Production не развёрнут.
 
 ### 9.0 E2 — стартовые принципы
 
@@ -1280,37 +1281,28 @@ E5 documentation closure (этот slice)
   -> E6 production / operations
 ```
 
-> Обновление 2026-10-19: Screenshot Audit Pack выполнен, независимый анализ Astra получен; по нему принято архитектурное решение E5.5 (§10.12). Блок ниже — исторический порядок утверждённый в E5 closure.
+> **ИСТОРИЧЕСКИЙ блок** (порядок, утверждённый в E5 closure). Screenshot Audit Pack выполнен, независимый анализ Astra получен, принято архитектурное решение E5.5 (§10.12). Актуальный порядок работ — `docs/roadmap.md` §A9.
 
 Объём независимого аудита (не выполняется в этом slice): architecture; security;
 performance; database; queries; maintainability; technical debt; modernization;
 UX; accessibility; SEO; public structure; функции для добавления/удаления;
 Tourist workflow; Manager workflow; Admin workflow; operations; design.
 
-### 10.12 E5.5 — Agency Operations Automation (AOA): архитектурное решение
+### 10.12 E5.5 — Agency Operations Automation (AOA): справка
 
-Принято E5.5-A0 (2026-10-19), **только документация**: код, миграции, маршруты,
-UI и тесты не менялись; E5 остаётся ✅ CLOSED. Полное решение —
-[`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md):
+Статус E5.5 — 🟢 **ACTIVE**; **канонические** статус, одобренные решения владельца
+(доступ Manager/Admin, назначение и переназначение обращений, финансовые правила),
+implementation gaps, план AOA-01…AOA-18, статус AO-находок и NEXT ведутся **только** в
+[`docs/roadmap.md`](roadmap.md) (Part A). Техническая архитектура и инварианты —
+[`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md)
+(справочный документ, не roadmap). E5 остаётся ✅ CLOSED и не переоткрывается.
 
-- `IncomingInquiry` остаётся техническим приёмом Tourvisor и provenance;
-  вводится независимая от провайдера бизнес-сущность `Inquiry`; `Booking` — прежний
-  операционный booking Авилоны; фактические брони у оператора — отдельный домен
-  `OperatorBooking` (будущие слайсы, **не реализовано**);
-- авторитетные инварианты: ручное бронирование у оператора (никакого авто-бронирования);
-  комиссия включена в цену оператора и не добавляется сверху; комиссия/маржа/расчёты с
-  оператором никогда не попадают в клиентские документы, чат и исходящую переписку;
-  раздельные ledger'ы поступлений и платежей оператору; статусы booking / оператора /
-  оплаты / расчётов / документов независимы;
-- провизорный план AOA-01…AOA-18 с зависимостями (не 18 одновременных релизов),
-  первый релиз и опциональные расширения разделены;
-- открытые решения владельца U-1…U-10 (видимость неназначенных обращений, пороги скидок,
-  права на платежи/возвраты, примеры комиссии, первый оператор Bridge, шаблоны документов,
-  VK, e-mail отправитель/Reply-To, верификация e-mail, retention) — **не угаданы**;
-- триаж наблюдений AO-01…AO-11 — в документе E5.5;
-- production остаётся на REG.RU; Timeweb предзаказан, не production; canonical MySQL не
-  затрагивается.
-
+Кратко (подробности — только по ссылкам выше): `IncomingInquiry` остаётся техническим
+приёмом Tourvisor и provenance; планируется независимая от провайдера бизнес-сущность
+`Inquiry`, отдельный домен `OperatorBooking`, раздельные ledger'ы — **ничего из этого
+не реализовано**. Реализовано в рамках E5.5 только: архитектурный checkpoint E5.5-A0
+(docs) и AO-FIX-01 (`6cbdbcda`). Production остаётся на REG.RU; Timeweb предзаказан, не
+production; canonical MySQL не затрагивается.
 ## 11. Запреты без отдельного operational plan
 
 - `composer update`, `npm update`, `npm audit fix`;
@@ -1327,7 +1319,7 @@ UI и тесты не менялись; E5 остаётся ✅ CLOSED. Полн
 
 ⬜ **PENDING.** E6 начинается только после: E5 documentation closure → свежий
 Project Sources → Screenshot Audit Pack → независимый полный аудит → утверждённые
-исправления по аудиту (§10.11) → решения по E5.5 AOA (§10.12; объём E5.5 до E6 определяется владельцем). Закрытие E5 ≠ production-ready.
+исправления по аудиту → реализованные слайсы E5.5, одобренные владельцем (`docs/roadmap.md` §A6) → AOA-18 QA → финальный независимый аудит. Закрытие E5 ≠ production-ready.
 
 ### 12.1 Production platform
 

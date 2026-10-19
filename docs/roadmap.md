@@ -1,43 +1,228 @@
-# Avilona_turfirma — Roadmap
+# Avilona_turfirma — Canonical Roadmap
 
-Актуализировано: **2026-10-19** (E5.5-A0 added; the rest reflects the E5 closure state)
+Updated: **2026-10-19** (ROADMAP-SYNC-01)
 
-## Current state
+> **SINGLE SOURCE OF TRUTH.** This file is the one canonical document for project stages, current status, implementation order, owner-approved decisions, unresolved business decisions, upcoming work and production readiness. `README.md`, `docs/README.md`, the E5.5 architecture document, generated Handoff and Project Sources must **defer to this file** for stage/status/NEXT statements and must not keep competing roadmaps. Architecture documents keep technical design and rationale only. Generated Handoff / Project Sources are versioned **snapshots** of this repository, never a competing source. Where code and this file disagree about *current behaviour*, the code at the pushed HEAD wins; where they disagree about *approved intent*, this file wins and the difference is an implementation gap (§A5).
 
-- Branch: `db-rebuild-stage3`
-- **Current authoritative application HEAD: `c56e330685ffa8953b22c803d6dce5334c69e81b`**
-- Subject: `fix: complete final tour search polish (E5-A4)`
-- Direct parent of current application HEAD: `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`)
-- Documentation checkpoint for this application HEAD: `c68b6814381cdd1e8921946dd7bbe153a13eb66f` (`docs: close E5 and prepare final audit`), docs-only on top of `c56e3306`; E5.5-A0 is a further docs-only architecture checkpoint on top of it (its HEAD is decided by Git)
-- Documentation checkpoint after E4 closure / entering E5 (previous docs-only commit; base of the now-**HISTORICAL** Project Sources set of 2026-09-23): `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — predates ALL E5 implementation, NOT the current HEAD, NOT authoritative over the current repository
-- Application HEAD at E4 closure: `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — NOT the current HEAD
-- Documentation checkpoint after E3-A6 / entering E4 (historical): `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — NOT the current HEAD
-- Application HEAD at E3-A6 closure: `ed550df8989b44e7305bdce6b6f5f063b82a2616` (`fix: polish cross-role chat switching (E3-A6-B)`) — NOT the current HEAD
-- Documentation checkpoint after E3-A5 (historical): `20cde21dda2c38682c796214fbb2401e3f1f7804` (`docs: close E3-A5 and refresh roadmap`) — NOT the current HEAD
-- Application HEAD at E3-A5 closure: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6` (`feat: modernize admin cabinet (E3-A5)`) — NOT the current HEAD
-- Documentation checkpoint after E2 closure (historical): `886bde9813a088d56d7db1e6b963f6f1d05ab4b2` (`docs: close E2 public redesign`) — NOT the current HEAD
-- Documentation checkpoint after E2-A5 (historical): `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa` (`docs: checkpoint E2 through E2-A5`) — NOT the current HEAD
-- Application HEAD at E2 closure (E2-A7): `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — NOT the current HEAD
-- Historical E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — NOT the current HEAD
-- Previous functional HEAD (Stage 13): `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`)
-- Stage 0–13: ✅ CLOSED
-- E1 Comprehensive Audit: ✅ TECHNICALLY CLOSED
-- E2 — Public UX / UI / Design Redesign — ✅ **COMPLETE / CLOSED at application level** (E2-A1…E2-A7)
-- **E3 — Cabinet UX/UI/Design Modernization — ✅ CLOSED at application level** (E3-A1…E3-A5 + E3-A6-A/B point-polish)
-- S13-R2 (Manager review cache parity relevance check) — ✅ **CLOSED** as part of E3-A5
-- **E4 — Post-redesign stabilization / resilience QA — ✅ CLOSED** (E4-A…E4-E1; final application checkpoint `55a9fcaf`)
-- **E5 — Final Tour Search / Aggregation Product Block — ✅ CLOSED at application level** (E5-A1 `9005457a`, E5-A2A `c0e16ae3`, E5-A2A.1 `d59d211e`, E5-A2B `0399d21f`, E5-A3 `137f109b`, E5-A3.1 `00ea2f04`, E5-A4 `c56e3306`; all pushed). See "E5 — tour search" below.
-- **APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.** E5 being closed does NOT mean production-ready. No production deployment/migration has happened; E5 migrations (at least `2026_10_01_000000…` and `2026_10_02_000000…`) are NOT applied to canonical MySQL `turfirma_rebuild_v4`; production Tourvisor secrets/webhook are not configured; privacy/legal provider facts are unresolved (see E5/E6 below).
-- **E5.5 — Agency Operations Automation (AOA): 📐 ARCHITECTURE DECISION ONLY (E5.5-A0, 2026-10-19). NOTHING IS IMPLEMENTED.** Recorded in `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. E5 stays CLOSED.
-- **NEXT:** small independent fixes from the audit triage (AO-01, AO-11, AO-10, AO-05, …), then E5.5 implementation slices (each with its own guarded plan, starting with AOA-01), then E6. The Screenshot Audit Pack is done and the independent Astra analysis was received (private, outside the repository). E5 is no longer NEXT.
-- Full verified baseline: **1393 tests / 9759 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`) — final E5 baseline, re-verified in the E5 documentation-closure slice (`php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit`)
-  - history: E5-A3 closure 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 closure 1233 / 8023; E2 closure 1051 / 7180; E1 closure 1001 / 7013
-  - 1 PHPUnit deprecation: the PHPUnit test-runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`) — verified in current output; not a functional failure
-  - canonical MySQL is never touched by tests
-- Infrastructure: current production hosting remains **REG.RU**. Future Timeweb Cloud server `web-prod-spb-01` (2 vCPU / 4 GB RAM / 50 GB NVMe / Saint Petersburg) is **PREORDERED / waiting for provider capacity — NOT production**. No DNS change; domains remain with REG.RU. (No private key paths/secrets are recorded in the repository.)
-- Project Sources: the external set of 2026-09-23 (`a1d72a40`) is **HISTORICAL ONLY** (predates E5). A fresh set is generated from the new clean pushed documentation HEAD after this docs-only commit. The current repository (tree, `git log`, tests, migrations, docs) is authoritative.
-- E5 private evidence (never in Project Sources): `C:\Avilona_private\E5\` (E5-A1_Browser_PoC, E5-A2B_Live_PoC, E5-A3_Browser_QA, E5-A3.1_Browser_QA, E5-A4_Browser_QA). E4 QA evidence preserved: `C:\Avilona_private\E4\…`.
-- Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — unresolved, must be decided before final production release (E6).
+This file has two parts: **Part A — canonical plan** (§A1–§A9, kept current) and **Part B — stage history** (closed stages, kept as a historical record).
+
+## A0. Status legend
+
+| Label | Meaning |
+|---|---|
+| `APPROVED REQUIREMENT` | The project owner approved the rule or scope. It says nothing about whether it is implemented. |
+| `OWNER_APPROVED` | An owner business decision that is final. Implementation status is stated separately. |
+| `PROPOSED IMPLEMENTATION` | A plan or slice proposed for delivering an approved requirement. It is not binding until its own guarded plan is approved. |
+| `IN PROGRESS` | Work has started and is not yet pushed. |
+| `CLOSED` | Implemented, verified and pushed (or documented as closed). |
+| `BLOCKED` | Cannot proceed until a stated dependency or decision is resolved. |
+| `BUSINESS_DECISION_REQUIRED` | The owner has not decided. Nothing may be invented. |
+| `OPEN` / `VERIFY_NEEDED` / `REVIEW` | Audit-finding states, see §A7. |
+
+## A1. Canonical stage status
+
+| Stage | Status |
+|---|---|
+| Stage 0–13 | ✅ CLOSED |
+| E1 — Comprehensive Audit | ✅ CLOSED (technically) |
+| E2 — Public UX/UI redesign | ✅ CLOSED |
+| E3 — Cabinet UX/UI redesign | ✅ CLOSED |
+| E4 — Post-redesign stabilization / QA | ✅ CLOSED |
+| E5 — Final tour search (Tourvisor → IncomingInquiry → native Booking) | ✅ FULLY CLOSED AND DOCUMENTED (application level; E5 is **not** reopened by E5.5) |
+| **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE** |
+| E5.5-A0 — architecture checkpoint | ✅ CLOSED AND PUSHED (`cb6e440a`, docs only) |
+| AO-FIX-01 — booking children ages in admin e-mail | ✅ CLOSED AND PUSHED (`6cbdbcdab1df4b7d7605ed22cc469c53128163a3`) |
+| E6 — Production deployment / operations | ⬜ PENDING |
+| **Production** | ❌ **NOT DEPLOYED** (current REG.RU hosting remains in use) |
+
+**Nothing in E5.5 beyond the architecture checkpoint and AO-FIX-01 is implemented.** No `Inquiry`, `OperatorBooking`, ledger, audit-event, Bridge, VK or outbound-e-mail feature exists in code.
+
+## A2. Current repository state
+
+- Branch: `db-rebuild-stage3`.
+- **Application HEAD (last code commit):** `6cbdbcdab1df4b7d7605ed22cc469c53128163a3` — `fix: handle booking children ages in admin email (AO-01)` (touches one e-mail Blade view and one test). The documentation checkpoint carrying this file is a docs-only commit on top of it; its hash is determined by Git and is not hard-coded here.
+- **Full verified test baseline (AO-FIX-01 final): 1403 tests / 9799 assertions, 0 failures, 0 errors** (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`). Documentation-only commits do not rerun the suite.
+  - history: E5 closure 1393 / 9759; E5-A3 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 1233 / 8023; E2 1051 / 7180; E1 1001 / 7013.
+  - 1 PHPUnit deprecation: the runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`); not a functional failure.
+  - Canonical MySQL is never touched by tests. Full-suite command: `php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit` with the project PHP.
+- **Infrastructure:** production hosting remains **REG.RU**. Timeweb Cloud server `web-prod-spb-01` (2 vCPU / 4 GB / 50 GB NVMe, Saint Petersburg) is **PREORDERED / waiting for provider capacity — NOT production** (not independently re-verified in ROADMAP-SYNC-01). No DNS change; domains stay with REG.RU. No private key paths or secrets are recorded in the repository.
+- **Canonical MySQL `turfirma_rebuild_v4`:** E5 migrations `2026_10_01_000000…` and `2026_10_02_000000…` are **not applied**. AO-FIX-01 added no migration.
+- **Project Sources:** external versioned snapshots only. The set of 2026-09-23 (`a1d72a40`) is historical. See `docs/README.md` §8.1 for the refresh workflow.
+- **Private evidence (never in Project Sources):** `C:\Avilona_private\E5\…`, `C:\Avilona_private\E4\…`; Screenshot Audit Pack under `C:\Avilona_private\Audit\…`. The independent Astra analysis is private and not stored in this repository.
+- Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — `BUSINESS_DECISION_REQUIRED`, must be decided before E6.
+
+### Checkpoint ledger (historical — none of these is the current HEAD)
+
+- Application HEAD at E5 closure: `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`); parent `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`).
+- E5 documentation closure: `c68b6814381cdd1e8921946dd7bbe153a13eb66f` (`docs: close E5 and prepare final audit`).
+- E5.5-A0 architecture checkpoint: `cb6e440a` (`docs: establish E5.5 agency operations architecture`).
+- Documentation checkpoint after E4 closure (base of the historical Project Sources set of 2026-09-23): `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`).
+- Application HEAD at E4 closure: `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`).
+- Documentation checkpoint after E3-A6 / entering E4: `c89e923f966f5aaa8bb972e2d6944018f8dce4a8`; application HEAD at E3-A6: `ed550df8989b44e7305bdce6b6f5f063b82a2616`.
+- Documentation checkpoint after E3-A5: `20cde21dda2c38682c796214fbb2401e3f1f7804`; application HEAD at E3-A5: `9fee7dfb990c7a6c18fc9dcf9205e3db3dca24e6`.
+- Documentation checkpoint after E2 closure: `886bde9813a088d56d7db1e6b963f6f1d05ab4b2`; after E2-A5: `eb88f0fc02b2bea37f4817c7cfc3ace0ef002caa`; application HEAD at E2-A7: `35f91b9e270cf68654877d42fc8b0d0d59d12458`.
+- E1 closure application commit: `08d0626311234faa06dedf2828cb878805241990`; Stage 13 functional HEAD: `dba20e2c6e2e66b6f69f33710b2626b3fe181e31`.
+
+## A3. Owner-approved access control — `OWNER_APPROVED`, NOT YET FULLY IMPLEMENTED
+
+This is a **final owner business decision**. It resolves former open decision U-1. The current code does **not** yet enforce it (see §A5).
+
+### Manager
+
+A Manager may see **only**:
+
+- their own assigned inquiries;
+- their own assigned bookings;
+- private client communications associated with work they are authorized to handle;
+- their own relevant operational information.
+
+A Manager must **not** see:
+
+- another Manager's inquiries, bookings or client conversations;
+- Admin's inquiries unless personally assigned;
+- unassigned incoming inquiries.
+
+This must not leak through: list pages; detail routes; search; AJAX/JSON; API; counts; notifications; attachments; chat endpoints; document download links. Client lookup needed for legitimate account selection must not grant access to another employee's private booking or correspondence history. When an inquiry is reassigned away from a Manager, it becomes "another employee's" inquiry and the rule above applies to the former assignee.
+
+### Admin
+
+Admin may: see all inquiries; see all bookings; see all related conversations for oversight; manage assignment; retain inquiries personally; reassign when reasonably necessary.
+
+**Existing E3 Admin chat contract is preserved and not broadened:** Admin may *read* any Booking chat but may *write* only when personally assigned, per the existing Booking chat authorization rules.
+
+## A4. Owner-approved inquiry assignment — `OWNER_APPROVED`, NOT YET IMPLEMENTED
+
+| Origin | Assignment |
+|---|---|
+| Manager-created | Automatically assigned to the creating Manager. No Admin approval. |
+| Admin-created | Assigned to Admin by default, or explicitly to another eligible employee chosen by Admin. |
+| Automatic / external | **Unassigned** until Admin allocates it, using staff workload and actual agency needs. A Manager may **not** claim an unassigned external inquiry. |
+
+**Reassignment.** Admin may reassign only when genuinely necessary; it must not be arbitrary or silent. A future implementation must record: previous responsible employee; new responsible employee; the Admin who performed it; timestamp; a **required reason**. The inquiry record and its history must remain available to authorized Admin. Ordinary Managers must not be able to reassign anyone else's inquiry.
+
+"Eligible employee" is not defined beyond what the code already uses for booking assignment (`User::assignableToBookings`); no new eligibility rule is invented here.
+
+### Financial business rules — `OWNER_APPROVED`
+
+- The tour operator's displayed selling price **already includes** the agency commission; commission is **never added on top** of the client price.
+- A discount reduces the customer's price.
+- Agency commission and margin are strictly **internal**; the client never sees internal margin or operator settlement details.
+- Original operator currency and the operator-specific exchange rate are preserved where relevant (no substitution with Central Bank rates).
+- Client payments and operator payments are separate. Price, payment and status dimensions are independent (see AO-09).
+- No automatic operator booking and no automatic payment.
+- **Not decided (`BUSINESS_DECISION_REQUIRED`):** discount approval thresholds, negative-margin permissions, who may enter payments/refunds. Do not invent them.
+
+Further architectural invariants (documents, Bridge, platform) are in `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md` §3.
+
+## A5. E5.5 implementation gaps (verified against code at `6cbdbcda`)
+
+E5's `IncomingInquiry` workflow predates the owner decisions in §A3–§A4. E5 stays CLOSED (its closure was correct for its own scope); the following are **gaps to be closed by AOA-02 and AOA-04**, not defects reopening E5:
+
+| Area | Current behaviour (code) | Required (§A3–§A4) |
+|---|---|---|
+| Inquiry list (`Manager\IncomingInquiryController::index`) | Lists **all** inquiries to every Manager/Admin; no per-user scoping | Manager: own assigned only; Admin: all |
+| Inquiry view (`IncomingInquiryPolicy::view`) | Any staff | Manager: only if personally assigned |
+| Claim (`IncomingInquiryPolicy::claim`) | Any staff may claim an unassigned inquiry | Manager may not claim; Admin allocates (Admin may self-assign) |
+| Close (`IncomingInquiryPolicy::close`) | Any staff may close while unassigned | Re-evaluate: unassigned inquiries are not visible to Managers |
+| Reassign | Admin only (matches), but **no required reason and no previous/new/actor/timestamp history** (`IncomingInquiryWorkflow::reassign`) | Required reason + durable history readable by Admin |
+| Client lookup (`IncomingInquiryClientMatcher`) | Searches active Tourist accounts by name/e-mail/phone | Must not expose another employee's booking/correspondence history; **not audited beyond the matcher in this task** |
+| Other surfaces (Booking lists, search, AJAX/JSON, API, counts, notifications, attachments, chat endpoints, document links) | **Not audited in ROADMAP-SYNC-01** | AOA-02 must produce and test a per-surface visibility matrix |
+| Manager-created / Admin-created `Inquiry` | Does not exist (no manual creation; `Inquiry` entity not built) | AOA-03 / AOA-04 |
+| Admin chat write | Existing E3 contract (read any, write only when assigned) | Unchanged |
+
+## A6. Canonical AOA implementation roadmap
+
+The AOA-01 … AOA-18 identifiers and titles below are the **project's dependency-ordered plan as organised in the E5.5-A0 checkpoint**. They are **not** a verified mapping to the private Astra report (which is not available in this repository); if that report is later supplied, reconcile by adding a cross-reference column — do **not** renumber silently, because AOA-NN is already cited in the E5.5 architecture document and other docs. This is a plan of **18 sequenced slices, not 18 simultaneous releases and not an irreversible requirement for the initial release.** Each slice gets its own guarded plan (exact allowed paths), tests and commit; the **Depends on** column is the binding part, the release grouping is a recommendation the owner may re-cut.
+
+Implementation status of every slice below: **NOT STARTED** (nothing implemented).
+
+| # | Workstream | Slice | Depends on | Requirement status | Blocked by |
+|---|---|---|---|---|---|
+| AOA-01 | A Data visibility & audit | Append-only business audit events + safe staff audit/log UI (covers AO-04) | — | PROPOSED IMPLEMENTATION | — |
+| AOA-02 | A Data visibility & audit | Visibility & assignment **policy layer** implementing §A3 across all surfaces (policy/surface matrix, eligible-employee rule) | AOA-01 | APPROVED REQUIREMENT (§A3) / PROPOSED IMPLEMENTATION | — (former U-1 resolved) |
+| AOA-03 | B Inquiry | Provider-independent `Inquiry` entity, additive migration, link/backfill from `IncomingInquiry` as provenance | AOA-02 | PROPOSED IMPLEMENTATION | — |
+| AOA-04 | B Inquiry | Manual Inquiry creation, ownership, responsibility & assignment per §A4, Admin allocation, reassignment with reason + history | AOA-03 | APPROVED REQUIREMENT (§A4) / PROPOSED IMPLEMENTATION | — (former U-1 resolved) |
+| AOA-05 | B Inquiry | Explicit Inquiry → Booking conversion on the new entity (E5 atomicity/idempotency kept) | AOA-04 | PROPOSED IMPLEMENTATION | — |
+| AOA-06 | C OperatorBooking | `OperatorBooking` domain, manual entry, provenance | AOA-05 | PROPOSED IMPLEMENTATION | — |
+| AOA-07 | C OperatorBooking | Import snapshots, diff, controlled approval (source-agnostic) | AOA-06 | PROPOSED IMPLEMENTATION | — |
+| AOA-08 | D Pricing & finance | Pricing / commission / discount / currency model + internal-only data separation guard | AOA-06 | APPROVED REQUIREMENT (§A4 rules) / PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-2, U-4) |
+| AOA-09 | D Pricing & finance | Customer receipts ledger; `paid_amount` as projection | AOA-08 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-3) |
+| AOA-10 | D Pricing & finance | Operator payments / settlement ledger | AOA-08 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-3, U-4) |
+| AOA-11 | D Deadlines | Deadlines (payment/document/travel) with staff reminders | AOA-06 | PROPOSED IMPLEMENTATION | — |
+| AOA-12 | E Documents | Template engine, immutable revisions, secure storage | AOA-05 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-6) |
+| AOA-13 | E Documents | Explicit client publication; operator-issued documents handling | AOA-12 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-6, U-10) |
+| AOA-14 | F Bridge / adapters | Operator adapter contract and **Bridge import protocol** (API → Bridge → manual); first adapter | AOA-07 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-5) |
+| AOA-15 | F Bridge / extension | Avilona Bridge browser connector / extension (thin, staff-operated; no stored operator passwords, no CAPTCHA bypass, no silent financial updates) | AOA-14 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-5) |
+| AOA-16 | G Communications | Outgoing e-mail from Avilona objects (internal-data guard enforced) | AOA-08, AO-01 (CLOSED) | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-8); AO-02/AO-03 first |
+| AOA-17 | G Communications | VK community integration | AOA-02 | PROPOSED IMPLEMENTATION | BUSINESS_DECISION_REQUIRED (U-7); AO-02/AO-03 first |
+| AOA-18 | H QA | Integrated QA and security review of all shipped slices; E6 hand-off | all shipped slices | PROPOSED IMPLEMENTATION | — |
+
+After AOA-18 (not slices, not renumbered):
+
+1. **Final independent audit** of the integrated result — `PROPOSED IMPLEMENTATION` (scope as listed in Part B "After E5").
+2. **E6 — production deployment / operations** — `PENDING` (§A9).
+
+### Recommended release grouping (PROPOSED — may be re-cut by the owner)
+
+- **First release (core operations):** AOA-01 → AOA-10, then the AOA-18 QA gate.
+- **Second release (incremental):** AOA-11 deadlines; AOA-12/13 limited document templates with explicit publication; AOA-16 outgoing e-mail.
+- **Optional extensions (each separately approved, not required for E6):** AOA-14/15 operator adapter and Bridge; AOA-17 VK.
+
+## A7. Audit observations (AO) status
+
+Small independent fixes are named by their AO id; slice naming beyond `AO-FIX-01` is not pre-assigned.
+
+| ID | Observation | Status |
+|---|---|---|
+| AO-01 | Admin booking e-mail `children_ages` error | ✅ **CLOSED** at `6cbdbcda` (AO-FIX-01) |
+| AO-11 | Tourist password validation error-bag mismatch | **OPEN** — small independent fix |
+| AO-10 | Mixed English/Russian validation messages | **OPEN** — focused fix |
+| AO-05 | Tourist chat header at 320 px | **OPEN** — focused responsive fix |
+| AO-02 / AO-03 | Chat wrapping and timestamp consistency | **OPEN** — before communications expansion (AOA-16/17) |
+| AO-04 | Admin log exposes absolute filesystem paths | **OPEN** — resolve in secure audit/log UI work (AOA-01) |
+| AO-06 | Unverified-e-mail Tourist reaches cabinet | **BUSINESS_DECISION_REQUIRED** — business/security policy (U-9) |
+| AO-07 | 403/404 ownership-denial inconsistency | **REVIEW** — not automatically a vulnerability |
+| AO-08 | Header switches to hamburger at 1200 px | **UX REVIEW** — not automatically a defect |
+| AO-09 | Booking can reach confirmed/completed with zero paid | **BUSINESS RULE REVIEW** — status and payment dimensions stay independent until the owner approves otherwise |
+| — | Possible legacy `str_plural()` use in booking-created / trip-reminder templates (reported by AO-FIX-01) | **VERIFY_NEEDED — LEGACY str_plural() HELPER** (below) |
+
+### VERIFY_NEEDED — LEGACY `str_plural()` HELPER
+
+Reported during AO-FIX-01 as possible legacy use; **not verified as a defect and not to be classified as one without evidence.** A later small read-only/focused check must determine: where the helper is called; whether it exists in the current runtime; whether the affected templates render successfully. Scoping note only (not a verification): a guarded `str_plural(int, string, string, string)` definition exists in `app/Helpers/helpers.php`, and calls exist in `app/Mail/TripReminder.php`, `resources/views/bookings/{index,show}.blade.php`, `resources/views/emails/bookings/created.blade.php` and `resources/views/emails/bookings/trip-reminder.blade.php`; whether that file is autoloaded in the runtime and whether those views/mails render was **not** checked.
+
+## A8. Unresolved owner decisions (not guessed)
+
+| ID | Decision | Status | Blocks |
+|---|---|---|---|
+| U-1 | Manager visibility of unassigned/colleagues' inquiries | ✅ **RESOLVED** — `OWNER_APPROVED` (§A3, §A4) | — |
+| U-2 | Manager discount thresholds, negative-margin permissions, approval flow | BUSINESS_DECISION_REQUIRED | AOA-08 |
+| U-3 | Who may enter payments and refunds | BUSINESS_DECISION_REQUIRED | AOA-09, AOA-10 |
+| U-4 | Operator commission / settlement worked examples (per operator) | BUSINESS_DECISION_REQUIRED | AOA-08, AOA-10 |
+| U-5 | First operator for Bridge / adapter work | BUSINESS_DECISION_REQUIRED | AOA-14, AOA-15 |
+| U-6 | Approved document templates and legal authority to issue them | BUSINESS_DECISION_REQUIRED | AOA-12, AOA-13 |
+| U-7 | Official VK community and staff reply privileges | BUSINESS_DECISION_REQUIRED | AOA-17 |
+| U-8 | E-mail sender identity and Reply-To | BUSINESS_DECISION_REQUIRED | AOA-16 |
+| U-9 | Account e-mail-verification policy (AO-06) | BUSINESS_DECISION_REQUIRED | security/product policy |
+| U-10 | Document and data retention | BUSINESS_DECISION_REQUIRED | AOA-13, AOA-16 |
+| — | `PENDING_BUSINESS_DECISION_OPENING_HOURS` | BUSINESS_DECISION_REQUIRED | E6 |
+| — | Tourvisor privacy/legal provider facts (Part B, E5 list) | `PRIVACY_LEGAL_FACT_REQUIRED` | E6 |
+| — | AO-09 payment-blocking / warning rules | BUSINESS RULE REVIEW | none until approved |
+
+## A9. NEXT and production readiness
+
+**Order of upcoming work (PROPOSED; one semantic slice at a time, each with its own guarded plan):**
+
+1. **NEXT — AO-11** (Tourist password validation error-bag mismatch): small independent fix.
+2. VERIFY_NEEDED `str_plural()` read-only/focused check (may run before or after AO-11; read-only).
+3. AO-10 → AO-05 (focused fixes).
+4. **AOA-01** (audit foundation) → **AOA-02** (access-control policy layer implementing §A3) → AOA-03 → AOA-04 …, in the dependency order of §A6. AO-02/AO-03 before AOA-16/17.
+5. AOA-18 QA gate → final independent audit → E6.
+
+**Production readiness.** `APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.` Production is **not deployed**; the project is **not production-ready** until E6 closes. Known pre-production items: pending E5 migrations on canonical/production; Tourvisor production secrets/webhook; privacy/legal provider facts; opening hours; separate runtime/dependency modernization pass; hosting move REG.RU → Timeweb (if pursued). See Part B "E6".
+
+---
+
+# Part B — Stage history (historical record; status is authoritative in Part A)
 
 ## Completed stages
 
@@ -672,15 +857,10 @@ Already solved and NOT carried forward: P-05 for `/tours` (H1/main — E5-A4); t
 E5 is declared **CLOSED at application level** by this documentation checkpoint on top of application checkpoint `c56e3306`. This pass changes no application code and updates no dependencies. **E5 closed ≠ production-ready.**
 
 ### E5.5 — Agency Operations Automation (AOA)
-📐 **ARCHITECTURE DECISION ONLY** (E5.5-A0, 2026-10-19). Sits between CLOSED E5 and pending E6. **No code, migration, route, UI or test exists for it.** Full decision: [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md).
-
-- Architecture: `IncomingInquiry` stays Tourvisor technical intake/provenance → new provider-independent `Inquiry` business entity → explicit conversion to at most one native `Booking` → separate `OperatorBooking` domain (provenance, import snapshots, diff, controlled approval). No U-ON / Qui-Quo dependency.
-- Provisional dependency-ordered plan AOA-01…AOA-18 in workstreams: A foundation/visibility/audit (01–02), B Inquiry (03–05), C OperatorBooking (06–07), D finances/payments/deadlines (08–11), E documents (12–13), F Bridge/API/adapters (14–15), G VK and outbound e-mail (16–17), H integrated QA (18). First release: AOA-01…AOA-10; second: deadlines, limited templates, outbound e-mail; optional: operator adapter/Bridge, VK.
-- Unresolved owner decisions U-1…U-10 (unassigned-inquiry visibility; discount/margin approvals; payment/refund permissions; commission examples; first Bridge operator; document templates/legal authority; VK community; e-mail sender/Reply-To; e-mail verification policy; retention) are recorded as open, not guessed.
-- Audit triage AO-01…AO-11 is recorded in the same document; none is fixed by E5.5-A0.
+🟢 **ACTIVE** — status, owner decisions, implementation gaps, the AOA-01…AOA-18 roadmap, AO findings and NEXT are **canonical in Part A of this file (§A1–§A9)**. The technical architecture, rationale and invariants are in [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md) (reference, not a competing roadmap). Sits between CLOSED E5 and pending E6; only E5.5-A0 (architecture, docs) and AO-FIX-01 (`6cbdbcda`) are done.
 
 ### After E5 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
-✅ Screenshot Audit Pack executed; independent analysis received (private, outside the repository). Historical approved order recorded at E5 closure:
+✅ Screenshot Audit Pack executed; independent analysis received (private, outside the repository). **Historical** — the current order of work is §A9. Approved order recorded at E5 closure:
 
 Approved order:
 
@@ -693,7 +873,7 @@ E5 documentation closure -> fresh Project Sources -> Screenshot Audit Pack
 Independent audit scope: architecture; security; performance; database; queries; maintainability; technical debt; modernization; UX; accessibility; SEO; public structure; features to add/remove; Tourist workflow; Manager workflow; Admin workflow; operations; design. Not executed in the E5 documentation-closure slice.
 
 ### E6 — final release / deploy / production smoke
-⬜ **PENDING** — final production / operations stage. Starts only after the audit above and the owner's decision on E5.5 scope. **Production is NOT deployed.**
+⬜ **PENDING** — final production / operations stage. Starts only after the E5.5 slices the owner approves for the initial release (§A6), the AOA-18 QA gate and the final independent audit (§A6, §A9). **Production is NOT deployed.**
 
 **Production platform**
 - Timeweb availability / provisioning when provider capacity becomes available (`web-prod-spb-01`, preordered, not production);
@@ -729,6 +909,7 @@ Also: production-ready claim is only allowed after E6 closes; final handoff / re
 - No canonical DB writes without guarded plan.
 - PHPUnit only PHP 8.3.32 + SQLite `:memory:`.
 - No real provider integrations without explicit operational approval.
+- This file is the single canonical roadmap; other documents must defer to it and must not carry their own NEXT lists.
 - Current Project Sources must correspond to a clean pushed documentation HEAD.
 - No CSS workaround for Tourvisor provider UI (Favorites is controlled by provider account settings).
 - Dependency/runtime modernization is a separate guarded E6 pass, never mixed with functional work.
