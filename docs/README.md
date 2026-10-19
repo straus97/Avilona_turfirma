@@ -1,6 +1,6 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-10-01**
+Дата актуализации содержания: **2026-10-19** (E5.5-A0: добавлено архитектурное решение, см. §10.12; остальное содержание — по состоянию E5 closure)
 
 ## 1. Текущий checkpoint
 
@@ -10,7 +10,7 @@
 | Branch | `db-rebuild-stage3` |
 | **Текущий authoritative application HEAD** | **`c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`)** — финальный application-коммит E5 |
 | Прямой parent текущего application HEAD | `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`) |
-| Documentation checkpoint для этого application HEAD | **ЕЩЁ НЕ СУЩЕСТВУЕТ.** Будет создан отдельным docs-only commit **поверх** `c56e3306` (этот файл + `docs/roadmap.md` + корневой `README.md`). Тот будущий HEAD определяется Git, не известен заранее и не зашивается в этот файл. |
+| Documentation checkpoint для этого application HEAD | `c68b6814381cdd1e8921946dd7bbe153a13eb66f` (`docs: close E5 and prepare final audit`) — docs-only commit поверх `c56e3306`; затем E5.5-A0 — docs-only архитектурный checkpoint поверх него (его HEAD определяется Git). |
 | Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
 | Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
 | Documentation/source checkpoint после E3-A6 / входа в E4 (историческое) | `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — предшествует E4-A…E4-E1, НЕ текущий HEAD |
@@ -35,7 +35,8 @@
 | S13-R2 (Manager review cache parity relevance check) | ✅ **CLOSED** — нет живого public review cache layer, parity не требуется (см. §5.7) |
 | **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** (E4-A…E4-E1; см. §9.4). Закрыт ранее, документационный checkpoint `a1d72a40`. |
 | **E5 — Final Tour Search / Aggregation Product Block** | ✅ **CLOSED на уровне приложения** — E5-A1 … E5-A4 закрыты и запушены (см. §10). **Приложение закрыто, но production НЕ развёрнут:** production-деплоя не было, проект **не production-ready** до закрытия E6. |
-| **Следующий шаг** | **Screenshot Audit Pack → независимый полный аудит (Astra / ChatGPT Work) → утверждённые исправления по аудиту (если есть) → E6.** E5 больше не NEXT. См. §10.11. |
+| **Следующий шаг** | **Небольшие независимые исправления AO → E5.5 AOA (реализация по слайсам, только после отдельных guarded-планов) → E6.** Screenshot Audit Pack выполнен, независимый анализ Astra получен. E5 больше не NEXT. См. §10.11–§10.12. |
+| **E5.5 — Agency Operations Automation (AOA)** | 📐 **ТОЛЬКО АРХИТЕКТУРНОЕ РЕШЕНИЕ (E5.5-A0, 2026-10-19).** Ничего не реализовано; E5 остаётся CLOSED. См. §10.12 и `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. |
 | E6 | ⬜ PENDING — final production / operations stage; **production НЕ развёрнут**, чеклист — §12; инфраструктурное состояние — §13 |
 
 **ПРИЛОЖЕНИЕ ЗАКРЫТО (E5) — НО PRODUCTION НЕ РАЗВЁРНУТ.** E5 закрыт на уровне
@@ -445,11 +446,12 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 | **E3** | **Cabinet UX/UI/Design Modernization** (Tourist / Manager / Admin) | ✅ **E3-A1…E3-A5 CLOSED на уровне приложения** (§9C); **E3-A6 point-polish (A + B) ✅ CLOSED** |
 | **E4** | Post-redesign stabilization / regression / browser-device / resilience QA | ✅ **CLOSED** (E4-A…E4-E1; §9.4) |
 | **E5** | Final Tour Search / Aggregation Product Block | ✅ **CLOSED на уровне приложения** — E5-A1…E5-A4 (§10); production НЕ развёрнут |
-| — | Screenshot Audit Pack + независимый полный аудит (Astra / ChatGPT Work) | ⬜ **NEXT** — перед E6 (§10.11) |
-| E6 | Final Release / Deploy / Production Smoke | ⬜ PENDING, после аудита (§12) |
+| — | Screenshot Audit Pack + независимый анализ (Astra / ChatGPT Work) | ✅ выполнены вне репозитория (§10.11) |
+| **E5.5** | Agency Operations Automation (AOA) | 📐 **ARCHITECTURE DECISION ONLY** — реализации нет (§10.12) |
+| E6 | Final Release / Deploy / Production Smoke | ⬜ PENDING, после E5.5 (§12) |
 
 Текущий статус: **E1–E5 закрыты на уровне приложения** (E5 — E5-A1…E5-A4, §10).
-Следующий шаг — **Screenshot Audit Pack → независимый полный аудит → E6** (§10.11,
+Следующий шаг — **небольшие исправления AO → E5.5 AOA → E6** (§10.11, §10.12,
 §12). Production не развёрнут.
 
 ### 9.0 E2 — стартовые принципы
@@ -1278,10 +1280,36 @@ E5 documentation closure (этот slice)
   -> E6 production / operations
 ```
 
+> Обновление 2026-10-19: Screenshot Audit Pack выполнен, независимый анализ Astra получен; по нему принято архитектурное решение E5.5 (§10.12). Блок ниже — исторический порядок утверждённый в E5 closure.
+
 Объём независимого аудита (не выполняется в этом slice): architecture; security;
 performance; database; queries; maintainability; technical debt; modernization;
 UX; accessibility; SEO; public structure; функции для добавления/удаления;
 Tourist workflow; Manager workflow; Admin workflow; operations; design.
+
+### 10.12 E5.5 — Agency Operations Automation (AOA): архитектурное решение
+
+Принято E5.5-A0 (2026-10-19), **только документация**: код, миграции, маршруты,
+UI и тесты не менялись; E5 остаётся ✅ CLOSED. Полное решение —
+[`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md):
+
+- `IncomingInquiry` остаётся техническим приёмом Tourvisor и provenance;
+  вводится независимая от провайдера бизнес-сущность `Inquiry`; `Booking` — прежний
+  операционный booking Авилоны; фактические брони у оператора — отдельный домен
+  `OperatorBooking` (будущие слайсы, **не реализовано**);
+- авторитетные инварианты: ручное бронирование у оператора (никакого авто-бронирования);
+  комиссия включена в цену оператора и не добавляется сверху; комиссия/маржа/расчёты с
+  оператором никогда не попадают в клиентские документы, чат и исходящую переписку;
+  раздельные ledger'ы поступлений и платежей оператору; статусы booking / оператора /
+  оплаты / расчётов / документов независимы;
+- провизорный план AOA-01…AOA-18 с зависимостями (не 18 одновременных релизов),
+  первый релиз и опциональные расширения разделены;
+- открытые решения владельца U-1…U-10 (видимость неназначенных обращений, пороги скидок,
+  права на платежи/возвраты, примеры комиссии, первый оператор Bridge, шаблоны документов,
+  VK, e-mail отправитель/Reply-To, верификация e-mail, retention) — **не угаданы**;
+- триаж наблюдений AO-01…AO-11 — в документе E5.5;
+- production остаётся на REG.RU; Timeweb предзаказан, не production; canonical MySQL не
+  затрагивается.
 
 ## 11. Запреты без отдельного operational plan
 
@@ -1299,7 +1327,7 @@ Tourist workflow; Manager workflow; Admin workflow; operations; design.
 
 ⬜ **PENDING.** E6 начинается только после: E5 documentation closure → свежий
 Project Sources → Screenshot Audit Pack → независимый полный аудит → утверждённые
-исправления по аудиту (§10.11). Закрытие E5 ≠ production-ready.
+исправления по аудиту (§10.11) → решения по E5.5 AOA (§10.12; объём E5.5 до E6 определяется владельцем). Закрытие E5 ≠ production-ready.
 
 ### 12.1 Production platform
 

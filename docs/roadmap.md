@@ -1,6 +1,6 @@
 # Avilona_turfirma — Roadmap
 
-Актуализировано: **2026-10-01**
+Актуализировано: **2026-10-19** (E5.5-A0 added; the rest reflects the E5 closure state)
 
 ## Current state
 
@@ -8,7 +8,7 @@
 - **Current authoritative application HEAD: `c56e330685ffa8953b22c803d6dce5334c69e81b`**
 - Subject: `fix: complete final tour search polish (E5-A4)`
 - Direct parent of current application HEAD: `00ea2f0440f0a25b6ecd161aadedb804ce9e8ac2` (`fix: remove plaintext staff client credentials (E5-A3.1)`)
-- Documentation checkpoint for this application HEAD: **does not exist yet** — will be created by a separate docs-only commit on top of `c56e3306` (this file + `docs/README.md` + root `README.md`); that future HEAD is decided by Git and is not known/invented here
+- Documentation checkpoint for this application HEAD: `c68b6814381cdd1e8921946dd7bbe153a13eb66f` (`docs: close E5 and prepare final audit`), docs-only on top of `c56e3306`; E5.5-A0 is a further docs-only architecture checkpoint on top of it (its HEAD is decided by Git)
 - Documentation checkpoint after E4 closure / entering E5 (previous docs-only commit; base of the now-**HISTORICAL** Project Sources set of 2026-09-23): `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — predates ALL E5 implementation, NOT the current HEAD, NOT authoritative over the current repository
 - Application HEAD at E4 closure: `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — NOT the current HEAD
 - Documentation checkpoint after E3-A6 / entering E4 (historical): `c89e923f966f5aaa8bb972e2d6944018f8dce4a8` (`docs: close E3-A6 and advance to E4`) — NOT the current HEAD
@@ -28,7 +28,8 @@
 - **E4 — Post-redesign stabilization / resilience QA — ✅ CLOSED** (E4-A…E4-E1; final application checkpoint `55a9fcaf`)
 - **E5 — Final Tour Search / Aggregation Product Block — ✅ CLOSED at application level** (E5-A1 `9005457a`, E5-A2A `c0e16ae3`, E5-A2A.1 `d59d211e`, E5-A2B `0399d21f`, E5-A3 `137f109b`, E5-A3.1 `00ea2f04`, E5-A4 `c56e3306`; all pushed). See "E5 — tour search" below.
 - **APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.** E5 being closed does NOT mean production-ready. No production deployment/migration has happened; E5 migrations (at least `2026_10_01_000000…` and `2026_10_02_000000…`) are NOT applied to canonical MySQL `turfirma_rebuild_v4`; production Tourvisor secrets/webhook are not configured; privacy/legal provider facts are unresolved (see E5/E6 below).
-- **NEXT: Screenshot Audit Pack + independent full audit (Astra / ChatGPT Work) BEFORE E6.** Then approved audit fixes (if any), then E6. E5 is no longer NEXT.
+- **E5.5 — Agency Operations Automation (AOA): 📐 ARCHITECTURE DECISION ONLY (E5.5-A0, 2026-10-19). NOTHING IS IMPLEMENTED.** Recorded in `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. E5 stays CLOSED.
+- **NEXT:** small independent fixes from the audit triage (AO-01, AO-11, AO-10, AO-05, …), then E5.5 implementation slices (each with its own guarded plan, starting with AOA-01), then E6. The Screenshot Audit Pack is done and the independent Astra analysis was received (private, outside the repository). E5 is no longer NEXT.
 - Full verified baseline: **1393 tests / 9759 assertions**, 0 failures, 0 errors (PHPUnit 11.5.56, PHP 8.3.32, Laravel 12.65.0, SQLite `:memory:`) — final E5 baseline, re-verified in the E5 documentation-closure slice (`php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit`)
   - history: E5-A3 closure 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 closure 1233 / 8023; E2 closure 1051 / 7180; E1 closure 1001 / 7013
   - 1 PHPUnit deprecation: the PHPUnit test-runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`) — verified in current output; not a functional failure
@@ -670,8 +671,16 @@ Already solved and NOT carried forward: P-05 for `/tours` (H1/main — E5-A4); t
 
 E5 is declared **CLOSED at application level** by this documentation checkpoint on top of application checkpoint `c56e3306`. This pass changes no application code and updates no dependencies. **E5 closed ≠ production-ready.**
 
-### After E5, before final E6 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
-⬜ **NEXT**
+### E5.5 — Agency Operations Automation (AOA)
+📐 **ARCHITECTURE DECISION ONLY** (E5.5-A0, 2026-10-19). Sits between CLOSED E5 and pending E6. **No code, migration, route, UI or test exists for it.** Full decision: [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md).
+
+- Architecture: `IncomingInquiry` stays Tourvisor technical intake/provenance → new provider-independent `Inquiry` business entity → explicit conversion to at most one native `Booking` → separate `OperatorBooking` domain (provenance, import snapshots, diff, controlled approval). No U-ON / Qui-Quo dependency.
+- Provisional dependency-ordered plan AOA-01…AOA-18 in workstreams: A foundation/visibility/audit (01–02), B Inquiry (03–05), C OperatorBooking (06–07), D finances/payments/deadlines (08–11), E documents (12–13), F Bridge/API/adapters (14–15), G VK and outbound e-mail (16–17), H integrated QA (18). First release: AOA-01…AOA-10; second: deadlines, limited templates, outbound e-mail; optional: operator adapter/Bridge, VK.
+- Unresolved owner decisions U-1…U-10 (unassigned-inquiry visibility; discount/margin approvals; payment/refund permissions; commission examples; first Bridge operator; document templates/legal authority; VK community; e-mail sender/Reply-To; e-mail verification policy; retention) are recorded as open, not guessed.
+- Audit triage AO-01…AO-11 is recorded in the same document; none is fixed by E5.5-A0.
+
+### After E5 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
+✅ Screenshot Audit Pack executed; independent analysis received (private, outside the repository). Historical approved order recorded at E5 closure:
 
 Approved order:
 
@@ -684,7 +693,7 @@ E5 documentation closure -> fresh Project Sources -> Screenshot Audit Pack
 Independent audit scope: architecture; security; performance; database; queries; maintainability; technical debt; modernization; UX; accessibility; SEO; public structure; features to add/remove; Tourist workflow; Manager workflow; Admin workflow; operations; design. Not executed in the E5 documentation-closure slice.
 
 ### E6 — final release / deploy / production smoke
-⬜ **PENDING** — final production / operations stage. Starts only after the audit above. **Production is NOT deployed.**
+⬜ **PENDING** — final production / operations stage. Starts only after the audit above and the owner's decision on E5.5 scope. **Production is NOT deployed.**
 
 **Production platform**
 - Timeweb availability / provisioning when provider capacity becomes available (`web-prod-spb-01`, preordered, not production);
