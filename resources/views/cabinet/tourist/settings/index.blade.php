@@ -31,15 +31,17 @@
                 <div class="mb-3">
                     <label for="current_password" class="form-label">Текущий пароль <span class="text-danger">*</span></label>
                     <input type="password" name="current_password" id="current_password" autocomplete="current-password"
-                           class="form-control @error('current_password') is-invalid @enderror" required>
-                    @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                           class="form-control @error('current_password', 'updatePassword') is-invalid @enderror" required
+                           @error('current_password', 'updatePassword') aria-invalid="true" aria-describedby="current_password-error" @enderror>
+                    @error('current_password', 'updatePassword')<div class="invalid-feedback" id="current_password-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Новый пароль <span class="text-danger">*</span></label>
                     <input type="password" name="password" id="password" autocomplete="new-password"
-                           class="form-control @error('password') is-invalid @enderror" required aria-describedby="password-hint">
-                    @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                           class="form-control @error('password', 'updatePassword') is-invalid @enderror" required
+                           @error('password', 'updatePassword') aria-invalid="true" aria-describedby="password-error password-hint" @else aria-describedby="password-hint" @enderror>
+                    @error('password', 'updatePassword')<div class="invalid-feedback" id="password-error">{{ $message }}</div>@enderror
                     <div class="form-text" id="password-hint">Минимум 8 символов.</div>
                 </div>
 
