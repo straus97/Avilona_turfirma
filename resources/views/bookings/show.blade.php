@@ -44,11 +44,16 @@
         $touristsLabel .= ', ' . $booking->children . ' ' . str_plural($booking->children, 'ребёнок', 'ребёнка', 'детей');
     }
 
+    // children_ages допускает null-элементы (nullable|integer): неизвестный или
+    // некорректный возраст пропускается, а не подставляется. Пустой результат
+    // → null, и строка «Возраст детей» не выводится.
     $childrenAgesLabel = null;
-    if ($booking->children > 0 && $booking->children_ages && count($booking->children_ages) > 0) {
-        $childrenAgesLabel = collect($booking->children_ages)
-            ->map(fn ($age) => $age . ' ' . str_plural((int) $age, 'год', 'года', 'лет'))
-            ->implode(', ');
+    if ($booking->children > 0) {
+        $childrenAgesLabel = collect($booking->children_ages ?? [])
+            ->map(fn ($age) => is_scalar($age) && !is_bool($age) ? filter_var($age, FILTER_VALIDATE_INT) : false)
+            ->filter(fn ($age) => $age !== false && $age >= 0)
+            ->map(fn ($age) => $age . ' ' . str_plural($age, 'год', 'года', 'лет'))
+            ->implode(', ') ?: null;
     }
 
     // Следующий шаг — только информационный текст. Учитывает эффективную роль,
