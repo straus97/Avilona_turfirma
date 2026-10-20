@@ -10,7 +10,7 @@
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| **Текущий authoritative application HEAD** | **`6cbdbcdab1df4b7d7605ed22cc469c53128163a3` (`fix: handle booking children ages in admin email (AO-01)`)** — последний код-коммит (AO-FIX-01); documentation checkpoint — docs-only commit поверх него (hash определяется Git) |
+| **Live HEAD** | Определяет Git (`git rev-parse HEAD`), не фиксируется в документах. Последний проверенный тестовый checkpoint — `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (AO-FIX-06); `6cbdbcda` (AO-FIX-01) — более ранний код-коммит. Статус и порядок работ — только в `docs/roadmap.md` |
 | Предыдущие checkpoints | docs `cb6e440a` (`docs: establish E5.5 agency operations architecture`, E5.5-A0); docs `c68b6814` (`docs: close E5 and prepare final audit`); application HEAD закрытия E5 `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`) — все НЕ текущий HEAD |
 | Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
 | Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
@@ -24,7 +24,7 @@
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
 | Активный внешний documentation/source (Project Sources) checkpoint | пока что — **ИСТОРИЧЕСКИЙ набор от 2026-09-23 на `a1d72a40`** (до E5) — **STALE**; свежий набор строится из нового чистого pushed docs HEAD после этого docs-only коммита (см. §8.1) |
-| Full PHPUnit baseline | **1403 tests / 9799 assertions**, 0 failures, 0 errors (AO-FIX-01 final; SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
+| Full PHPUnit baseline | **Последний проверенный: 1478 tests / 11644 assertions**, 0 failures, 0 errors (checkpoint `4b7abff2`, AO-FIX-06; сообщён, не перезапускался в docs-slice). Ранее: AO-FIX-01 — 1403 / 9799 (SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
 | PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | 12.65.0 |
@@ -51,7 +51,7 @@ production-секреты/webhook Tourvisor не настроены. Закры�
 вывод подтверждён запуском `--display-phpunit-deprecations`). Это не
 функциональный/кодовый сбой.
 
-Текущий baseline 1403 / 9799 — финальный результат AO-FIX-01 (`6cbdbcda`).
+Последний проверенный baseline 1478 / 11644 (`4b7abff2`, AO-FIX-06); 1403 / 9799 — результат AO-FIX-01 (`6cbdbcda`).
 Предыдущий baseline 1393 / 9759 — финальный верифицированный E5 baseline, получен
 повторным полным прогоном в E5 docs-slice на checkpoint `c56e3306`
 (`C:\wamp\bin\php\php8.3.32\php.exe -d xdebug.mode=off -d memory_limit=2048M
@@ -1301,7 +1301,7 @@ implementation gaps, план AOA-01…AOA-18, статус AO-находок и
 приёмом Tourvisor и provenance; планируется независимая от провайдера бизнес-сущность
 `Inquiry`, отдельный домен `OperatorBooking`, раздельные ledger'ы — **ничего из этого
 не реализовано**. Реализовано в рамках E5.5 только: архитектурный checkpoint E5.5-A0
-(docs) и AO-FIX-01 (`6cbdbcda`). Production остаётся на REG.RU; Timeweb предзаказан, не
+(docs) и малые исправления AO-FIX-01…06 (см. roadmap §A7). Production остаётся на REG.RU; Timeweb предзаказан, не
 production; canonical MySQL не затрагивается.
 ## 11. Запреты без отдельного operational plan
 

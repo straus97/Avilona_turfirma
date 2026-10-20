@@ -1,6 +1,6 @@
 # Avilona_turfirma — Canonical Roadmap
 
-Updated: **2026-10-19** (ROADMAP-SYNC-01)
+Updated: **2026-10-20** (ROADMAP-SYNC-02; previous sync ROADMAP-SYNC-01, 2026-10-19)
 
 > **SINGLE SOURCE OF TRUTH.** This file is the one canonical document for project stages, current status, implementation order, owner-approved decisions, unresolved business decisions, upcoming work and production readiness. `README.md`, `docs/README.md`, the E5.5 architecture document, generated Handoff and Project Sources must **defer to this file** for stage/status/NEXT statements and must not keep competing roadmaps. Architecture documents keep technical design and rationale only. Generated Handoff / Project Sources are versioned **snapshots** of this repository, never a competing source. Where code and this file disagree about *current behaviour*, the code at the pushed HEAD wins; where they disagree about *approved intent*, this file wins and the difference is an implementation gap (§A5).
 
@@ -31,23 +31,23 @@ This file has two parts: **Part A — canonical plan** (§A1–§A9, kept curren
 | E5 — Final tour search (Tourvisor → IncomingInquiry → native Booking) | ✅ FULLY CLOSED AND DOCUMENTED (application level; E5 is **not** reopened by E5.5) |
 | **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE** |
 | E5.5-A0 — architecture checkpoint | ✅ CLOSED AND PUSHED (`cb6e440a`, docs only) |
-| AO-FIX-01 — booking children ages in admin e-mail | ✅ CLOSED AND PUSHED (`6cbdbcdab1df4b7d7605ed22cc469c53128163a3`) |
+| AO-FIX-01 … AO-FIX-06 — small audit fixes (§A7) | ✅ CLOSED AND PUSHED (last: `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9`) |
 | E6 — Production deployment / operations | ⬜ PENDING |
 | **Production** | ❌ **NOT DEPLOYED** (current REG.RU hosting remains in use) |
 
-**Nothing in E5.5 beyond the architecture checkpoint and AO-FIX-01 is implemented.** No `Inquiry`, `OperatorBooking`, ledger, audit-event, Bridge, VK or outbound-e-mail feature exists in code.
+**Nothing in E5.5 beyond the architecture checkpoint and the small AO-FIX-01…06 fixes (§A7) is implemented.** The owner-approved access and assignment rules (§A3–§A4) are approved requirements only; the Manager privacy gaps in §A5 are **not fixed**. No `Inquiry`, `OperatorBooking`, ledger, audit-event, Bridge, VK or outbound-e-mail feature exists in code.
 
 ## A2. Current repository state
 
 - Branch: `db-rebuild-stage3`.
-- **Application HEAD (last code commit):** `6cbdbcdab1df4b7d7605ed22cc469c53128163a3` — `fix: handle booking children ages in admin email (AO-01)` (touches one e-mail Blade view and one test). The documentation checkpoint carrying this file is a docs-only commit on top of it; its hash is determined by Git and is not hard-coded here.
-- **Full verified test baseline (AO-FIX-01 final): 1403 tests / 9799 assertions, 0 failures, 0 errors** (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`). Documentation-only commits do not rerun the suite.
-  - history: E5 closure 1393 / 9759; E5-A3 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 1233 / 8023; E2 1051 / 7180; E1 1001 / 7013.
+- **Live HEAD:** Git is authoritative (`git rev-parse HEAD`); this file deliberately does not track it commit by commit. Distinct reference points: the *last verified test checkpoint* (below); the *architectural decision checkpoint* `cb6e440a`; *historical Project Sources checkpoints* (ledger below). No workflow may require every application commit to rewrite a SHA in several documents.
+- **Last verified test checkpoint:** application commit `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (`fix: correct narrow tourist chat header layout (AO-05)`) — **1478 tests / 11644 assertions, 0 failures, 0 errors** (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`), as reported by AO-FIX-06. This is the last *reported* baseline; ROADMAP-SYNC-02 is documentation-only and did **not** rerun the suite. Documentation-only commits never rerun it.
+  - history: AO-FIX-02 1414 / 9905; AO-FIX-01 1403 / 9799; E5 closure 1393 / 9759; E5-A3 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 1233 / 8023; E2 1051 / 7180; E1 1001 / 7013.
   - 1 PHPUnit deprecation: the runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`); not a functional failure.
   - Canonical MySQL is never touched by tests. Full-suite command: `php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit` with the project PHP.
 - **Infrastructure:** production hosting remains **REG.RU**. Timeweb Cloud server `web-prod-spb-01` (2 vCPU / 4 GB / 50 GB NVMe, Saint Petersburg) is **PREORDERED / waiting for provider capacity — NOT production** (not independently re-verified in ROADMAP-SYNC-01). No DNS change; domains stay with REG.RU. No private key paths or secrets are recorded in the repository.
-- **Canonical MySQL `turfirma_rebuild_v4`:** E5 migrations `2026_10_01_000000…` and `2026_10_02_000000…` are **not applied**. AO-FIX-01 added no migration.
-- **Project Sources:** external versioned snapshots only. The set of 2026-09-23 (`a1d72a40`) is historical. See `docs/README.md` §8.1 for the refresh workflow.
+- **Canonical MySQL `turfirma_rebuild_v4`:** E5 migrations `2026_10_01_000000…` and `2026_10_02_000000…` are **not applied**. The AO fixes added no migration.
+- **Project Sources:** external versioned snapshots only. All existing sets (2026-09-23 `a1d72a40`, 2026-10-01 `c68b6814`) are historical and predate the AO fixes. **Not regenerated in ROADMAP-SYNC-02:** the existing generator contains hard-coded HEAD assumptions and a destructive promotion step, so a separate reviewed guarded generator-modernization task is required before any new authoritative package. Existing archives and wrappers are preserved unmodified. See `docs/README.md` §8.1.
 - **Private evidence (never in Project Sources):** `C:\Avilona_private\E5\…`, `C:\Avilona_private\E4\…`; Screenshot Audit Pack under `C:\Avilona_private\Audit\…`. The independent Astra analysis is private and not stored in this repository.
 - Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — `BUSINESS_DECISION_REQUIRED`, must be decided before E6.
 
@@ -114,9 +114,9 @@ Admin may: see all inquiries; see all bookings; see all related conversations fo
 
 Further architectural invariants (documents, Bridge, platform) are in `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md` §3.
 
-## A5. E5.5 implementation gaps (verified against code at `6cbdbcda`)
+## A5. E5.5 implementation gaps (verified against code at `6cbdbcda`; later commits touched no inquiry/visibility code)
 
-E5's `IncomingInquiry` workflow predates the owner decisions in §A3–§A4. E5 stays CLOSED (its closure was correct for its own scope); the following are **gaps to be closed by AOA-02 and AOA-04**, not defects reopening E5:
+E5's `IncomingInquiry` workflow predates the owner decisions in §A3–§A4. E5 stays CLOSED (its closure was correct for its own scope); the following are **gaps to be closed by AOA-02 and AOA-04**, not defects reopening E5. **HIGH-PRIORITY SECURITY/PRIVACY GAP: the Manager visibility boundary is not enforced today and must be closed server-side before further staff workflows are built.** Hiding UI links is not authorization; enforcement is required on every route, data query, JSON response, document, chat and search surface.
 
 | Area | Current behaviour (code) | Required (§A3–§A4) |
 |---|---|---|
@@ -170,25 +170,43 @@ After AOA-18 (not slices, not renumbered):
 
 ## A7. Audit observations (AO) status
 
-Small independent fixes are named by their AO id; slice naming beyond `AO-FIX-01` is not pre-assigned.
+Small independent fixes are named `AO-FIX-NN` (chronological fix id) and cite the AO finding they close. Each commit below was verified by ROADMAP-SYNC-02 to be an ancestor of the checkpoint `4b7abff2` in `db-rebuild-stage3`.
+
+### Closed
+
+| Fix id | AO | What | Commit | Status |
+|---|---|---|---|---|
+| AO-FIX-01 | AO-01 | Admin BookingCreated e-mail `children_ages` rendering | `6cbdbcdab1df4b7d7605ed22cc469c53128163a3` | ✅ CLOSED |
+| AO-FIX-02 | AO-11 | Tourist password error-bag display and form isolation | `f60b6c2a53b27db271ba2039a46bfd585c258507` | ✅ CLOSED |
+| AO-FIX-03 | — (follow-up found during AO-FIX-01/02 work) | Nullable child ages in client e-mail templates | `81fd1370b78a21988369b8e36e3ac2aad0fba336` | ✅ CLOSED |
+| AO-FIX-04 | — (follow-up) | Invalid child ages in Booking `show` view | `d5fa53c2be7bee49efbe14f8704da195f1befcb3` | ✅ CLOSED |
+| AO-FIX-05 | AO-10 | Russian validation localization | `c1955d7c44a4ac2c64c32a6a25ac8827d20d020d` | ✅ CLOSED |
+| AO-FIX-06 | AO-05 | Tourist chat header on narrow screens | `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` | ✅ CLOSED |
+| AO-VERIFY-01 | legacy `str_plural()` helper check | Helper is autoloaded and renders valid inputs correctly | none — no code change | ✅ **VERIFIED_WORKING** |
+
+Only the findings listed above are claimed fixed; no unrelated AO finding is implied closed.
+
+### Open
 
 | ID | Observation | Status |
 |---|---|---|
-| AO-01 | Admin booking e-mail `children_ages` error | ✅ **CLOSED** at `6cbdbcda` (AO-FIX-01) |
-| AO-11 | Tourist password validation error-bag mismatch | **OPEN** — small independent fix |
-| AO-10 | Mixed English/Russian validation messages | **OPEN** — focused fix |
-| AO-05 | Tourist chat header at 320 px | **OPEN** — focused responsive fix |
-| AO-02 / AO-03 | Chat wrapping and timestamp consistency | **OPEN** — before communications expansion (AOA-16/17) |
-| AO-04 | Admin log exposes absolute filesystem paths | **OPEN** — resolve in secure audit/log UI work (AOA-01) |
+| AO-02 | Long unbroken chat message overflow | **OPEN** — before communications expansion (AOA-16/17) |
+| AO-03 | Chat timestamp consistency | **OPEN** — before communications expansion (AOA-16/17) |
+| AO-04 | Admin technical logs expose absolute filesystem paths | **OPEN** — resolve in secure audit/log UI work (AOA-01) |
 | AO-06 | Unverified-e-mail Tourist reaches cabinet | **BUSINESS_DECISION_REQUIRED** — business/security policy (U-9) |
-| AO-07 | 403/404 ownership-denial inconsistency | **REVIEW** — not automatically a vulnerability |
-| AO-08 | Header switches to hamburger at 1200 px | **UX REVIEW** — not automatically a defect |
-| AO-09 | Booking can reach confirmed/completed with zero paid | **BUSINESS RULE REVIEW** — status and payment dimensions stay independent until the owner approves otherwise |
-| — | Possible legacy `str_plural()` use in booking-created / trip-reminder templates (reported by AO-FIX-01) | **VERIFY_NEEDED — LEGACY str_plural() HELPER** (below) |
+| AO-07 | 403/404 ownership-denial inconsistency | **REVIEW** — not automatically a vulnerability; revisit with AOA-02 visibility work |
+| AO-08 | Public header switches to hamburger at 1200 px | **UX REVIEW** — not automatically a defect |
+| AO-09 | Booking can reach confirmed/completed with zero paid | **BUSINESS RULE REVIEW** — Booking status, client payment and operator settlement are independent by the owner's financial architecture; **no rule that a completed Booking must be fully paid is approved or implied** |
+| **AO-12** | **ADMIN CHAT NARROW-VIEWPORT OVERFLOW** — on `/cabinet/admin/chats/{id}` a very long manager name makes the page ~395 px wide at 320–390 px viewports. Independently reproduced during AO-FIX-06; pre-existing; separate Admin chat header markup (not touched by AO-FIX-06). *Id checked: AO-01…AO-11 and AO-FIX-01…06 are the only existing ids; AO-12 is unused.* | **OPEN** — focused responsive fix, scheduled **before the final integrated Browser QA (AOA-18)**; not implemented |
 
-### VERIFY_NEEDED — LEGACY `str_plural()` HELPER
+### Verification / follow-up items (not stages)
 
-Reported during AO-FIX-01 as possible legacy use; **not verified as a defect and not to be classified as one without evidence.** A later small read-only/focused check must determine: where the helper is called; whether it exists in the current runtime; whether the affected templates render successfully. Scoping note only (not a verification): a guarded `str_plural(int, string, string, string)` definition exists in `app/Helpers/helpers.php`, and calls exist in `app/Mail/TripReminder.php`, `resources/views/bookings/{index,show}.blade.php`, `resources/views/emails/bookings/created.blade.php` and `resources/views/emails/bookings/trip-reminder.blade.php`; whether that file is autoloaded in the runtime and whether those views/mails render was **not** checked.
+| Item | Note | Where |
+|---|---|---|
+| CSS cache-busting | `public/css/cabinet-e3.css` is loaded without explicit cache-busting; stale browser-cached CSS can delay visibility of new responsive styling. No asset-loading change made. | Deployment-readiness / **E6 verification item** |
+| Client-facing `BookingCreated` mailable | AO-FIX-03 reported it is **not dispatched** by the ordinary Booking creation flow. Not wired up automatically. | Potential product behaviour to review under communication automation (AOA-16) |
+| Child-age display surfaces | AO-FIX-04 did not audit every surface that shows child ages. | Small QA follow-up within AOA-18 integrated UI regression |
+| Localization polish | Minor Russian wording differences between Tourist and staff forms; raw list values such as "pdf, doc". Non-blocking. | Polish, no schedule |
 
 ## A8. Unresolved owner decisions (not guessed)
 
@@ -212,11 +230,14 @@ Reported during AO-FIX-01 as possible legacy use; **not verified as a defect and
 
 **Order of upcoming work (PROPOSED; one semantic slice at a time, each with its own guarded plan):**
 
-1. **NEXT — AO-11** (Tourist password validation error-bag mismatch): small independent fix.
-2. VERIFY_NEEDED `str_plural()` read-only/focused check (may run before or after AO-11; read-only).
-3. AO-10 → AO-05 (focused fixes).
-4. **AOA-01** (audit foundation) → **AOA-02** (access-control policy layer implementing §A3) → AOA-03 → AOA-04 …, in the dependency order of §A6. AO-02/AO-03 before AOA-16/17.
-5. AOA-18 QA gate → final independent audit → E6.
+1. **NEXT — AOA-01** (data visibility boundaries and business audit foundation; see the dependency note below). The small AO-FIX series (AO-FIX-01…06) is complete.
+2. **AOA-02** (visibility & assignment policy layer implementing §A3 across all surfaces) → AOA-03 → AOA-04 …, in the dependency order of §A6. AO-02/AO-03 before AOA-16/17.
+3. AO-12 (Admin chat narrow-viewport overflow): focused fix, before AOA-18.
+4. AOA-18 integrated QA gate (incl. child-age surface follow-up) → final independent audit → E6 (incl. CSS cache-busting verification).
+
+### AOA-01 / AOA-02 dependency note
+
+Slices are **NOT STARTED**; the §A6 numbering and dependency order are **unchanged**. Concrete tension: AOA-01 (audit foundation, no dependency) precedes AOA-02 (policy layer), yet the Manager visibility gap (§A5) is an exposure that exists *today*, and audit events built first would record activity on surfaces whose access rules are not yet enforced. **Proposed narrow adjustment (PROPOSED, not applied; subject to owner approval of the AOA-01 guarded plan):** AOA-01 additionally includes a *read-only inventory of every staff data surface* (routes, queries, JSON, documents, chat, search, counts) that seeds the AOA-02 visibility matrix, and — if the owner does not want to leave it exposed until AOA-02 — minimal server-side Manager scoping of `IncomingInquiry` list/view/claim. The full policy layer, `Inquiry` entity and assignment workflow stay in AOA-02…AOA-04 exactly as in §A6.
 
 **Production readiness.** `APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.` Production is **not deployed**; the project is **not production-ready** until E6 closes. Known pre-production items: pending E5 migrations on canonical/production; Tourvisor production secrets/webhook; privacy/legal provider facts; opening hours; separate runtime/dependency modernization pass; hosting move REG.RU → Timeweb (if pursued). See Part B "E6".
 
@@ -857,7 +878,7 @@ Already solved and NOT carried forward: P-05 for `/tours` (H1/main — E5-A4); t
 E5 is declared **CLOSED at application level** by this documentation checkpoint on top of application checkpoint `c56e3306`. This pass changes no application code and updates no dependencies. **E5 closed ≠ production-ready.**
 
 ### E5.5 — Agency Operations Automation (AOA)
-🟢 **ACTIVE** — status, owner decisions, implementation gaps, the AOA-01…AOA-18 roadmap, AO findings and NEXT are **canonical in Part A of this file (§A1–§A9)**. The technical architecture, rationale and invariants are in [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md) (reference, not a competing roadmap). Sits between CLOSED E5 and pending E6; only E5.5-A0 (architecture, docs) and AO-FIX-01 (`6cbdbcda`) are done.
+🟢 **ACTIVE** — status, owner decisions, implementation gaps, the AOA-01…AOA-18 roadmap, AO findings and NEXT are **canonical in Part A of this file (§A1–§A9)**. The technical architecture, rationale and invariants are in [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md) (reference, not a competing roadmap). Sits between CLOSED E5 and pending E6; only E5.5-A0 (architecture, docs) and the small AO-FIX-01…06 fixes (§A7) are done.
 
 ### After E5 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
 ✅ Screenshot Audit Pack executed; independent analysis received (private, outside the repository). **Historical** — the current order of work is §A9. Approved order recorded at E5 closure:

@@ -8,10 +8,10 @@
 
 - Project path: `C:\wamp\www\Avilona_turfirma`
 - Branch: `db-rebuild-stage3`
-- **Application HEAD (последний код-коммит): `6cbdbcdab1df4b7d7605ed22cc469c53128163a3` — `fix: handle booking children ages in admin email (AO-01)`**; documentation checkpoint — docs-only commit поверх него (hash определяется Git).
-- Stage 0–13, E1, E2, E3, E4 — ✅ CLOSED; **E5 — ✅ FULLY CLOSED** (application level); **E5.5 Agency Operations Automation — 🟢 ACTIVE** (закрыты только архитектурный checkpoint E5.5-A0 и AO-FIX-01; **остальное не реализовано**); E6 — ⬜ PENDING.
+- **Live HEAD определяет Git** (`git rev-parse HEAD`); здесь он не фиксируется. Последний проверенный тестовый checkpoint — `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (AO-FIX-06).
+- Stage 0–13, E1, E2, E3, E4 — ✅ CLOSED; **E5 — ✅ FULLY CLOSED** (application level); **E5.5 Agency Operations Automation — 🟢 ACTIVE** (закрыты только архитектурный checkpoint E5.5-A0 и малые исправления AO-FIX-01…06; **остальное не реализовано**); E6 — ⬜ PENDING.
 - **Production НЕ развёрнут** (используется текущий хостинг REG.RU). Закрытие приложения ≠ production-ready.
-- Full PHPUnit baseline: **1403 tests / 9799 assertions**, 0 failures, 0 errors (AO-FIX-01; PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой.
+- Last verified full PHPUnit baseline: **1478 tests / 11644 assertions**, 0 failures, 0 errors (checkpoint `4b7abff2`, AO-FIX-06; PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой.
 - Следующий шаг, одобренные решения владельца (доступ Manager/Admin, назначение обращений, финансовые правила), открытые решения и план AOA — **только в [`docs/roadmap.md`](docs/roadmap.md)**.
 
 Внешние Project Sources / Handoff — версионированные снимки этого репозитория, а не отдельный источник истины. Набор от 2026-09-23 (`a1d72a40`) — **исторический**. Процесс refresh — `docs/README.md` §8.1.
