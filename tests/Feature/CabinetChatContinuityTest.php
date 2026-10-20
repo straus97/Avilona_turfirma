@@ -651,6 +651,41 @@ class CabinetChatContinuityTest extends TestCase
         $this->assertMatchesRegularExpression('/\.tc-chat__panel\s*\{[^}]*min-width:\s*0;/s', $css);
     }
 
+    public function test_tourist_chat_header_wraps_instead_of_squeezing_the_manager_name(): void
+    {
+        [$tourist, $manager, $booking] = $this->scenario();
+
+        $html = $this->actingAs($tourist)->get(route('cabinet.chat', $booking->id))->assertOk()->getContent();
+
+        // Блок имени держится на классе, а не на inline flex:1 — иначе CSS не
+        // может задать ему базовую ширину, и на 320px имя ломалось на 4 строки
+        // под бейджем статуса (AO-05).
+        $this->assertStringContainsString('tc-chat__header-main', $html);
+        $this->assertStringNotContainsString('style="flex: 1; min-width: 0;"', $html);
+        // Имя, контекст заявки и статус остаются в шапке: ничего не скрыто.
+        $this->assertStringContainsString($manager->name, $html);
+        $this->assertStringContainsString('Заявка #' . $booking->id, $html);
+
+        $css = file_get_contents(public_path('css/cabinet-e3.css'));
+        $this->assertNotFalse($css);
+
+        // Шапка переносится, а не ужимает блок имени до ~56px.
+        $this->assertMatchesRegularExpression('/\.tc-chat__header\s*\{\s*flex-wrap:\s*wrap;\s*\}/s', $css);
+        $this->assertMatchesRegularExpression(
+            '/\.tc-chat__header-main\s*\{[^}]*flex:\s*1\s+1\s+11rem;[^}]*min-width:\s*0;/s',
+            $css
+        );
+        // Бейдж и аватар не сжимаются, строка «Заявка # • страна» не обрезается многоточием.
+        $this->assertMatchesRegularExpression(
+            '/\.tc-chat__header\s*>\s*\.status-badge\s*\{\s*flex:\s*0\s+0\s+auto;/s',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.tc-chat__header-main\s+\.tc-thread__sub\s*\{[^}]*white-space:\s*normal;/s',
+            $css
+        );
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------

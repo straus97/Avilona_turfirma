@@ -81,7 +81,7 @@
                     <span class="user-avatar" style="width: 44px; height: 44px;" aria-hidden="true">
                         {{ Str::upper(Str::substr($currentBooking->manager->name, 0, 1)) }}
                     </span>
-                    <div style="flex: 1; min-width: 0;">
+                    <div class="tc-chat__header-main">
                         <h2 class="mb-0" style="font-size: 1rem; font-weight: 600;">{{ $currentBooking->manager->name }}</h2>
                         <div class="tc-thread__sub">
                             Заявка #{{ $currentBooking->id }} • {{ $currentBooking->destination_country }}@if($currentBooking->destination_city), {{ $currentBooking->destination_city }}@endif

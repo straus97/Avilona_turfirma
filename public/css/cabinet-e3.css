@@ -1308,6 +1308,30 @@ body {
     border-bottom: 1px solid var(--cabinet-border);
 }
 
+/* Шапка переписки (AO-05). Раньше аватар, блок имени и статус-бейдж стояли в
+   одной строке без переноса, а бейдж (nowrap, ~122px) и аватар забирали
+   большую часть ширины: на 320px колонке имени оставалось ~56px — имя
+   менеджера ломалось на 4 строки, длинное слово вылезало под бейдж, а строка
+   «Заявка # • страна» обрезалась многоточием. Теперь шапка переносится: блок
+   имени получает минимальную базу 11rem и растягивается, а когда рядом с ним
+   не помещается бейдж (узкий экран либо узкая панель на 768px), бейдж
+   уходит на вторую строку целиком. Все элементы остаются в потоке, ничего
+   не скрывается. */
+.tc-chat__header { flex-wrap: wrap; }
+
+.tc-chat__header > .user-avatar,
+.tc-chat__header > .status-badge { flex: 0 0 auto; }
+
+.tc-chat__header-main { flex: 1 1 11rem; min-width: 0; }
+
+.tc-chat__header-main h2 { overflow-wrap: anywhere; }
+
+.tc-chat__header-main .tc-thread__sub {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
 .tc-chat__messages {
     flex: 1 1 auto;
     display: flex;
