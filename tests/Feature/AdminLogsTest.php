@@ -48,7 +48,7 @@ class AdminLogsTest extends TestCase
         $html = $this->actingAs($admin)->get(route('cabinet.admin.logs'))->assertOk()->getContent();
 
         $this->assertStringContainsString('Логи системы', $html);
-        $this->assertStringContainsString('Последние 200 строк', $html);
+        $this->assertStringContainsString('Последние записи', $html);
         $this->assertStringContainsString('Журнал приложения', $html);
     }
 

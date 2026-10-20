@@ -131,6 +131,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::post('/settings/notifications', [\App\Http\Controllers\Admin\AdminController::class, 'updateNotifications'])->name('settings.notifications');
         Route::post('/settings/clear-cache', [\App\Http\Controllers\Admin\AdminController::class, 'clearCache'])->name('clear-cache');
         Route::get('/logs', [\App\Http\Controllers\Admin\AdminController::class, 'logs'])->name('logs');
+        Route::get('/audit', [\App\Http\Controllers\Admin\AuditController::class, 'index'])->name('audit');
         Route::delete('/profile/account', [\App\Http\Controllers\Admin\AdminController::class, 'destroyAccount'])->name('destroy-account');
     });
 });

@@ -32,21 +32,23 @@ This file has two parts: **Part A — canonical plan** (§A1–§A9, kept curren
 | **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE** |
 | E5.5-A0 — architecture checkpoint | ✅ CLOSED AND PUSHED (`cb6e440a`, docs only) |
 | AO-FIX-01 … AO-FIX-06 — small audit fixes (§A7) | ✅ CLOSED AND PUSHED (last: `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9`) |
+| AOA-01-I1 — business audit foundation, safe Admin log/audit UI (AO-04), staff access matrix | ✅ COMPLETED (commit `feat: establish AOA business audit foundation (AOA-01-I1)`); **AOA-01 as a whole stays 🟢 ACTIVE — AOA-01-I2 is NEXT** |
 | E6 — Production deployment / operations | ⬜ PENDING |
 | **Production** | ❌ **NOT DEPLOYED** (current REG.RU hosting remains in use) |
 
-**Nothing in E5.5 beyond the architecture checkpoint and the small AO-FIX-01…06 fixes (§A7) is implemented.** The owner-approved access and assignment rules (§A3–§A4) are approved requirements only; the Manager privacy gaps in §A5 are **not fixed**. No `Inquiry`, `OperatorBooking`, ledger, audit-event, Bridge, VK or outbound-e-mail feature exists in code.
+**Nothing in E5.5 beyond the architecture checkpoint, the small AO-FIX-01…06 fixes (§A7) and AOA-01-I1 is implemented.** AOA-01-I1 added only: the append-only `audit_events` table with its writer (`AuditRecorder`, **not yet wired into any business process**), the Admin-only audit page (`/cabinet/admin/audit`), a safe Admin technical-log summary (AO-04), and the read-only staff access matrix [`docs/AOA-01-I1-staff-access-surface-matrix-2026-10-20.md`](AOA-01-I1-staff-access-surface-matrix-2026-10-20.md) (evidence, not a roadmap). The owner-approved access and assignment rules (§A3–§A4) are approved requirements only; the Manager privacy gaps in §A5 are **not fixed** (reproduced at runtime in the matrix: G1–G8). No `Inquiry`, `OperatorBooking`, ledger, Bridge, VK or outbound-e-mail feature exists in code.
 
 ## A2. Current repository state
 
 - Branch: `db-rebuild-stage3`.
 - **Live HEAD:** Git is authoritative (`git rev-parse HEAD`); this file deliberately does not track it commit by commit. Distinct reference points: the *last verified test checkpoint* (below); the *architectural decision checkpoint* `cb6e440a`; *historical Project Sources checkpoints* (ledger below). No workflow may require every application commit to rewrite a SHA in several documents.
 - **Last verified test checkpoint:** application commit `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (`fix: correct narrow tourist chat header layout (AO-05)`) — **1478 tests / 11644 assertions, 0 failures, 0 errors** (PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`), as reported by AO-FIX-06. This is the last *reported* baseline; ROADMAP-SYNC-02 is documentation-only and did **not** rerun the suite. Documentation-only commits never rerun it.
+  - AOA-01-I1 (PHP 8.4.13, same command, SQLite `:memory:`): **1528 tests / 11806 assertions, 0 failures, 0 errors** — +50 tests from the new `AuditEventFoundationTest` (31), `AdminAuditPageTest` (12) and `AdminTechnicalLogSafetyTest` (7); one existing assertion label updated in `AdminLogsTest`. Same single deprecation notice.
   - history: AO-FIX-02 1414 / 9905; AO-FIX-01 1403 / 9799; E5 closure 1393 / 9759; E5-A3 1383 / 9682; E4 closure 1286 / 8628; E4 entry 1242 / 8056; E3-A5 1233 / 8023; E2 1051 / 7180; E1 1001 / 7013.
   - 1 PHPUnit deprecation: the runner notice "Your XML configuration validates against a deprecated schema" (`phpunit.xml`); not a functional failure.
   - Canonical MySQL is never touched by tests. Full-suite command: `php -d xdebug.mode=off -d memory_limit=2048M vendor/bin/phpunit` with the project PHP.
 - **Infrastructure:** production hosting remains **REG.RU**. Timeweb Cloud server `web-prod-spb-01` (2 vCPU / 4 GB / 50 GB NVMe, Saint Petersburg) is **PREORDERED / waiting for provider capacity — NOT production** (not independently re-verified in ROADMAP-SYNC-01). No DNS change; domains stay with REG.RU. No private key paths or secrets are recorded in the repository.
-- **Canonical MySQL `turfirma_rebuild_v4`:** E5 migrations `2026_10_01_000000…` and `2026_10_02_000000…` are **not applied**. The AO fixes added no migration.
+- **Canonical MySQL `turfirma_rebuild_v4`:** E5 migrations `2026_10_01_000000…` and `2026_10_02_000000…` are **not applied**. The AO fixes added no migration. The AOA-01-I1 migration `2026_10_20_000000_create_audit_events_table` is **not applied** either and was **tested only on SQLite** (PHPUnit `:memory:` and a disposable file: migrate → rollback → migrate); MySQL validation is required before E6 (see the matrix document §5).
 - **Project Sources:** external versioned snapshots only. All existing sets (2026-09-23 `a1d72a40`, 2026-10-01 `c68b6814`) are historical and predate the AO fixes. **Not regenerated in ROADMAP-SYNC-02:** the existing generator contains hard-coded HEAD assumptions and a destructive promotion step, so a separate reviewed guarded generator-modernization task is required before any new authoritative package. Existing archives and wrappers are preserved unmodified. See `docs/README.md` §8.1.
 - **Private evidence (never in Project Sources):** `C:\Avilona_private\E5\…`, `C:\Avilona_private\E4\…`; Screenshot Audit Pack under `C:\Avilona_private\Audit\…`. The independent Astra analysis is private and not stored in this repository.
 - Opening hours remain **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** (home 10:00–20:00 weekdays vs contacts 11:00–20:00 by appointment) — `BUSINESS_DECISION_REQUIRED`, must be decided before E6.
@@ -126,7 +128,7 @@ E5's `IncomingInquiry` workflow predates the owner decisions in §A3–§A4. E5 
 | Close (`IncomingInquiryPolicy::close`) | Any staff may close while unassigned | Re-evaluate: unassigned inquiries are not visible to Managers |
 | Reassign | Admin only (matches), but **no required reason and no previous/new/actor/timestamp history** (`IncomingInquiryWorkflow::reassign`) | Required reason + durable history readable by Admin |
 | Client lookup (`IncomingInquiryClientMatcher`) | Searches active Tourist accounts by name/e-mail/phone | Must not expose another employee's booking/correspondence history; **not audited beyond the matcher in this task** |
-| Other surfaces (Booking lists, search, AJAX/JSON, API, counts, notifications, attachments, chat endpoints, document links) | **Not audited in ROADMAP-SYNC-01** | AOA-02 must produce and test a per-surface visibility matrix |
+| Other surfaces (Booking lists, search, AJAX/JSON, API, counts, notifications, attachments, chat endpoints, document links) | **Inventoried read-only in AOA-01-I1** — see the [access matrix](AOA-01-I1-staff-access-surface-matrix-2026-10-20.md): Booking/chat/message/document scoping is VERIFIED server-side; confirmed gaps G5 (tourist directory), G6 (service-level idempotent returns skip authorization), G7 (Booking reassignment has no reason/history), G8 (former manager keeps notification preview). **None fixed.** | AOA-02 turns the matrix into the policy layer and regression tests |
 | Manager-created / Admin-created `Inquiry` | Does not exist (no manual creation; `Inquiry` entity not built) | AOA-03 / AOA-04 |
 | Admin chat write | Existing E3 contract (read any, write only when assigned) | Unchanged |
 
@@ -134,11 +136,11 @@ E5's `IncomingInquiry` workflow predates the owner decisions in §A3–§A4. E5 
 
 The AOA-01 … AOA-18 identifiers and titles below are the **project's dependency-ordered plan as organised in the E5.5-A0 checkpoint**. They are **not** a verified mapping to the private Astra report (which is not available in this repository); if that report is later supplied, reconcile by adding a cross-reference column — do **not** renumber silently, because AOA-NN is already cited in the E5.5 architecture document and other docs. This is a plan of **18 sequenced slices, not 18 simultaneous releases and not an irreversible requirement for the initial release.** Each slice gets its own guarded plan (exact allowed paths), tests and commit; the **Depends on** column is the binding part, the release grouping is a recommendation the owner may re-cut.
 
-Implementation status of every slice below: **NOT STARTED** (nothing implemented).
+Implementation status of every slice below: **NOT STARTED**, except **AOA-01**, which is **ACTIVE**: internal slice **I1 is completed** (audit foundation, safe Admin audit/log UI, access matrix), and **I2 (Manager visibility scoping and atomic Admin assignment/reassignment with audit) is NEXT** — its minimum change set is in §4 of the access matrix. I2 is not started.
 
 | # | Workstream | Slice | Depends on | Requirement status | Blocked by |
 |---|---|---|---|---|---|
-| AOA-01 | A Data visibility & audit | Append-only business audit events + safe staff audit/log UI (covers AO-04) | — | PROPOSED IMPLEMENTATION | — |
+| AOA-01 | A Data visibility & audit | Append-only business audit events + safe staff audit/log UI (covers AO-04). **I1 ✅ completed** (foundation + UI + access matrix; no business process instrumented yet). **I2 NEXT**: server-side Manager visibility for `IncomingInquiry` + atomic Admin assignment/reassignment with audit. Overall: 🟢 ACTIVE, not closed | — | I1 IMPLEMENTED / I2 PROPOSED IMPLEMENTATION | — |
 | AOA-02 | A Data visibility & audit | Visibility & assignment **policy layer** implementing §A3 across all surfaces (policy/surface matrix, eligible-employee rule) | AOA-01 | APPROVED REQUIREMENT (§A3) / PROPOSED IMPLEMENTATION | — (former U-1 resolved) |
 | AOA-03 | B Inquiry | Provider-independent `Inquiry` entity, additive migration, link/backfill from `IncomingInquiry` as provenance | AOA-02 | PROPOSED IMPLEMENTATION | — |
 | AOA-04 | B Inquiry | Manual Inquiry creation, ownership, responsibility & assignment per §A4, Admin allocation, reassignment with reason + history | AOA-03 | APPROVED REQUIREMENT (§A4) / PROPOSED IMPLEMENTATION | — (former U-1 resolved) |
@@ -182,6 +184,7 @@ Small independent fixes are named `AO-FIX-NN` (chronological fix id) and cite th
 | AO-FIX-04 | — (follow-up) | Invalid child ages in Booking `show` view | `d5fa53c2be7bee49efbe14f8704da195f1befcb3` | ✅ CLOSED |
 | AO-FIX-05 | AO-10 | Russian validation localization | `c1955d7c44a4ac2c64c32a6a25ac8827d20d020d` | ✅ CLOSED |
 | AO-FIX-06 | AO-05 | Tourist chat header on narrow screens | `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` | ✅ CLOSED |
+| AOA-01-I1 | AO-04 | Admin technical-log screen no longer prints raw `laravel.log` text (stack traces carried absolute server paths, SQL, e-mails, tokens). Reproduced first with a synthetic log (5 of 7 new regression tests failed on the old viewer), then replaced by a bounded, sanitized summary (time, level, short message; no traces/context/paths). The log file, its location and rotation are untouched and remain available to server operators. | commit `feat: establish AOA business audit foundation (AOA-01-I1)` | ✅ CLOSED |
 | AO-VERIFY-01 | legacy `str_plural()` helper check | Helper is autoloaded and renders valid inputs correctly | none — no code change | ✅ **VERIFIED_WORKING** |
 
 Only the findings listed above are claimed fixed; no unrelated AO finding is implied closed.
@@ -192,7 +195,6 @@ Only the findings listed above are claimed fixed; no unrelated AO finding is imp
 |---|---|---|
 | AO-02 | Long unbroken chat message overflow | **OPEN** — before communications expansion (AOA-16/17) |
 | AO-03 | Chat timestamp consistency | **OPEN** — before communications expansion (AOA-16/17) |
-| AO-04 | Admin technical logs expose absolute filesystem paths | **OPEN** — resolve in secure audit/log UI work (AOA-01) |
 | AO-06 | Unverified-e-mail Tourist reaches cabinet | **BUSINESS_DECISION_REQUIRED** — business/security policy (U-9) |
 | AO-07 | 403/404 ownership-denial inconsistency | **REVIEW** — not automatically a vulnerability; revisit with AOA-02 visibility work |
 | AO-08 | Public header switches to hamburger at 1200 px | **UX REVIEW** — not automatically a defect |
@@ -230,14 +232,14 @@ Only the findings listed above are claimed fixed; no unrelated AO finding is imp
 
 **Order of upcoming work (PROPOSED; one semantic slice at a time, each with its own guarded plan):**
 
-1. **NEXT — AOA-01** (data visibility boundaries and business audit foundation; see the dependency note below). The small AO-FIX series (AO-FIX-01…06) is complete.
+1. **NEXT — AOA-01-I2** (Manager visibility scoping + atomic Admin assignment/reassignment with audit; the remaining half of AOA-01 — see the dependency note below). AOA-01-I1 and the small AO-FIX series (AO-FIX-01…06) are complete.
 2. **AOA-02** (visibility & assignment policy layer implementing §A3 across all surfaces) → AOA-03 → AOA-04 …, in the dependency order of §A6. AO-02/AO-03 before AOA-16/17.
 3. AO-12 (Admin chat narrow-viewport overflow): focused fix, before AOA-18.
 4. AOA-18 integrated QA gate (incl. child-age surface follow-up) → final independent audit → E6 (incl. CSS cache-busting verification).
 
 ### AOA-01 / AOA-02 dependency note
 
-Slices are **NOT STARTED**; the §A6 numbering and dependency order are **unchanged**. Concrete tension: AOA-01 (audit foundation, no dependency) precedes AOA-02 (policy layer), yet the Manager visibility gap (§A5) is an exposure that exists *today*, and audit events built first would record activity on surfaces whose access rules are not yet enforced. **Proposed narrow adjustment (PROPOSED, not applied; subject to owner approval of the AOA-01 guarded plan):** AOA-01 additionally includes a *read-only inventory of every staff data surface* (routes, queries, JSON, documents, chat, search, counts) that seeds the AOA-02 visibility matrix, and — if the owner does not want to leave it exposed until AOA-02 — minimal server-side Manager scoping of `IncomingInquiry` list/view/claim. The full policy layer, `Inquiry` entity and assignment workflow stay in AOA-02…AOA-04 exactly as in §A6.
+**Status after AOA-01-I1:** the read-only staff-surface inventory proposed below **is done** (see the [access matrix](AOA-01-I1-staff-access-surface-matrix-2026-10-20.md)); the minimal Manager scoping of `IncomingInquiry` list/view/claim, plus Admin direct assignment and reason-required reassignment with audit, is **AOA-01-I2 and is not implemented**. The §A6 numbering and dependency order are **unchanged**. The original note follows. Concrete tension: AOA-01 (audit foundation, no dependency) precedes AOA-02 (policy layer), yet the Manager visibility gap (§A5) is an exposure that exists *today*, and audit events built first would record activity on surfaces whose access rules are not yet enforced. **Proposed narrow adjustment (PROPOSED, not applied; subject to owner approval of the AOA-01 guarded plan):** AOA-01 additionally includes a *read-only inventory of every staff data surface* (routes, queries, JSON, documents, chat, search, counts) that seeds the AOA-02 visibility matrix, and — if the owner does not want to leave it exposed until AOA-02 — minimal server-side Manager scoping of `IncomingInquiry` list/view/claim. The full policy layer, `Inquiry` entity and assignment workflow stay in AOA-02…AOA-04 exactly as in §A6.
 
 **Production readiness.** `APPLICATION CLOSED ≠ PRODUCTION DEPLOYED.` Production is **not deployed**; the project is **not production-ready** until E6 closes. Known pre-production items: pending E5 migrations on canonical/production; Tourvisor production secrets/webhook; privacy/legal provider facts; opening hours; separate runtime/dependency modernization pass; hosting move REG.RU → Timeweb (if pursued). See Part B "E6".
 
@@ -878,7 +880,7 @@ Already solved and NOT carried forward: P-05 for `/tours` (H1/main — E5-A4); t
 E5 is declared **CLOSED at application level** by this documentation checkpoint on top of application checkpoint `c56e3306`. This pass changes no application code and updates no dependencies. **E5 closed ≠ production-ready.**
 
 ### E5.5 — Agency Operations Automation (AOA)
-🟢 **ACTIVE** — status, owner decisions, implementation gaps, the AOA-01…AOA-18 roadmap, AO findings and NEXT are **canonical in Part A of this file (§A1–§A9)**. The technical architecture, rationale and invariants are in [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md) (reference, not a competing roadmap). Sits between CLOSED E5 and pending E6; only E5.5-A0 (architecture, docs) and the small AO-FIX-01…06 fixes (§A7) are done.
+🟢 **ACTIVE** — status, owner decisions, implementation gaps, the AOA-01…AOA-18 roadmap, AO findings and NEXT are **canonical in Part A of this file (§A1–§A9)**. The technical architecture, rationale and invariants are in [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](E5.5-agency-operations-automation-architecture-2026-10-19.md) (reference, not a competing roadmap). Sits between CLOSED E5 and pending E6; only E5.5-A0 (architecture, docs), the small AO-FIX-01…06 fixes (§A7) and AOA-01-I1 (audit foundation, AO-04, access matrix) are done; AOA-01-I2 is NEXT.
 
 ### After E5 — Screenshot Audit Pack + Astra Task 2 (full independent project audit)
 ✅ Screenshot Audit Pack executed; independent analysis received (private, outside the repository). **Historical** — the current order of work is §A9. Approved order recorded at E5 closure:

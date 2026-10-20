@@ -88,6 +88,11 @@
         <i class="bi bi-gear" aria-hidden="true"></i>
         <span>Система</span>
     </a>
+    @php($isActive = $navActive('cabinet.admin.audit'))
+    <a href="{{ route('cabinet.admin.audit') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-journal-check" aria-hidden="true"></i>
+        <span>Журнал действий</span>
+    </a>
     @php($isActive = $navActive('cabinet.admin.logs'))
     <a href="{{ route('cabinet.admin.logs') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-file-text" aria-hidden="true"></i>

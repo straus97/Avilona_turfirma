@@ -28,6 +28,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Services\Diagnostics\TechnicalLogSummary;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
@@ -998,38 +999,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Логи
+     * Логи: безопасная сводка, а не сырой текст журнала (AO-04).
      */
-    public function logs(): View
+    public function logs(TechnicalLogSummary $logSummary): View
     {
-        $path = storage_path('logs/laravel.log');
-        $lines = [];
-        $maxLines = 200;
-        $tailBytes = 512 * 1024; // 512 KB
-
-        if (file_exists($path)) {
-            try {
-                $size = filesize($path);
-                $start = max(0, $size - $tailBytes);
-
-                $handle = fopen($path, 'rb');
-                if ($handle) {
-                    fseek($handle, $start);
-                    $chunk = stream_get_contents($handle);
-                    fclose($handle);
-
-                    $allLines = preg_split("/\r\n|\r|\n/", (string) $chunk);
-                    if ($start > 0 && isset($allLines[0])) {
-                        array_shift($allLines);
-                    }
-                    $lines = array_slice($allLines, -$maxLines);
-                }
-            } catch (\Throwable $e) {
-                $lines = ["Не удалось прочитать лог: " . $e->getMessage()];
-            }
-        }
-
-        return view('admin.logs', compact('lines', 'path'));
+        return view('admin.logs', ['summary' => $logSummary->summarize()]);
     }
     
     /**
