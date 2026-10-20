@@ -36,12 +36,17 @@
         <p><strong>Взрослых:</strong> {{ $booking->adults }}</p>
         @if($booking->children > 0)
             <p><strong>Детей:</strong> {{ $booking->children }}
-                @if($booking->children_ages && count($booking->children_ages) > 0)
-                    <br><small style="color: #666;">Возраст: 
-                    @foreach($booking->children_ages as $age)
-                        {{ $age }} {{ str_plural($age, 'год', 'года', 'лет') }}@if(!$loop->last), @endif
-                    @endforeach
-                    </small>
+                @php
+                    // children_ages допускает null-элементы (nullable|integer):
+                    // неизвестный возраст пропускается, а не подставляется.
+                    $childAgeLabels = collect($booking->children_ages ?? [])
+                        ->map(fn ($age) => is_scalar($age) && !is_bool($age) ? filter_var($age, FILTER_VALIDATE_INT) : false)
+                        ->filter(fn ($age) => $age !== false && $age >= 0)
+                        ->map(fn ($age) => $age . ' ' . str_plural($age, 'год', 'года', 'лет'))
+                        ->implode(', ');
+                @endphp
+                @if($childAgeLabels !== '')
+                    <br><small style="color: #666;">Возраст: {{ $childAgeLabels }}</small>
                 @endif
             </p>
         @endif
