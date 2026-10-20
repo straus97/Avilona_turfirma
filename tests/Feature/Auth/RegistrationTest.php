@@ -63,8 +63,8 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasErrors(['name', 'email']);
 
         $errors = session('errors')->getBag('default');
-        $this->assertStringContainsString('имя', $errors->first('name'));
-        $this->assertStringContainsString('электронная почта', $errors->first('email'));
+        $this->assertStringContainsString('имя', mb_strtolower($errors->first('name')));
+        $this->assertStringContainsString('электронная почта', mb_strtolower($errors->first('email')));
         $this->assertStringNotContainsString('name', $errors->first('name'));
         $this->assertStringNotContainsString('email', $errors->first('email'));
     }

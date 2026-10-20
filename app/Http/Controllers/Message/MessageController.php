@@ -80,7 +80,7 @@ class MessageController extends Controller
         );
         if (! in_array((int) $validated['receiver_id'], $allowedReceiverIds, true)) {
             throw ValidationException::withMessages([
-                'receiver_id' => ['The selected receiver is not a participant in this booking.'],
+                'receiver_id' => ['Выбранный получатель не является участником этой заявки.'],
             ]);
         }
 
