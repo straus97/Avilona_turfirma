@@ -8,10 +8,14 @@ use App\Models\DestinationCity;
 use App\Models\IncomingInquiry;
 use App\Models\User;
 use App\Services\Accounts\StaffClientAccounts;
+use App\Services\Audit\AuditRecorder;
+use App\Support\Audit\AuditEventType;
+use App\Support\Audit\AuditMetadata;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 /**
  * Бизнес-процесс обработки входящего обращения (E5-A3):
@@ -28,65 +32,139 @@ use Illuminate\Support\Facades\Log;
  */
 class IncomingInquiryWorkflow
 {
-    public function __construct(private readonly StaffClientAccounts $accounts)
-    {
+    public const AUDIT_SUBJECT = 'incoming_inquiry';
+
+    public const REASON_MIN_LENGTH = 5;
+    public const REASON_MAX_LENGTH = 300;
+
+    public function __construct(
+        private readonly StaffClientAccounts $accounts,
+        private readonly AuditRecorder $audit,
+    ) {
     }
 
     /**
-     * Взять обращение в работу (атомарно: выигрывает ровно один сотрудник).
+     * Самоназначение администратора («взять себе»): тот же контракт, что и
+     * прямое назначение, только исполнитель — сам актор.
      *
      * @return bool true — взято сейчас; false — уже ваше (повторная отправка).
      */
     public function claim(IncomingInquiry $inquiry, User $actor): bool
     {
-        $this->assertAssignable($actor->id, 'Вы не можете вести обращения: учётная запись неактивна или без роли сотрудника.');
-
-        $updated = IncomingInquiry::query()
-            ->whereKey($inquiry->id)
-            ->actionable()
-            ->where('workflow_state', IncomingInquiry::WORKFLOW_NEW)
-            ->whereNull('assigned_to')
-            ->update([
-                'workflow_state' => IncomingInquiry::WORKFLOW_IN_PROGRESS,
-                'assigned_to' => $actor->id,
-                'claimed_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-        if ($updated === 1) {
-            return true;
-        }
-
-        $current = IncomingInquiry::query()->findOrFail($inquiry->id);
-
-        if (
-            $current->workflow_state === IncomingInquiry::WORKFLOW_IN_PROGRESS
-            && (int) $current->assigned_to === (int) $actor->id
-        ) {
-            return false;
-        }
-
-        throw new IncomingInquiryWorkflowException($this->claimRefusal($current));
+        return $this->assign($inquiry, $actor, (int) $actor->id, 'claim');
     }
 
-    /** Администратор передаёт обращение в работе другому сотруднику. */
-    public function reassign(IncomingInquiry $inquiry, User $actor, int $newAssigneeId): bool
+    /**
+     * Первичное назначение НОВОГО ничьего обращения сотруднику (AOA-01-I2A).
+     *
+     * Только администратор. Всё внутри одной транзакции: блокировка строки,
+     * авторизация по актуальной строке ДО любых идемпотентных возвратов,
+     * условный UPDATE (второй рубеж против гонки) и событие аудита. Если запись
+     * аудита не удалась, назначение откатывается. Повтор с тем же исполнителем
+     * ничего не меняет и второго события не пишет; назначение другому
+     * исполнителю после чужого назначения отклоняется (никаких молчаливых перезаписей).
+     *
+     * @return bool true — назначено сейчас; false — уже назначено этому сотруднику.
+     */
+    public function assign(IncomingInquiry $inquiry, User $actor, int $assigneeId, string $ability = 'assign'): bool
     {
-        $this->assertAssignable($newAssigneeId, 'Выбранного сотрудника нельзя назначить ответственным.', 'assigned_to');
+        return DB::transaction(function () use ($inquiry, $actor, $assigneeId, $ability): bool {
+            $locked = $this->lock($inquiry);
+            $this->authorize($actor, $ability, $locked);
 
-        return DB::transaction(function () use ($inquiry, $actor, $newAssigneeId): bool {
+            $this->assertAssignableLocked(
+                $assigneeId,
+                $ability === 'claim'
+                    ? 'Вы не можете вести обращения: учётная запись неактивна или без роли сотрудника.'
+                    : 'Выбранного сотрудника нельзя назначить ответственным.',
+                $ability === 'claim' ? 'workflow' : 'assigned_to'
+            );
+
+            if (
+                $locked->workflow_state === IncomingInquiry::WORKFLOW_IN_PROGRESS
+                && $locked->assigned_to !== null
+                && (int) $locked->assigned_to === $assigneeId
+            ) {
+                return false;
+            }
+
+            if (! $locked->isActionable()) {
+                throw new IncomingInquiryWorkflowException('Это обращение пока нельзя взять в работу: данные не загружены.');
+            }
+
+            if ($locked->workflow_state !== IncomingInquiry::WORKFLOW_NEW || $locked->assigned_to !== null) {
+                throw new IncomingInquiryWorkflowException($this->assignRefusal($locked));
+            }
+
+            $updated = IncomingInquiry::query()
+                ->whereKey($locked->id)
+                ->actionable()
+                ->where('workflow_state', IncomingInquiry::WORKFLOW_NEW)
+                ->whereNull('assigned_to')
+                ->update([
+                    'workflow_state' => IncomingInquiry::WORKFLOW_IN_PROGRESS,
+                    'assigned_to' => $assigneeId,
+                    'claimed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            if ($updated !== 1) {
+                throw new IncomingInquiryWorkflowException('Обращение уже назначено другим администратором. Обновите страницу.');
+            }
+
+            $this->audit->record(AuditEventType::InquiryAssigned, $actor, self::AUDIT_SUBJECT, (int) $locked->id, [
+                'new_assignee_id' => $assigneeId,
+                'self_assigned' => $assigneeId === (int) $actor->id,
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Администратор передаёт уже назначенное обращение (в работе) другому сотруднику.
+     *
+     * Причина обязательна и ограничена по длине; она проверяется тем же валидатором
+     * метаданных аудита (e-mail, пути, токеноподобные строки отклоняются, валидатор
+     * не ослабляется). Переназначение и событие аудита — в одной транзакции.
+     * $expectedAssigneeId — ответственный, которого администратор видел на форме:
+     * если он уже сменился, операция отклоняется, а не перезаписывает чужое решение.
+     *
+     * @return bool true — переназначено; false — этот сотрудник уже ответственный (повтор).
+     */
+    public function reassign(IncomingInquiry $inquiry, User $actor, int $newAssigneeId, string $reason, ?int $expectedAssigneeId = null): bool
+    {
+        return DB::transaction(function () use ($inquiry, $actor, $newAssigneeId, $reason, $expectedAssigneeId): bool {
             $locked = $this->lock($inquiry);
             $this->authorize($actor, 'reassign', $locked);
+            $reason = $this->cleanReason($reason);
+            $this->assertAssignableLocked($newAssigneeId, 'Выбранного сотрудника нельзя назначить ответственным.', 'assigned_to');
             $this->assertInProgress($locked);
 
-            if ((int) $locked->assigned_to === $newAssigneeId) {
+            $previousId = $locked->assigned_to !== null ? (int) $locked->assigned_to : null;
+
+            if ($previousId === $newAssigneeId) {
                 return false;
+            }
+
+            if ($expectedAssigneeId !== null && $previousId !== $expectedAssigneeId) {
+                throw new IncomingInquiryWorkflowException('Ответственный за обращение уже изменён. Обновите страницу и повторите.', 'assigned_to');
+            }
+
+            if ($previousId === null) {
+                throw new IncomingInquiryWorkflowException('У обращения нет ответственного — назначьте сотрудника, а не переназначайте.', 'assigned_to');
             }
 
             $locked->forceFill([
                 'assigned_to' => $newAssigneeId,
                 'claimed_at' => now(),
             ])->save();
+
+            $this->audit->record(AuditEventType::InquiryReassigned, $actor, self::AUDIT_SUBJECT, (int) $locked->id, [
+                'previous_assignee_id' => $previousId,
+                'new_assignee_id' => $newAssigneeId,
+                'reason' => $reason,
+            ]);
 
             return true;
         });
@@ -199,11 +277,14 @@ class IncomingInquiryWorkflow
         $result = DB::transaction(function () use ($inquiry, $actor, $data): array {
             $locked = $this->lock($inquiry);
 
+            // Права проверяются ДО идемпотентного возврата: потерявший доступ
+            // сотрудник не получает Booking повторным запросом.
+            $this->authorize($actor, 'process', $locked);
+
             if ($locked->workflow_state === IncomingInquiry::WORKFLOW_CONVERTED && $locked->booking_id !== null) {
                 return ['booking' => Booking::withTrashed()->findOrFail($locked->booking_id), 'created' => false];
             }
 
-            $this->authorize($actor, 'process', $locked);
             $this->assertInProgress($locked);
 
             if ($locked->client_user_id === null) {
@@ -294,11 +375,12 @@ class IncomingInquiryWorkflow
         return DB::transaction(function () use ($inquiry, $actor, $reason): bool {
             $locked = $this->lock($inquiry);
 
+            // Права проверяются ДО идемпотентного возврата «уже закрыто».
+            $this->authorize($actor, 'close', $locked);
+
             if ($locked->workflow_state === IncomingInquiry::WORKFLOW_CLOSED) {
                 return false;
             }
-
-            $this->authorize($actor, 'close', $locked);
 
             if ($locked->workflow_state === IncomingInquiry::WORKFLOW_CONVERTED) {
                 throw new IncomingInquiryWorkflowException('Обращение уже оформлено как заявка — закрыть его без бронирования нельзя.');
@@ -349,12 +431,40 @@ class IncomingInquiryWorkflow
         }
     }
 
-    /** Единый контракт назначаемого сотрудника — User::assignableToBookings(). */
-    private function assertAssignable(int $userId, string $message, string $field = 'workflow'): void
+    /**
+     * Единый контракт назначаемого сотрудника — User::assignableToBookings().
+     * Вызывается внутри транзакции, строка пользователя блокируется на время проверки.
+     */
+    private function assertAssignableLocked(int $userId, string $message, string $field = 'workflow'): void
     {
-        if (! User::query()->assignableToBookings()->whereKey($userId)->exists()) {
+        if (User::query()->assignableToBookings()->lockForUpdate()->find($userId) === null) {
             throw new IncomingInquiryWorkflowException($message, $field);
         }
+    }
+
+    /** Причина переназначения: обязательна, ограничена и безопасна для журнала аудита. */
+    private function cleanReason(string $reason): string
+    {
+        $reason = trim((string) preg_replace('/\s+/u', ' ', $reason));
+        $length = mb_strlen($reason);
+
+        if ($length < self::REASON_MIN_LENGTH || $length > self::REASON_MAX_LENGTH) {
+            throw new IncomingInquiryWorkflowException(
+                'Укажите причину переназначения: от ' . self::REASON_MIN_LENGTH . ' до ' . self::REASON_MAX_LENGTH . ' символов.',
+                'reason'
+            );
+        }
+
+        try {
+            AuditMetadata::validate(['reason' => $reason]);
+        } catch (InvalidArgumentException) {
+            throw new IncomingInquiryWorkflowException(
+                'Причина не должна содержать email, пути к файлам и длинные ключеподобные строки.',
+                'reason'
+            );
+        }
+
+        return $reason;
     }
 
     private function linkClient(IncomingInquiry $locked, User $client, User $actor): void
@@ -366,17 +476,13 @@ class IncomingInquiryWorkflow
         ])->save();
     }
 
-    private function claimRefusal(IncomingInquiry $current): string
+    private function assignRefusal(IncomingInquiry $current): string
     {
-        if (! $current->isActionable()) {
-            return 'Это обращение пока нельзя взять в работу: данные не загружены.';
-        }
-
         return match ($current->workflow_state) {
-            IncomingInquiry::WORKFLOW_IN_PROGRESS => 'Обращение уже взято в работу другим сотрудником.',
+            IncomingInquiry::WORKFLOW_IN_PROGRESS => 'Обращение уже назначено сотруднику. Чтобы сменить ответственного, используйте переназначение.',
             IncomingInquiry::WORKFLOW_CONVERTED => 'Обращение уже оформлено как заявка.',
             IncomingInquiry::WORKFLOW_CLOSED => 'Обращение уже закрыто.',
-            default => 'Не удалось взять обращение в работу. Обновите страницу.',
+            default => 'Не удалось назначить обращение. Обновите страницу.',
         };
     }
 }

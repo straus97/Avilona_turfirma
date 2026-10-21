@@ -97,6 +97,24 @@ class IncomingInquiry extends Model
         return $query->where('state', self::STATE_IMPORTED)->where('external_type', 0);
     }
 
+    /**
+     * Единое правило видимости обращений (AOA-01-I2A): администратор видит все,
+     * менеджер — только назначенные ему сейчас; остальным — ничего. Применяется
+     * ко всем спискам и выборкам; отдельную запись проверяет IncomingInquiryPolicy::view.
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->hasRole(User::ROLE_ADMIN)) {
+            return $query;
+        }
+
+        if ($user->hasRole(User::ROLE_MANAGER)) {
+            return $query->where($query->getModel()->getTable() . '.assigned_to', $user->id);
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
+
     public function isActionable(): bool
     {
         return $this->state === self::STATE_IMPORTED && $this->external_type === 0;

@@ -103,16 +103,36 @@
         <p class="mb-2">Обращение никем не взято в работу.</p>
     @endif
 
-    @if($canClaim)
-        <form method="POST" action="{{ route('cabinet.manager.inquiries.claim', $inquiry) }}" data-submit-once>
+    @if($canAssign)
+        <form method="POST" action="{{ route('cabinet.manager.inquiries.assign', $inquiry) }}" class="row g-2 align-items-end mt-2" data-submit-once>
             @csrf
-            <button type="submit" class="btn btn-primary">Взять в работу</button>
+            <div class="col-12 col-md-6">
+                <label for="inq-assign-to" class="form-label">Назначить ответственного</label>
+                <select id="inq-assign-to" name="assigned_to" class="form-select @error('assigned_to') is-invalid @enderror" required>
+                    <option value="" @selected(old('assigned_to') === null)>— выберите сотрудника —</option>
+                    @foreach($assignableStaff as $staff)
+                        <option value="{{ $staff->id }}" @selected((int) old('assigned_to') === $staff->id)>{{ $staff->name }}@if($staff->id === auth()->id()) (я)@endif</option>
+                    @endforeach
+                </select>
+                @error('assigned_to')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-primary">Назначить</button>
+            </div>
+        </form>
+    @endif
+
+    @if($canClaim)
+        <form method="POST" action="{{ route('cabinet.manager.inquiries.claim', $inquiry) }}" class="mt-2" data-submit-once>
+            @csrf
+            <button type="submit" class="btn btn-outline-primary">Взять себе</button>
         </form>
     @endif
 
     @if($canReassign)
-        <form method="POST" action="{{ route('cabinet.manager.inquiries.reassign', $inquiry) }}" class="row g-2 align-items-end mt-2" data-submit-once>
+        <form method="POST" action="{{ route('cabinet.manager.inquiries.reassign', $inquiry) }}" class="row g-2 align-items-start mt-2" data-submit-once>
             @csrf
+            <input type="hidden" name="expected_assignee_id" value="{{ $inquiry->assigned_to }}">
             <div class="col-12 col-md-6">
                 <label for="inq-assigned-to" class="form-label">Передать другому сотруднику</label>
                 <select id="inq-assigned-to" name="assigned_to" class="form-select @error('assigned_to') is-invalid @enderror" required>
@@ -121,11 +141,32 @@
                     @endforeach
                 </select>
                 @error('assigned_to')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @error('expected_assignee_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
             </div>
-            <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-outline-primary">Назначить</button>
+            <div class="col-12 col-md-6">
+                <label for="inq-reassign-reason" class="form-label">Причина переназначения (обязательно, сохраняется в истории)</label>
+                <textarea id="inq-reassign-reason" name="reason" rows="2" class="form-control @error('reason') is-invalid @enderror" minlength="{{ \App\Services\IncomingInquiries\IncomingInquiryWorkflow::REASON_MIN_LENGTH }}" maxlength="{{ \App\Services\IncomingInquiries\IncomingInquiryWorkflow::REASON_MAX_LENGTH }}" required>{{ old('reason') }}</textarea>
+                @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-outline-primary">Переназначить</button>
             </div>
         </form>
+    @endif
+
+    @if($assignmentHistory->isNotEmpty())
+        <h3 class="h6 mt-4">История назначений</h3>
+        <ul class="list-unstyled small mb-0">
+            @foreach($assignmentHistory as $entry)
+                <li class="mb-2">
+                    <strong>{{ $entry['type'] }}</strong>
+                    · {{ $entry['at']?->format('d.m.Y H:i') }}
+                    · {{ $entry['actor'] ?? 'система' }}:
+                    @if($entry['previous']){{ $entry['previous'] }} → @endif{{ $entry['new'] ?? '—' }}
+                    @if($entry['reason'])<br><span class="text-muted">Причина: {{ $entry['reason'] }}</span>@endif
+                </li>
+            @endforeach
+        </ul>
     @endif
 </section>
 

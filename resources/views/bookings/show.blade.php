@@ -241,7 +241,11 @@
                 @if($booking->incomingInquiry)
                     <p class="booking-note mt-3">
                         <i class="bi bi-inbox" aria-hidden="true"></i>
-                        Источник: <a href="{{ route('cabinet.manager.inquiries.show', $booking->incomingInquiry) }}">входящее обращение #{{ $booking->incomingInquiry->id }}</a>
+                        @can('view', $booking->incomingInquiry)
+                            Источник: <a href="{{ route('cabinet.manager.inquiries.show', $booking->incomingInquiry) }}">входящее обращение #{{ $booking->incomingInquiry->id }}</a>
+                        @else
+                            Источник: входящее обращение #{{ $booking->incomingInquiry->id }}
+                        @endcan
                     </p>
                 @endif
             </section>

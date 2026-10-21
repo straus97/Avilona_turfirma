@@ -86,14 +86,15 @@ class IncomingInquiryStaffAccessTest extends TestCase
 
     public function test_manager_sees_labelled_incoming_inquiry_with_provenance_and_state(): void
     {
+        // AOA-01-I2A: менеджер видит обращение, только когда оно назначено ему (прежде видел все).
         $manager = $this->userWithRoles(['manager']);
-        $inquiry = $this->inquiry();
+        $inquiry = $this->inquiry(['assigned_to' => $manager->id, 'workflow_state' => IncomingInquiry::WORKFLOW_IN_PROGRESS]);
 
         $list = $this->actingAs($manager)->get(route('cabinet.manager.inquiries'));
         $list->assertOk()
             ->assertSee('Входящие обращения')
             ->assertSee('Tourvisor #1688615')
-            ->assertSee('Новое')
+            ->assertSee('В работе')
             ->assertSee('Это не бронирования');
 
         $show = $this->actingAs($manager)->get(route('cabinet.manager.inquiries.show', $inquiry->id));
@@ -118,7 +119,8 @@ class IncomingInquiryStaffAccessTest extends TestCase
 
     public function test_failed_and_unsupported_states_are_shown_honestly(): void
     {
-        $manager = $this->userWithRoles(['manager']);
+        // AOA-01-I2A: необработанные обращения ничьи, поэтому их видит администратор.
+        $manager = $this->userWithRoles(['admin']);
         $this->inquiry(['external_id' => '1', 'state' => IncomingInquiry::STATE_FAILED, 'last_error_code' => 'timeout', 'client_name' => null]);
         $this->inquiry(['external_id' => '2', 'external_type' => 1, 'state' => IncomingInquiry::STATE_UNSUPPORTED, 'client_name' => null]);
 

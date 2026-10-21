@@ -349,7 +349,7 @@ class BookingController extends Controller
         // Источник-обращение нужен только сотрудникам (блок «Клиент» виден только им);
         // для туриста связь не загружается вовсе.
         if (Auth::user()->hasAnyRole(['admin', 'manager'])) {
-            $booking->load('incomingInquiry:id,booking_id');
+            $booking->load('incomingInquiry:id,booking_id,assigned_to');
         }
 
         // Список кандидатов на роль ответственного нужен только админу (форма назначения

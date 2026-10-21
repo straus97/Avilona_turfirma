@@ -76,6 +76,7 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/inquiries', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'index'])->name('inquiries');
         Route::get('/inquiries/{inquiry}', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'show'])->whereNumber('inquiry')->name('inquiries.show');
         Route::post('/inquiries/{inquiry}/claim', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'claim'])->whereNumber('inquiry')->name('inquiries.claim');
+        Route::post('/inquiries/{inquiry}/assign', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'assign'])->whereNumber('inquiry')->name('inquiries.assign');
         Route::post('/inquiries/{inquiry}/reassign', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'reassign'])->whereNumber('inquiry')->name('inquiries.reassign');
         Route::post('/inquiries/{inquiry}/client/select', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'selectClient'])->whereNumber('inquiry')->name('inquiries.client.select');
         Route::post('/inquiries/{inquiry}/client/create', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'createClient'])->whereNumber('inquiry')->name('inquiries.client.create');

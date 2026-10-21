@@ -2,6 +2,8 @@
 
 **Date:** 2026-10-20 · **Slice:** AOA-01-I1 · **Source baseline:** `013d2483` (+ the I1 audit foundation).
 
+> **Update 2026-10-21 (AOA-01-I2A):** gaps G1, G2, G3, G4 and G6 below were *implemented and verified* in AOA-01-I2A — see **§6 (implementation evidence)**. The "Gap" columns and §3 describe the state at I1 and are kept as the historical baseline. G5, G7 and G8 are still open (AOA-01-I2B).
+>
 > **Role of this document: technical evidence for AOA-01-I2 / AOA-02. It is NOT a roadmap.** Status, slice order and owner decisions live only in [`docs/roadmap.md`](roadmap.md). Nothing in the *Gap* or *I2* columns is implemented by I1 (the only behavioural change in I1 is the Admin log viewer, AO-04).
 
 **Method.** Source read of routes, controllers, policies, services and Blade layouts, plus a throw-away runtime probe (synthetic users and records, SQLite `:memory:`, not committed) that exercised the suspected gaps. Statuses:
@@ -55,12 +57,12 @@ Owner rule under test: a Manager sees only **own assigned** Inquiries, Bookings 
 
 | ID | Gap | Surface | Severity note |
 |---|---|---|---|
-| G1 | Manager lists and opens all inquiries incl. unassigned and colleagues' (client phone/e-mail/comment) | I-01, I-02 | Known (roadmap §A5); reproduced. **Not silently fixed in I1.** |
-| G2 | Manager can claim and close unassigned inquiries | I-03, I-09 | Known; reproduced |
-| G3 | Reassignment has no required reason and no durable history | I-04 | Known; foundation now exists (`audit_events`) |
-| G4 | Admin cannot assign a NEW inquiry directly (must claim-then-reassign) | I-04 | New precision on §A4 |
+| G1 | Manager lists and opens all inquiries incl. unassigned and colleagues' (client phone/e-mail/comment) | I-01, I-02 | Known (roadmap §A5); reproduced. **RESOLVED in I2A (§6).** |
+| G2 | Manager can claim and close unassigned inquiries | I-03, I-09 | Known; reproduced. **RESOLVED in I2A (§6).** |
+| G3 | Reassignment has no required reason and no durable history | I-04 | Known; foundation now exists (`audit_events`). **RESOLVED in I2A (§6).** |
+| G4 | Admin cannot assign a NEW inquiry directly (must claim-then-reassign) | I-04 | New precision on §A4. **RESOLVED in I2A (§6).** |
 | G5 | Tourist directory (name/e-mail/phone) exposed to any Manager via inquiry lookup and booking-create dropdown | I-05, I-12, B-05 | Needs an owner decision on lookup scope |
-| G6 | Authorization is skipped on idempotent early returns inside `convert` and `close` (HTTP is still blocked by the controller) | I-08, I-09 | Defence-in-depth |
+| G6 | Authorization is skipped on idempotent early returns inside `convert` and `close` (HTTP is still blocked by the controller) | I-08, I-09 | Defence-in-depth. **RESOLVED in I2A (§6).** |
 | G7 | Booking assignment/reassignment keeps no reason/history | B-04 | Candidate; not in §A4 text |
 | G8 | Former manager keeps notification preview/unread count after Booking reassignment | B-10 | Minor leak |
 
@@ -87,3 +89,65 @@ Existing code: `IncomingInquiryPolicy` decides *who* by role/assignee; `Incoming
 - New table `audit_events` (migration `2026_10_20_000000_create_audit_events_table`): additive, no FK on `actor_id`, nothing backfilled (starts empty). Append-only is enforced **in the application** (model events + query-builder guards + no mutating routes); it is **not** a database guarantee.
 - Tested in I1 on SQLite `:memory:` (PHPUnit) and on a disposable SQLite file with migrate → `rollback --step=1` → migrate. **Not tested on MySQL.** Required before E6 (guarded plan, separate from I1): apply on a disposable MySQL copy; confirm `json`/`uuid`/`timestamp` column behaviour and index names; decide whether the application DB user should lack `UPDATE`/`DELETE` on `audit_events` (or use triggers) for a database-level append-only guarantee; confirm PDO integer typing for the strict `===` ownership comparisons (B-02, B-09).
 - The recorder is not wired into any business process in I1; no existing behaviour changes except the Admin log viewer (AO-04).
+
+## 6. AOA-01-I2A implementation evidence (2026-10-21)
+
+**Scope:** legacy `IncomingInquiry` workflow only (no new `Inquiry` entity, no migration, no canonical-MySQL or production change). Gaps G1, G2, G3, G4, G6 are **resolved to the extent verified below**. **G5, G7, G8 are NOT addressed and remain OPEN (AOA-01-I2B)**; the complete Manager privacy contract is therefore **not** claimed.
+
+### 6.1 What changed (by surface)
+
+| Surface | Before (I1) | After (I2A) | Evidence |
+|---|---|---|---|
+| I-01 list, filters, pagination, counts | unscoped | `IncomingInquiry::scopeVisibleTo(User)`: Admin all, Manager `assigned_to = id`, others none; applied in `index` (rows, `?status=`, `total()`, pages) | `test_manager_list_contains_only_own_inquiries`, `test_pagination_and_filters_do_not_leak_foreign_rows`, `test_visibility_scope_matches_policy_for_every_role` |
+| I-02 detail / direct URL / JSON | any staff | controller `visible()` → **404 without data** for foreign/unassigned (HTML and JSON); policy `view` = Admin or assigned Manager | `test_manager_cannot_open_foreign_unassigned_or_admin_owned_inquiry_and_gets_no_data` |
+| Every inquiry action | policy only | `visible()` (404) **before** the ability check (403 for Admin-only operations on an own inquiry); service failure after a concurrent reassignment is mapped to the same 404 | `test_every_inquiry_action_is_hidden_from_a_manager_who_does_not_own_it`, `test_manager_cannot_claim_assign_or_reassign_even_for_own_inquiry` |
+| I-03 claim | any staff | policy `claim` = Admin only (self-assignment through the same `assign` contract) | `test_manager_cannot_take_unassigned_inquiry`, `test_service_level_manager_claim_of_unassigned_inquiry_is_refused` |
+| I-04 initial assignment (G4) | not possible directly | new `POST …/assign`, policy `assign` = Admin; `IncomingInquiryWorkflow::assign` — one transaction, row lock, re-authorization, eligibility via `assignableToBookings()` (locked), conditional UPDATE (`new` + `assigned_to IS NULL`), then `inquiry.assigned` audit (`new_assignee_id`, `self_assigned`); repeat with the same target is a no-op without a second event; a different target after someone else's assignment is rejected | `test_admin_assigns_new_inquiry_directly_to_a_manager_and_records_audit`, `test_assignment_rejects_ineligible_targets_without_side_effects`, `test_repeated_assignment_is_harmless_and_does_not_duplicate_audit`, `test_assignment_cannot_overwrite_a_concurrent_assignment`, `test_stale_second_assignment_loses_atomically` |
+| I-04 reassignment (G3) | no reason/history | `reassign(…, reason, expectedAssigneeId)`: Admin only; reason 5–300 chars, whitespace-collapsed and pre-checked with the **unchanged** `AuditMetadata` validator (e-mail / path / token-like text rejected with a form error — validator not weakened); `expected_assignee_id` rejects stale forms; `inquiry.reassigned` audit (`previous_assignee_id`, `new_assignee_id`, `reason`; actor and `occurred_at` from the recorder) in the same transaction | `test_admin_reassigns_with_reason_and_event_is_recorded`, `test_reassignment_requires_a_meaningful_bounded_safe_reason`, `test_stale_reassignment_is_rejected_and_retry_does_not_duplicate_history`, `test_reassignment_requires_assignable_target_and_in_progress_state` |
+| Audit atomicity | n/a | a failing `AuditRecorder` rolls back assignment and reassignment (state, `assigned_to`, `claimed_at`, zero events) | `test_assignment_rolls_back_when_audit_recording_fails`, `test_reassignment_rolls_back_when_audit_recording_fails` |
+| Revocation | n/a | former Manager gets 404 on detail/close/list immediately; new Manager gains access | `test_previous_manager_loses_access_and_new_manager_gains_it_immediately` |
+| I-08 / I-09 (G6) | `authorize` after the idempotent return | `authorize` moved before the "already converted" and "already closed" returns; HTTP maps a revoked owner to 404; legitimate idempotent repeats by owner/Admin unchanged | `test_repeated_conversion_after_access_is_revoked_returns_no_booking`, `test_repeated_close_after_access_is_revoked_is_refused` |
+| I-09 close | any staff while unassigned | policy `close` = `process` (Admin or assigned Manager); unassigned inquiries can be closed only by Admin | `test_manager_closes_only_own_inquiry`, `test_unassigned_inquiry_is_closed_only_by_admin_and_assigned_one_by_responsible_or_admin` |
+| I-13 Booking → inquiry link | link always rendered | rendered only when `can('view', inquiry)`, else plain text | `test_booking_page_links_to_inquiry_only_for_those_who_can_view_it` |
+| Admin UI | reassign select only | Admin assign form (+ "take for myself"), reassign form with required reason and hidden `expected_assignee_id`, Admin-only "История назначений" read from `audit_events` | `test_admin_forms_are_rendered_only_for_admin`, `test_assignment_history_is_visible_to_admin_only` |
+| Tourist | 403 | unchanged (route role middleware) | `test_tourist_has_no_access_to_inquiry_management` |
+
+Denial convention for this slice: Manager + foreign/unassigned inquiry → **404**; Manager + Admin-only operation on an own inquiry → **403**; guest → login redirect; Tourist → 403. AO-07 (global 403/404 consistency) is **unchanged and still open**; Booking and chat denial behaviour was not touched.
+
+Preserved by design (regression-tested): Tourvisor intake/provenance/deduplication, `booking_id` linkage and the single-Booking guarantee, assignment alone never creates or alters a Booking, no automatic or historical reassignment (existing owners keep their inquiries), no external calls. `inquiry.converted` is **not** emitted in I2A (conversion untouched).
+
+### 6.2 Existing tests whose expectations changed (deliberately)
+
+| Test | Old expectation (permissive E5) | New expectation and reason |
+|---|---|---|
+| `IncomingInquiryWorkflowTest::claimed()` helper | a Manager claims the inquiry through the HTTP route | an Admin assigns it through `…/assign`; Managers can no longer self-claim |
+| `test_manager_claims_inquiry_and_technical_state_is_untouched` → `test_admin_claims_…` | Manager claim succeeds | Admin self-claim succeeds (same state/provenance assertions) |
+| `test_repeated_claim_by_same_manager_is_harmless` → `…_same_admin_…` | Manager repeat claim | Admin repeat claim; also asserts a single audit event |
+| `test_second_manager_cannot_steal_active_claim` → `test_admin_cannot_take_inquiry_already_assigned_to_someone_else` + `test_manager_cannot_take_unassigned_inquiry` | second Manager gets a form error | Admin gets a form error; a Manager now gets 404 |
+| `test_stale_second_claim_loses_atomically` → `test_stale_second_assignment_loses_atomically` | two Managers race on claim | two Admins race on assignment (+ audit count) |
+| `test_inquiry_with_unfinished_import_cannot_be_claimed` | Manager | Admin (Manager cannot see unassigned) |
+| `test_inactive_staff_cannot_claim` → `test_inactive_admin_cannot_claim` | inactive Manager | inactive Admin (Manager has no route to the inquiry) |
+| `test_admin_can_claim_and_reassign_only_to_assignable_staff` → `…_reassign_only_to_assignable_staff_with_reason` | reassign without reason | reason and `expected_assignee_id` required |
+| `test_manager_cannot_reassign` | 403 with only `assigned_to` | 403 with the complete payload (own inquiry) |
+| `test_other_manager_cannot_process_someone_elses_inquiry` | 403 | 404 (foreign inquiry does not exist for a Manager) |
+| `test_selection_requires_inquiry_in_progress` | Manager 403 | Manager 404; Admin gets the original "take into work first" error |
+| `test_conversion_preconditions_are_enforced_without_side_effects` (unassigned case) | Manager convert → 403 | Manager convert → 404 |
+| `test_unclaimed_inquiry_can_be_closed_by_any_staff_but_…` → `test_unassigned_inquiry_is_closed_only_by_admin_and_…` | any staff closes an unassigned inquiry | only Admin; Manager gets 404 |
+| `test_list_filters_by_workflow_state_and_shows_assignee` | asserted as Manager | asserted as Admin (Manager scoping covered in the new file) |
+| `test_tourist_and_guest_cannot_use_any_inquiry_action`, `test_mutation_routes_are_behind_web_csrf_and_staff_role_middleware` | existing routes | `assign` added to both route lists; reassign payload extended |
+| `IncomingInquiryStaffAccessTest::test_manager_sees_labelled_incoming_inquiry_…` | Manager sees an unassigned "Новое" inquiry | Manager sees an inquiry assigned to them ("В работе") |
+| `IncomingInquiryStaffAccessTest::test_failed_and_unsupported_states_are_shown_honestly` | Manager | Admin (those inquiries are unassigned) |
+
+### 6.3 Verification and limits
+
+- PHPUnit (SQLite `:memory:`, synthetic data): **1561 tests / 12166 assertions, 0 failures, 0 errors** (previous baseline 1528 / 11806). Mutation spot-checks (view open to all staff; close idempotent return before authorize; reassign audit skipped) were each detected by the new tests.
+- Browser QA (isolated disposable SQLite DB, headless Chrome, synthetic users; 360 px and 1200 px, 74/74 checks each): Admin sees all and assigns an unassigned inquiry **by keyboard only**; assigned Manager sees it; other Manager gets 404 without data; Manager cannot claim/assign/reassign/close foreign or unassigned (404/403 as specified); Admin reassigns by keyboard with a reason (a too-short reason is rejected with a visible error and writes no event); previous Manager loses access, new Manager gains it; owner close and convert (and their idempotent repeats) still work; Tourist gets 403; no horizontal overflow and no first-party console errors.
+- **NOT verified:** true row-lock concurrency on MySQL. SQLite serialises writers, so the `lockForUpdate` / conditional-UPDATE protection is exercised only logically. A disposable-MySQL concurrency check (two Admins assigning/reassigning the same inquiry; assignment vs. Manager close) is **required before E6/production**, together with the I1 MySQL checks in §5.
+- The Admin history view shows the reason text exactly as the Admin typed it (HTML-escaped). The audit validator does not detect phone numbers or other free-text PII; the form hint only warns about e-mail, paths and key-like strings.
+- `sendPasswordSetup` still calls the row lock outside a transaction (I-07, unchanged; authorization there is intact).
+
+### 6.4 Residual exposure (explicitly open — AOA-01-I2B)
+
+- **G5:** the full active-Tourist directory (name/e-mail/phone) is still searchable by an assigned Manager (`IncomingInquiryClientMatcher`) and listed in the booking-create dropdown. I2A introduced no new lookup surface.
+- **G7:** Booking assignment/reassignment still has no reason or history.
+- **G8:** a former Booking manager keeps stale notification previews/unread count (≤ 60 visible characters). Inquiry reassignment creates no notifications, so I2A added no new leak here.

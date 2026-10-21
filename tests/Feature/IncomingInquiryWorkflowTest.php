@@ -88,10 +88,18 @@ class IncomingInquiryWorkflowTest extends TestCase
         return $inquiry->refresh();
     }
 
+    /**
+     * AOA-01-I2A: менеджер больше не берёт обращение сам — ответственного назначает
+     * администратор. Хелпер сохраняет прежнее имя: «обращение, которое ведёт $by».
+     */
     private function claimed(User $by, array $overrides = []): IncomingInquiry
     {
         $inquiry = $this->inquiry($overrides);
-        $this->actingAs($by)->post(route('cabinet.manager.inquiries.claim', $inquiry))->assertRedirect();
+        $admin = $this->userWithRoles(['admin']);
+        $this->actingAs($admin)
+            ->post(route('cabinet.manager.inquiries.assign', $inquiry), ['assigned_to' => $by->id])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         return $inquiry->refresh();
     }
@@ -138,86 +146,107 @@ class IncomingInquiryWorkflowTest extends TestCase
         $this->assertNull($inquiry->booking_id);
     }
 
-    public function test_manager_claims_inquiry_and_technical_state_is_untouched(): void
+    // AOA-01-I2A: прежде «менеджер берёт ничьё обращение сам» (E5-A3). Теперь самоназначение
+    // доступно только администратору, а менеджер ничьё обращение не видит (404) и не берёт.
+    public function test_admin_claims_inquiry_and_technical_state_is_untouched(): void
     {
-        $manager = $this->userWithRoles(['manager']);
+        $admin = $this->userWithRoles(['admin']);
         $inquiry = $this->inquiry();
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.claim', $inquiry))
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.claim', $inquiry))
             ->assertRedirect(route('cabinet.manager.inquiries.show', $inquiry));
 
         $inquiry->refresh();
         $this->assertSame(IncomingInquiry::WORKFLOW_IN_PROGRESS, $inquiry->workflow_state);
-        $this->assertSame($manager->id, $inquiry->assigned_to);
+        $this->assertSame($admin->id, $inquiry->assigned_to);
         $this->assertNotNull($inquiry->claimed_at);
         $this->assertSame(IncomingInquiry::STATE_IMPORTED, $inquiry->state);
         $this->assertSame(0, Booking::count());
     }
 
-    public function test_repeated_claim_by_same_manager_is_harmless(): void
+    public function test_repeated_claim_by_same_admin_is_harmless(): void
+    {
+        $admin = $this->userWithRoles(['admin']);
+        $inquiry = $this->claimed($admin);
+
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.claim', $inquiry))
+            ->assertSessionHas('success');
+
+        $this->assertSame($admin->id, $inquiry->fresh()->assigned_to);
+        $this->assertSame(1, \App\Models\AuditEvent::where('event_type', 'inquiry.assigned')->count());
+    }
+
+    public function test_admin_cannot_take_inquiry_already_assigned_to_someone_else(): void
     {
         $manager = $this->userWithRoles(['manager']);
+        $admin = $this->userWithRoles(['admin']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.claim', $inquiry))
-            ->assertSessionHas('success');
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.claim', $inquiry))
+            ->assertSessionHasErrors('workflow');
 
         $this->assertSame($manager->id, $inquiry->fresh()->assigned_to);
     }
 
-    public function test_second_manager_cannot_steal_active_claim(): void
+    public function test_manager_cannot_take_unassigned_inquiry(): void
     {
-        $first = $this->userWithRoles(['manager']);
-        $second = $this->userWithRoles(['manager']);
-        $inquiry = $this->claimed($first);
+        $manager = $this->userWithRoles(['manager']);
+        $inquiry = $this->inquiry();
 
-        $this->actingAs($second)->post(route('cabinet.manager.inquiries.claim', $inquiry))
-            ->assertSessionHasErrors('workflow');
+        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.claim', $inquiry))->assertNotFound();
 
-        $this->assertSame($first->id, $inquiry->fresh()->assigned_to);
+        $this->assertNull($inquiry->fresh()->assigned_to);
+        $this->assertSame(IncomingInquiry::WORKFLOW_NEW, $inquiry->fresh()->workflow_state);
+        $this->assertSame(0, \App\Models\AuditEvent::count());
     }
 
-    public function test_stale_second_claim_loses_atomically(): void
+    public function test_stale_second_assignment_loses_atomically(): void
     {
+        $adminA = $this->userWithRoles(['admin']);
+        $adminB = $this->userWithRoles(['admin']);
         $first = $this->userWithRoles(['manager']);
         $second = $this->userWithRoles(['manager']);
         $inquiry = $this->inquiry();
         $staleCopy = IncomingInquiry::find($inquiry->id);
 
         $service = app(IncomingInquiryWorkflow::class);
-        $this->assertTrue($service->claim($inquiry, $first));
+        $this->assertTrue($service->assign($inquiry, $adminA, $first->id));
 
-        $this->expectException(IncomingInquiryWorkflowException::class);
         try {
-            $service->claim($staleCopy, $second);
-        } finally {
-            $this->assertSame($first->id, $inquiry->fresh()->assigned_to);
+            $service->assign($staleCopy, $adminB, $second->id);
+            $this->fail('A stale second assignment must not overwrite the first.');
+        } catch (IncomingInquiryWorkflowException) {
+            // expected
         }
+
+        $this->assertSame($first->id, $inquiry->fresh()->assigned_to);
+        $this->assertSame(1, \App\Models\AuditEvent::where('event_type', 'inquiry.assigned')->count());
     }
 
     public function test_inquiry_with_unfinished_import_cannot_be_claimed(): void
     {
-        $manager = $this->userWithRoles(['manager']);
+        $admin = $this->userWithRoles(['admin']);
         $failed = $this->inquiry(['state' => IncomingInquiry::STATE_FAILED]);
         $online = $this->inquiry(['external_type' => 1, 'state' => IncomingInquiry::STATE_UNSUPPORTED]);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.claim', $failed))->assertSessionHasErrors('workflow');
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.claim', $online))->assertSessionHasErrors('workflow');
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.claim', $failed))->assertSessionHasErrors('workflow');
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.claim', $online))->assertSessionHasErrors('workflow');
 
         $this->assertSame(IncomingInquiry::WORKFLOW_NEW, $failed->fresh()->workflow_state);
         $this->assertSame(IncomingInquiry::WORKFLOW_NEW, $online->fresh()->workflow_state);
     }
 
-    public function test_inactive_staff_cannot_claim(): void
+    public function test_inactive_admin_cannot_claim(): void
     {
-        $inactive = $this->userWithRoles(['manager'], ['is_active' => false]);
+        $inactive = $this->userWithRoles(['admin'], ['is_active' => false]);
         $inquiry = $this->inquiry();
 
         $this->actingAs($inactive)->post(route('cabinet.manager.inquiries.claim', $inquiry))->assertSessionHasErrors('workflow');
         $this->assertNull($inquiry->fresh()->assigned_to);
     }
 
-    public function test_admin_can_claim_and_reassign_only_to_assignable_staff(): void
+    // AOA-01-I2A: переназначение теперь требует причину и ожидаемого текущего ответственного.
+    public function test_admin_can_reassign_only_to_assignable_staff_with_reason(): void
     {
         $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
@@ -227,26 +256,37 @@ class IncomingInquiryWorkflowTest extends TestCase
         $inquiry = $this->claimed($admin);
         $this->assertSame($admin->id, $inquiry->assigned_to);
 
-        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), ['assigned_to' => $inactiveManager->id])
+        $payload = fn (int $to): array => [
+            'assigned_to' => $to,
+            'expected_assignee_id' => $admin->id,
+            'reason' => 'Клиент просил другого менеджера',
+        ];
+
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), $payload($inactiveManager->id))
             ->assertSessionHasErrors('assigned_to');
-        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), ['assigned_to' => $tourist->id])
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), $payload($tourist->id))
             ->assertSessionHasErrors('assigned_to');
         $this->assertSame($admin->id, $inquiry->fresh()->assigned_to);
 
-        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), ['assigned_to' => $manager->id])
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.reassign', $inquiry), $payload($manager->id))
             ->assertSessionHas('success');
         $this->assertSame($manager->id, $inquiry->fresh()->assigned_to);
     }
 
+    // AOA-01-I2A: чужое обращение для менеджера не существует (404); своё, но админская операция — 403.
     public function test_manager_cannot_reassign(): void
     {
         $manager = $this->userWithRoles(['manager']);
         $other = $this->userWithRoles(['manager']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.reassign', $inquiry), ['assigned_to' => $other->id])
-            ->assertForbidden();
+        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.reassign', $inquiry), [
+            'assigned_to' => $other->id,
+            'expected_assignee_id' => $manager->id,
+            'reason' => 'Передаю коллеге',
+        ])->assertForbidden();
         $this->assertSame($manager->id, $inquiry->fresh()->assigned_to);
+        $this->assertSame(0, \App\Models\AuditEvent::where('event_type', 'inquiry.reassigned')->count());
     }
 
     public function test_tourist_and_guest_cannot_use_any_inquiry_action(): void
@@ -257,7 +297,8 @@ class IncomingInquiryWorkflowTest extends TestCase
 
         $actions = [
             ['claim', []],
-            ['reassign', ['assigned_to' => $tourist->id]],
+            ['assign', ['assigned_to' => $tourist->id]],
+            ['reassign', ['assigned_to' => $tourist->id, 'expected_assignee_id' => 1, 'reason' => 'Тестовая причина']],
             ['client.select', ['client_id' => $client->id]],
             ['client.create', ['client_name' => 'X']],
             ['client.password-setup', []],
@@ -288,10 +329,11 @@ class IncomingInquiryWorkflowTest extends TestCase
         $tourist = $this->userWithRoles(['tourist']);
         [$inquiry] = $this->linkedClaimed($owner, $tourist);
 
-        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])->assertForbidden();
-        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'X'])->assertForbidden();
-        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.convert', $inquiry), $this->convertPayload())->assertForbidden();
-        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.close', $inquiry), ['close_confirmed' => '1'])->assertForbidden();
+        // AOA-01-I2A: чужое обращение для менеджера не существует — 404 вместо прежнего 403.
+        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])->assertNotFound();
+        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'X'])->assertNotFound();
+        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.convert', $inquiry), $this->convertPayload())->assertNotFound();
+        $this->actingAs($intruder)->post(route('cabinet.manager.inquiries.close', $inquiry), ['close_confirmed' => '1'])->assertNotFound();
 
         $this->assertSame(0, Booking::count());
         $this->assertSame(IncomingInquiry::WORKFLOW_IN_PROGRESS, $inquiry->fresh()->workflow_state);
@@ -299,7 +341,7 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_mutation_routes_are_behind_web_csrf_and_staff_role_middleware(): void
     {
-        foreach (['claim', 'reassign', 'client.select', 'client.create', 'client.password-setup', 'convert', 'close'] as $name) {
+        foreach (['claim', 'assign', 'reassign', 'client.select', 'client.create', 'client.password-setup', 'convert', 'close'] as $name) {
             $route = Route::getRoutes()->getByName('cabinet.manager.inquiries.' . $name);
             $this->assertNotNull($route, $name);
             $this->assertContains('POST', $route->methods());
@@ -408,12 +450,16 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_selection_requires_inquiry_in_progress(): void
     {
+        // AOA-01-I2A: менеджер ничьё обращение не видит (404); админ получает прежний отказ «сначала возьмите в работу».
         $manager = $this->userWithRoles(['manager']);
+        $admin = $this->userWithRoles(['admin']);
         $tourist = $this->userWithRoles(['tourist']);
         $inquiry = $this->inquiry();
 
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])
-            ->assertForbidden();
+            ->assertNotFound();
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])
+            ->assertSessionHasErrors('workflow');
         $this->assertNull($inquiry->fresh()->client_user_id);
     }
 
@@ -650,7 +696,7 @@ class IncomingInquiryWorkflowTest extends TestCase
 
         // не взято в работу → у обращения нет ответственного: менеджер не вправе обрабатывать
         $new = $this->inquiry();
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.convert', $new), $this->convertPayload())->assertForbidden();
+        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.convert', $new), $this->convertPayload())->assertNotFound();
 
         // клиент не выбран
         $noClient = $this->claimed($manager);
@@ -872,20 +918,28 @@ class IncomingInquiryWorkflowTest extends TestCase
         $this->assertSame(IncomingInquiry::WORKFLOW_IN_PROGRESS, $inquiry->fresh()->workflow_state);
     }
 
-    public function test_unclaimed_inquiry_can_be_closed_by_any_staff_but_claimed_one_only_by_responsible_or_admin(): void
+    // AOA-01-I2A: прежде любой сотрудник закрывал ничьё обращение. Теперь ничьё закрывает только администратор,
+    // назначенное — ответственный менеджер или администратор.
+    public function test_unassigned_inquiry_is_closed_only_by_admin_and_assigned_one_by_responsible_or_admin(): void
     {
         $a = $this->userWithRoles(['manager']);
         $b = $this->userWithRoles(['manager']);
         $admin = $this->userWithRoles(['admin']);
 
         $free = $this->inquiry();
-        $this->actingAs($b)->post(route('cabinet.manager.inquiries.close', $free), ['close_confirmed' => '1'])->assertSessionHas('success');
+        $this->actingAs($b)->post(route('cabinet.manager.inquiries.close', $free), ['close_confirmed' => '1'])->assertNotFound();
+        $this->assertSame(IncomingInquiry::WORKFLOW_NEW, $free->fresh()->workflow_state);
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.close', $free), ['close_confirmed' => '1'])->assertSessionHas('success');
         $this->assertSame(IncomingInquiry::WORKFLOW_CLOSED, $free->fresh()->workflow_state);
 
         $owned = $this->claimed($a);
-        $this->actingAs($b)->post(route('cabinet.manager.inquiries.close', $owned), ['close_confirmed' => '1'])->assertForbidden();
+        $this->actingAs($b)->post(route('cabinet.manager.inquiries.close', $owned), ['close_confirmed' => '1'])->assertNotFound();
         $this->actingAs($admin)->post(route('cabinet.manager.inquiries.close', $owned), ['close_confirmed' => '1'])->assertSessionHas('success');
         $this->assertSame(IncomingInquiry::WORKFLOW_CLOSED, $owned->fresh()->workflow_state);
+
+        $own2 = $this->claimed($a);
+        $this->actingAs($a)->post(route('cabinet.manager.inquiries.close', $own2), ['close_confirmed' => '1'])->assertSessionHas('success');
+        $this->assertSame(IncomingInquiry::WORKFLOW_CLOSED, $own2->fresh()->workflow_state);
     }
 
     public function test_converted_inquiry_cannot_be_closed_and_closed_cannot_be_converted(): void
@@ -925,19 +979,22 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_list_filters_by_workflow_state_and_shows_assignee(): void
     {
+        // AOA-01-I2A: фильтры состояния проверяются от имени администратора (видит все обращения);
+        // менеджерская видимость покрыта IncomingInquiryAccessAllocationTest.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager'], ['name' => 'Ответственная Мария']);
         $new = $this->inquiry(['external_id' => '111111']);
         $mine = $this->claimed($manager, ['external_id' => '222222']);
         $closed = $this->claimed($manager, ['external_id' => '333333']);
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.close', $closed), ['close_confirmed' => '1']);
 
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries', ['status' => 'new']))
+        $this->actingAs($admin)->get(route('cabinet.manager.inquiries', ['status' => 'new']))
             ->assertOk()->assertSee('#111111')->assertDontSee('#222222')->assertDontSee('#333333');
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries', ['status' => 'in_progress']))
+        $this->actingAs($admin)->get(route('cabinet.manager.inquiries', ['status' => 'in_progress']))
             ->assertOk()->assertSee('#222222')->assertSee('Ответственная Мария')->assertDontSee('#111111');
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries', ['status' => 'closed']))
+        $this->actingAs($admin)->get(route('cabinet.manager.inquiries', ['status' => 'closed']))
             ->assertOk()->assertSee('#333333')->assertDontSee('#222222');
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries', ['status' => 'garbage']))
+        $this->actingAs($admin)->get(route('cabinet.manager.inquiries', ['status' => 'garbage']))
             ->assertOk()->assertSee('#111111')->assertSee('#222222');
     }
 

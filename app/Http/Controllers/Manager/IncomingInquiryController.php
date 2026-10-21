@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditEvent;
 use App\Models\IncomingInquiry;
 use App\Models\User;
 use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
 use App\Services\IncomingInquiries\IncomingInquiryWorkflow;
 use App\Services\IncomingInquiries\IncomingInquiryWorkflowException;
+use App\Support\Audit\AuditEventType;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +23,11 @@ use Illuminate\Support\Facades\Auth;
  * действовать над конкретным обращением, решает IncomingInquiryPolicy, а
  * допустимость действия в текущем состоянии — IncomingInquiryWorkflow
  * (внутри транзакции). Ничего здесь не обращается к Tourvisor и туроператорам.
+ *
+ * Видимость (AOA-01-I2A): менеджер видит только назначенные ему обращения.
+ * Чужое или ничьё обращение для менеджера «не существует» (404 без данных) —
+ * для ЛЮБОГО действия, до проверки права на само действие; право на действие,
+ * которого у видящего менеджера нет (назначение, переназначение), даёт 403.
  */
 class IncomingInquiryController extends Controller
 {
@@ -33,6 +41,7 @@ class IncomingInquiryController extends Controller
         $filter = (is_string($filter) && array_key_exists($filter, IncomingInquiry::workflowLabels())) ? $filter : null;
 
         $inquiries = IncomingInquiry::query()
+            ->visibleTo(Auth::user())
             ->with('assignee:id,name')
             ->when($filter !== null, function ($query) use ($filter): void {
                 $query->where('workflow_state', $filter)->actionable();
@@ -47,7 +56,7 @@ class IncomingInquiryController extends Controller
 
     public function show(Request $request, IncomingInquiry $inquiry, IncomingInquiryClientMatcher $matcher): View
     {
-        $this->authorize('view', $inquiry);
+        $this->visible($inquiry);
 
         $inquiry->load(['assignee:id,name', 'clientUser', 'booking', 'convertedBy:id,name', 'closedBy:id,name']);
 
@@ -56,6 +65,12 @@ class IncomingInquiryController extends Controller
 
         $canProcess = $inquiryOpen && $actor->can('process', $inquiry);
         $searchTerm = trim((string) $request->query('client_q', ''));
+
+        $canAssign = $inquiry->isActionable()
+            && $inquiry->workflow_state === IncomingInquiry::WORKFLOW_NEW
+            && $inquiry->assigned_to === null
+            && $actor->can('assign', $inquiry);
+        $canReassign = $inquiryOpen && $actor->can('reassign', $inquiry);
 
         return view('manager.inquiries.show', [
             'inquiry' => $inquiry,
@@ -66,18 +81,22 @@ class IncomingInquiryController extends Controller
             'canClose' => $inquiry->isActionable()
                 && in_array($inquiry->workflow_state, [IncomingInquiry::WORKFLOW_NEW, IncomingInquiry::WORKFLOW_IN_PROGRESS], true)
                 && $actor->can('close', $inquiry),
-            'canReassign' => $inquiryOpen && $actor->can('reassign', $inquiry),
-            'assignableStaff' => ($inquiryOpen && $actor->can('reassign', $inquiry))
+            'canAssign' => $canAssign,
+            'canReassign' => $canReassign,
+            'assignableStaff' => ($canAssign || $canReassign)
                 ? User::query()->assignableToBookings()->orderBy('name')->get(['id', 'name'])
                 : collect(),
+            'assignmentHistory' => $actor->can('assign', $inquiry) ? $this->assignmentHistory($inquiry) : collect(),
             'candidates' => $canProcess ? $matcher->candidatesFor($inquiry) : collect(),
             'searchTerm' => $searchTerm,
             'searchResults' => $canProcess ? $matcher->search($searchTerm) : collect(),
         ]);
     }
 
+    /** Самоназначение администратора. Менеджер обращение себе не берёт. */
     public function claim(IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('claim', $inquiry);
 
         return $this->perform($inquiry, function () use ($inquiry): string {
@@ -87,14 +106,45 @@ class IncomingInquiryController extends Controller
         });
     }
 
-    public function reassign(Request $request, IncomingInquiry $inquiry): RedirectResponse
+    /** Первичное назначение нового обращения сотруднику (только администратор). */
+    public function assign(Request $request, IncomingInquiry $inquiry): RedirectResponse
     {
-        $this->authorize('reassign', $inquiry);
+        $this->visible($inquiry);
+        $this->authorize('assign', $inquiry);
 
         $validated = $request->validate(['assigned_to' => ['required', 'integer']], [], ['assigned_to' => 'Ответственный']);
 
         return $this->perform($inquiry, function () use ($inquiry, $validated): string {
-            return $this->workflow->reassign($inquiry, Auth::user(), (int) $validated['assigned_to'])
+            return $this->workflow->assign($inquiry, Auth::user(), (int) $validated['assigned_to'])
+                ? 'Обращение назначено сотруднику.'
+                : 'Обращение уже назначено этому сотруднику.';
+        });
+    }
+
+    /** Смена ответственного у назначенного обращения: только администратор, с обязательной причиной. */
+    public function reassign(Request $request, IncomingInquiry $inquiry): RedirectResponse
+    {
+        $this->visible($inquiry);
+        $this->authorize('reassign', $inquiry);
+
+        $validated = $request->validate([
+            'assigned_to' => ['required', 'integer'],
+            'expected_assignee_id' => ['required', 'integer'],
+            'reason' => ['required', 'string', 'min:' . IncomingInquiryWorkflow::REASON_MIN_LENGTH, 'max:' . IncomingInquiryWorkflow::REASON_MAX_LENGTH],
+        ], [], [
+            'assigned_to' => 'Ответственный',
+            'expected_assignee_id' => 'Текущий ответственный',
+            'reason' => 'Причина переназначения',
+        ]);
+
+        return $this->perform($inquiry, function () use ($inquiry, $validated): string {
+            return $this->workflow->reassign(
+                $inquiry,
+                Auth::user(),
+                (int) $validated['assigned_to'],
+                $validated['reason'],
+                (int) $validated['expected_assignee_id'],
+            )
                 ? 'Ответственный изменён.'
                 : 'Этот сотрудник уже ответственный за обращение.';
         });
@@ -102,6 +152,7 @@ class IncomingInquiryController extends Controller
 
     public function selectClient(Request $request, IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('process', $inquiry);
 
         $validated = $request->validate(['client_id' => ['required', 'integer']], [], ['client_id' => 'Клиент']);
@@ -115,6 +166,7 @@ class IncomingInquiryController extends Controller
 
     public function createClient(Request $request, IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('process', $inquiry);
 
         $validated = $request->validate([
@@ -142,6 +194,7 @@ class IncomingInquiryController extends Controller
 
     public function sendPasswordSetup(IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('process', $inquiry);
 
         return $this->perform($inquiry, function () use ($inquiry): string {
@@ -153,6 +206,7 @@ class IncomingInquiryController extends Controller
 
     public function convert(Request $request, IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('process', $inquiry);
 
         // Возраст детей вводится строкой «5, 8» и приводится к массиву до валидации.
@@ -204,6 +258,8 @@ class IncomingInquiryController extends Controller
 
         try {
             $result = $this->workflow->convert($inquiry, Auth::user(), $validated);
+        } catch (AuthorizationException $e) {
+            $this->hideOrRethrow($inquiry, $e);
         } catch (IncomingInquiryWorkflowException $e) {
             return redirect()->route('cabinet.manager.inquiries.show', $inquiry)
                 ->withErrors([$e->field => $e->getMessage()])
@@ -219,6 +275,7 @@ class IncomingInquiryController extends Controller
 
     public function close(Request $request, IncomingInquiry $inquiry): RedirectResponse
     {
+        $this->visible($inquiry);
         $this->authorize('close', $inquiry);
 
         $validated = $request->validate([
@@ -247,6 +304,8 @@ class IncomingInquiryController extends Controller
     {
         try {
             $message = $action();
+        } catch (AuthorizationException $e) {
+            $this->hideOrRethrow($inquiry, $e);
         } catch (IncomingInquiryWorkflowException $e) {
             return redirect()->route('cabinet.manager.inquiries.show', $inquiry)
                 ->withErrors([$e->field => $e->getMessage()])
@@ -254,5 +313,63 @@ class IncomingInquiryController extends Controller
         }
 
         return redirect()->route('cabinet.manager.inquiries.show', $inquiry)->with('success', $message);
+    }
+
+    /**
+     * Обращение вне видимости пользователя не раскрывается: 404 без данных.
+     * Вызывается до проверки права на конкретное действие.
+     */
+    private function visible(IncomingInquiry $inquiry): void
+    {
+        abort_unless(Auth::user()->can('view', $inquiry), 404);
+    }
+
+    /**
+     * Отказ сервиса по актуальной (заблокированной) строке: если пользователь
+     * успел потерять видимость (обращение переназначено), ответ — тот же 404,
+     * иначе — обычный 403.
+     */
+    private function hideOrRethrow(IncomingInquiry $inquiry, AuthorizationException $e): never
+    {
+        $current = IncomingInquiry::query()->find($inquiry->id);
+
+        abort_unless($current !== null && Auth::user()->can('view', $current), 404);
+
+        throw $e;
+    }
+
+    /**
+     * История назначений для администратора: события аудита этого обращения.
+     * Имена сотрудников подставляются по id; причина выводится только экранированной.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function assignmentHistory(IncomingInquiry $inquiry)
+    {
+        $events = AuditEvent::query()
+            ->where('subject_type', IncomingInquiryWorkflow::AUDIT_SUBJECT)
+            ->where('subject_id', $inquiry->id)
+            ->whereIn('event_type', [AuditEventType::InquiryAssigned->value, AuditEventType::InquiryReassigned->value])
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        $ids = $events->flatMap(fn (AuditEvent $e): array => [
+            $e->actor_id,
+            $e->metadata['previous_assignee_id'] ?? null,
+            $e->metadata['new_assignee_id'] ?? null,
+        ])->filter()->unique()->values();
+
+        $names = User::query()->whereIn('id', $ids)->pluck('name', 'id');
+
+        return $events->map(fn (AuditEvent $e): array => [
+            'type' => $e->typeLabel(),
+            'at' => $e->occurred_at,
+            'actor' => $names[$e->actor_id] ?? null,
+            'previous' => $names[$e->metadata['previous_assignee_id'] ?? 0] ?? null,
+            'new' => $names[$e->metadata['new_assignee_id'] ?? 0] ?? null,
+            'reason' => $e->metadata['reason'] ?? null,
+        ]);
     }
 }

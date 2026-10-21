@@ -6,61 +6,64 @@ use App\Models\IncomingInquiry;
 use App\Models\User;
 
 /**
- * Кто вправе действовать над входящим обращением (E5-A3).
+ * Кто вправе действовать над входящим обращением (E5-A3, AOA-01-I2A).
  *
  * Политика отвечает только на вопрос «кто»: роль и ответственность. Допустимость
  * действия в текущем состоянии (new/in_progress/…) проверяет сервис внутри
  * транзакции, чтобы гонка не обходила проверку.
  *
- * Эффективная роль — по привычному приоритету admin > manager; турист и
- * пользователь без роли не имеют доступа ни к чему.
+ * Правило владельца: администратор видит и ведёт все обращения; менеджер — только
+ * те, что назначены ему сейчас. Назначать и переназначать может только
+ * администратор. Турист и пользователь без роли не имеют доступа ни к чему.
+ * Эффективная роль — по привычному приоритету admin > manager.
  */
 class IncomingInquiryPolicy
 {
-    private function isStaff(User $user): bool
+    private function isAdmin(User $user): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_MANAGER]);
+        return $user->hasRole(User::ROLE_ADMIN);
     }
 
-    public function view(User $user, IncomingInquiry $inquiry): bool
+    private function isAssignedManager(User $user, IncomingInquiry $inquiry): bool
     {
-        return $this->isStaff($user);
-    }
-
-    /** Взять в работу может любой сотрудник (состояние проверяет сервис). */
-    public function claim(User $user, IncomingInquiry $inquiry): bool
-    {
-        return $this->isStaff($user);
-    }
-
-    /**
-     * Выбор клиента, оформление заявки: администратор или ответственный менеджер.
-     * Чужой менеджер не может обрабатывать обращение, взятое коллегой.
-     */
-    public function process(User $user, IncomingInquiry $inquiry): bool
-    {
-        if ($user->hasRole(User::ROLE_ADMIN)) {
-            return true;
-        }
-
         return $user->hasRole(User::ROLE_MANAGER)
             && $inquiry->assigned_to !== null
             && (int) $inquiry->assigned_to === (int) $user->id;
     }
 
-    /** Закрыть без бронирования: как process, а ещё любой сотрудник — пока обращение ничьё. */
-    public function close(User $user, IncomingInquiry $inquiry): bool
+    /** Видимость совпадает с IncomingInquiry::scopeVisibleTo(). */
+    public function view(User $user, IncomingInquiry $inquiry): bool
     {
-        if ($this->process($user, $inquiry)) {
-            return true;
-        }
-
-        return $this->isStaff($user) && $inquiry->assigned_to === null;
+        return $this->isAdmin($user) || $this->isAssignedManager($user, $inquiry);
     }
 
-    /** Переназначение — только администратор. */
+    /** Взять обращение себе (самоназначение) — только администратор; менеджер не берёт чужое/ничьё. */
+    public function claim(User $user, IncomingInquiry $inquiry): bool
+    {
+        return $this->isAdmin($user);
+    }
+
+    /** Первичное назначение ничьего обращения сотруднику — только администратор. */
+    public function assign(User $user, IncomingInquiry $inquiry): bool
+    {
+        return $this->isAdmin($user);
+    }
+
+    /** Выбор клиента, оформление заявки: администратор или ответственный менеджер. */
+    public function process(User $user, IncomingInquiry $inquiry): bool
+    {
+        return $this->isAdmin($user) || $this->isAssignedManager($user, $inquiry);
+    }
+
+    /** Закрыть без бронирования: как process (ничьё обращение менеджер закрыть не может). */
+    public function close(User $user, IncomingInquiry $inquiry): bool
+    {
+        return $this->process($user, $inquiry);
+    }
+
+    /** Смена уже назначенного ответственного — только администратор. */
     public function reassign(User $user, IncomingInquiry $inquiry): bool
     {
-        return $user->hasRole(User::ROLE_ADMIN);
+        return $this->isAdmin($user);
     }
 }
