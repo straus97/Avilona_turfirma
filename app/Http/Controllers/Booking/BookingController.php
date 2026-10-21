@@ -10,7 +10,10 @@ use App\Models\Role;
 use App\Models\Tour;
 use App\Models\User;
 use App\Models\DestinationCity;
+use App\Services\Accounts\ClientVisibility;
 use App\Services\Accounts\StaffClientAccounts;
+use App\Services\Bookings\BookingAssignment;
+use App\Services\Bookings\BookingAssignmentException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -94,7 +97,7 @@ class BookingController extends Controller
         $clients = collect();
         if (Auth::user()->hasAnyRole(['manager', 'admin'])) {
             $clients = $this->touristClientQuery()
-                ->select('id', 'name', 'email')
+                ->select('users.id', 'users.name', 'users.email')
                 ->orderBy('name')
                 ->get();
         }
@@ -176,7 +179,11 @@ class BookingController extends Controller
                     // Без учёта регистра: «Client@…» и «client@…» — один и тот же аккаунт.
                     function (string $attribute, $value, \Closure $fail): void {
                         if ($this->accounts->emailExists((string) $value)) {
-                            $fail('Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.');
+                            // Менеджер не должен узнать, есть ли такой клиент у агентства и чей он:
+                            // нейтральный текст без сведений об учётной записи (AOA-01-I2B, G5).
+                            $fail(Auth::user()->isAdmin()
+                                ? 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.'
+                                : 'Не удалось создать клиента с указанным email. Если клиент уже обращался в агентство, попросите администратора помочь с привязкой.');
                         }
                     },
                 ],
@@ -191,7 +198,7 @@ class BookingController extends Controller
                     'integer',
                     function (string $attribute, $value, \Closure $fail): void {
                         if (!$this->touristClientQuery()->whereKey($value)->exists()) {
-                            $fail('Выберите клиента из списка активных туристов.');
+                            $fail('Выберите клиента из доступного вам списка.');
                         }
                     },
                 ],
@@ -275,14 +282,13 @@ class BookingController extends Controller
     }
 
     /**
-     * Пользователи, которых менеджер/админ вправе выбрать владельцем заявки:
-     * только активные туристы. Используется и в форме, и в валидации.
+     * Пользователи, которых сотрудник вправе выбрать владельцем заявки: активные
+     * туристы, видимые ему по текущим рабочим связям (администратору — все;
+     * AOA-01-I2B, G5). Используется и в форме, и в валидации, и при записи.
      */
     private function touristClientQuery(): Builder
     {
-        return User::query()
-            ->where('is_active', true)
-            ->whereHas('roles', fn (Builder $query) => $query->where('name', Role::TOURIST));
+        return ClientVisibility::touristsVisibleTo(Auth::user());
     }
 
     /**
@@ -340,7 +346,7 @@ class BookingController extends Controller
     /**
      * Просмотр заявки
      */
-    public function show(Booking $booking)
+    public function show(Booking $booking, BookingAssignment $assignment)
     {
         $this->authorize('view', $booking);
 
@@ -359,7 +365,10 @@ class BookingController extends Controller
             ? User::assignableToBookings()->orderBy('name')->get()
             : collect();
 
-        return view('bookings.show', compact('booking', 'assignableEmployees'));
+        // История ответственных видна только администратору.
+        $assignmentHistory = Auth::user()->isAdmin() ? $assignment->history($booking) : collect();
+
+        return view('bookings.show', compact('booking', 'assignableEmployees', 'assignmentHistory'));
     }
 
     /**
@@ -424,33 +433,42 @@ class BookingController extends Controller
     /**
      * Назначение менеджера на заявку (только для админа)
      */
-    public function assignManager(Request $request, Booking $booking)
+    public function assignManager(Request $request, Booking $booking, BookingAssignment $assignment)
     {
         $this->authorize('assignManager', $booking);
-        
-        $request->validate([
-            'manager_id' => 'required|exists:users,id',
+
+        // expected_manager_id — ответственный, которого администратор видел на форме
+        // (пустой = «не назначен»): устаревшая форма не перезаписывает чужое решение.
+        $validated = $request->validate([
+            'manager_id' => ['required', 'integer', 'exists:users,id'],
+            'expected_manager_id' => ['present', 'nullable', 'integer'],
+            'reason_code' => ['nullable', 'string', 'max:40'],
+            'reason' => ['nullable', 'string', 'max:' . BookingAssignment::REASON_NOTE_MAX_LENGTH],
+        ], [], [
+            'manager_id' => 'Ответственный',
+            'reason_code' => 'Причина',
+            'reason' => 'Пояснение',
         ]);
 
-        // Ответственным может быть только активный менеджер или администратор.
-        // Единое правило берётся из User::assignableToBookings(), поэтому UI и сервер
-        // применяют одну и ту же бизнес-логику.
-        if (! User::assignableToBookings()->whereKey($request->manager_id)->exists()) {
-            return back()->withErrors([
-                'manager_id' => 'Выбранного сотрудника нельзя назначить ответственным по заявке.',
-            ])->withInput();
+        try {
+            // Допустимость сотрудника (User::assignableToBookings()), права, актуальность формы,
+            // смена ответственного и запись аудита выполняются сервисом атомарно.
+            $result = $assignment->assign(
+                $booking,
+                Auth::user(),
+                (int) $validated['manager_id'],
+                isset($validated['expected_manager_id']) ? (int) $validated['expected_manager_id'] : null,
+                $validated['reason_code'] ?? null,
+                $validated['reason'] ?? null,
+            );
+        } catch (BookingAssignmentException $e) {
+            return back()->withErrors([$e->field => $e->getMessage()])->withInput();
         }
 
-        if ($booking->status === Booking::STATUS_NEW) {
-            // Первичное назначение: модель переводит заявку в PROGRESS. Событие
-            // отправляется тем же защищённым путём, что и при переназначении.
-            $booking->assignManager($request->manager_id);
-            $this->dispatchManagerAssigned($booking);
-        } elseif ($booking->reassignManager((int) $request->manager_id)) {
-            // Переназначение зафиксировано и ответственный действительно сменился.
-            $this->dispatchManagerAssigned($booking);
+        // Тот же ответственный на не-NEW заявке → no-op: ни уведомления, ни события аудита.
+        if ($result !== BookingAssignment::RESULT_UNCHANGED) {
+            $this->dispatchManagerAssigned($booking->refresh());
         }
-        // Тот же ответственный на не-NEW заявке → reassignManager() вернул false → no-op.
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Ответственный назначен');

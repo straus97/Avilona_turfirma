@@ -575,7 +575,9 @@ class AdminCabinetE3RedesignTest extends TestCase
         );
         // Появляется ровно один раз — как disabled fallback, а не ещё и как
         // обычный (активный, выбираемый) кандидат из списка $managers.
-        $this->assertSame(1, substr_count($html, 'value="' . $manager->id . '"'));
+        // AOA-01-I2B: форма несёт скрытое поле expected_manager_id с тем же id, поэтому
+        // считаются только <option>.
+        $this->assertSame(1, substr_count($html, '<option value="' . $manager->id . '"'));
     }
 
     public function test_inactive_assignee_presentation_does_not_grow_query_count_with_booking_count(): void

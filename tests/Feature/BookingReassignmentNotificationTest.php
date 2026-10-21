@@ -37,7 +37,7 @@ class BookingReassignmentNotificationTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $managerA->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -68,7 +68,7 @@ class BookingReassignmentNotificationTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $managerA->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -94,7 +94,7 @@ class BookingReassignmentNotificationTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $managerA->id, Booking::STATUS_CONFIRMED);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -118,7 +118,7 @@ class BookingReassignmentNotificationTest extends TestCase
         $booking  = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -145,7 +145,7 @@ class BookingReassignmentNotificationTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $managerA->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -178,7 +178,7 @@ class BookingReassignmentNotificationTest extends TestCase
             ->andThrow(new \RuntimeException('mail down'));
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerB->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking))
             ->assertSessionHasNoErrors();
 
@@ -211,7 +211,7 @@ class BookingReassignmentNotificationTest extends TestCase
             ->andThrow(new \RuntimeException('mail down'));
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $managerA->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking))
             ->assertSessionHasNoErrors();
 

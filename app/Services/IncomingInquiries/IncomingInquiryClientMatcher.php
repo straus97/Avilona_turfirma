@@ -5,13 +5,16 @@ namespace App\Services\IncomingInquiries;
 use App\Models\IncomingInquiry;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Accounts\ClientVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
  * Подбор КАНДИДАТОВ среди существующих туристов для показа сотруднику.
  *
- * Совпадение email/телефона — только подсказка: сервис ничего не пишет и не
+ * Кандидаты и поиск ограничены клиентами, видимыми сотруднику
+ * (ClientVisibility, AOA-01-I2B): менеджер не находит чужого клиента по имени,
+ * телефону или email. Совпадение email/телефона — только подсказка: сервис ничего не пишет и не
  * связывает. Владельца заявки определяет только явное решение сотрудника.
  */
 class IncomingInquiryClientMatcher
@@ -30,7 +33,7 @@ class IncomingInquiryClientMatcher
     /**
      * @return Collection<int, array{user: User, reasons: list<string>}>
      */
-    public function candidatesFor(IncomingInquiry $inquiry): Collection
+    public function candidatesFor(IncomingInquiry $inquiry, User $actor): Collection
     {
         $email = $this->normalizedEmail($inquiry->client_email);
         $phone = $this->phoneTail($inquiry->client_phone);
@@ -39,8 +42,7 @@ class IncomingInquiryClientMatcher
             return collect();
         }
 
-        $users = self::touristQuery()
-            ->withCount('bookings')
+        $users = ClientVisibility::touristsVisibleTo($actor)
             ->where(function (Builder $q) use ($email, $phone): void {
                 if ($email !== null) {
                     $q->whereRaw('LOWER(email) = ?', [$email]);
@@ -75,7 +77,7 @@ class IncomingInquiryClientMatcher
      *
      * @return Collection<int, User>
      */
-    public function search(?string $term): Collection
+    public function search(?string $term, User $actor): Collection
     {
         $term = trim((string) $term);
 
@@ -86,8 +88,7 @@ class IncomingInquiryClientMatcher
         $like = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term) . '%';
         $digits = $this->digits($term);
 
-        return self::touristQuery()
-            ->withCount('bookings')
+        return ClientVisibility::touristsVisibleTo($actor)
             ->where(function (Builder $q) use ($like, $digits): void {
                 $q->whereRaw("name LIKE ? ESCAPE '!'", [$like])
                     ->orWhereRaw("email LIKE ? ESCAPE '!'", [$like]);

@@ -811,7 +811,8 @@ class IncomingInquiryAccessAllocationTest extends TestCase
         $inquiry = $this->inquiry();
 
         $this->actingAs($admin)->post(route('cabinet.manager.inquiries.assign', $inquiry), ['assigned_to' => $manager->id]);
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])->assertSessionHas('success');
+        // AOA-01-I2B: существующего клиента к обращению менеджера привязывает администратор.
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])->assertSessionHas('success');
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.convert', $inquiry), $this->convertPayload())->assertSessionHas('success');
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.convert', $inquiry), $this->convertPayload())->assertSessionHas('success');
 

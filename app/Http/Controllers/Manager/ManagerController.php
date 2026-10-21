@@ -9,7 +9,9 @@ use App\Models\Article;
 use App\Models\ReviewConsent;
 use App\Models\Reviews;
 use App\Models\UserDocument;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\Accounts\ClientVisibility;
 use App\Support\NewsHtmlSanitizer;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -137,28 +139,33 @@ class ManagerController extends Controller
     {
         $manager = $request->user();
         
-        // Получаем уникальных клиентов через заявки
-        $clientIds = Booking::where('manager_id', $manager->id)
-            ->distinct()
-            ->pluck('user_id');
+        // Администратор видит всех клиентов-туристов, менеджер — только тех, с кем у него
+        // сейчас есть рабочая связь (его заявки или назначенные ему обращения; AOA-01-I2B, G5).
+        // Фильтрация выполняется в SQL (ClientVisibility), а не в шаблоне.
+        $isAdmin = $manager->hasRole(User::ROLE_ADMIN);
+
+        // Счётчики и «последняя заявка» — только по заявкам самого менеджера:
+        // чужие заявки общего клиента здесь не видны. Администратор считает все.
+        $ownBookings = fn ($query) => $isAdmin ? $query : $query->where('manager_id', $manager->id);
 
         // Коррелированный подзапрос: id самой свежей (по created_at) заявки
         // этого менеджера по каждому клиенту. Строится через Eloquent-модель
         // Booking, поэтому глобальный scope SoftDeletes остаётся активным.
-        $latestBookingIdSubquery = Booking::query()
+        $latestBookingIdSubquery = $ownBookings(Booking::query()
             ->select('bookings.id')
-            ->whereColumn('bookings.user_id', 'users.id')
-            ->where('bookings.manager_id', $manager->id)
+            ->whereColumn('bookings.user_id', 'users.id'))
             ->orderByDesc('bookings.created_at')
             ->limit(1);
 
-        $clients = User::whereIn('id', $clientIds)
+        $clientsQuery = $isAdmin
+            ? User::query()->whereHas('roles', fn ($q) => $q->where('name', Role::TOURIST))
+            : ClientVisibility::scopeTo(User::query(), $manager);
+
+        $clients = $clientsQuery
             ->withCount([
-                'bookings' => function ($query) use ($manager) {
-                    $query->where('manager_id', $manager->id);
-                },
-                'bookings as active_bookings' => function ($query) use ($manager) {
-                    $query->where('manager_id', $manager->id)
+                'bookings' => fn ($query) => $ownBookings($query),
+                'bookings as active_bookings' => function ($query) use ($ownBookings) {
+                    $ownBookings($query)
                         ->whereIn('status', [Booking::STATUS_NEW, Booking::STATUS_PROGRESS, Booking::STATUS_CONFIRMED]);
                 },
             ])

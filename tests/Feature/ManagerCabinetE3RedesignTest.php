@@ -777,7 +777,10 @@ class ManagerCabinetE3RedesignTest extends TestCase
         $pendingCountQueries = collect($log)->filter(function (array $entry): bool {
             $sql = strtolower($entry['query']);
 
+            // AOA-01-I2B: счётчик колокольчика читает notifications и содержит подзапрос к bookings;
+            // это не «ожидающие заявки» сайдбара, поэтому из подсчёта исключается.
             return str_contains($sql, 'select count(*)')
+                && ! str_contains($sql, 'from "notifications"')
                 && str_contains($sql, 'from "bookings"')
                 && str_contains($sql, 'manager_id')
                 && str_contains($sql, ' in (');

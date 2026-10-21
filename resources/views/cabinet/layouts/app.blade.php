@@ -82,12 +82,12 @@
 
             <!-- Notifications -->
             @php
-                $__unreadNotificationCount = Auth::user()->unreadNotifications()
-                    ->where('type', \App\Notifications\NewMessageDatabaseNotification::class)
+                // Видимость — по ТЕКУЩЕЙ принадлежности заявки (AOA-01-I2B, G8): прежний ответственный
+                // не видит ни счётчик, ни превью сообщений по заявке, которая ему больше не принадлежит.
+                $__unreadNotificationCount = \App\Support\Notifications\MessageNotificationVisibility::unreadFor(Auth::user())
                     ->count();
 
-                $__latestUnreadNotification = Auth::user()->unreadNotifications()
-                    ->where('type', \App\Notifications\NewMessageDatabaseNotification::class)
+                $__latestUnreadNotification = \App\Support\Notifications\MessageNotificationVisibility::unreadFor(Auth::user())
                     ->latest()
                     ->first();
             @endphp

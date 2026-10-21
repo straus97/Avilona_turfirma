@@ -38,7 +38,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -57,7 +57,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $manager1->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager2->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager2->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -78,7 +78,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking      = $this->makeBookingFor($owner);
 
         $this->actingAs($actingAdmin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $targetAdmin->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $targetAdmin->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -95,7 +95,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $admin->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $admin->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -114,7 +114,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking = $this->makeBookingFor($owner, $manager->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $target->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $target->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -132,7 +132,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $both->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $both->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -154,7 +154,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking  = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -173,7 +173,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $current->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -191,7 +191,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking  = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -210,7 +210,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $current->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $inactive->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -232,7 +232,7 @@ class BookingAssigneeEligibilityTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [

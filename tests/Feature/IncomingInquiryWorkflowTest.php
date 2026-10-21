@@ -108,7 +108,8 @@ class IncomingInquiryWorkflowTest extends TestCase
     {
         $tourist ??= $this->userWithRoles(['tourist']);
         $inquiry = $this->claimed($manager, $overrides);
-        $this->actingAs($manager)
+        // AOA-01-I2B: менеджер не выбирает произвольного существующего клиента — привязку выполняет администратор.
+        $this->actingAs($this->userWithRoles(['admin']))
             ->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])
             ->assertRedirect();
 
@@ -368,7 +369,8 @@ class IncomingInquiryWorkflowTest extends TestCase
         $match = $this->userWithRoles(['tourist'], ['name' => 'Совпавший По Почте', 'email' => 'Synthetic.Client@example.test']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries.show', $inquiry))
+        // AOA-01-I2B: подсказки по всему справочнику видит администратор (менеджер — только своих клиентов).
+        $this->actingAs($this->userWithRoles(['admin']))->get(route('cabinet.manager.inquiries.show', $inquiry))
             ->assertOk()->assertSee('Совпавший По Почте')->assertSee('совпадает email');
 
         $inquiry->refresh();
@@ -384,7 +386,7 @@ class IncomingInquiryWorkflowTest extends TestCase
         $unrelated = $this->userWithRoles(['tourist'], ['name' => 'Посторонний Турист', 'phone' => '+7 911 000-00-00']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries.show', $inquiry))
+        $this->actingAs($this->userWithRoles(['admin']))->get(route('cabinet.manager.inquiries.show', $inquiry))
             ->assertOk()->assertSee('Совпавший По Телефону')->assertSee('совпадает телефон')
             ->assertDontSee('Посторонний Турист');
 
@@ -412,8 +414,10 @@ class IncomingInquiryWorkflowTest extends TestCase
         $this->userWithRoles(['tourist'], ['name' => 'Поискин Турист']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->get(route('cabinet.manager.inquiries.show', [$inquiry, 'client_q' => 'Поискин']))
-            ->assertOk()->assertSee('Поискин Турист')->assertDontSee('Коллега Поискин');
+        $this->actingAs($this->userWithRoles(['admin']))->get(route('cabinet.manager.inquiries.show', [$inquiry, 'client_q' => 'Поискин']))
+            ->assertOk()->assertSee('Выбрать клиента Поискин Турист')
+            // Администратор видит коллегу в списке назначения, но не среди найденных клиентов.
+            ->assertDontSee('Выбрать клиента Коллега Поискин');
     }
 
     public function test_explicit_selection_of_existing_tourist_persists(): void
@@ -423,12 +427,13 @@ class IncomingInquiryWorkflowTest extends TestCase
         $inquiry = $this->claimed($manager);
         $before = $tourist->fresh()->only(['name', 'email', 'phone', 'password']);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])
+        $admin = $this->userWithRoles(['admin']);
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.select', $inquiry), ['client_id' => $tourist->id])
             ->assertSessionHas('success');
 
         $inquiry->refresh();
         $this->assertSame($tourist->id, $inquiry->client_user_id);
-        $this->assertSame($manager->id, $inquiry->client_linked_by);
+        $this->assertSame($admin->id, $inquiry->client_linked_by);
         $this->assertNotNull($inquiry->client_linked_at);
         $this->assertSame($before, $tourist->fresh()->only(['name', 'email', 'phone', 'password']), 'Аккаунт не изменяется');
     }
@@ -571,7 +576,7 @@ class IncomingInquiryWorkflowTest extends TestCase
         // Уже активный (подтверждённый) клиент — ссылку слать нельзя.
         $active = $this->userWithRoles(['tourist']);
         $other = $this->claimed($manager);
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.select', $other), ['client_id' => $active->id]);
+        $this->actingAs($this->userWithRoles(['admin']))->post(route('cabinet.manager.inquiries.client.select', $other), ['client_id' => $active->id]);
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.password-setup', $other))->assertSessionHasErrors('client_id');
         Notification::assertNotSentTo($active, ResetPassword::class);
     }

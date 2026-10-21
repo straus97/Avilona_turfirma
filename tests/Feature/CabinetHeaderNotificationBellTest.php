@@ -213,18 +213,29 @@ class CabinetHeaderNotificationBellTest extends TestCase
 
     public function test_malformed_non_array_data_payload_does_not_error_and_shows_fallback_text(): void
     {
-        $tourist = $this->makeUser([Role::TOURIST]);
+        // AOA-01-I2B (G8): уведомление без читаемого booking_id нельзя привязать к заявке, поэтому
+        // не-администратору оно не показывается (закрытое поведение). Администратор (надзор) его
+        // по-прежнему видит с безопасным fallback-текстом; 500 нет ни в одном случае.
+        $admin = $this->makeUser([Role::ADMIN]);
 
         // Скалярный (не-массив) payload корректного типа — см. аналогичную
         // технику в CabinetNotificationOpenTest (проверка ветки !is_array($data)).
-        $this->rawNotification($tourist, 'not-an-array-payload');
+        $this->rawNotification($admin, 'not-an-array-payload');
 
-        $response = $this->actingAs($tourist)->get(route('cabinet.dashboard'));
+        $response = $this->actingAs($admin)->get(route('cabinet.admin.dashboard'));
 
         $response->assertOk();
         $response->assertSee('notification-badge">1</span>', false);
         $response->assertSee('Новое сообщение');
         $response->assertSee('Отправитель: Пользователь');
+
+        $tourist = $this->makeUser([Role::TOURIST]);
+        $this->rawNotification($tourist, 'not-an-array-payload');
+
+        $this->actingAs($tourist)->get(route('cabinet.dashboard'))
+            ->assertOk()
+            ->assertDontSee('<span class="notification-badge">', false)
+            ->assertDontSee('Отправитель: Пользователь');
     }
 
     // -----------------------------------------------------------------------
@@ -391,8 +402,18 @@ class CabinetHeaderNotificationBellTest extends TestCase
      */
     private function notify(User $owner, string $previewMarker): DatabaseNotification
     {
-        $sender  = $this->makeUser([Role::TOURIST]);
-        $booking = $this->makeBookingFor($sender, null);
+        // AOA-01-I2B (G8): уведомление видно только участнику заявки ПО ТЕКУЩЕЙ принадлежности,
+        // поэтому получатель здесь — настоящий владелец (турист) или ответственный (менеджер) заявки.
+        if ($owner->hasRole(Role::MANAGER)) {
+            $sender  = $this->makeUser([Role::TOURIST]);
+            $booking = $this->makeBookingFor($sender, $owner->id);
+        } elseif ($owner->hasRole(Role::TOURIST)) {
+            $sender  = $this->makeUser([Role::MANAGER]);
+            $booking = $this->makeBookingFor($owner, $sender->id);
+        } else {
+            $sender  = $this->makeUser([Role::TOURIST]);
+            $booking = $this->makeBookingFor($sender, null);
+        }
         $message = $this->makeMessage($booking, $sender, $owner, $previewMarker);
 
         $owner->notify(new NewMessageDatabaseNotification($message));

@@ -7,6 +7,7 @@ use App\Mail\AdminBookingCreated;
 use App\Mail\BookingCreated as BookingCreatedMail;
 use App\Models\Booking;
 use App\Models\DestinationCity;
+use App\Models\IncomingInquiry;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -134,6 +135,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
         $manager = $this->makeUser(Role::MANAGER);
         $tourist = $this->makeUser(Role::TOURIST);
+        $this->giveWorkRelationship($manager, $tourist);
 
         $this->actingAs($manager)
             ->post(route('bookings.store'), $this->validPayload([
@@ -435,6 +437,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
         $legacyClient = $this->makeUser(Role::TOURIST);
         $legacyClient->forceFill(['email' => 'temp_1736600000@avilona.ru'])->save();
+        $this->giveWorkRelationship($manager, $legacyClient);
 
         $this->actingAs($manager)
             ->post(route('bookings.store'), $this->validPayload([
@@ -453,6 +456,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
         $client = $this->makeUser(Role::TOURIST);
         $client->forceFill(['email' => 'ivanov@avilona.ru'])->save();
+        $this->giveWorkRelationship($manager, $client);
 
         $this->actingAs($manager)
             ->post(route('bookings.store'), $this->validPayload([
@@ -541,6 +545,7 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
         $manager = $this->makeUser(Role::MANAGER);
         $tourist = $this->makeUser(Role::TOURIST);
+        $this->giveWorkRelationship($manager, $tourist);
 
         $submitted = 'Отель 5*, первая линия.';
 
@@ -576,6 +581,28 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
+
+    /**
+     * AOA-01-I2B: менеджер выбирает только клиента с текущей рабочей связью. Связь создаётся
+     * обращением, назначенным менеджеру (заявка не создаётся, поэтому sole() в тестах сохраняется).
+     */
+    private function giveWorkRelationship(User $manager, User $client): void
+    {
+        (new IncomingInquiry())->forceFill([
+            'provider' => 'tourvisor',
+            'external_type' => 0,
+            'external_id' => (string) random_int(100000, 999999),
+            'state' => IncomingInquiry::STATE_IMPORTED,
+            'webhook_count' => 1,
+            'first_notified_at' => now(),
+            'last_notified_at' => now(),
+            'imported_at' => now(),
+            'normalizer_version' => 1,
+            'workflow_state' => IncomingInquiry::WORKFLOW_IN_PROGRESS,
+            'assigned_to' => $manager->id,
+            'client_user_id' => $client->id,
+        ])->save();
+    }
 
     private function makeUser(string $roleName): User
     {

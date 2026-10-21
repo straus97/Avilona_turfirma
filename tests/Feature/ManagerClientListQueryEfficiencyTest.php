@@ -247,7 +247,10 @@ class ManagerClientListQueryEfficiencyTest extends TestCase
         // latest-booking hydration), plus 1 bounded query the sidebar
         // partial now runs for the real "Мои заявки" pending-count badge
         // (E3-A4) — none of the four grows with client count.
-        $this->assertSame(4, $countForOneClient);
+        // AOA-01-I2B: видимость клиентов теперь — подзапросы внутри самой выборки (отдельный
+        // pluck идентификаторов убран), а колокольчик шапки делает 2 ограниченных запроса
+        // с проверкой текущей принадлежности заявки (G8). Итог 6; он по-прежнему не растёт с числом клиентов.
+        $this->assertSame(6, $countForOneClient);
         $this->assertNotSame(2 * 5, $countForFiveClients);
     }
 }

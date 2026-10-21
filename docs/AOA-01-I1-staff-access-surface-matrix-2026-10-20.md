@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-20 · **Slice:** AOA-01-I1 · **Source baseline:** `013d2483` (+ the I1 audit foundation).
 
-> **Update 2026-10-21 (AOA-01-I2A):** gaps G1, G2, G3, G4 and G6 below were *implemented and verified* in AOA-01-I2A — see **§6 (implementation evidence)**. The "Gap" columns and §3 describe the state at I1 and are kept as the historical baseline. G5, G7 and G8 are still open (AOA-01-I2B).
+> **Update 2026-10-21 (AOA-01-I2A):** gaps G1, G2, G3, G4 and G6 below were *implemented and verified* in AOA-01-I2A — see **§6 (implementation evidence)**. The "Gap" columns and §3 describe the state at I1 and are kept as the historical baseline. G5, G7 and G8 were *implemented and verified* in AOA-01-I2B — see **§7**.
 >
 > **Role of this document: technical evidence for AOA-01-I2 / AOA-02. It is NOT a roadmap.** Status, slice order and owner decisions live only in [`docs/roadmap.md`](roadmap.md). Nothing in the *Gap* or *I2* columns is implemented by I1 (the only behavioural change in I1 is the Admin log viewer, AO-04).
 
@@ -151,3 +151,53 @@ Preserved by design (regression-tested): Tourvisor intake/provenance/deduplicati
 - **G5:** the full active-Tourist directory (name/e-mail/phone) is still searchable by an assigned Manager (`IncomingInquiryClientMatcher`) and listed in the booking-create dropdown. I2A introduced no new lookup surface.
 - **G7:** Booking assignment/reassignment still has no reason or history.
 - **G8:** a former Booking manager keeps stale notification previews/unread count (≤ 60 visible characters). Inquiry reassignment creates no notifications, so I2A added no new leak here.
+
+
+## 7. AOA-01-I2B implementation evidence (2026-10-21)
+
+**Scope:** G5, G7, G8 only; legacy `IncomingInquiry` and Booking workflows; no new `Inquiry` entity, **no migration**, no canonical-MySQL or production change. Resolved **to the extent verified below** (SQLite `:memory:` + disposable-DB browser QA). True MySQL row-lock concurrency is **not** verified.
+
+### 7.1 Owner decision implemented (G5, OWNER_APPROVED)
+
+A Manager sees only clients tied to their **current** assigned inquiries or bookings; Admin sees the full directory; a client who exists only under another Manager is **not** discoverable by name, phone or e-mail; Admin links such a client to the receiving Manager's work through the existing Admin-capable `client/select` operation (no duplicate account, no Manager-controlled arbitrary linking). Visibility of one client never extends to that client's other bookings, correspondence or inquiries (those keep their own policies).
+
+### 7.2 What changed (by surface)
+
+| Surface | Before | After | Evidence |
+|---|---|---|---|
+| Client rule | none | `App\Services\Accounts\ClientVisibility` — SQL sub-queries: Admin all; Manager = clients of `bookings.manager_id = me` ∪ `incoming_inquiries.assigned_to = me AND client_user_id NOT NULL`; others none. Historical assignment grants nothing | `test_scope_is_applied_in_sql_and_excludes_inactive_and_non_tourists`, `test_manager_sees_clients_of_current_bookings_and_assigned_inquiries_only` |
+| Manager clients page | clients of own bookings | scoped via the same rule (+ inquiry-linked clients); counts/"latest booking" only over the Manager's own bookings; Admin sees all tourists | `test_admin_sees_the_complete_directory_…`, `test_shared_client_clients_page_counts_only_own_bookings` |
+| B-05 booking-create dropdown + `client_id` validation + owner lock | all active tourists | same scoped query for form, validation and write; failure text neutral ("Выберите клиента из доступного вам списка") | `test_booking_store_rejects_foreign_client_without_leaking_account_details` |
+| I-12 inquiry candidates + manual search (`IncomingInquiryClientMatcher`) | whole directory, incl. booking count | `candidatesFor/search($actor)` scoped by `ClientVisibility`; the "заявок: N" figure (other managers' activity) removed | `test_foreign_client_cannot_be_found_by_name_phone_or_email_in_inquiry_search`, `test_manager_can_search_and_select_a_client_they_legitimately_work_with` |
+| I-05 `client/select` | any active tourist id | service selects from the visible set; foreign and non-existent ids give the **identical** neutral error ("попросите администратора привязать его") | `test_selecting_a_foreign_or_missing_client_gives_one_neutral_answer_without_details` |
+| New-client creation (booking + inquiry) | e-mail conflict message named the existing flow | Manager: neutral text, no account details; Admin keeps the informative hint; genuinely new clients still created | `test_new_client_creation_still_works_for_manager`, `test_existing_email_conflict_is_neutral_for_manager_and_informative_for_admin` |
+| Admin-assisted association | n/a | Admin `client/select` on the Manager's inquiry; Manager then sees only the client profile, not the other Manager's booking/notes/chat | `test_admin_can_link_an_existing_foreign_client_to_a_managers_inquiry_without_exposing_other_records` |
+| Revocation | n/a | reassigning the Booking/inquiry removes access unless another current relationship remains | `test_reassignment_revokes_access_unless_another_relationship_remains` |
+| B-04 Booking (re)assignment (G7) | `manager_id` + status only, no reason/history | `App\Services\Bookings\BookingAssignment`: Admin only; one transaction with row lock on the booking, re-authorization, locked eligibility (`assignableToBookings()`), stale-form rejection (`expected_manager_id` required, `present`), no-op for same target on non-NEW (no event, no notification), reason **category** required when an existing assignee changes (`workload`, `absence`, `specialization`, `client_request`, `staff_change`, `other`) + optional note 5–200 chars (required for `other`) checked by `AuditMetadata`; audit `booking.reassigned` (change) or `booking.assigned` (first/confirming assignment, no reason) with `previous_manager_id`, `new_manager_id`, `reason_code`, `reason`; actor and `occurred_at` from `AuditRecorder`; Admin-only history on the booking page; status, payment data, client and chat untouched | `BookingReassignmentAuditTest` (15 tests) |
+| Audit atomicity | n/a | failing `AuditRecorder` rolls the assignment back | `test_audit_failure_rolls_the_assignment_back` |
+| Audit free-text PII | phone numbers not detected | `AuditMetadata` rejects phone-like digit runs (≥10 digits, ≤2 separators; ISO / dd.mm.yyyy dates exempt). Applies to Inquiry **and** Booking reasons; existing e-mail/path/token checks unchanged | `test_audit_metadata_rejects_phone_numbers_but_keeps_dates_and_plain_text`, `test_inquiry_reassignment_reason_also_rejects_phone_numbers` |
+| B-10 notifications (G8) | bell count + 60-char preview by addressee | `App\Support\Notifications\MessageNotificationVisibility`: for `NewMessageDatabaseNotification` the bell count and preview are limited, in SQL (`data->booking_id IN (select …)`), to Bookings the user owns **now** (Manager `manager_id`, Tourist `user_id`); Admin unchanged (oversight); no readable `booking_id` → hidden for non-Admin; rows are never deleted, so access returns with the Booking; other notification types untouched | `BookingNotificationPrivacyTest` (10 tests) |
+| `GET /messages/unread-count` | all unread for the receiver | restricted to Bookings accessible now (same role precedence) | `test_unread_messages_counter_is_consistent_with_current_access` |
+| Chat / booking / write rules | — | **unchanged**; Admin may still write only while assigned | `test_admin_chat_write_rule_is_not_broadened_by_reassignment`, `test_direct_booking_and_chat_authorization_stays_intact_for_former_manager` |
+
+Queued/delayed delivery: `NewMessageDatabaseNotification` is stored synchronously (channel `database`, not queued). The queued e-mail `NewMessageReceived` builds its link with `Booking::chatRouteFor()`, which throws for a user who is no longer the owner/assignee, so a mail still queued for a former Manager cannot render (source-read; not re-tested in I2B). E-mails already delivered cannot be recalled.
+
+### 7.3 Existing tests whose fixtures/expectations changed (deliberately)
+
+| Test | Change and reason |
+|---|---|
+| `BookingAssigneeEligibilityTest`, `BookingLifecycleAuthorizationTest`, `BookingReassignmentNotificationTest` (24 posts to `bookings.assign-manager`) | payload now carries `expected_manager_id` (= current manager) and `reason_code`; same assertions otherwise |
+| `IncomingInquiryWorkflowTest` (`linkedClaimed()`, candidates/search/selection/password-setup tests) | the existing client is linked **by Admin**, candidate/search pages are viewed **as Admin** (a Manager no longer sees unrelated clients); `client_linked_by` asserts the Admin |
+| `IncomingInquiryAccessAllocationTest::test_assigned_manager_converts_once_…` | client selected by Admin, conversion still by the Manager |
+| `BookingCreationOwnershipAndAtomicityTest` (4 manager→existing-client tests) | fixture `giveWorkRelationship()` gives the Manager a current relationship (assigned inquiry) before choosing the client |
+| `CabinetHeaderNotificationBellTest::notify()` | the notified user is now a real participant of the Booking (the old fixture notified a stranger); malformed-payload test split: Admin still sees the fallback text, a Tourist no longer sees an unresolvable notification |
+| `ManagerClientListQueryEfficiencyTest` | bookings-touching queries 4 → 6 (pluck of ids replaced by sub-queries; bell adds 2 bounded queries); still constant in client count |
+| `ManagerCabinetE3RedesignTest` (pending-count query shape) | queries on `notifications` are excluded from the sidebar-count heuristic |
+| `AdminCabinetE3RedesignTest` (inactive assignee shown once) | counts `<option value="id"` (the form now also holds a hidden `expected_manager_id`) |
+
+### 7.4 Verification and limits
+
+- PHPUnit (SQLite `:memory:`, synthetic data): **1599 tests / 12401 assertions, 0 failures, 0 errors** (previous 1561 / 12166). Command needs `-d xdebug.mode=off -d memory_limit=2048M`.
+- Browser QA (isolated disposable SQLite DB, headless Chrome CDP, synthetic users; 1200 px 66/66, 360 px 56/56 checks; no horizontal overflow, no first-party console errors): Admin sees all clients; Manager A sees only own clients and cannot find a foreign client by name/phone/e-mail; booking-create dropdown scoped and usable; Admin reassigns with a reason (missing reason and a phone number in the reason are rejected with visible errors; keyboard order covers reason select, note and submit); history shown; former Manager loses booking access, bell preview/count and client visibility; new Manager gains them; Admin links an existing client to Manager A's inquiry (1200 px) and Manager A still gets 403 on the other Manager's booking; Tourist cabinet unaffected.
+- **NOT verified:** MySQL row-lock concurrency (two Admins reassigning the same Booking; reassignment vs. Manager action). SQLite serialises writers. A disposable-MySQL check is **required before E6**, together with the I1/I2A checks.
+- Residual limits (documented, not fixed): (1) creating a client with an e-mail that already exists unavoidably answers "cannot create" (a one-bit existence oracle for e-mail; no name/owner/id is returned; `users.email` stays unique). (2) The phone check is deliberately narrow (digit runs); names and other free-text PII are not detected. (3) Old notifications without a readable `booking_id` are hidden from non-Admins; Admin still sees them. (4) Booking owner (`user_id`) cannot be changed after creation, so Admin-assisted association exists for `IncomingInquiry` (select) and for Admin-created Bookings (existing client, then assign); there is no CRM merge. (5) A Manager's closed/converted inquiry still grants client visibility while it stays assigned to them (same rule as the inquiry's own visibility). (6) The admin Booking list form for an assigned row carries the reason controls inline; creating the first assignment needs none.

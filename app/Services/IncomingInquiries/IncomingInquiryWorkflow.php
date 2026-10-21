@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\DestinationCity;
 use App\Models\IncomingInquiry;
 use App\Models\User;
+use App\Services\Accounts\ClientVisibility;
 use App\Services\Accounts\StaffClientAccounts;
 use App\Services\Audit\AuditRecorder;
 use App\Support\Audit\AuditEventType;
@@ -33,6 +34,9 @@ use InvalidArgumentException;
 class IncomingInquiryWorkflow
 {
     public const AUDIT_SUBJECT = 'incoming_inquiry';
+
+    /** Нейтральный отказ: не раскрывает, существует ли клиент и чей он (AOA-01-I2B, G5). */
+    public const CLIENT_UNAVAILABLE_MESSAGE = 'Этот клиент вам недоступен. Если клиент уже обращался в агентство, попросите администратора привязать его к обращению.';
 
     public const REASON_MIN_LENGTH = 5;
     public const REASON_MAX_LENGTH = 300;
@@ -178,10 +182,12 @@ class IncomingInquiryWorkflow
             $this->authorize($actor, 'process', $locked);
             $this->assertInProgress($locked);
 
-            $client = IncomingInquiryClientMatcher::touristQuery()->lockForUpdate()->find($userId);
+            // Менеджер может выбрать только клиента, видимого ему по текущим рабочим связям.
+            // Чужой и несуществующий id неразличимы: ответ один и тот же, без данных о клиенте.
+            $client = ClientVisibility::touristsVisibleTo($actor)->lockForUpdate()->find($userId);
 
             if ($client === null) {
-                throw new IncomingInquiryWorkflowException('Выберите клиента из списка активных туристов.', 'client_id');
+                throw new IncomingInquiryWorkflowException(self::CLIENT_UNAVAILABLE_MESSAGE, 'client_id');
             }
 
             $this->linkClient($locked, $client, $actor);
@@ -210,10 +216,7 @@ class IncomingInquiryWorkflow
                 $this->assertInProgress($locked);
 
                 if ($email !== null && $this->accounts->emailExists($email)) {
-                    throw new IncomingInquiryWorkflowException(
-                        'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.',
-                        'client_email'
-                    );
+                    throw $this->emailConflict($actor);
                 }
 
                 // Без роли «tourist» createTourist бросает исключение — транзакция откатывается.
@@ -224,10 +227,7 @@ class IncomingInquiryWorkflow
                 return $client;
             });
         } catch (UniqueConstraintViolationException) {
-            throw new IncomingInquiryWorkflowException(
-                'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.',
-                'client_email'
-            );
+            throw $this->emailConflict($actor);
         }
     }
 
@@ -459,12 +459,27 @@ class IncomingInquiryWorkflow
             AuditMetadata::validate(['reason' => $reason]);
         } catch (InvalidArgumentException) {
             throw new IncomingInquiryWorkflowException(
-                'Причина не должна содержать email, пути к файлам и длинные ключеподобные строки.',
+                'Причина не должна содержать email, телефоны, пути к файлам и длинные ключеподобные строки.',
                 'reason'
             );
         }
 
         return $reason;
+    }
+
+    /**
+     * Конфликт email при создании клиента. Администратор (видит весь справочник)
+     * получает прежнюю подсказку; менеджер — нейтральный текст без сведений об
+     * учётной записи: ни имени, ни владельца, ни самого факта «чей» это клиент.
+     */
+    private function emailConflict(User $actor): IncomingInquiryWorkflowException
+    {
+        return new IncomingInquiryWorkflowException(
+            $actor->hasRole(User::ROLE_ADMIN)
+                ? 'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.'
+                : 'Не удалось создать клиента с указанными данными. Если клиент уже обращался в агентство, попросите администратора привязать его к обращению.',
+            'client_email'
+        );
     }
 
     private function linkClient(IncomingInquiry $locked, User $client, User $actor): void

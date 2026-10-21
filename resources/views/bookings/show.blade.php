@@ -517,23 +517,59 @@
                         <i class="bi bi-person-plus" aria-hidden="true"></i> Ответственный
                     </h2>
                 </div>
-                <form action="{{ route('bookings.assign-manager', $booking) }}" method="POST">
+                <form action="{{ route('bookings.assign-manager', $booking) }}" method="POST" data-submit-once>
                     @csrf
+                    <input type="hidden" name="expected_manager_id" value="{{ $booking->manager_id }}">
                     <div class="mb-3">
                         <label for="manager_id" class="form-label">Сотрудник (менеджер или администратор)</label>
-                        <select name="manager_id" id="manager_id" class="form-select" required>
+                        <select name="manager_id" id="manager_id" class="form-select @error('manager_id') is-invalid @enderror" required>
                             <option value="">— Выберите —</option>
                             @foreach($assignableEmployees as $employee)
-                                <option value="{{ $employee->id }}" {{ $booking->manager_id == $employee->id ? 'selected' : '' }}>
+                                <option value="{{ $employee->id }}" {{ (int) old('manager_id', $booking->manager_id) === $employee->id ? 'selected' : '' }}>
                                     {{ $employee->name }}
                                 </option>
                             @endforeach
                         </select>
+                        @error('manager_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @error('expected_manager_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    @if($booking->manager_id !== null)
+                        <div class="mb-3">
+                            <label for="reason_code" class="form-label">Причина смены ответственного</label>
+                            <select name="reason_code" id="reason_code" class="form-select @error('reason_code') is-invalid @enderror">
+                                <option value="">— Выберите причину —</option>
+                                @foreach(\App\Services\Bookings\BookingAssignment::REASONS as $code => $label)
+                                    <option value="{{ $code }}" @selected(old('reason_code') === $code)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('reason_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Пояснение (обязательно для «Другая причина»)</label>
+                            <textarea name="reason" id="reason" rows="2" class="form-control @error('reason') is-invalid @enderror" maxlength="{{ \App\Services\Bookings\BookingAssignment::REASON_NOTE_MAX_LENGTH }}">{{ old('reason') }}</textarea>
+                            <div class="form-text">Сохраняется в истории заявки. Не указывайте телефоны и email клиентов.</div>
+                            @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    @endif
                     <button type="submit" class="btn btn-primary w-100">
                         {{ $booking->manager ? 'Сменить ответственного' : 'Назначить' }}
                     </button>
                 </form>
+
+                @if($assignmentHistory->isNotEmpty())
+                    <h3 class="h6 mt-4">История ответственных</h3>
+                    <ul class="list-unstyled small mb-0">
+                        @foreach($assignmentHistory as $entry)
+                            <li class="mb-2">
+                                <strong>{{ $entry['type'] }}</strong>
+                                · {{ $entry['at']?->format('d.m.Y H:i') }}
+                                · {{ $entry['actor'] ?? 'система' }}:
+                                @if($entry['previous']){{ $entry['previous'] }} → @endif{{ $entry['new'] ?? '—' }}
+                                @if($entry['reason'])<br><span class="text-muted">Причина: {{ $entry['reason'] }}@if($entry['note']) — {{ $entry['note'] }}@endif</span>@endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </section>
         @endif
 

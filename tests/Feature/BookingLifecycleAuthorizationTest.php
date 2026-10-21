@@ -81,7 +81,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $manager = $this->makeUser(Role::MANAGER);
         $booking = $this->makeBookingFor($owner);
 
-        $this->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id])
+        $this->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('login'));
 
         $this->assertDatabaseHas('bookings', [
@@ -561,7 +561,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -579,7 +579,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $booking  = $this->makeBookingFor($owner, $manager1->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager2->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager2->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [
@@ -656,7 +656,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -675,7 +675,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $booking = $this->makeBookingFor($owner, $manager->id, Booking::STATUS_PROGRESS);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $tourist->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertSessionHasErrors('manager_id');
 
         $this->assertDatabaseHas('bookings', [
@@ -693,7 +693,7 @@ class BookingLifecycleAuthorizationTest extends TestCase
         $booking = $this->makeBookingFor($owner);
 
         $this->actingAs($admin)
-            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id])
+            ->post(route('bookings.assign-manager', $booking), ['manager_id' => $manager->id, 'expected_manager_id' => $booking->manager_id, 'reason_code' => 'workload'])
             ->assertRedirect(route('bookings.show', $booking));
 
         $this->assertDatabaseHas('bookings', [

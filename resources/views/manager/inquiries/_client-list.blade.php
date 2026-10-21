@@ -9,7 +9,6 @@
                     {{ $candidate->hasTechnicalEmail() ? 'email не указан' : $candidate->email }}
                     @if($candidate->phone) · {{ $candidate->phone }}@endif
                     · в системе с {{ $candidate->created_at?->format('d.m.Y') ?? '—' }}
-                    · заявок: {{ $candidate->bookings_count ?? 0 }}
                     · email {{ $candidate->email_verified_at ? 'подтверждён' : 'не подтверждён' }}
                 </div>
                 @if(! empty($entry['reasons']))

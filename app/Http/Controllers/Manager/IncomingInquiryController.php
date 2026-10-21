@@ -87,9 +87,9 @@ class IncomingInquiryController extends Controller
                 ? User::query()->assignableToBookings()->orderBy('name')->get(['id', 'name'])
                 : collect(),
             'assignmentHistory' => $actor->can('assign', $inquiry) ? $this->assignmentHistory($inquiry) : collect(),
-            'candidates' => $canProcess ? $matcher->candidatesFor($inquiry) : collect(),
+            'candidates' => $canProcess ? $matcher->candidatesFor($inquiry, $actor) : collect(),
             'searchTerm' => $searchTerm,
-            'searchResults' => $canProcess ? $matcher->search($searchTerm) : collect(),
+            'searchResults' => $canProcess ? $matcher->search($searchTerm, $actor) : collect(),
         ]);
     }
 

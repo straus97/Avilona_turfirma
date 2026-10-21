@@ -12,6 +12,19 @@
     <p class="page-subtitle">Поиск, фильтры и назначение менеджеров</p>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success" role="status">{{ session('success') }}</div>
+@endif
+@if($errors->any())
+    <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="card-custom mb-4">
     <div class="card-header-custom">
         <div class="card-title-custom">Фильтры</div>
@@ -111,8 +124,10 @@
                             @include('cabinet.components.status-badge', ['status' => $booking->status])
                         </td>
                         <td>
-                            <form action="{{ route('bookings.assign-manager', $booking->id) }}" method="POST" class="d-flex gap-2 align-items-center">
+                            <form action="{{ route('bookings.assign-manager', $booking->id) }}" method="POST" class="d-flex flex-wrap gap-2 align-items-center">
                                 @csrf
+                                {{-- Ответственный, которого администратор видит сейчас: устаревшая форма отклоняется (G7). --}}
+                                <input type="hidden" name="expected_manager_id" value="{{ $booking->manager_id }}">
                                 @php
                                     // Список кандидатов — только $managers (единый источник правды,
                                     // User::assignableToBookings()). Если текущий ответственный туда
@@ -137,6 +152,16 @@
                                     @endforeach
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                                @if($booking->manager_id !== null)
+                                    {{-- Смена ответственного требует причины; сохраняется в истории заявки. --}}
+                                    <select name="reason_code" class="form-select form-select-sm w-100" aria-label="Причина смены ответственного по заявке №{{ $booking->id }}">
+                                        <option value="">Причина смены…</option>
+                                        @foreach(\App\Services\Bookings\BookingAssignment::REASONS as $code => $label)
+                                            <option value="{{ $code }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="text" name="reason" class="form-control form-control-sm w-100" maxlength="{{ \App\Services\Bookings\BookingAssignment::REASON_NOTE_MAX_LENGTH }}" placeholder="Пояснение (для «Другая причина»)" aria-label="Пояснение к смене ответственного по заявке №{{ $booking->id }}">
+                                @endif
                             </form>
                         </td>
                         <td>

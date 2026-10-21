@@ -6,6 +6,7 @@ use App\Events\NewMessageReceived;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Booking;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -171,9 +172,23 @@ class MessageController extends Controller
      */
     public function unreadCount()
     {
-        $count = Message::byReceiver(Auth::id())
-            ->unread()
-            ->count();
+        $user = Auth::user();
+
+        $query = Message::byReceiver($user->id)->unread();
+
+        // Счётчик учитывает только заявки, доступные пользователю СЕЙЧАС (AOA-01-I2B, G8):
+        // после переназначения прежний ответственный не получает сведений о чужой переписке.
+        if ($user->hasRole(User::ROLE_ADMIN)) {
+            // администратор: надзор над всеми заявками
+        } elseif ($user->hasRole(User::ROLE_MANAGER)) {
+            $query->whereHas('booking', fn ($q) => $q->where('manager_id', $user->id));
+        } elseif ($user->hasRole(User::ROLE_TOURIST)) {
+            $query->whereHas('booking', fn ($q) => $q->where('user_id', $user->id));
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $count = $query->count();
         
         return response()->json(['count' => $count]);
     }
