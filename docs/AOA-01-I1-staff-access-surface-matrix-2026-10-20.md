@@ -344,7 +344,7 @@ Lock order is unchanged: `bookings` row → (`booking_documents` insert/update |
 
 **Accepted technical limits:** (a) a download or an e-mail that has **already started** before a reassignment cannot be recalled — this is a property of streaming and of SMTP delivery, not a database race; (b) a password-setup request linearised before a reassignment may deliver its e-mail after the commit (same model as I4); (c) removal of the physical file after a committed soft-delete can fail and leave a file without a row (never a row without a file); (d) two truly simultaneous password-setup requests can both pass the broker's non-atomic 60-second throttle check — the second token replaces the first (pre-existing, not an authorization issue, not changed); (e) only MySQL 9.7.1 was exercised.
 
-**New observation, NOT fixed (separate follow-up):** **I5-F1** — deleting a chat message does not delete the recipient's database notification, whose payload keeps a ≤120-character preview of the removed text (verified with a throw-away test: `messages = 0`, `notifications = 1`, `preview` = the text). It is shown only to the recipient who already received that message and stays access-controlled by *current* Booking ownership (G8), so it is a data-retention inconsistency, not a cross-user exposure. The fix (remove or blank the notification when a message is deleted) needs a JSON-payload lookup that works on both SQLite and MySQL and a decision on semantics, so it is recorded rather than expanded into I5.
+**New observation, NOT fixed in I5 — FIXED later in AOA-01-I6 (§11):** **I5-F1** — deleting a chat message does not delete the recipient's database notification, whose payload keeps a ≤120-character preview of the removed text (verified with a throw-away test: `messages = 0`, `notifications = 1`, `preview` = the text). It is shown only to the recipient who already received that message and stays access-controlled by *current* Booking ownership (G8), so it is a data-retention inconsistency, not a cross-user exposure. The fix (remove or blank the notification when a message is deleted) needs a JSON-payload lookup that works on both SQLite and MySQL and a decision on semantics, so it is recorded rather than expanded into I5.
 
 **Unresolved owner decisions:** **I3-F3** (client e-mail existence bit) — OPEN; owner acceptance of AOA-01 closure.
 
@@ -352,4 +352,54 @@ Lock order is unchanged: `bookings` row → (`booking_documents` insert/update |
 
 1. Owner decision on I3-F3 (accept / throttle + audit / uniform "request accepted").
 2. Owner acceptance of the recorded residuals: I5-F1 (notification preview after message deletion), the `Tour::increaseAvailableSeats()` check-then-increment (roadmap follow-up table), and the accepted technical limits above.
+3. Owner closure of AOA-01 (this slice does not close it).
+
+## 11. AOA-01-I6 — Deleted chat message and its database notification (2026-10-22)
+
+Resolves the I5-F1 finding of §10.5. **I3-F3 stays OPEN** (owner decision; nothing implemented). AOA-01 is **not** closed by this slice.
+
+### 11.1 Investigation
+
+| Question | Finding |
+|---|---|
+| Who may delete a chat message? | `DELETE messages/{message}` (`MessageController::destroy`): the **sender** or an **Admin** (403 otherwise). The chat UI has no delete control; the route is the only path. Unchanged. |
+| Soft or hard delete? | **Hard delete** (`Message` has no `SoftDeletes`; no other code path deletes messages). A deleted message disappears for **everyone**, including the receiver and Admin; `messages.index` JSON and `/messages/unread-count` (which count `messages` rows) already omit it. |
+| Which notification payloads carry message text? | Only `NewMessageDatabaseNotification` (`type`, `message_id`, `booking_id`, `sender_id`, `sender_name`, **`preview` ≤120 chars**, `has_attachment`). The format never changed since it was introduced (one historical shape). Mail is a separate channel (fixed in I5). |
+| Is the text a persistent snapshot? | Yes — a copy in `notifications.data`, independent of `messages`. |
+| Did a viewer re-check the message? | No. The header bell (count + latest unread preview, `MessageNotificationVisibility`) and `NotificationController::open` checked only the Booking ownership (G8), never whether the message still exists. |
+| Surfaces | (1) header bell — unread count and latest preview; (2) `POST cabinet/notifications/{id}/open`. There is **no** notification list page and **no** notification JSON endpoint. `/messages/unread-count` counts `messages` rows, not notifications. |
+| Could a recipient / Admin still read deleted content? | **Yes (before the fix)** — the recipient (including an Admin recipient, who is not Booking-scoped) saw the deleted text in the bell until the notification was read. Reassignment already hides it from a former Manager (G8) but not from the current responsible person. |
+
+### 11.2 Reproduction before the fix
+
+New `DeletedMessageNotificationPrivacyTest` (16 tests, synthetic data) on the unfixed HEAD `365ac4ae`: **11 of 16 fail** on SQLite and the same **11** on disposable MySQL 9.7.1 — after the sender deletes the message the recipient's bell still shows the secret marker text and the badge, `open` redirects to the chat and marks the notification read, and the text stays in `notifications.data`. The positive controls (live notification, non-sender gets 403, live legacy snapshot, other notification types, JSON endpoints) pass before and after.
+
+### 11.3 Implementation
+
+| Area | Change |
+|---|---|
+| `MessageNotificationVisibility::restrict()` | Adds one condition for **all** roles (Admin included): `data->message_id IN (SELECT id FROM messages)`, in the same form as the existing `data->booking_id` filter. The bell count/preview and the open route share it, so deleted ⇒ not shown, not counted, not openable. It is evaluated at read time, therefore it covers **historical snapshots created before the fix**, any other deletion path and a notification created after its message was deleted. A notification without a readable `message_id` cannot be verified and is hidden (fail closed, also for Admin). |
+| `NotificationController::open` | Resolves the notification through `restrict()` (same rule as the bell). A deleted-message notification is a **404**, is **not** marked read, and reveals nothing; the existing type/payload/booking/role checks stay as defence in depth. |
+| `MessageController::destroy` | `DB::transaction`: delete the message **and** `MessageNotificationVisibility::redactDeleted()` — the stored `preview` becomes `Сообщение удалено`, `has_attachment=false`, `deleted=true`. Rows are **kept** (no indiscriminate deletion; business audit untouched). Only `NewMessageDatabaseNotification` rows whose `message_id` matches are touched. If the redaction fails, the deletion **rolls back** (all or nothing; the user may retry). The physical attachment file is still removed **after** commit and cannot be rolled back (unchanged order). |
+| Not changed | Deletion authorization, G8 current-ownership rules, Admin Booking-chat read/write rights, notification dispatch, mail, chat UI. No generic "message deleted" entry is shown: the notification simply disappears, consistent with the unread-messages counter. |
+
+### 11.4 Verification
+
+- **PHPUnit (SQLite `:memory:`, PHP 8.4.13, Xdebug off):** full suite **1666 tests / 12787 assertions, 0 failures, 0 errors** (baseline 1650 / 12613; +16). New tests cover: live notification visible/counted/openable; delete before read and after read; Tourist, Manager and Admin recipients; Admin deleting another user's message; refused deletion (403) leaves the preview intact; redaction of the stored data (row kept, secret absent from the raw table) and an attachment-only message; rollback when the redaction fails; legacy snapshots (missing message, `null`/`abc`/`0`/`-3`/array/float/absent `message_id`) hidden for every role and `open` ⇒ 404 without marking read; a legacy snapshot of a live message (string ids) still visible; other notification types untouched; two notifications with one deleted (counts 2→1, `unread-count` agrees); `messages.index` / `unread-count` JSON free of deleted text; reassignment A→B→A combined with deletion. Existing tests adjusted: the constant `from messages` query budget of pages with the bell 2→4 (the two bell queries now embed the existence subquery; the one-vs-six-bookings equality that detects N+1 is unchanged) and two raw-payload tests (`CabinetHeaderNotificationBellTest`, `CabinetNotificationOpenTest`) now carry a real `message_id`; a scalar payload is now hidden from Admin too.
+- **MySQL 9.7.1 (JSON filter + transaction):** disposable instance on `127.0.0.1:3411` (own datadir `C:\Avilona_private\AOA-01-I6_Verification\mysql_data`, `--no-defaults`, guarded bootstrap that aborts unless the live connection is that instance; WAMP 3306/3308 and `turfirma_rebuild_v4` never touched; stopped afterwards). The 16 new tests **pass (172 assertions)**; the unfixed `app/` tree fails **11/16**; 144 related tests ran with 1 failure — `ManagerCabinetE3RedesignTest::test_dashboard_reuses_precomputed_counts…`, which matches SQLite-quoted SQL (`from "bookings"`) and **fails identically on the unfixed tree** (pre-existing, driver-specific, unrelated). The Booking-lock/concurrency contracts of I3–I5 are untouched, so that suite was not rerun.
+- **Browser (headless Chrome over CDP, disposable app + MySQL database `aoa01_i6_qa`, synthetic data, mail `array`), 360 px and 1200 px, 42 checks each, all pass:** live notification shown with badge; sender deletes (200) → the Manager's, Admin's and Tourist's bell lose the text and the badge, the historical snapshot is never rendered, `unread-count` agrees, the stored snapshot is redacted with the row kept; direct open of a deleted-message notification ⇒ 404 and stays unread; a non-sender delete ⇒ 403; keyboard (focus bell → Enter opens → ArrowDown → Enter opens the chat); the former Manager after reassignment sees nothing; the new Manager sees no deleted/historical content; no horizontal overflow; no first-party console errors (the deliberate 403/404 probe responses are excluded by exact URL).
+
+### 11.5 Remaining limitations and residuals
+
+1. A notification created **after** its message was deleted (the `NewMessageReceived` listener running after a concurrent delete) keeps its text snapshot in `notifications.data` (it is never shown — the read-time rule hides it); only the redaction-at-delete step cannot see it. A periodic cleanup of such rows is not part of this slice.
+2. The redaction is a scan by `data->message_id` over `NewMessageDatabaseNotification` rows (no index on the JSON path) — acceptable for a rare action; revisit if the notifications table becomes large.
+3. A notification **already rendered** in an open browser page before the deletion stays on that page until reload; a click then yields 404. The bell has no live refresh.
+4. A message's attachment file removal after commit remains non-transactional (unchanged).
+5. Pre-existing and unrelated: the bell shows the "latest" notification by `created_at`; two notifications created within the same second tie.
+6. `ManagerCabinetE3RedesignTest::test_dashboard_reuses_precomputed_counts…` is SQLite-specific (quoted identifiers) and does not pass on MySQL, independent of this change.
+
+### 11.6 Remaining AOA-01 closure blockers
+
+1. Owner decision on I3-F3 (accept / throttle + audit / uniform "request accepted") — **OPEN**.
+2. Owner acceptance of the recorded residuals: the `Tour::increaseAvailableSeats()` check-then-increment (roadmap follow-up table) and the accepted technical limits (§10.5, §11.5).
 3. Owner closure of AOA-01 (this slice does not close it).

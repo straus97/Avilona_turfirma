@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Booking;
 use App\Models\User;
+use App\Support\Notifications\MessageNotificationVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -210,8 +211,13 @@ class MessageController extends Controller
         $attachmentPath = $message->hasAttachment() ? $message->attachment_url : null;
 
         // Сначала удаляем запись, затем физический файл: сбой БД не должен
-        // оставить активную запись с уже удалённым вложением.
-        $message->delete();
+        // оставить активную запись с уже удалённым вложением. Снимок текста в уведомлениях
+        // затирается в той же транзакции (AOA-01-I6): либо удалено всё, либо ничего.
+        // Файл вложения удаляется после коммита и откатить его нельзя.
+        DB::transaction(function () use ($message): void {
+            $message->delete();
+            MessageNotificationVisibility::redactDeleted((int) $message->id);
+        });
 
         if ($attachmentPath !== null) {
             Storage::disk('local')->delete($attachmentPath);

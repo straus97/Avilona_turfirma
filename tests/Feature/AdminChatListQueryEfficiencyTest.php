@@ -170,6 +170,8 @@ class AdminChatListQueryEfficiencyTest extends TestCase
         $countForSixBookings = $this->requestChatsAndCaptureMessagesQueryCount($admin);
 
         $this->assertSame($countForOneBooking, $countForSixBookings);
-        $this->assertLessThanOrEqual(2, $countForOneBooking);
+        // AOA-01-I6: 2 queries of the chat list itself + 2 constant header-bell queries
+        // (count + latest preview) whose filter embeds a `from messages` existence subquery.
+        $this->assertLessThanOrEqual(4, $countForOneBooking);
     }
 }

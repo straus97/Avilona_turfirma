@@ -214,13 +214,16 @@ class CabinetHeaderNotificationBellTest extends TestCase
     public function test_malformed_non_array_data_payload_does_not_error_and_shows_fallback_text(): void
     {
         // AOA-01-I2B (G8): уведомление без читаемого booking_id нельзя привязать к заявке, поэтому
-        // не-администратору оно не показывается (закрытое поведение). Администратор (надзор) его
-        // по-прежнему видит с безопасным fallback-текстом; 500 нет ни в одном случае.
+        // не-администратору оно не показывается (закрытое поведение). Администратор (надзор) видит
+        // уведомление с безопасным fallback-текстом, пока сообщение существует; 500 нет ни в одном случае.
         $admin = $this->makeUser([Role::ADMIN]);
 
-        // Скалярный (не-массив) payload корректного типа — см. аналогичную
-        // технику в CabinetNotificationOpenTest (проверка ветки !is_array($data)).
-        $this->rawNotification($admin, 'not-an-array-payload');
+        // AOA-01-I6: уведомление показывается только при живом сообщении (message_id), поэтому
+        // fallback-тексты проверяются на payload без sender_name/preview, но с реальным message_id;
+        // скалярный payload (ниже) без message_id теперь скрыт и от администратора.
+        $author  = $this->makeUser([Role::TOURIST]);
+        $message = $this->makeMessage($this->makeBookingFor($author, null), $author, $admin, 'неважно');
+        $this->rawNotification($admin, ['type' => 'new_message', 'message_id' => $message->id]);
 
         $response = $this->actingAs($admin)->get(route('cabinet.admin.dashboard'));
 
@@ -228,6 +231,12 @@ class CabinetHeaderNotificationBellTest extends TestCase
         $response->assertSee('notification-badge">1</span>', false);
         $response->assertSee('Новое сообщение');
         $response->assertSee('Отправитель: Пользователь');
+
+        // Скалярный (не-массив) payload корректного типа: без ошибок и без показа.
+        $this->rawNotification($admin, 'not-an-array-payload');
+        $this->actingAs($admin)->get(route('cabinet.admin.dashboard'))
+            ->assertOk()
+            ->assertSee('notification-badge">1</span>', false);
 
         $tourist = $this->makeUser([Role::TOURIST]);
         $this->rawNotification($tourist, 'not-an-array-payload');

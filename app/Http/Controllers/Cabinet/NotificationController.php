@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cabinet;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Notifications\NewMessageDatabaseNotification;
+use App\Support\Notifications\MessageNotificationVisibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,9 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $databaseNotification = $user->notifications()
+        // Тот же серверный фильтр, что у колокольчика (AOA-01-I6): уведомление об удалённом
+        // сообщении, как и чужое, выглядит несуществующим.
+        $databaseNotification = MessageNotificationVisibility::restrict($user->notifications(), $user)
             ->whereKey($notification)
             ->firstOrFail();
 

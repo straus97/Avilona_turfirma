@@ -296,7 +296,10 @@ class ManagerCabinetE3RedesignTest extends TestCase
         // One grouped query for this slice's own unread aggregate, plus one
         // pre-existing fallback query the sidebar partial always runs for the
         // unread-messages badge — neither one grows with booking count.
-        $this->assertLessThanOrEqual(2, $countForOneBooking);
+        // AOA-01-I6: the header bell (count + latest preview) adds two more constant
+        // queries whose filter embeds a `from messages` existence subquery, so the
+        // absolute budget is 4; the equality above is what proves there is no N+1.
+        $this->assertLessThanOrEqual(4, $countForOneBooking);
     }
 
     // ------------------------------------------------------------------
@@ -372,7 +375,10 @@ class ManagerCabinetE3RedesignTest extends TestCase
         // One grouped query for this slice's own unread aggregate, plus one
         // pre-existing fallback query the sidebar partial always runs for the
         // unread-messages badge — neither one grows with booking count.
-        $this->assertLessThanOrEqual(2, $countForOneBooking);
+        // AOA-01-I6: the header bell (count + latest preview) adds two more constant
+        // queries whose filter embeds a `from messages` existence subquery, so the
+        // absolute budget is 4; the equality above is what proves there is no N+1.
+        $this->assertLessThanOrEqual(4, $countForOneBooking);
     }
 
     // ------------------------------------------------------------------
