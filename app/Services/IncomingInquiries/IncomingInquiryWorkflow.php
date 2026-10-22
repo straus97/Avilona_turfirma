@@ -238,24 +238,31 @@ class IncomingInquiryWorkflow
      */
     public function sendPasswordSetup(IncomingInquiry $inquiry, User $actor): void
     {
-        $locked = $this->lock($inquiry);
-        $this->authorize($actor, 'process', $locked);
-        $this->assertInProgress($locked);
+        // AOA-01-I5: lockForUpdate вне транзакции ничего не блокирует (автокоммит снимает
+        // блокировку сразу). Решение принимается в короткой транзакции, а письмо (SMTP)
+        // уходит после коммита, вне блокировки.
+        $client = DB::transaction(function () use ($inquiry, $actor): User {
+            $locked = $this->lock($inquiry);
+            $this->authorize($actor, 'process', $locked);
+            $this->assertInProgress($locked);
 
-        $client = $locked->client_user_id
-            ? IncomingInquiryClientMatcher::touristQuery()->find($locked->client_user_id)
-            : null;
+            $client = $locked->client_user_id
+                ? IncomingInquiryClientMatcher::touristQuery()->find($locked->client_user_id)
+                : null;
 
-        if ($client === null) {
-            throw new IncomingInquiryWorkflowException('Сначала выберите или создайте клиента.', 'client_id');
-        }
+            if ($client === null) {
+                throw new IncomingInquiryWorkflowException('Сначала выберите или создайте клиента.', 'client_id');
+            }
 
-        if (! $this->accounts->canSendPasswordSetup($client)) {
-            throw new IncomingInquiryWorkflowException(
-                'Ссылку установки пароля можно отправить только клиенту, который ещё не входил в кабинет и имеет настоящий email.',
-                'client_id'
-            );
-        }
+            if (! $this->accounts->canSendPasswordSetup($client)) {
+                throw new IncomingInquiryWorkflowException(
+                    'Ссылку установки пароля можно отправить только клиенту, который ещё не входил в кабинет и имеет настоящий email.',
+                    'client_id'
+                );
+            }
+
+            return $client;
+        });
 
         if (! $this->accounts->sendPasswordSetup($client)) {
             throw new IncomingInquiryWorkflowException('Не удалось отправить ссылку. Попробуйте позже.', 'client_id');

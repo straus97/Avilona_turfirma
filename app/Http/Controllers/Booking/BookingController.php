@@ -16,6 +16,7 @@ use App\Services\Bookings\BookingAssignment;
 use App\Services\Bookings\BookingAssignmentException;
 use App\Services\Bookings\BookingLifecycle;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class BookingController extends Controller
 {
@@ -322,14 +324,30 @@ class BookingController extends Controller
      * Явная отправка клиенту стандартной ссылки установки пароля
      * (тот же механизм, что «Забыли пароль»). Только админ или назначенный
      * менеджер; только клиенту, который ещё не активировал аккаунт.
+     *
+     * AOA-01-I5: решение об отправке принимается под блокировкой строки заявки
+     * (как в BookingLifecycle) — переназначенный менеджер письма уже не вызовет.
+     * Само письмо уходит ПОСЛЕ коммита, вне блокировки (внешний вызов SMTP).
      */
     public function sendClientPasswordSetup(Booking $booking): RedirectResponse
     {
         $this->authorize('update', $booking);
 
-        $client = $booking->user;
+        $client = DB::transaction(function () use ($booking): ?User {
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
-        if ($client === null || !$client->hasRole(Role::TOURIST) || !$client->is_active || !$this->accounts->canSendPasswordSetup($client)) {
+            $this->authorize('update', $locked);
+
+            $client = $locked->user;
+
+            if ($client === null || !$client->hasRole(Role::TOURIST) || !$client->is_active || !$this->accounts->canSendPasswordSetup($client)) {
+                return null;
+            }
+
+            return $client;
+        });
+
+        if ($client === null) {
             return back()->withErrors([
                 'client_password_setup' => 'Ссылку установки пароля можно отправить только клиенту, который ещё не входил в кабинет и имеет настоящий email.',
             ]);
@@ -570,6 +588,12 @@ class BookingController extends Controller
 
     /**
      * Загрузка документа к заявке (только менеджер/админ)
+     *
+     * AOA-01-I5: файл сначала кладётся в приватное хранилище (долгая операция — вне
+     * блокировки), затем в короткой транзакции строка заявки блокируется, права
+     * проверяются по ЗАБЛОКИРОВАННОЙ записи (актуальный ответственный) и создаётся
+     * запись документа. Откат БД не отменяет запись на диск, поэтому при любом отказе
+     * или сбое подготовленный файл удаляется явно.
      */
     public function storeDocument(Request $request, Booking $booking): RedirectResponse
     {
@@ -590,24 +614,36 @@ class BookingController extends Controller
                 throw new \RuntimeException('Uploaded file is not valid');
             }
 
+            $size = $file->getSize();
             $path = $file->store("documents/bookings/{$booking->id}", 'local');
 
             if (!$path) {
                 throw new \RuntimeException('File could not be stored on disk');
             }
 
-            BookingDocument::create([
-                'booking_id'    => $booking->id,
-                'document_type' => $validated['document_type'],
-                'title'         => $validated['title'],
-                'file_path'     => $path,
-                'file_size'     => $file->getSize(),
-                'uploaded_by'   => Auth::id(),
-                'uploaded_at'   => now(),
-            ]);
+            DB::transaction(function () use ($booking, $validated, $path, $size): void {
+                $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+                $this->authorizeBooking($locked);
+
+                BookingDocument::create([
+                    'booking_id'    => $locked->id,
+                    'document_type' => $validated['document_type'],
+                    'title'         => $validated['title'],
+                    'file_path'     => $path,
+                    'file_size'     => $size,
+                    'uploaded_by'   => Auth::id(),
+                    'uploaded_at'   => now(),
+                ]);
+            });
         } catch (\Throwable $e) {
             if (is_string($path) && $path !== '') {
                 Storage::disk('local')->delete($path);
+            }
+
+            // Отказ по правам / исчезнувшая заявка — не «сбой сохранения»: обычный 403/404.
+            if ($e instanceof HttpExceptionInterface || $e instanceof ModelNotFoundException) {
+                throw $e;
             }
 
             Log::error('BookingDocument store failed', [
@@ -626,6 +662,10 @@ class BookingController extends Controller
 
     /**
      * Скачивание документа по заявке (только менеджер/админ)
+     *
+     * AOA-01-I5: чтение не меняет данные, поэтому блокировка не нужна; ответственный
+     * перечитывается из БД непосредственно перед выдачей файла. Уже начатую передачу
+     * после переназначения отозвать нельзя — это предел потоковой выдачи, а не гонка БД.
      */
     public function downloadDocument(Booking $booking, BookingDocument $document): StreamedResponse
     {
@@ -639,6 +679,8 @@ class BookingController extends Controller
             abort(404);
         }
 
+        $this->authorizeBooking(Booking::query()->findOrFail($booking->id));
+
         return Storage::disk('local')->download(
             $document->file_path,
             $this->buildDocumentDownloadName($document)
@@ -647,6 +689,10 @@ class BookingController extends Controller
 
     /**
      * Удаление документа по заявке (только менеджер/админ)
+     *
+     * AOA-01-I5: права проверяются по заблокированной записи заявки; строка
+     * мягко удаляется в транзакции, физический файл — только после коммита и вне
+     * блокировки (если удаление файла не удалось, остаётся файл без записи, но не наоборот).
      */
     public function destroyDocument(Booking $booking, BookingDocument $document): RedirectResponse
     {
@@ -656,11 +702,22 @@ class BookingController extends Controller
             abort(404);
         }
 
-        $filePath = $document->file_path;
+        $filePath = DB::transaction(function () use ($booking, $document): string {
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
-        // Soft-delete the row first; only then remove the physical file.
-        // This ensures a DB failure cannot leave an active record pointing to a deleted file.
-        $document->delete();
+            $this->authorizeBooking($locked);
+
+            // Под блокировкой заявки документ мог быть уже удалён параллельным запросом.
+            $current = BookingDocument::query()
+                ->where('booking_id', $locked->id)
+                ->find($document->id);
+
+            abort_if($current === null, 404);
+
+            $current->delete();
+
+            return (string) $current->file_path;
+        });
 
         Storage::disk('local')->delete($filePath);
 

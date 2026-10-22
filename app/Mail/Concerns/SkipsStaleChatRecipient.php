@@ -17,12 +17,14 @@ use Illuminate\Support\Facades\Log;
  * не перехватываются и остаются видны.
  *
  * Mailable задаёт заявку и получателя через deliveryBooking() / deliveryRecipient().
+ * Если исходной записи уже нет (AOA-01-I5: удалённое сообщение), оба метода возвращают null —
+ * это то же ожидаемое «отправлять нечего», а не сбой.
  * В журнал попадают только идентификаторы — ни текста заявки, ни сообщения, ни адреса.
  */
 trait SkipsStaleChatRecipient
 {
-    /** Заявка, к чату которой ведёт письмо. */
-    abstract protected function deliveryBooking(): Booking;
+    /** Заявка, к чату которой ведёт письмо; null — исходная запись (например, сообщение) удалена. */
+    abstract protected function deliveryBooking(): ?Booking;
 
     /** Получатель письма; null — адресата больше нет. */
     abstract protected function deliveryRecipient(): ?User;
@@ -36,9 +38,9 @@ trait SkipsStaleChatRecipient
         $recipient = $this->deliveryRecipient();
 
         if (! $this->recipientParticipatesNow($recipient)) {
-            Log::info('Queued booking e-mail skipped: recipient no longer participates in the booking', [
+            Log::info('Queued booking e-mail skipped: recipient no longer participates in the booking or the source record was removed', [
                 'mailable' => static::class,
-                'booking_id' => $this->deliveryBooking()->id,
+                'booking_id' => $this->deliveryBooking()?->id,
                 'recipient_id' => $recipient?->id,
             ]);
 
@@ -51,13 +53,15 @@ trait SkipsStaleChatRecipient
     /** Актуальное состояние заявки читается из БД, а не берётся из сериализованного письма. */
     private function recipientParticipatesNow(?User $recipient): bool
     {
-        if ($recipient === null) {
+        $booking = $this->deliveryBooking();
+
+        if ($recipient === null || $booking === null) {
             return false;
         }
 
         $current = Booking::withTrashed()
             ->select(['id', 'user_id', 'manager_id'])
-            ->find($this->deliveryBooking()->id);
+            ->find($booking->id);
 
         return $current !== null && $current->isChatParticipant($recipient);
     }

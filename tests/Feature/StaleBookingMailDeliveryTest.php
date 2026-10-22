@@ -242,6 +242,82 @@ class StaleBookingMailDeliveryTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // AOA-01-I5: сообщение удалено до доставки письма
+    // -----------------------------------------------------------------------
+
+    public function test_email_for_a_deleted_message_is_skipped_without_failed_job_or_content(): void
+    {
+        $booking = $this->bookingOf($this->tourist, $this->managerA);
+        $message = $this->touristWritesTo($booking, $this->managerA);
+        $this->assertSame(1, DB::table('jobs')->count());
+
+        $this->actingAs($this->tourist)->deleteJson(route('messages.destroy', $message))->assertOk();
+        $this->assertNull(Message::query()->find($message->id));
+
+        $this->runWorker(tries: 3);
+
+        $this->assertSame([], $this->recipients(), 'Удалённое сообщение не должно рассылаться.');
+        $this->assertSame(0, DB::table('failed_jobs')->count(), 'Намеренно удалённое сообщение не должно создавать failed job.');
+        $this->assertSame(0, DB::table('jobs')->count(), 'Задача завершена, а не оставлена на повтор.');
+        $this->assertNoSensitiveLogs();
+    }
+
+    public function test_admin_deleting_a_message_also_skips_its_pending_email(): void
+    {
+        $booking = $this->bookingOf($this->tourist, $this->managerA);
+        $message = $this->touristWritesTo($booking, $this->managerA);
+
+        $this->actingAs($this->admin)->deleteJson(route('messages.destroy', $message))->assertOk();
+        $this->runWorker();
+
+        $this->assertSame([], $this->recipients());
+        $this->assertSame(0, DB::table('failed_jobs')->count());
+    }
+
+    public function test_only_the_deleted_messages_email_is_skipped(): void
+    {
+        $booking = $this->bookingOf($this->tourist, $this->managerA);
+        $deleted = $this->touristWritesTo($booking, $this->managerA);
+        $this->touristWritesTo($booking, $this->managerA);
+        $this->assertSame(2, DB::table('jobs')->count());
+
+        $this->actingAs($this->tourist)->deleteJson(route('messages.destroy', $deleted))->assertOk();
+        $this->runWorker();
+
+        $this->assertSame(['manager.a@example.test'], $this->recipients());
+        $this->assertSame(0, DB::table('failed_jobs')->count());
+    }
+
+    public function test_deleted_message_mailable_send_is_a_noop_and_real_failures_still_surface(): void
+    {
+        $booking = $this->bookingOf($this->tourist, $this->managerA);
+        $message = Message::query()->create([
+            'booking_id' => $booking->id,
+            'sender_id' => $this->tourist->id,
+            'receiver_id' => $this->managerA->id,
+            'message' => self::SECRET_TEXT,
+        ]);
+        $mailable = new NewMessageReceivedMail($message);
+        $message->delete();
+
+        $this->assertNull($mailable->to($this->managerA->email)->send(Mail::mailer('array')));
+        $this->assertSame([], $this->sent());
+
+        // Неожиданный сбой (не «записи нет») не подавляется.
+        Event::listen(MessageSending::class, function (): void {
+            throw new \RuntimeException('synthetic transport failure');
+        });
+        $kept = Message::query()->create([
+            'booking_id' => $booking->id,
+            'sender_id' => $this->tourist->id,
+            'receiver_id' => $this->managerA->id,
+            'message' => 'ok',
+        ]);
+        $this->expectException(\RuntimeException::class);
+        (new NewMessageReceivedMail($kept))->to($this->managerA->email)->send(Mail::mailer('array'));
+    }
+
+    // -----------------------------------------------------------------------
     // BookingStatusChanged / ManagerAssigned — тот же дефект у соседних писем
     // -----------------------------------------------------------------------
 

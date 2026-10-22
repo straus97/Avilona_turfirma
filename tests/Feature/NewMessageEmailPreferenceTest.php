@@ -55,7 +55,7 @@ class NewMessageEmailPreferenceTest extends TestCase
             NewMessageReceivedMail::class,
             fn (NewMessageReceivedMail $mail): bool =>
                 $mail->hasTo($manager->email)
-                && $mail->message->id === $message->id
+                && $mail->messageId === $message->id
         );
     }
 

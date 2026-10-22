@@ -10,30 +10,53 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
+/**
+ * Письмо хранит только id сообщения, а не модель (AOA-01-I5): сообщение могли удалить,
+ * пока письмо ждало воркера. Модель в очереди (SerializesModels) при отсутствии записи
+ * падает ModelNotFoundException ещё до send() и оставляет failed job; здесь запись
+ * читается при доставке, а её отсутствие — ожидаемое условие «отправлять нечего»
+ * (см. SkipsStaleChatRecipient). Текст удалённого сообщения письмо восстановить не может.
+ */
 class NewMessageReceived extends Mailable
 {
-    use Queueable, SerializesModels, SkipsStaleChatRecipient;
+    use Queueable, SkipsStaleChatRecipient;
 
-    public Message $message;
+    public int $messageId;
 
-    protected function deliveryBooking(): Booking
-    {
-        return $this->message->booking;
-    }
-
-    protected function deliveryRecipient(): ?User
-    {
-        return $this->message->receiver;
-    }
+    /** Читается только при доставке; в сериализованное письмо не попадает. */
+    private ?Message $resolved = null;
 
     /**
      * Create a new message instance.
      */
     public function __construct(Message $message)
     {
-        $this->message = $message;
+        $this->messageId = (int) $message->getKey();
+    }
+
+    /** Актуальное сообщение из БД; null — оно удалено. */
+    public function message(): ?Message
+    {
+        return $this->resolved ??= Message::query()
+            ->with(['booking', 'sender', 'receiver'])
+            ->find($this->messageId);
+    }
+
+    /** В очередь уходят только скаляры: кэш прочитанного сообщения не сериализуется. */
+    public function __sleep(): array
+    {
+        return array_values(array_diff(array_keys(get_object_vars($this)), ['resolved']));
+    }
+
+    protected function deliveryBooking(): ?Booking
+    {
+        return $this->message()?->booking;
+    }
+
+    protected function deliveryRecipient(): ?User
+    {
+        return $this->message()?->receiver;
     }
 
     /**
@@ -42,7 +65,7 @@ class NewMessageReceived extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Новое сообщение по заявке #' . $this->message->booking_id . ' - Авилона',
+            subject: 'Новое сообщение по заявке #' . $this->message()->booking_id . ' - Авилона',
         );
     }
 
@@ -51,14 +74,16 @@ class NewMessageReceived extends Mailable
      */
     public function content(): Content
     {
+        $message = $this->message();
+
         return new Content(
             view: 'emails.messages.new-message',
             with: [
                 // Модель передаётся под именем chatMessage: переменная $message
                 // зарезервирована мейлером (Illuminate\Mail\Message) и в шаблоне
                 // затирает публичное свойство.
-                'chatMessage' => $this->message,
-                'chatUrl' => $this->message->booking->chatRouteFor($this->message->receiver),
+                'chatMessage' => $message,
+                'chatUrl' => $message->booking->chatRouteFor($message->receiver),
             ],
         );
     }
