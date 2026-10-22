@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\SkipsStaleChatRecipient;
 use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -12,10 +13,20 @@ use Illuminate\Queue\SerializesModels;
 
 class ManagerAssigned extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, SkipsStaleChatRecipient;
 
     public Booking $booking;
     public User $recipient;
+
+    protected function deliveryBooking(): Booking
+    {
+        return $this->booking;
+    }
+
+    protected function deliveryRecipient(): ?User
+    {
+        return $this->recipient;
+    }
 
     /**
      * Create a new message instance.

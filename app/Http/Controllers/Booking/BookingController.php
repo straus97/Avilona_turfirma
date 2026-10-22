@@ -14,6 +14,7 @@ use App\Services\Accounts\ClientVisibility;
 use App\Services\Accounts\StaffClientAccounts;
 use App\Services\Bookings\BookingAssignment;
 use App\Services\Bookings\BookingAssignmentException;
+use App\Services\Bookings\BookingLifecycle;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -384,8 +385,10 @@ class BookingController extends Controller
     /**
      * Обновление заявки
      */
-    public function update(Request $request, Booking $booking)
+    public function update(Request $request, Booking $booking, BookingLifecycle $lifecycle)
     {
+        // Первичная проверка — быстрый отказ; окончательная проверка прав, статуса и запись
+        // выполняются сервисом под блокировкой строки заявки (AOA-01-I4).
         $this->authorize('update', $booking);
 
         $user = Auth::user();
@@ -417,13 +420,12 @@ class BookingController extends Controller
         $newStatus = $validated['status'];
         unset($validated['status']);
 
-        if ($newStatus !== $booking->status) {
-            // Real transition: validate and fire event via the model method.
-            $booking->transitionTo($newStatus);
-        }
+        // Реальный переход (не повтор текущего статуса): допустимость повторно проверяется
+        // по заблокированной записи, событие отправляется после коммита.
+        $targetStatus = $newStatus !== $booking->status ? $newStatus : null;
 
-        if (!empty($validated)) {
-            $booking->update($validated);
+        if (!$lifecycle->update($booking, $user, $targetStatus, $validated)) {
+            return back()->withErrors(['status' => 'Невозможно изменить статус заявки в текущем состоянии.']);
         }
 
         return redirect()->route('bookings.show', $booking)
@@ -496,7 +498,7 @@ class BookingController extends Controller
     /**
      * Отмена заявки
      */
-    public function cancel(Booking $booking)
+    public function cancel(Booking $booking, BookingLifecycle $lifecycle)
     {
         $this->authorize('cancel', $booking);
 
@@ -504,7 +506,10 @@ class BookingController extends Controller
             return back()->withErrors(['status' => 'Невозможно отменить заявку в текущем статусе.']);
         }
 
-        $booking->transitionTo(Booking::STATUS_CANCELLED);
+        // Окончательная проверка прав и запись — под блокировкой строки заявки (AOA-01-I4).
+        if (!$lifecycle->transition($booking, Auth::user(), 'cancel', Booking::STATUS_CANCELLED)) {
+            return back()->withErrors(['status' => 'Невозможно отменить заявку в текущем статусе.']);
+        }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка отменена');
@@ -513,7 +518,7 @@ class BookingController extends Controller
     /**
      * Подтверждение заявки (только для менеджера/админа)
      */
-    public function confirm(Booking $booking)
+    public function confirm(Booking $booking, BookingLifecycle $lifecycle)
     {
         $this->authorize('confirm', $booking);
 
@@ -521,7 +526,10 @@ class BookingController extends Controller
             return back()->withErrors(['status' => 'Нельзя подтвердить заявку в текущем статусе.']);
         }
 
-        $booking->transitionTo(Booking::STATUS_CONFIRMED);
+        // Окончательная проверка прав и запись — под блокировкой строки заявки (AOA-01-I4).
+        if (!$lifecycle->transition($booking, Auth::user(), 'confirm', Booking::STATUS_CONFIRMED)) {
+            return back()->withErrors(['status' => 'Нельзя подтвердить заявку в текущем статусе.']);
+        }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка подтверждена');
@@ -530,7 +538,7 @@ class BookingController extends Controller
     /**
      * Завершение заявки (только для менеджера/админа)
      */
-    public function complete(Booking $booking)
+    public function complete(Booking $booking, BookingLifecycle $lifecycle)
     {
         $this->authorize('complete', $booking);
 
@@ -538,7 +546,10 @@ class BookingController extends Controller
             return back()->withErrors(['status' => 'Нельзя завершить заявку в текущем статусе.']);
         }
 
-        $booking->transitionTo(Booking::STATUS_COMPLETED);
+        // Окончательная проверка прав и запись — под блокировкой строки заявки (AOA-01-I4).
+        if (!$lifecycle->transition($booking, Auth::user(), 'complete', Booking::STATUS_COMPLETED)) {
+            return back()->withErrors(['status' => 'Нельзя завершить заявку в текущем статусе.']);
+        }
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка завершена');

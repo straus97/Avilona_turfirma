@@ -2,7 +2,10 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\SkipsStaleChatRecipient;
+use App\Models\Booking;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -11,9 +14,19 @@ use Illuminate\Queue\SerializesModels;
 
 class NewMessageReceived extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, SkipsStaleChatRecipient;
 
     public Message $message;
+
+    protected function deliveryBooking(): Booking
+    {
+        return $this->message->booking;
+    }
+
+    protected function deliveryRecipient(): ?User
+    {
+        return $this->message->receiver;
+    }
 
     /**
      * Create a new message instance.

@@ -258,6 +258,23 @@ class Booking extends Model
      */
     public function transitionTo(string $targetStatus): void
     {
+        $oldStatus = $this->persistTransition($targetStatus);
+
+        $this->dispatchStatusChanged($oldStatus);
+    }
+
+    /**
+     * Записать переход статуса (и восстановление мест при отмене) БЕЗ отправки события.
+     *
+     * Вызывающий код, который держит блокировку строки заявки в своей транзакции
+     * (AOA-01-I4, BookingLifecycle), вызывает dispatchStatusChanged() только после коммита.
+     *
+     * @return string прежний статус
+     *
+     * @throws \DomainException when the transition is not allowed.
+     */
+    public function persistTransition(string $targetStatus): string
+    {
         if (!$this->canTransitionTo($targetStatus)) {
             throw new \DomainException(
                 "Invalid booking status transition from '{$this->status}' to '{$targetStatus}'."
@@ -293,8 +310,17 @@ class Booking extends Model
             throw $e;
         }
 
-        // Заявка уже зафиксирована в БД: сбой уведомления не должен её откатывать
-        // или превращать успешный переход в HTTP-ошибку.
+        return $oldStatus;
+    }
+
+    /**
+     * Отправить BookingStatusChanged для уже зафиксированного перехода.
+     *
+     * Заявка уже зафиксирована в БД: сбой уведомления не должен её откатывать
+     * или превращать успешный переход в HTTP-ошибку.
+     */
+    public function dispatchStatusChanged(string $oldStatus): void
+    {
         try {
             event(new \App\Events\BookingStatusChanged($this, $oldStatus));
         } catch (\Throwable $e) {
@@ -375,6 +401,16 @@ class Booking extends Model
     public function complete(): void
     {
         $this->transitionTo(self::STATUS_COMPLETED);
+    }
+
+    /**
+     * Участвует ли пользователь в переписке по заявке СЕЙЧАС: владелец (турист) или
+     * текущий ответственный. Единый предикат для ссылки на чат и для проверки
+     * получателя письма в момент фактической отправки (AOA-01-I4).
+     */
+    public function isChatParticipant(User $user): bool
+    {
+        return $user->id === $this->user_id || $user->id === $this->manager_id;
     }
 
     /**

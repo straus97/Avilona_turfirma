@@ -9,10 +9,12 @@ use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class MessageController extends Controller
 {
@@ -67,23 +69,11 @@ class MessageController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,bmp,webp|max:10240', // 10MB
         ]);
 
+        // Первичная проверка — быстрый отказ до загрузки файла; окончательная проверка прав
+        // и получателя повторяется ниже под блокировкой строки заявки (AOA-01-I4).
         $booking = Booking::findOrFail($validated['booking_id']);
         $this->authorizeBookingWrite($booking);
-
-        // Validate that receiver_id is an actual booking participant (not the sender)
-        $senderId = (int) Auth::id();
-        $participants = [(int) $booking->user_id];
-        if ($booking->manager_id !== null) {
-            $participants[] = (int) $booking->manager_id;
-        }
-        $allowedReceiverIds = array_values(
-            array_filter($participants, fn (int $id): bool => $id !== $senderId)
-        );
-        if (! in_array((int) $validated['receiver_id'], $allowedReceiverIds, true)) {
-            throw ValidationException::withMessages([
-                'receiver_id' => ['Выбранный получатель не является участником этой заявки.'],
-            ]);
-        }
+        $this->assertReceiverIsParticipant($booking, (int) $validated['receiver_id']);
 
         $validated['sender_id'] = Auth::id();
 
@@ -111,18 +101,31 @@ class MessageController extends Controller
                 $validated['attachment_url'] = $storedPath;
             }
 
-            $message = Message::create($validated);
+            // Файл сохранён вне блокировки (запись на диск не держит строку заявки).
+            // Права и получатель перечитываются по заблокированной заявке: если за время
+            // запроса ответственного сменили, сообщение не создаётся.
+            $message = DB::transaction(function () use ($booking, $validated): Message {
+                $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+                $this->authorizeBookingWrite($locked);
+                $this->assertReceiverIsParticipant($locked, (int) $validated['receiver_id']);
+
+                return Message::create($validated);
+            });
         } catch (\Throwable $e) {
             // Убираем осиротевший приватный файл, если сообщение не сохранилось.
             if (is_string($storedPath) && $storedPath !== '') {
                 Storage::disk('local')->delete($storedPath);
             }
 
-            Log::error('Message store failed', [
-                'booking_id' => $validated['booking_id'],
-                'sender_id'  => Auth::id(),
-                'exception'  => get_class($e),
-            ]);
+            // Отказ по правам и неверный получатель — штатные ответы 403/422, а не сбой сохранения.
+            if (! $e instanceof HttpExceptionInterface && ! $e instanceof ValidationException) {
+                Log::error('Message store failed', [
+                    'booking_id' => $validated['booking_id'],
+                    'sender_id'  => Auth::id(),
+                    'exception'  => get_class($e),
+                ]);
+            }
 
             throw $e;
         }
@@ -243,6 +246,27 @@ class MessageController extends Controller
             . ($extension !== '' ? '.' . $extension : '');
 
         return Storage::disk('local')->download($message->attachment_url, $downloadName);
+    }
+
+    /**
+     * receiver_id должен быть реальным участником заявки (владелец или текущий
+     * ответственный), но не самим отправителем.
+     */
+    private function assertReceiverIsParticipant(Booking $booking, int $receiverId): void
+    {
+        $senderId = (int) Auth::id();
+        $participants = [(int) $booking->user_id];
+        if ($booking->manager_id !== null) {
+            $participants[] = (int) $booking->manager_id;
+        }
+        $allowedReceiverIds = array_values(
+            array_filter($participants, fn (int $id): bool => $id !== $senderId)
+        );
+        if (! in_array($receiverId, $allowedReceiverIds, true)) {
+            throw ValidationException::withMessages([
+                'receiver_id' => ['Выбранный получатель не является участником этой заявки.'],
+            ]);
+        }
     }
 
     /**
