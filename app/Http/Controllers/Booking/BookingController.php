@@ -10,6 +10,8 @@ use App\Models\Role;
 use App\Models\Tour;
 use App\Models\User;
 use App\Models\DestinationCity;
+use App\Services\Accounts\ClientVerificationException;
+use App\Services\Accounts\ClientVerificationService;
 use App\Services\Accounts\ClientVisibility;
 use App\Services\Accounts\StaffClientAccounts;
 use App\Services\Bookings\BookingAssignment;
@@ -30,8 +32,10 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class BookingController extends Controller
 {
-    public function __construct(private readonly StaffClientAccounts $accounts)
-    {
+    public function __construct(
+        private readonly StaffClientAccounts $accounts,
+        private readonly ClientVerificationService $verification,
+    ) {
         $this->middleware('auth');
     }
 
@@ -172,6 +176,13 @@ class BookingController extends Controller
         $isNewClient = $isStaff && (bool) ($validated['is_new_client'] ?? false);
         $clientData  = [];
 
+        if ($isManager && $isNewClient) {
+            // AOA-01-I7: менеджер не создаёт аккаунты и не проверяет email. Данные клиента уходят
+            // администратору запросом на проверку; Booking здесь не создаётся, введённые данные
+            // заявки сохраняются в форме. Ответ не зависит от существования email.
+            return $this->submitClientVerification($request, $actor);
+        }
+
         if ($isStaff && $isNewClient) {
             $clientData = $request->validate([
                 'client_name'  => 'required|string|max:255',
@@ -182,11 +193,8 @@ class BookingController extends Controller
                     // Без учёта регистра: «Client@…» и «client@…» — один и тот же аккаунт.
                     function (string $attribute, $value, \Closure $fail): void {
                         if ($this->accounts->emailExists((string) $value)) {
-                            // Менеджер не должен узнать, есть ли такой клиент у агентства и чей он:
-                            // нейтральный текст без сведений об учётной записи (AOA-01-I2B, G5).
-                            $fail(Auth::user()->isAdmin()
-                                ? 'Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.'
-                                : 'Не удалось создать клиента с указанным email. Если клиент уже обращался в агентство, попросите администратора помочь с привязкой.');
+                            // Сюда доходит только администратор (менеджер уходит в запрос на проверку, AOA-01-I7).
+                            $fail('Пользователь с таким email уже существует. Пожалуйста, выберите его из списка клиентов или используйте другой email.');
                         }
                     },
                 ],
@@ -282,6 +290,34 @@ class BookingController extends Controller
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Заявка успешно создана! Наш менеджер свяжется с вами в ближайшее время.');
+    }
+
+    /**
+     * Менеджер отправил форму в режиме «новый клиент»: принимаем запрос на проверку клиента
+     * и возвращаем в форму заявки с сохранённым вводом (кроме полей клиента).
+     */
+    private function submitClientVerification(Request $request, User $actor): RedirectResponse
+    {
+        $client = $request->validate([
+            'client_name' => ['required', 'string', 'max:255'],
+            'client_email' => ['nullable', 'email', 'max:255'],
+            'client_phone' => ['nullable', 'string', 'max:20'],
+        ], [], [
+            'client_name' => 'Имя клиента',
+            'client_email' => 'Email клиента',
+            'client_phone' => 'Телефон клиента',
+        ]);
+
+        $back = redirect()->route('bookings.create', array_filter(['tour_id' => $request->input('tour_id')]))
+            ->withInput($request->except(['_token', 'is_new_client', 'client_id', 'client_name', 'client_email', 'client_phone']));
+
+        try {
+            $this->verification->submit($actor, $client['client_name'], $client['client_email'] ?? null, $client['client_phone'] ?? null);
+        } catch (ClientVerificationException $e) {
+            return $back->withErrors(['client_verification' => $e->getMessage()]);
+        }
+
+        return $back->with('success', ClientVerificationService::NEUTRAL_MESSAGE . ' Заявка пока не создана: после решения администратора выберите клиента в списке.');
     }
 
     /**

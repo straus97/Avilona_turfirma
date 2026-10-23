@@ -83,6 +83,9 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::post('/inquiries/{inquiry}/client/password-setup', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'sendPasswordSetup'])->whereNumber('inquiry')->name('inquiries.client.password-setup');
         Route::post('/inquiries/{inquiry}/convert', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'convert'])->whereNumber('inquiry')->name('inquiries.convert');
         Route::post('/inquiries/{inquiry}/close', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'close'])->whereNumber('inquiry')->name('inquiries.close');
+        // AOA-01-I7: запросы на проверку клиента (менеджер -> администратор). Лимит частоты и защита от дублей — в ClientVerificationService.
+        Route::get('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'index'])->name('client-requests');
+        Route::post('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'store'])->name('client-requests.store');
         Route::get('/content', [\App\Http\Controllers\Manager\ManagerController::class, 'content'])->name('content');
         Route::get('/articles', [\App\Http\Controllers\Manager\ManagerController::class, 'articles'])->name('articles');
         Route::get('/articles/create', [\App\Http\Controllers\Manager\ManagerController::class, 'createArticle'])->name('articles.create');
@@ -111,6 +114,11 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/users/{user}/documents/{document}/download', [\App\Http\Controllers\Admin\AdminController::class, 'downloadUserDocument'])->name('user-document.download');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'userShow'])->name('user-show');
         Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('delete-user');
+        Route::get('/client-requests', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'index'])->name('client-requests');
+        Route::get('/client-requests/{clientRequest}', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'show'])->whereNumber('clientRequest')->name('client-requests.show');
+        Route::post('/client-requests/{clientRequest}/link', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'link'])->whereNumber('clientRequest')->name('client-requests.link');
+        Route::post('/client-requests/{clientRequest}/create', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'create'])->whereNumber('clientRequest')->name('client-requests.create');
+        Route::post('/client-requests/{clientRequest}/reject', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'reject'])->whereNumber('clientRequest')->name('client-requests.reject');
         Route::get('/bookings', [\App\Http\Controllers\Admin\AdminController::class, 'bookings'])->name('bookings');
         Route::get('/roles', [\App\Http\Controllers\Admin\AdminController::class, 'roles'])->name('roles');
         Route::get('/chats/{bookingId?}', [\App\Http\Controllers\Admin\AdminController::class, 'chats'])->name('chats');

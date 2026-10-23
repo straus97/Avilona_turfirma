@@ -14,6 +14,10 @@
      * внутри списка веток, а не личным бейджем). Один ограниченный COUNT, либо
      * авторитетное значение, если вид его уже передал.
      */
+    $sidebarPendingClientRequests = \App\Models\ClientVerificationRequest::query()
+        ->where('status', \App\Models\ClientVerificationRequest::STATUS_PENDING)
+        ->count();
+
     $sidebarUnreadMessagesCount = $unreadMessagesCount
         ?? \App\Models\Message::query()
             ->where('receiver_id', auth()->id())
@@ -41,6 +45,14 @@
     <a href="{{ route('cabinet.admin.users') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-people" aria-hidden="true"></i>
         <span>Пользователи</span>
+    </a>
+    @php($isActive = $navActive('cabinet.admin.client-requests*'))
+    <a href="{{ route('cabinet.admin.client-requests') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-person-check" aria-hidden="true"></i>
+        <span>Проверка клиентов</span>
+        @if($sidebarPendingClientRequests > 0)
+            <span class="menu-badge">{{ $sidebarPendingClientRequests }}</span>
+        @endif
     </a>
     @php($isActive = $navActive('cabinet.manager.inquiries*'))
     <a href="{{ route('cabinet.manager.inquiries') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>

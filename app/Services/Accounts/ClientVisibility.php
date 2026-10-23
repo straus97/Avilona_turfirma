@@ -3,6 +3,7 @@
 namespace App\Services\Accounts;
 
 use App\Models\Booking;
+use App\Models\ClientVerificationRequest;
 use App\Models\IncomingInquiry;
 use App\Models\Role;
 use App\Models\User;
@@ -14,8 +15,10 @@ use Illuminate\Database\Eloquent\Builder;
  *  - Администратор видит весь справочник активных туристов.
  *  - Менеджер видит только тех клиентов, с которыми у него СЕЙЧАС есть рабочая
  *    связь: клиент владеет заявкой, где менеджер — ответственный, либо клиент
- *    закреплён за обращением, назначенным этому менеджеру. Историческое
- *    назначение доступа не даёт: после переназначения связь исчезает.
+ *    закреплён за обращением, назначенным этому менеджеру, либо подтверждён
+ *    администратором по его запросу на проверку клиента (на ограниченный срок,
+ *    AOA-01-I7). Историческое назначение доступа не даёт: после переназначения
+ *    связь исчезает.
  *  - Остальные роли клиентов не видят.
  *
  * Правило применяется на уровне SQL (подзапросы), а не фильтрацией в Blade/JS.
@@ -52,7 +55,15 @@ class ClientVisibility
                 ->orWhereIn('users.id', IncomingInquiry::query()
                     ->select('incoming_inquiries.client_user_id')
                     ->whereNotNull('incoming_inquiries.client_user_id')
-                    ->where('incoming_inquiries.assigned_to', $actor->id));
+                    ->where('incoming_inquiries.assigned_to', $actor->id))
+                // AOA-01-I7: клиент, подтверждённый администратором по запросу ЭТОГО менеджера,
+                // пока не истёк срок рабочего доступа (дальше его заменяет заявка/обращение).
+                ->orWhereIn('users.id', ClientVerificationRequest::query()
+                    ->select('client_verification_requests.resolved_user_id')
+                    ->whereNotNull('client_verification_requests.resolved_user_id')
+                    ->where('client_verification_requests.requested_by', $actor->id)
+                    ->where('client_verification_requests.status', ClientVerificationRequest::STATUS_APPROVED)
+                    ->where('client_verification_requests.access_expires_at', '>', now()));
         });
     }
 }

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\AuditEvent;
 use App\Models\IncomingInquiry;
+use App\Models\ClientVerificationRequest;
 use App\Models\User;
+use App\Services\Accounts\ClientVerificationService;
 use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
 use App\Services\IncomingInquiries\IncomingInquiryWorkflow;
 use App\Services\IncomingInquiries\IncomingInquiryWorkflowException;
@@ -31,8 +33,10 @@ use Illuminate\Support\Facades\Auth;
  */
 class IncomingInquiryController extends Controller
 {
-    public function __construct(private readonly IncomingInquiryWorkflow $workflow)
-    {
+    public function __construct(
+        private readonly IncomingInquiryWorkflow $workflow,
+        private readonly ClientVerificationService $verification,
+    ) {
     }
 
     public function index(Request $request): View
@@ -87,6 +91,16 @@ class IncomingInquiryController extends Controller
                 ? User::query()->assignableToBookings()->orderBy('name')->get(['id', 'name'])
                 : collect(),
             'assignmentHistory' => $actor->can('assign', $inquiry) ? $this->assignmentHistory($inquiry) : collect(),
+            // AOA-01-I7: состояние собственных запросов менеджера на проверку клиента по этому обращению.
+            'clientRequests' => $canProcess && ! $actor->hasRole(User::ROLE_ADMIN)
+                ? ClientVerificationRequest::query()
+                    ->where('incoming_inquiry_id', $inquiry->id)
+                    ->where('requested_by', $actor->id)
+                    ->orderByDesc('id')
+                    ->limit(5)
+                    ->get()
+                : collect(),
+            'isAdminActor' => $actor->hasRole(User::ROLE_ADMIN),
             'candidates' => $canProcess ? $matcher->candidatesFor($inquiry, $actor) : collect(),
             'searchTerm' => $searchTerm,
             'searchResults' => $canProcess ? $matcher->search($searchTerm, $actor) : collect(),
@@ -178,6 +192,22 @@ class IncomingInquiryController extends Controller
             'client_email' => 'Email клиента',
             'client_phone' => 'Телефон клиента',
         ]);
+
+        // AOA-01-I7: менеджер не создаёт аккаунты и не проверяет email — запрос на проверку клиента
+        // получает администратор; ответ одинаков для любого email.
+        if (! Auth::user()->hasRole(User::ROLE_ADMIN)) {
+            return $this->perform($inquiry, function () use ($inquiry, $validated): string {
+                $this->verification->submit(
+                    Auth::user(),
+                    $validated['client_name'],
+                    $validated['client_email'] ?? null,
+                    $validated['client_phone'] ?? null,
+                    $inquiry,
+                );
+
+                return ClientVerificationService::NEUTRAL_MESSAGE;
+            });
+        }
 
         return $this->perform($inquiry, function () use ($inquiry, $validated): string {
             $client = $this->workflow->createClient(

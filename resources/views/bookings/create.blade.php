@@ -16,6 +16,8 @@
 @section('content')
 @php
     $isStaffCreator = Auth::user()->hasAnyRole(['manager', 'admin']);
+    // AOA-01-I7: менеджер не создаёт аккаунты сам — данные нового клиента уходят администратору запросом.
+    $isManagerCreator = $isStaffCreator && ! Auth::user()->isAdmin();
 @endphp
 
 <div class="page-header">
@@ -56,9 +58,25 @@
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="isNewClient" name="is_new_client" value="1" {{ old('is_new_client') ? 'checked' : '' }}>
                     <label class="form-check-label" for="isNewClient">
-                        <strong>Новый клиент</strong> — его ещё нет в базе
+                        @if($isManagerCreator)
+                            <strong>Нужного клиента нет в списке</strong> — отправить запрос на проверку администратору
+                        @else
+                            <strong>Новый клиент</strong> — его ещё нет в базе
+                        @endif
                     </label>
                 </div>
+
+                @error('client_verification')
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ $message }}
+                    </div>
+                @enderror
+                @if($isManagerCreator)
+                    <p class="form-text mt-0">
+                        Администратор проверит клиента и откроет вам доступ. Заявка при этом не создаётся.
+                        <a href="{{ route('cabinet.manager.client-requests') }}">Мои запросы на проверку клиентов</a>
+                    </p>
+                @endif
 
                 @error('client_email')
                     <div class="alert alert-danger">
@@ -113,7 +131,11 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">
-                            Для клиента будет создан аккаунт без пароля. Пароль не отправляется: после создания заявки вы сможете отправить клиенту ссылку для установки пароля.
+                            @if($isManagerCreator)
+                                Данные получит администратор. После его решения клиент появится в списке выше, а заявку можно будет оформить. Пароль никому не отправляется.
+                            @else
+                                Для клиента будет создан аккаунт без пароля. Пароль не отправляется: после создания заявки вы сможете отправить клиенту ссылку для установки пароля.
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -355,8 +377,8 @@
             <a href="{{ route('cabinet.bookings') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left" aria-hidden="true"></i> Отмена
             </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Отправить заявку
+            <button type="submit" class="btn btn-primary" id="bookingSubmit" data-manager-creator="{{ $isManagerCreator ? '1' : '0' }}">
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i> <span id="bookingSubmitLabel">Отправить заявку</span>
             </button>
         </div>
     </form>
@@ -378,7 +400,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Синхронизация режима клиента. clearValues=false при первичной загрузке,
         // иначе значения old() затирались бы после ошибки валидации.
+        const submitLabel = document.getElementById('bookingSubmitLabel');
+        const submitButton = document.getElementById('bookingSubmit');
+
         function syncClientMode(clearValues) {
+            if (submitLabel && submitButton && submitButton.dataset.managerCreator === '1') {
+                submitLabel.textContent = isNewClientCheckbox.checked ? 'Отправить запрос на проверку клиента' : 'Отправить заявку';
+            }
+
             if (isNewClientCheckbox.checked) {
                 existingClientBlock.style.display = 'none';
                 newClientBlock.style.display = 'block';

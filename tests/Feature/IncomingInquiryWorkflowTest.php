@@ -474,10 +474,12 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_new_tourist_is_created_safely_and_linked(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
             'client_name' => 'Новый Турист',
             'client_email' => 'brand.new@example.test',
             'client_phone' => '+79001112233',
@@ -491,7 +493,7 @@ class IncomingInquiryWorkflowTest extends TestCase
         $this->assertFalse((bool) $client->password_change_required);
         $this->assertTrue((bool) $client->is_active);
         $this->assertSame($client->id, $inquiry->fresh()->client_user_id);
-        $this->assertSame($manager->id, $inquiry->fresh()->client_linked_by);
+        $this->assertSame($admin->id, $inquiry->fresh()->client_linked_by);
 
         foreach (['password', 'Password1', '12345678', 'avilona', '89001112233', '+79001112233', 'brand.new@example.test', 'Новый Турист'] as $guess) {
             $this->assertFalse(Hash::check($guess, $client->password), "Пароль не должен быть предсказуемым: $guess");
@@ -504,12 +506,14 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_client_creation_rolls_back_completely_when_tourist_role_is_missing(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $inquiry = $this->claimed($manager);
         Role::query()->where('name', Role::TOURIST)->delete();
         $usersBefore = User::count();
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
             'client_name' => 'Без Роли', 'client_email' => 'norole@example.test',
         ])->assertStatus(404);
 
@@ -519,25 +523,29 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_two_new_clients_never_share_a_password_hash(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $a = $this->claimed($manager);
         $b = $this->claimed($manager);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $a), ['client_name' => 'A', 'client_email' => 'a@example.test']);
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $b), ['client_name' => 'B', 'client_email' => 'b@example.test']);
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $a), ['client_name' => 'A', 'client_email' => 'a@example.test']);
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $b), ['client_name' => 'B', 'client_email' => 'b@example.test']);
 
         $this->assertNotSame(User::where('email', 'a@example.test')->value('password'), User::where('email', 'b@example.test')->value('password'));
     }
 
     public function test_existing_email_never_creates_duplicate_or_touches_existing_account(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $existing = $this->userWithRoles(['tourist'], ['name' => 'Давний Клиент', 'email' => 'taken@example.test']);
         $inquiry = $this->claimed($manager);
         $usersBefore = User::count();
         $snapshot = $existing->fresh()->only(['name', 'email', 'password', 'phone', 'email_verified_at']);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
             'client_name' => 'Другое Имя',
             'client_email' => 'TAKEN@example.test',
         ])->assertSessionHasErrors('client_email');
@@ -549,10 +557,12 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_new_tourist_without_email_gets_technical_address_and_no_mail(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $inquiry = $this->claimed($manager);
 
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'Без Почты'])
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'Без Почты'])
             ->assertSessionHas('success');
 
         $client = User::where('name', 'Без Почты')->sole();
@@ -563,9 +573,11 @@ class IncomingInquiryWorkflowTest extends TestCase
 
     public function test_password_setup_link_is_explicit_and_only_for_not_yet_activated_clients(): void
     {
+        // AOA-01-I7: аккаунт по обращению создаёт администратор; менеджер отправляет запрос.
+        $admin = $this->userWithRoles(['admin']);
         $manager = $this->userWithRoles(['manager']);
         $inquiry = $this->claimed($manager);
-        $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), [
             'client_name' => 'Новый', 'client_email' => 'setup@example.test',
         ]);
         Notification::assertNothingSent();
@@ -576,7 +588,7 @@ class IncomingInquiryWorkflowTest extends TestCase
         // Уже активный (подтверждённый) клиент — ссылку слать нельзя.
         $active = $this->userWithRoles(['tourist']);
         $other = $this->claimed($manager);
-        $this->actingAs($this->userWithRoles(['admin']))->post(route('cabinet.manager.inquiries.client.select', $other), ['client_id' => $active->id]);
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.select', $other), ['client_id' => $active->id]);
         $this->actingAs($manager)->post(route('cabinet.manager.inquiries.client.password-setup', $other))->assertSessionHasErrors('client_id');
         Notification::assertNotSentTo($active, ResetPassword::class);
     }

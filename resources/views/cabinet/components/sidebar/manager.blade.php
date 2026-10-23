@@ -47,6 +47,11 @@
         <i class="bi bi-people" aria-hidden="true"></i>
         <span>Мои клиенты</span>
     </a>
+    @php($isActive = $navActive('cabinet.manager.client-requests*'))
+    <a href="{{ route('cabinet.manager.client-requests') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-person-check" aria-hidden="true"></i>
+        <span>Проверка клиентов</span>
+    </a>
     @php($isActive = $navActive('cabinet.manager.inquiries*'))
     <a href="{{ route('cabinet.manager.inquiries') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-inbox" aria-hidden="true"></i>

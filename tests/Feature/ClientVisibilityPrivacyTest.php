@@ -178,26 +178,33 @@ class ClientVisibilityPrivacyTest extends TestCase
         $this->assertStringNotContainsString('secret.client', $text);
     }
 
-    public function test_new_client_creation_still_works_for_manager(): void
+    public function test_new_client_creation_still_works_for_admin_and_manager_gets_a_request(): void
     {
+        // AOA-01-I7: аккаунты создаёт администратор; менеджер отправляет запрос (расширенные проверки — ManagerClientVerificationTest).
+        $admin = $this->userWith('admin');
         $a = $this->userWith('manager');
 
-        $this->actingAs($a)->post(route('bookings.store'), $this->bookingPayload([
+        $this->actingAs($admin)->post(route('bookings.store'), $this->bookingPayload([
             'is_new_client' => '1', 'client_name' => 'Совсем Новый', 'client_email' => 'brand.new@example.test',
         ]))->assertSessionHasNoErrors()->assertRedirect();
 
         $client = User::query()->where('email', 'brand.new@example.test')->sole();
         $this->assertSame($client->id, Booking::query()->sole()->user_id);
-        $this->assertContains($client->id, ClientVisibility::touristsVisibleTo($a)->pluck('users.id')->all());
 
         $inquiry = $this->inquiryFor($a);
-        $this->actingAs($a)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'Из Обращения', 'client_email' => 'from.inquiry@example.test'])
+        $this->actingAs($admin)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'Из Обращения', 'client_email' => 'from.inquiry@example.test'])
             ->assertSessionHas('success');
         $this->assertNotNull($inquiry->fresh()->client_user_id);
+
+        $this->actingAs($a)->post(route('cabinet.manager.inquiries.client.create', $this->inquiryFor($a)), ['client_name' => 'Запрос', 'client_email' => 'requested@example.test'])
+            ->assertSessionHas('success');
+        $this->assertNull(User::query()->where('email', 'requested@example.test')->first(), 'Менеджер аккаунт не создаёт');
     }
 
-    public function test_existing_email_conflict_is_neutral_for_manager_and_informative_for_admin(): void
+    public function test_existing_email_conflict_is_informative_for_admin_and_identical_for_manager(): void
     {
+        // AOA-01-I7: менеджер больше не получает ни ошибки, ни успеха, зависящих от email —
+        // его ответ одинаков для существующего и нового адреса (см. ManagerClientVerificationTest).
         $admin = $this->userWith('admin');
         $a = $this->userWith('manager');
         $b = $this->userWith('manager');
@@ -206,16 +213,12 @@ class ClientVisibilityPrivacyTest extends TestCase
 
         $this->actingAs($a)->post(route('bookings.store'), $this->bookingPayload([
             'is_new_client' => '1', 'client_name' => 'Дубликат', 'client_email' => 'existing.person@example.test',
-        ]))->assertSessionHasErrors('client_email');
-        $text = implode(' ', session('errors')->all());
-        $this->assertStringNotContainsString('Уже Существующий', $text);
-        $this->assertStringNotContainsString('выберите его из списка', $text);
-        $this->assertStringContainsString('администратор', $text);
+        ]))->assertSessionHasNoErrors()->assertSessionHas('success');
+        $this->assertStringNotContainsString('Уже Существующий', (string) session('success'));
 
         $inquiry = $this->inquiryFor($a);
         $this->actingAs($a)->post(route('cabinet.manager.inquiries.client.create', $inquiry), ['client_name' => 'Дубликат', 'client_email' => 'existing.person@example.test'])
-            ->assertSessionHasErrors('client_email');
-        $this->assertStringNotContainsString('Уже Существующий', implode(' ', session('errors')->all()));
+            ->assertSessionHasNoErrors()->assertSessionHas('success');
         $this->assertNull($inquiry->fresh()->client_user_id);
         $this->assertSame(1, User::query()->where('email', 'existing.person@example.test')->count(), 'Дубликат не создан');
 

@@ -262,11 +262,13 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_new_client_receives_the_tourist_role_and_no_plaintext_password(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -282,13 +284,36 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
         $this->assertNull($client->email_verified_at);
     }
 
-    public function test_new_client_booking_created_by_manager_gets_manager_and_progress_status(): void
+    public function test_new_client_booking_created_by_manager_is_a_verification_request_not_a_booking(): void
     {
         Event::fake([BookingCreated::class]);
 
         $manager = $this->makeUser(Role::MANAGER);
+        $usersBefore = User::count();
 
+        // AOA-01-I7: прежнее ожидание (менеджер создаёт клиента и заявку с manager_id и статусом
+        // «в обработке») заменено — менеджер лишь передаёт данные клиента администратору.
         $this->actingAs($manager)
+            ->post(route('bookings.store'), $this->validPayload([
+                'is_new_client' => 1,
+                'client_name'   => 'Новый Клиент',
+            ]))
+            ->assertRedirect(route('bookings.create'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseCount('bookings', 0);
+        $this->assertSame($usersBefore, User::count());
+        $this->assertDatabaseHas('client_verification_requests', ['requested_by' => $manager->id, 'status' => 'pending']);
+        Event::assertNotDispatched(BookingCreated::class);
+    }
+
+    public function test_new_client_booking_created_by_admin_has_no_manager_and_new_status(): void
+    {
+        Event::fake([BookingCreated::class]);
+
+        $admin = $this->makeUser(Role::ADMIN);
+
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -299,18 +324,20 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
         $client  = User::query()->where('name', 'Новый Клиент')->sole();
 
         $this->assertSame($client->id, $booking->user_id);
-        $this->assertSame($manager->id, $booking->manager_id);
-        $this->assertSame(Booking::STATUS_PROGRESS, $booking->status);
+        $this->assertNull($booking->manager_id);
+        $this->assertSame(Booking::STATUS_NEW, $booking->status);
     }
 
     public function test_generated_technical_emails_do_not_collide(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
         for ($i = 1; $i <= 2; $i++) {
-            $this->actingAs($manager)
+            $this->actingAs($admin)
                 ->post(route('bookings.store'), $this->validPayload([
                     'is_new_client' => 1,
                     'client_name'   => 'Клиент ' . $i,
@@ -333,16 +360,18 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_missing_tourist_role_rolls_back_every_record_of_the_request(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
         // Remove the tourist role entirely.
         Role::query()->where('name', Role::TOURIST)->forceDelete();
 
         $before = $this->baselineCounts();
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -360,6 +389,8 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_failure_after_all_writes_rolls_back_user_pivot_city_and_booking(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
         // Fires inside the transaction, after the user, the role pivot and the
@@ -370,11 +401,11 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
             fn (): never => throw new \RuntimeException('forced failure')
         );
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
         $before = $this->baselineCounts();
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -396,10 +427,12 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_real_client_email_receives_the_booking_created_mail(): void
     {
-        $manager = $this->makeUser(Role::MANAGER);
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
+        $admin = $this->makeUser(Role::ADMIN);
         $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -416,10 +449,12 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_generated_technical_email_receives_no_credentials_mail(): void
     {
-        $manager = $this->makeUser(Role::MANAGER);
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
+        $admin = $this->makeUser(Role::ADMIN);
         $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -496,11 +531,13 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_notes_for_a_client_with_email_record_the_intended_recipient(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',
@@ -519,11 +556,13 @@ class BookingCreationOwnershipAndAtomicityTest extends TestCase
 
     public function test_notes_for_a_client_without_email_do_not_claim_credentials_were_sent(): void
     {
+        // AOA-01-I7: прямое создание клиента вместе с заявкой теперь только у администратора;
+        // менеджер отправляет запрос на проверку (ManagerClientVerificationTest).
         Event::fake([BookingCreated::class]);
 
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->validPayload([
                 'is_new_client' => 1,
                 'client_name'   => 'Новый Клиент',

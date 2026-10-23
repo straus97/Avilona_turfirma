@@ -215,8 +215,15 @@ class IncomingInquiryWorkflow
                 $this->authorize($actor, 'process', $locked);
                 $this->assertInProgress($locked);
 
+                // AOA-01-I7: аккаунты туристов напрямую создаёт только администратор. Менеджер
+                // отправляет запрос на проверку клиента (ClientVerificationService); отказ ниже не
+                // зависит от email, поэтому существование аккаунта не раскрывается.
+                if (! $actor->hasRole(User::ROLE_ADMIN)) {
+                    throw new IncomingInquiryWorkflowException('Менеджер не создаёт клиентов напрямую: отправьте запрос на проверку клиента администратору.', 'client_email');
+                }
+
                 if ($email !== null && $this->accounts->emailExists($email)) {
-                    throw $this->emailConflict($actor);
+                    throw $this->emailConflict();
                 }
 
                 // Без роли «tourist» createTourist бросает исключение — транзакция откатывается.
@@ -227,7 +234,7 @@ class IncomingInquiryWorkflow
                 return $client;
             });
         } catch (UniqueConstraintViolationException) {
-            throw $this->emailConflict($actor);
+            throw $this->emailConflict();
         }
     }
 
@@ -474,17 +481,11 @@ class IncomingInquiryWorkflow
         return $reason;
     }
 
-    /**
-     * Конфликт email при создании клиента. Администратор (видит весь справочник)
-     * получает прежнюю подсказку; менеджер — нейтральный текст без сведений об
-     * учётной записи: ни имени, ни владельца, ни самого факта «чей» это клиент.
-     */
-    private function emailConflict(User $actor): IncomingInquiryWorkflowException
+    /** Конфликт email при прямом создании клиента администратором (он видит весь справочник). */
+    private function emailConflict(): IncomingInquiryWorkflowException
     {
         return new IncomingInquiryWorkflowException(
-            $actor->hasRole(User::ROLE_ADMIN)
-                ? 'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.'
-                : 'Не удалось создать клиента с указанными данными. Если клиент уже обращался в агентство, попросите администратора привязать его к обращению.',
+            'Пользователь с таким email уже существует. Найдите его в списке клиентов и выберите явно.',
             'client_email'
         );
     }

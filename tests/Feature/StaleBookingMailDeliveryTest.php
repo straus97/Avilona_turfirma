@@ -65,6 +65,9 @@ class StaleBookingMailDeliveryTest extends TestCase
             '--stop-when-empty' => true,
             '--tries' => $tries,
             '--sleep' => 0,
+            // По умолчанию воркер выходит при 128 МБ; процесс PHPUnit всего набора давно больше, и воркер
+            // останавливался после первой задачи (AOA-01-I7: тест зависел от объёма памяти всего набора).
+            '--memory' => 0,
             '--quiet' => true,
         ])->run();
     }

@@ -218,7 +218,24 @@
     @endif
 
     <hr>
+    @if($isAdminActor)
     <h3 class="h6">Нового клиента создавать, только если аккаунта точно нет</h3>
+    @else
+    <h3 class="h6">Клиента нет в списке? Отправьте запрос на проверку</h3>
+    <p class="text-muted small">Администратор проверит клиента и либо откроет вам существующий аккаунт, либо создаст новый. Ответ на запрос не зависит от того, есть ли клиент в системе.</p>
+
+    @foreach($clientRequests as $clientRequest)
+        <div class="alert {{ $clientRequest->status === 'approved' ? 'alert-success' : ($clientRequest->status === 'rejected' ? 'alert-warning' : 'alert-info') }}" role="status">
+            <strong>{{ $clientRequest->managerStatusLabel() }}</strong>
+            · {{ $clientRequest->client_name }} · {{ $clientRequest->created_at?->format('d.m.Y H:i') }}
+            @if($clientRequest->status === 'approved')
+                <span class="d-block small">Клиент доступен в разделе «Мои клиенты» и в списке выше.</span>
+            @elseif($clientRequest->status === 'rejected' && $clientRequest->resolution_note)
+                <span class="d-block small">Комментарий администратора: {{ $clientRequest->resolution_note }}</span>
+            @endif
+        </div>
+    @endforeach
+    @endif
     <form method="POST" action="{{ route('cabinet.manager.inquiries.client.create', $inquiry) }}" class="row g-3" data-submit-once>
         @csrf
         <div class="col-12 col-md-4">
@@ -237,8 +254,13 @@
             @error('client_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
         <div class="col-12">
+            @if($isAdminActor)
             <button type="submit" class="btn btn-outline-primary">Создать клиента и выбрать</button>
             <p class="text-muted small mt-2 mb-0">Пароль не создаётся и не показывается. Email считается неподтверждённым. Если такой email уже есть в системе, аккаунт не будет изменён — выберите его из списка.</p>
+            @else
+            <button type="submit" class="btn btn-outline-primary">Отправить запрос на проверку клиента</button>
+            <p class="text-muted small mt-2 mb-0">Пароль не создаётся и никому не отправляется. До решения администратора заявку оформить нельзя.</p>
+            @endif
         </div>
     </form>
 </section>

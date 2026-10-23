@@ -72,10 +72,11 @@ class StaffClientCredentialHardeningTest extends TestCase
 
     public function test_staff_created_tourist_has_no_plaintext_password_anywhere(): void
     {
+        // AOA-01-I7: клиента вместе с заявкой напрямую создаёт администратор (менеджер отправляет запрос).
         Event::fake([BookingCreated::class]);
-        $manager = $this->makeUser(Role::MANAGER);
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $response = $this->actingAs($manager)
+        $response = $this->actingAs($admin)
             ->post(route('bookings.store'), $this->payload('Иван Новый', 'ivan.new@example.test'));
         $response->assertRedirect();
 
@@ -99,7 +100,7 @@ class StaffClientCredentialHardeningTest extends TestCase
         }
 
         // Ответ (страница заявки после редиректа), сессия и JSON-представление.
-        $page = $this->actingAs($manager)->get($response->headers->get('Location'));
+        $page = $this->actingAs($admin)->get($response->headers->get('Location'));
         $page->assertOk();
         $this->assertStringNotContainsString(self::SECRET, $page->getContent());
         $this->assertStringNotContainsString(self::SECRET, json_encode(session()->all()));
@@ -112,9 +113,10 @@ class StaffClientCredentialHardeningTest extends TestCase
 
     public function test_generated_secret_is_never_mailed_and_no_credentials_text_is_sent(): void
     {
-        $manager = $this->makeUser(Role::MANAGER);
+        // AOA-01-I7: клиента вместе с заявкой напрямую создаёт администратор (менеджер отправляет запрос).
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->payload('Мария Почта', 'maria.mail@example.test'))
             ->assertRedirect();
 
@@ -144,9 +146,10 @@ class StaffClientCredentialHardeningTest extends TestCase
 
     public function test_technical_email_client_gets_no_mail_and_no_reset_link(): void
     {
-        $manager = $this->makeUser(Role::MANAGER);
+        // AOA-01-I7: клиента вместе с заявкой напрямую создаёт администратор (менеджер отправляет запрос).
+        $admin = $this->makeUser(Role::ADMIN);
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->payload('Без Почты'))
             ->assertRedirect();
 
@@ -160,7 +163,7 @@ class StaffClientCredentialHardeningTest extends TestCase
         Notification::assertNothingSent();
 
         // Явное действие для технического адреса отклоняется без отправки.
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.client.password-setup', $booking))
             ->assertSessionHasErrors('client_password_setup');
         Notification::assertNothingSent();
@@ -168,12 +171,13 @@ class StaffClientCredentialHardeningTest extends TestCase
 
     public function test_case_insensitive_duplicate_email_creates_no_user_and_does_not_touch_existing(): void
     {
-        $manager = $this->makeUser(Role::MANAGER);
+        // AOA-01-I7: клиента вместе с заявкой напрямую создаёт администратор (менеджер отправляет запрос).
+        $admin = $this->makeUser(Role::ADMIN);
         $existing = $this->makeUser(Role::TOURIST, ['email' => 'Client.Dup@Example.test', 'name' => 'Исходный']);
         $before = $existing->fresh()->getAttributes();
         $usersBefore = User::count();
 
-        $this->actingAs($manager)
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->payload('Другой Человек', 'client.dup@example.test'))
             ->assertSessionHasErrors('client_email');
 
@@ -191,9 +195,12 @@ class StaffClientCredentialHardeningTest extends TestCase
     public function test_assigned_manager_sends_standard_reset_link_only_when_asked(): void
     {
         $manager = $this->makeUser(Role::MANAGER);
-        $this->actingAs($manager)
+        $admin = $this->makeUser(Role::ADMIN);
+        // AOA-01-I7: клиента и заявку создаёт администратор, затем заявка назначается менеджеру.
+        $this->actingAs($admin)
             ->post(route('bookings.store'), $this->payload('Ссылка Клиент', 'link.client@example.test'))
             ->assertRedirect();
+        Booking::query()->update(['manager_id' => $manager->id]);
 
         $client = User::where('email', 'link.client@example.test')->sole();
         $booking = Booking::query()->sole();
