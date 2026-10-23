@@ -164,14 +164,10 @@ class CabinetController extends Controller
             return $redirect;
         }
         
-        $query = Booking::query();
-        
-        if ($user->hasAnyRole(['admin', 'manager'])) {
-            $query->with(['user', 'manager']);
-        } else {
-            $query->where('user_id', $user->id)->with(['manager']);
-        }
-        
+        // Сюда попадает только турист (персонал уже перенаправлен выше), поэтому выборка
+        // ограничена владельцем безусловно — без «служебной» ветки с неограниченным запросом (AOA-02).
+        $query = Booking::query()->where('user_id', $user->id)->with(['manager']);
+
         // Фильтры
         if ($request->filled('status')) {
             $query->where('status', $request->status);

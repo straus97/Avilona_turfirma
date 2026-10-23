@@ -178,32 +178,21 @@ class MessageController extends Controller
     {
         $user = Auth::user();
 
-        $query = Message::byReceiver($user->id)->unread();
-
         // Счётчик учитывает только заявки, доступные пользователю СЕЙЧАС (AOA-01-I2B, G8):
         // после переназначения прежний ответственный не получает сведений о чужой переписке.
-        if ($user->hasRole(User::ROLE_ADMIN)) {
-            // администратор: надзор над всеми заявками
-        } elseif ($user->hasRole(User::ROLE_MANAGER)) {
-            $query->whereHas('booking', fn ($q) => $q->where('manager_id', $user->id));
-        } elseif ($user->hasRole(User::ROLE_TOURIST)) {
-            $query->whereHas('booking', fn ($q) => $q->where('user_id', $user->id));
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $count = $query->count();
+        // Правило общее с дашбордом и сайдбаром (Message::scopeAccessibleTo, AOA-02).
+        $count = Message::byReceiver($user->id)->unread()->accessibleTo($user)->count();
         
         return response()->json(['count' => $count]);
     }
 
     /**
-     * Удалить сообщение (только отправитель или админ)
+     * Удалить сообщение (администратор или отправитель, который всё ещё участник переписки)
      */
     public function destroy(Message $message)
     {
         $user = Auth::user();
-        
+
         if ($message->sender_id !== $user->id && !$user->isAdmin()) {
             abort(403);
         }
@@ -214,7 +203,21 @@ class MessageController extends Controller
         // оставить активную запись с уже удалённым вложением. Снимок текста в уведомлениях
         // затирается в той же транзакции (AOA-01-I6): либо удалено всё, либо ничего.
         // Файл вложения удаляется после коммита и откатить его нельзя.
-        DB::transaction(function () use ($message): void {
+        DB::transaction(function () use ($message, $user): void {
+            // Контракт администратора не меняется (удаляет любое сообщение). Остальные — только
+            // свои и только пока участвуют в переписке (AOA-02): прежний ответственный или
+            // менеджер без роли после переназначения не меняют историю чужой заявки. Права
+            // перечитываются под блокировкой заявки, как при отправке (AOA-01-I4).
+            if (! $user->isAdmin()) {
+                $booking = Booking::withTrashed()->lockForUpdate()->find($message->booking_id);
+
+                if ($booking === null) {
+                    abort(404);
+                }
+
+                $this->authorizeBookingWrite($booking);
+            }
+
             $message->delete();
             MessageNotificationVisibility::redactDeleted((int) $message->id);
         });

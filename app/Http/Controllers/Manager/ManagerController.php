@@ -49,9 +49,10 @@ class ManagerController extends Controller
             ->where('status', Booking::STATUS_COMPLETED)
             ->count();
         
-        // Непрочитанные сообщения
+        // Непрочитанные сообщения — только по заявкам, доступным сейчас (AOA-02).
         $unreadMessages = Message::where('receiver_id', $manager->id)
             ->where('is_read', false)
+            ->accessibleTo($manager)
             ->count();
 
         // Заявки, требующие внимания: новые и в обработке, старейшие первыми.

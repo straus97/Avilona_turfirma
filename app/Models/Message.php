@@ -64,6 +64,29 @@ class Message extends Model
         return $query->where('booking_id', $bookingId);
     }
 
+    /**
+     * Сообщения по заявкам, доступным пользователю СЕЙЧАС (AOA-02): администратор — все
+     * (надзор), менеджер — по заявкам, где он ответственный, турист — по своим; остальным
+     * ничего. Единое правило для всех счётчиков непрочитанного: после переназначения
+     * прежний ответственный не видит ни числа, ни содержимого чужой переписки.
+     */
+    public function scopeAccessibleTo($query, User $user)
+    {
+        if ($user->hasRole(User::ROLE_ADMIN)) {
+            return $query;
+        }
+
+        if ($user->hasRole(User::ROLE_MANAGER)) {
+            return $query->whereHas('booking', fn ($q) => $q->where('manager_id', $user->id));
+        }
+
+        if ($user->hasRole(User::ROLE_TOURIST)) {
+            return $query->whereHas('booking', fn ($q) => $q->where('user_id', $user->id));
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
+
     public function scopeBySender($query, $senderId)
     {
         return $query->where('sender_id', $senderId);

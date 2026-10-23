@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-20 · **Slice:** AOA-01-I1 · **Source baseline:** `013d2483` (+ the I1 audit foundation).
 
-> **Update 2026-10-21 (AOA-01-I2A):** gaps G1, G2, G3, G4 and G6 below were *implemented and verified* in AOA-01-I2A — see **§6 (implementation evidence)**. The "Gap" columns and §3 describe the state at I1 and are kept as the historical baseline. G5, G7 and G8 were *implemented and verified* in AOA-01-I2B — see **§7**. The MySQL migration/concurrency gate and the closure risks were independently verified in AOA-01-I3 — see **§8** (findings I3-F1…F3; AOA-01 is not closed). **Update 2026-10-22 (AOA-01-I4):** I3-F1 and I3-F2 were *fixed and verified* (incl. multi-process MySQL) — see **§9**; I3-F3 remains OPEN and AOA-01 is not closed. **Update 2026-10-22 (AOA-01-I5):** the Booking-document upload/delete/download and client password-setup residuals and the deleted-message queued mail were *investigated, reproduced and fixed* — see **§10**; I3-F3 and owner closure remain OPEN. **Update 2026-10-23 (AOA-01-I7):** I3-F3 was **resolved by the owner-approved option C and implemented** — see **§12**; **Closure (2026-10-23):** the owner formally closed AOA-01 with tracked residuals — status and residual register are canonical in `docs/roadmap.md` (§A1, §A7.1); this file remains technical evidence only.
+> **Update 2026-10-21 (AOA-01-I2A):** gaps G1, G2, G3, G4 and G6 below were *implemented and verified* in AOA-01-I2A — see **§6 (implementation evidence)**. The "Gap" columns and §3 describe the state at I1 and are kept as the historical baseline. G5, G7 and G8 were *implemented and verified* in AOA-01-I2B — see **§7**. The MySQL migration/concurrency gate and the closure risks were independently verified in AOA-01-I3 — see **§8** (findings I3-F1…F3; AOA-01 is not closed). **Update 2026-10-22 (AOA-01-I4):** I3-F1 and I3-F2 were *fixed and verified* (incl. multi-process MySQL) — see **§9**; I3-F3 remains OPEN and AOA-01 is not closed. **Update 2026-10-22 (AOA-01-I5):** the Booking-document upload/delete/download and client password-setup residuals and the deleted-message queued mail were *investigated, reproduced and fixed* — see **§10**; I3-F3 and owner closure remain OPEN. **Update 2026-10-23 (AOA-01-I7):** I3-F3 was **resolved by the owner-approved option C and implemented** — see **§12**; **Closure (2026-10-23):** the owner formally closed AOA-01 with tracked residuals — status and residual register are canonical in `docs/roadmap.md` (§A1, §A7.1); this file remains technical evidence only. **Update 2026-10-23 (AOA-02):** the staff visibility/assignment policy layer was consolidated and closed — see **§13**.
 >
 > **Role of this document: technical evidence for AOA-01-I2 / AOA-02. It is NOT a roadmap.** Status, slice order and owner decisions live only in [`docs/roadmap.md`](roadmap.md). Nothing in the *Gap* or *I2* columns is implemented by I1 (the only behavioural change in I1 is the Admin log viewer, AO-04).
 
@@ -458,3 +458,85 @@ For a new e-mail, another Manager's client, the Manager's own client, an Admin e
 ### 12.7 AOA-01 closure assessment
 
 All planned functional slices (I1–I7) are implemented and verified, the MySQL gate is satisfied, and I3-F1, I3-F2, I3-F3 and I5-F1 are fixed or resolved. **Recommendation:** a single docs-only closure checkpoint that records the owner's acceptance of the residuals in §12.6 item 8 and §11.5, then AOA-02. *Superseded:* the owner closed AOA-01 on 2026-10-23 with tracked residuals; the canonical status and the residual register are in `docs/roadmap.md` (§A7.1). The residual list in §12.6 item 8 and §11.5 stays valid and OPEN.
+
+
+## 13. AOA-02 — Staff visibility and assignment policy consolidation (2026-10-23)
+
+Evidence only; status is canonical in `docs/roadmap.md` (§A1, §A6, §A9). Baseline HEAD `9a66781d`, PHP 8.5.12 / 8.4.13, SQLite `:memory:`; synthetic data only; canonical MySQL never touched.
+
+### 13.1 Canonical scope and what AOA-01 had already delivered
+
+Roadmap definition: *visibility & assignment policy layer implementing §A3 across all surfaces (policy/surface matrix, eligible-employee rule)*; the provider-independent `Inquiry` entity is **AOA-03** and was **not** started. Requirement-by-requirement status after the audit:
+
+| §A3/§A4 requirement | Delivered by | AOA-02 action |
+|---|---|---|
+| Manager sees only currently assigned inquiries (list, detail, actions); unassigned intake hidden; Manager cannot claim | AOA-01-I2A (`IncomingInquiryPolicy`, `IncomingInquiry::scopeVisibleTo`, 404 for foreign/unassigned) | re-verified by the new matrix; no code change |
+| Admin direct allocation, reassignment with required reason, audit in the same transaction, former assignee loses access, stale/concurrent writes | I2A, I4, I5 (`IncomingInquiryWorkflow`, row locks, `AuditRecorder`) | re-verified; no code change |
+| Eligible-employee rule | `User::scopeAssignableToBookings()` — one source used by inquiry assign/reassign/convert, Booking assignment and the UI lists (I2A/I2B) | verified consistent; a tourist or inactive manager as target is refused on both paths (test added) |
+| Booking visibility and writes limited to the responsible Manager (re-authorized under the row lock) | `BookingPolicy`, I4 `BookingLifecycle`, I5 documents | re-verified; no code change |
+| Client directory limited to current work; no foreign history | I2B `ClientVisibility` | re-verified (test added) |
+| Booking reassignment needs reason + audit; former Manager loses chat/notifications | I2B (G7, G8), I6 | **two residual surfaces found — see 13.2** |
+| Neutral Manager client-verification request (option C) | I7 | re-verified (browser QA); **not redesigned** |
+| Admin Booking chat: read all, write only when personally assigned | E3 contract | unchanged; pinned by a test |
+
+### 13.2 Consolidation audit — gaps reproduced and fixed
+
+Method: read every ownership check (policies, query scopes, controller `authorize` calls, workflow services, JSON endpoints, counts, notifications, attachments, direct URLs), then reproduced suspicions on synthetic data against the unfixed code.
+
+| # | Gap (reproduced on `9a66781d`) | Authorization source | Fix |
+|---|---|---|---|
+| F1 | After a Booking is reassigned, the former Manager's **dashboard unread counter** and **sidebar chat badge** still counted unread messages of that Booking (only a number, but it discloses activity on someone else's conversation). I2B/I6 had fixed the JSON counter and the bell; these two surfaces ran their own unscoped `messages` count. 3 of the 14 new tests in that class failed before the fix. | `ManagerController::dashboard`, `cabinet/components/sidebar/manager.blade.php` | One rule `Message::scopeAccessibleTo(User)` (Admin all, Manager own current Bookings, Tourist own Bookings, others none) now used by `MessageController::unreadCount`, the dashboard and the sidebar |
+| F2 | A Manager who **lost** a Booking (reassigned, or whose role was removed) could still **delete their own old message** in it (`DELETE /messages/{id}` only required `sender_id === self`), altering the history that the new Manager and the client see. 3 of the 14 new tests failed before the fix. | `MessageController::destroy` | A non-Admin sender must still pass the write gate (`authorizeBookingWrite`), re-checked under the Booking row lock inside the existing deletion transaction (same pattern as `store`, I4). Admin may still delete any message (existing contract, unchanged) |
+| F3 | Latent only: `CabinetController::bookings` built an **unscoped** `Booking::query()` for staff behind `redirectIfNotTourist()` (matrix B-07). Unreachable, no exposure reproduced. | `CabinetController::bookings` | Owner scope (`user_id`) is now unconditional; staff are still redirected (regression test) |
+
+Together the unfixed code failed 6 of the 14 tests of `StaffMessageVisibilityConsolidationTest` (F1: 3, F2: 3). Not changed on purpose: `messages/{id}/read` by a former Manager (touches only the caller's own receiver row, discloses nothing).
+
+### 13.3 Manager / Admin authorization matrix (verified by `StaffAccessPolicyMatrixTest`)
+
+`A` = Manager responsible; `B` = another Manager; `T` = Tourist owner; `U` = another Tourist. Cells are the observed behaviour.
+
+| Surface | Admin | Manager A (own) | Manager B (foreign) | Tourist T (owner) | Tourist U (other) |
+|---|---|---|---|---|---|
+| Booking show — A's Booking | 200 | 200 | 403 | 200 | 403 |
+| Booking edit — A's Booking | 200 | 200 | 403 | 403 | 403 |
+| Booking show — Admin-owned or unassigned Booking | 200 | 403 | 403 | 200 | 403 |
+| Booking writes (confirm/cancel/complete/update/password-setup) | allowed | own only | 403/404, state unchanged | no | no |
+| Booking assign-manager | allowed | **403** (Admin only) | 403 | no | no |
+| Chat JSON `messages?booking_id` and attachment | 200 (read all) | 200 | 403 | 200 | 403 |
+| Chat write `messages.store` | **only if personally assigned** (403 otherwise) | 200 | 403 | 200 | 403 |
+| Chat pages (`manager/chat`, `admin/chats`, `cabinet/chat`) | admin chats 200 | 200; foreign/Admin-owned 404 | 404 | own 200 | 404 |
+| Message delete | any (unchanged) | own message **while still responsible** | 403 | own message | 403 |
+| Booking document download / upload / delete | all | own Bookings | 403 | owner route 200 | 403 |
+| Unread counts (JSON, dashboard, sidebar, bell) | all | **current Bookings only** | — | own | — |
+| Inquiry list / show | all | own assigned only; foreign, unassigned, Admin-owned → 404 | 404 | 403 | 403 |
+| Inquiry claim / assign / reassign | allowed (reason required for reassign) | 404 (unassigned) / 403 (own) | 404 | 403 | 403 |
+| Inquiry close / convert / client actions | all | own assigned only; foreign → 403/404, state unchanged | 403/404 | 403 | 403 |
+| Client directory (`manager/clients`, lookup, Booking-create) | all | clients tied to current work only | same rule | no | no |
+| Client-verification request | resolves all | submits, sees own, neutral outcome | own only | no | no |
+| Admin-only pages (users, roles, audit, logs, client-request resolution) | allowed | 403 | 403 | 403 | 403 |
+
+The test also asserts that the target of an assignment must be an eligible employee (active Manager/Admin) for both inquiries and Bookings, and contains a **route-classification guard**: every named route with an ownership-bearing parameter (`booking`, `inquiry`, `message`, `clientRequest`, `notification`, `document`, `user`, `role`, `bookingId`) must be listed as matrix-tested, admin-only (and must still carry `role:admin`) or own-record; a new unclassified route fails the suite, so the policy layer cannot silently grow a hole.
+
+### 13.4 Verification
+
+- **Focused:** `StaffMessageVisibilityConsolidationTest` (14; 6 failed before the fix, 14/14 after) and `StaffAccessPolicyMatrixTest` (14; the matrix was already satisfied by the unfixed code, which is the evidence that AOA-01 had delivered the inquiry/booking/document/chat policy).
+- **Full suite (SQLite `:memory:`, Xdebug off, 2048 MB):** **1737 tests / 13483 assertions, 0 failures, 0 errors** on PHP 8.5.12 and on PHP 8.4.13 (+28 over 1709 / 13258). One existing expectation changed deliberately: `ManagerClientListQueryEfficiencyTest` counts statements containing `bookings` (6→7; the sidebar unread counter is still a single statement, now with a sub-select; no growth with client count).
+- **Disposable MySQL 9.7.1** (new data directory and port created for this slice; canonical never touched): the migration chain applies; `StaffMessageVisibilityConsolidationTest`, `StaffAccessPolicyMatrixTest`, `MessageAttachmentSecurityTest`, `BookingNotificationPrivacyTest`, `DeletedMessageNotificationPrivacyTest`, `MessageParticipantAuthorizationTest` — **101 tests / 572 assertions pass**. True two-process barrier: a reassignment holds the Booking row lock, the former Manager's delete issued meanwhile **blocks ≈3.9 s and then returns 403 with the message preserved**; the same harness on the **pre-fix controller returns 200 and deletes the message**. Stress: 3 rounds × (4 concurrent deleters × 25 + a locker × 25) — 0 errors, no deadlock, no lock-wait timeout.
+- **Chrome QA (headless, CDP) at 360 px and 1200 px, app instance on the disposable MySQL:** 60/60 checks at each width — Manager isolation (own inquiry/booking/client only; colleague, unassigned, Admin-owned → 404/403 with no data), claim refused, Admin oversight and allocation through the real form, Booking reassignment through the real form with a reason, former Manager loses badge/chat/documents/clients/own-message deletion, new Manager gains them, neutral client-verification request (existing foreign e-mail vs unknown e-mail indistinguishable on the Manager page), Admin chat write refused when not assigned, Tourist isolation, no horizontal overflow, no first-party console errors. Evidence is kept outside the repository (`C:\Avilona_private\AOA-02_Verification\`).
+
+### 13.5 Compatibility and safety review
+
+No migration, no dependency change (Composer untouched; the nette/utils and nette/schema platform ceilings recorded in ENV-COMPAT-01 remain open and must be handled in a separate dependency pass before E6), no PHP configuration change. The code uses no 8.4/8.5-only symbols (PHP 8.3 compatibility is preserved by syntax; an 8.3.36 binary was still not available locally). No new route and no new response contract: denials keep their existing codes. No secrets, real e-mails or personal data were added; all fixtures are synthetic (`example.test`).
+
+### 13.6 Residuals and observations (recorded, not changed)
+
+- Every AOA-01 residual R-A … R-O (`docs/roadmap.md` §A7.1) is **unchanged** — in particular public account enumeration (R-A), client-verification data retention (R-B), the fixed 30-day window and missing revoke (R-L), and durable inquiry/draft continuity (R-D, **AOA-03**).
+- **Admin message deletion is not audited** (B-09) and **Booking price revisions emit no audit event** (B-03): outside the visibility scope; candidates for the audit work in AOA-08/09.
+- `users.is_active` is used only for assignment eligibility and client lookup; the application has **no deactivation feature and does not check the flag at login**. An already-assigned Manager who is deactivated by other means would keep their work. Not reachable through the product today; decide together with workload/eligibility rules in AOA-04.
+- Admin and Tourist sidebar counters were deliberately left as they are (Admin oversight is allowed; a Tourist owns the Booking for life).
+- `messages.index` serializes the full `sender`/`receiver` user models of both participants; both are legitimate participants, so this is not an authorization issue, but the serialized attributes were not reviewed here.
+- AO-07 (403 vs 404) was re-examined and is consistent per surface family (13.3); not changed.
+
+### 13.7 AOA-02 closure assessment
+
+All §A3–§A4 requirements are implemented and now pinned by one route × actor regression plus the route-classification guard; the only code gaps found (F1, F2; F3 latent) are fixed with focused tests, MySQL concurrency evidence and browser QA. **AOA-02 is complete; AOA-03 (provider-independent `Inquiry` entity) is next** and must reuse `IncomingInquiryPolicy`/`scopeVisibleTo`, the audit events, `Message::scopeAccessibleTo` and this matrix test rather than introduce a parallel rule set.

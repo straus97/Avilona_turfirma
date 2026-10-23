@@ -20,6 +20,7 @@
         ?? \App\Models\Message::query()
             ->where('receiver_id', auth()->id())
             ->where('is_read', false)
+            ->accessibleTo(auth()->user())
             ->count();
 
     /**
