@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Inquiries\Backfill\InquiryBackfillService;
 use App\Services\Inquiries\Backfill\InquiryBackfillVerifier;
+use App\Services\Inquiries\Backfill\InquiryReconciler;
 use App\Services\Inquiries\Backfill\UnsafeBackfillConnection;
 use App\Services\Inquiries\Backfill\VerifiedQaConnection;
 use Illuminate\Console\Command;
@@ -24,6 +25,7 @@ class BackfillInquiriesCommand extends Command
         {--apply : Записать недостающие Inquiry (без флага — только dry-run)}
         {--confirm-database= : Имя QA-базы; обязательно вместе с --apply}
         {--verify : Только сверить IncomingInquiry и Inquiry (без записи)}
+        {--reconcile : AOA-03-I3: переходная сверка пар IncomingInquiry ↔ Inquiry (только чтение)}
         {--chunk=200 : Размер порции (1-1000)}
         {--json : Машиночитаемый отчёт}';
 
@@ -41,9 +43,10 @@ class BackfillInquiriesCommand extends Command
 
         $apply = (bool) $this->option('apply');
         $verify = (bool) $this->option('verify');
+        $reconcile = (bool) $this->option('reconcile');
 
-        if ($apply && $verify) {
-            $this->error('Use either --apply or --verify, not both.');
+        if ($apply + $verify + $reconcile > 1) {
+            $this->error('Use only one of --apply, --verify or --reconcile.');
 
             return self::FAILURE;
         }
@@ -67,7 +70,10 @@ class BackfillInquiriesCommand extends Command
             return self::FAILURE;
         }
 
-        if ($verify) {
+        if ($reconcile) {
+            $report = (new InquiryReconciler($qa))->reconcile($chunk);
+            $exit = $report['fully_reconciled'] ? self::SUCCESS : self::FAILURE;
+        } elseif ($verify) {
             $report = (new InquiryBackfillVerifier($qa))->verify($chunk);
             $exit = $report['fully_verified'] ? self::SUCCESS : self::FAILURE;
         } elseif ($apply) {
@@ -93,7 +99,7 @@ class BackfillInquiriesCommand extends Command
         $this->line(strtoupper(str_replace('_', ' ', (string) $report['mode'])) . ($report['mode'] === 'dry_run' ? ' — NO WRITES' : ''));
         $this->line('source records: ' . $report['source_total'] . ', eligible: ' . $report['eligible']);
 
-        foreach (['status_distribution', 'technical_state_distribution', 'verdicts', 'summary', 'reasons', 'outcomes', 'integrity', 'global'] as $section) {
+        foreach (['status_distribution', 'technical_state_distribution', 'verdicts', 'summary', 'reasons', 'outcomes', 'integrity', 'global', 'provenance', 'direction_of_difference', 'expected_evolution', 'incomplete_because'] as $section) {
             if (! isset($report[$section])) {
                 continue;
             }
@@ -103,7 +109,11 @@ class BackfillInquiriesCommand extends Command
             }
         }
 
-        foreach (['inquiries_created', 'writes_performed', 'race_resolved', 'fully_verified'] as $key) {
+        if (isset($report['unprocessed_sources'])) {
+            $this->line('unprocessed sources: ' . $report['unprocessed_sources']['total']);
+        }
+
+        foreach (['inquiries_created', 'writes_performed', 'race_resolved', 'fully_verified', 'structurally_consistent', 'fully_reconciled'] as $key) {
             if (isset($report[$key])) {
                 $this->line($key . ': ' . (is_bool($report[$key]) ? ($report[$key] ? 'yes' : 'no') : (string) $report[$key]));
             }

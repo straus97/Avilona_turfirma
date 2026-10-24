@@ -5,8 +5,10 @@ namespace App\Services\Accounts;
 use App\Models\Booking;
 use App\Models\ClientVerificationRequest;
 use App\Models\IncomingInquiry;
+use App\Models\Inquiry;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Inquiries\InquiryAuthority;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -15,7 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
  *  - Администратор видит весь справочник активных туристов.
  *  - Менеджер видит только тех клиентов, с которыми у него СЕЙЧАС есть рабочая
  *    связь: клиент владеет заявкой, где менеджер — ответственный, либо клиент
- *    закреплён за обращением, назначенным этому менеджеру, либо подтверждён
+ *    закреплён за обращением, назначенным этому менеджеру (IncomingInquiry, а с AOA-03-I3
+ *    также самостоятельный Inquiry — см. InquiryAuthority), либо подтверждён
  *    администратором по его запросу на проверку клиента (на ограниченный срок,
  *    AOA-01-I7). Историческое назначение доступа не даёт: после переназначения
  *    связь исчезает.
@@ -56,6 +59,17 @@ class ClientVisibility
                     ->select('incoming_inquiries.client_user_id')
                     ->whereNotNull('incoming_inquiries.client_user_id')
                     ->where('incoming_inquiries.assigned_to', $actor->id))
+                // AOA-03-I3: клиент САМОСТОЯТЕЛЬНОГО Inquiry (без IncomingInquiry), которым менеджер
+                // отвечает сейчас. Привязанные к IncomingInquiry Inquiry клиента НЕ раскрывают:
+                // пока E5 работает на старой записи, клиента даёт она (ветка выше), а расходящийся
+                // снимок Inquiry не должен ни дублировать, ни расширять эту видимость.
+                ->orWhereIn('users.id', InquiryAuthority::scopeIndependent(Inquiry::query())
+                    ->select('inquiries.client_user_id')
+                    ->whereNotNull('inquiries.client_user_id')
+                    ->where('inquiries.assigned_to', $actor->id)
+                    ->whereIn('inquiries.client_user_id', User::query()
+                        ->select('users.id')
+                        ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::TOURIST))))
                 // AOA-01-I7: клиент, подтверждённый администратором по запросу ЭТОГО менеджера,
                 // пока не истёк срок рабочего доступа (дальше его заменяет заявка/обращение).
                 ->orWhereIn('users.id', ClientVerificationRequest::query()

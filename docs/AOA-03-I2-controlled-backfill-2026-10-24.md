@@ -34,7 +34,9 @@ Not copied: `vendor_payload`, contacts (`client_name/phone/email/comment`), pric
 - **Report privacy.** Counts, reason codes and at most 20 numeric source ids per code; no names, e-mail, phone, passport data or payload.
 - **Verification semantics.** `MATCHED` ≈ what apply would create; the apply outcomes are `CREATED` / `ALREADY_PRESENT` / `BLOCKED` / `CONFLICT` / `UNSUPPORTED`. The comparison is valid **before** the runtime switch only: once Inquiries are edited (AOA-04/05) divergence of status/assignee becomes legitimate and the verifier must be replaced by a parity check (a test shows it flags legacy drift).
 
-## 5. ClientVisibility — unchanged; required change before the switch
+## 5. ClientVisibility — unchanged in I2; extended in AOA-03-I3
+
+*(Update 2026-10-25: [AOA-03-I3](AOA-03-I3-inquiry-aware-read-integration-2026-10-25.md) added the independent-Inquiry branch and the linked-pair authority rule; the text below is the I2-time state and requirement. The I2 verifier remains the "initial backfill integrity" contract; I3 added a separate transitional reconciler.)*
 
 `ClientVisibility` and the Manager counters still read `IncomingInquiry` / `Booking` only; a backfilled `Inquiry.client_user_id` grants **no** access (test: visible-tourist sets of Manager, outsider Manager and Admin are identical before and after apply). Before SWITCH it must be extended so that a Manager sees a client through an Inquiry **only when `inquiries.assigned_to` is that Manager now** (current assignee authoritative; `created_by`, `converted_by`, historic assignment or a former `assigned_at` never grant access), together with the Manager counters and notifications, behind tests. Closed/converted rows follow the same current-assignee rule as today's legacy rows.
 

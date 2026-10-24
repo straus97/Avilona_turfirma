@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Inquiries\InquiryAuthority;
 use App\Support\Inquiries\InquiryInvariantViolation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -168,8 +169,10 @@ class Inquiry extends Model
 
     /**
      * Единое правило видимости (как IncomingInquiry::scopeVisibleTo): администратор видит
-     * все, менеджер — только назначенные ему сейчас (чужие и ничьи не видны), остальным —
-     * ничего. Для отдельной записи — InquiryPolicy::view.
+     * все, менеджер — только те, за которые отвечает сейчас (чужие, ничьи и бывшие не видны),
+     * остальным — ничего. Для привязанного к IncomingInquiry обращения ответственный должен
+     * совпадать с ответственным источника (AOA-03-I3, InquiryAuthority). Для отдельной
+     * записи — InquiryPolicy::view.
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
@@ -178,7 +181,7 @@ class Inquiry extends Model
         }
 
         if ($user->hasRole(User::ROLE_MANAGER)) {
-            return $query->where($query->getModel()->getTable() . '.assigned_to', $user->id);
+            return InquiryAuthority::scopeResponsibleManager($query, $user);
         }
 
         return $query->whereRaw('1 = 0');

@@ -2,6 +2,7 @@
 
 namespace App\Services\Inquiries;
 
+use App\Models\IncomingInquiry;
 use App\Models\Inquiry;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,14 @@ class InquiryDraftStore
     {
         return DB::transaction(function () use ($inquiry, $actor, $patch, $expectedRevision): Inquiry {
             $locked = Inquiry::query()->lockForUpdate()->findOrFail($inquiry->id);
+
+            // Привязанное обращение (AOA-03-I3): полномочия зависят от назначения источника, и оно
+            // читается под блокировкой — переназначение E5 не проскочит между проверкой и записью.
+            // Порядок блокировок (Inquiry → IncomingInquiry) обратного пути не имеет: E5 блокирует
+            // только IncomingInquiry.
+            if ($locked->incoming_inquiry_id !== null) {
+                IncomingInquiry::query()->lockForUpdate()->find($locked->incoming_inquiry_id);
+            }
 
             Gate::forUser($actor)->authorize('updateDraft', $locked);
 

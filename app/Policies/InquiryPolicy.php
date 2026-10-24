@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Inquiry;
 use App\Models\User;
+use App\Services\Inquiries\InquiryAuthority;
 
 /**
  * Кто вправе работать с обращением агентства (AOA-03-I1, правило владельца §A3).
@@ -16,6 +17,10 @@ use App\Models\User;
  * доступа к управлению обращениями. Правила не копируют IncomingInquiryPolicy
  * слепо: создание и назначение здесь намеренно не объявлены — это AOA-04.
  * Эффективная роль — по привычному приоритету admin > manager.
+ *
+ * Привязанное к IncomingInquiry обращение (AOA-03-I3): пока E5 работает на старой записи,
+ * менеджер отвечает за него, только если назначение Inquiry совпадает с назначением
+ * источника; при расхождении доступ менеджеру закрыт (см. InquiryAuthority).
  */
 class InquiryPolicy
 {
@@ -24,11 +29,10 @@ class InquiryPolicy
         return $user->hasRole(User::ROLE_ADMIN);
     }
 
+    /** Ответственный менеджер СЕЙЧАС (для привязанного обращения — совпадающий с источником). */
     private function isAssignedManager(User $user, Inquiry $inquiry): bool
     {
-        return $user->hasRole(User::ROLE_MANAGER)
-            && $inquiry->assigned_to !== null
-            && (int) $inquiry->assigned_to === (int) $user->id;
+        return InquiryAuthority::isResponsibleManager($inquiry, $user);
     }
 
     /** Видимость совпадает с Inquiry::scopeVisibleTo(). */
