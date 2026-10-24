@@ -51,7 +51,7 @@
                                 <dt><i class="bi bi-building" aria-hidden="true"></i></dt>
                                 <dd>
                                     <span class="e2-contact-list__label">Юридический адрес:</span>
-                                    191119, Россия, Санкт-Петербург, ул. Звенигородская, д. 22, литера А, офис 053, пом. 7Н
+                                    Россия, 198302, г. Санкт-Петербург, вн. тер. г. муниципальный округ Красненькая речка, ул. Морской Пехоты, д. 10, к. 1, литера А, кв. 22
                                 </dd>
                             </div>
                             <div>
@@ -215,7 +215,7 @@
                     <dl class="e2-contact-list">
                         <div>
                             <dt><i class="bi bi-hash" aria-hidden="true"></i></dt>
-                            <dd><span class="e2-contact-list__label">ИНН / КПП:</span>7805502454 / 784001001</dd>
+                            <dd><span class="e2-contact-list__label">ИНН / КПП:</span>7805502454 / 780501001</dd>
                         </div>
                         <div>
                             <dt><i class="bi bi-hash" aria-hidden="true"></i></dt>

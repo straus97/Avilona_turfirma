@@ -76,7 +76,7 @@ class PublicPersonalDataConsentTest extends TestCase
     {
         $response = $this->get(route('personal_data_consent.info'));
 
-        $response->assertSee('Звенигородская, д. 22');
+        $response->assertSee('Морской Пехоты, д. 10, к. 1, литера А, кв. 22');
     }
 
     public function test_personal_data_consent_page_contains_withdrawal_email(): void

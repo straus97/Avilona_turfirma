@@ -100,7 +100,7 @@ class PublicReviewConsentLegalPagesTest extends TestCase
         $response->assertSee('ООО «Авилона»', false);
         $response->assertSee('7805502454');
         $response->assertSee('1097847289803');
-        $response->assertSee('Звенигородская, д. 22', false);
+        $response->assertSee('Морской Пехоты, д. 10, к. 1, литера А, кв. 22', false);
     }
 
     public function test_review_personal_data_consent_page_describes_collected_data_and_purposes(): void
@@ -181,7 +181,7 @@ class PublicReviewConsentLegalPagesTest extends TestCase
         $response->assertSee('ООО «Авилона»', false);
         $response->assertSee('7805502454');
         $response->assertSee('1097847289803');
-        $response->assertSee('Звенигородская, д. 22', false);
+        $response->assertSee('Морской Пехоты, д. 10, к. 1, литера А, кв. 22', false);
     }
 
     public function test_review_publication_consent_page_contains_publication_resource_urls(): void

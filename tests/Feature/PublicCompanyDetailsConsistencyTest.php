@@ -15,10 +15,10 @@ use Tests\TestCase;
  *
  * Правило: страница /contacts обязана явно различать фактический
  * (клиентский) адрес офиса — Санкт-Петербург, ул. Генерала Симоняка, д. 10 —
- * и юридический адрес по ЕГРЮЛ — Санкт-Петербург, ул. Звенигородская, д. 22,
+ * и юридический адрес по ЕГРЮЛ — Санкт-Петербург, ул. Морской Пехоты, д. 10, к. 1, литера А, кв. 22 (запись ЕГРЮЛ от 2026-10-12),
  * которые не совпадают и не должны подменять друг друга. Реквизиты компании
  * (ИНН/КПП/ОГРН) должны соответствовать актуальной выписке ЕГРЮЛ, включая
- * исправленный КПП 784001001 (устаревшее значение 780501001 не должно
+ * КПП 780501001 по выписке ЕГРЮЛ от 2026-10-25 (прежнее значение 784001001 не должно
  * встречаться на странице).
  *
  * Та же логика распространяется на главную страницу и на визитор-facing
@@ -37,13 +37,13 @@ class PublicCompanyDetailsConsistencyTest extends TestCase
 
     private const INVALID_HYBRID_ADDRESS = '191119, Россия, Санкт-Петербург, ул. Генерала Симоняка';
 
-    private const LEGAL_ADDRESS = 'Звенигородская, д. 22';
+    private const LEGAL_ADDRESS = 'Морской Пехоты, д. 10, к. 1, литера А, кв. 22';
 
     private const INN = '7805502454';
 
-    private const CURRENT_KPP = '784001001';
+    private const CURRENT_KPP = '780501001';
 
-    private const STALE_KPP = '780501001';
+    private const STALE_KPP = '784001001';
 
     private const OGRN = '1097847289803';
 
@@ -113,6 +113,24 @@ class PublicCompanyDetailsConsistencyTest extends TestCase
 
         $response->assertDontSee(self::STALE_KPP);
     }
+    public function test_old_registered_address_is_gone_and_new_one_is_not_a_visitor_location(): void
+    {
+        $routes = ['contact.index', 'personal_data_consent.info'];
+        foreach ($routes as $name) {
+            $this->get(route($name))->assertDontSee('Звенигородская');
+        }
+
+        // Регистрационный адрес (кв. 22) не является местом приёма клиентов: ни на главной, ни в карте/подвале.
+        foreach (['home.index'] as $name) {
+            $this->get(route($name))->assertDontSee('Морской Пехоты')->assertSee(self::ACTUAL_OFFICE_ADDRESS);
+        }
+
+        $html = $this->get(route('contact.index'))->getContent();
+        $this->assertStringContainsString('198302', $html);
+        $this->assertStringContainsString('Красненькая речка', $html);
+        $this->assertSame(1, substr_count($html, 'кв. 22'), 'адрес-квартира выводится один раз — только как юридический');
+    }
+
 
     // -----------------------------------------------------------------------
     // Main layout (header/footer office address label)

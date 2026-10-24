@@ -74,7 +74,7 @@ class PublicContactsE2RedesignTest extends TestCase
         $response->assertOk();
         $response->assertSee('avilonatur@bk.ru');
         $response->assertSee('Генерала Симоняка, д. 10');
-        $response->assertSee('Звенигородская, д. 22');
+        $response->assertSee('Морской Пехоты, д. 10, к. 1, литера А, кв. 22');
         $response->assertSee('Фактический адрес');
         $response->assertSee('Юридический адрес');
     }
