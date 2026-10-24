@@ -5,6 +5,8 @@ namespace App\Services\Inquiries;
 use App\Models\IncomingInquiry;
 use App\Models\Inquiry;
 use App\Models\User;
+use App\Services\Audit\AuditRecorder;
+use App\Support\Audit\AuditEventType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -19,11 +21,24 @@ use Illuminate\Support\Facades\Gate;
  * (ответственный мог смениться между показом формы и отправкой), проверка, что
  * обращение ещё открыто, и оптимистичная версия — устаревшая форма отклоняется, а не
  * перезаписывает чужое сохранение. Поля владельца/статуса/клиента/заявки в патче
- * недопустимы (InquiryDraftData). События аудита нет: черновик — рабочая заметка,
- * а не изменение ответственности.
+ * недопустимы (InquiryDraftData).
+ *
+ * AOA-03-I4: принятое сохранение фиксируется событием аудита `inquiry.draft_updated` в той же
+ * транзакции (сбой записи аудита откатывает и черновик). Событие несёт только идентификаторы:
+ * обращение, актор, версии «до/после» и ИМЕНА изменённых полей — значения черновика
+ * (заметки, пожелания, даты) в журнал не попадают. Отклонённые попытки (права, валидация,
+ * устаревшая версия, закрытое обращение) и пустой патч событий не создают. Это единственное
+ * поддерживаемое сегодня изменение Inquiry со стороны Inquiry: назначение, статус, клиент и
+ * заявка на Inquiry пока не меняются ни одним сервисом (AOA-04/05), и событий для них нет.
  */
 class InquiryDraftStore
 {
+    public const AUDIT_SUBJECT = 'inquiry';
+
+    public function __construct(private readonly AuditRecorder $audit)
+    {
+    }
+
     /**
      * @param  array<string, mixed>  $patch  см. InquiryDraftData
      * @param  int  $expectedRevision  версия черновика, которую сотрудник видел на форме
@@ -61,11 +76,25 @@ class InquiryDraftStore
                 return $locked;
             }
 
-            $locked->forceFill($changes + [
-                'draft_revision' => $locked->draft_revision + 1,
+            $previousRevision = (int) $locked->draft_revision;
+
+            $locked->forceFill($changes);
+            // Фактически изменённые поля (повторная отправка тех же значений версию поднимает,
+            // как и раньше, но список изменённых полей в этом случае пуст).
+            $changedFields = array_values(array_intersect(Inquiry::DRAFT_FIELDS, array_keys($locked->getDirty())));
+
+            $locked->forceFill([
+                'draft_revision' => $previousRevision + 1,
                 'draft_updated_by' => $actor->id,
                 'draft_updated_at' => now(),
             ])->save();
+
+            $this->audit->record(AuditEventType::InquiryDraftUpdated, $actor, self::AUDIT_SUBJECT, (int) $locked->id, [
+                'previous_revision' => $previousRevision,
+                'new_revision' => $previousRevision + 1,
+                'changed_field_count' => count($changedFields),
+                'changed_fields' => $changedFields === [] ? null : implode(',', $changedFields),
+            ]);
 
             return $locked;
         });

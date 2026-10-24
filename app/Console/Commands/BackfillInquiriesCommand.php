@@ -99,7 +99,7 @@ class BackfillInquiriesCommand extends Command
         $this->line(strtoupper(str_replace('_', ' ', (string) $report['mode'])) . ($report['mode'] === 'dry_run' ? ' — NO WRITES' : ''));
         $this->line('source records: ' . $report['source_total'] . ', eligible: ' . $report['eligible']);
 
-        foreach (['status_distribution', 'technical_state_distribution', 'verdicts', 'summary', 'reasons', 'outcomes', 'integrity', 'global', 'provenance', 'direction_of_difference', 'expected_evolution', 'incomplete_because'] as $section) {
+        foreach (['status_distribution', 'technical_state_distribution', 'verdicts', 'summary', 'reasons', 'outcomes', 'integrity', 'global', 'provenance', 'direction_of_difference', 'expected_evolution', 'draft_audit_evidence', 'incomplete_because'] as $section) {
             if (! isset($report[$section])) {
                 continue;
             }

@@ -104,7 +104,8 @@ class InquiryDraftStoreTest extends TestCase
         $this->assertNull($fresh->booking_id);
         $this->assertSame($manager->id, $fresh->assigned_to);
         $this->assertSame(0, Booking::withTrashed()->count());
-        $this->assertSame(0, AuditEvent::query()->count());
+        // AOA-03-I4: принятое сохранение даёт ровно одно событие аудита (подробности — InquiryDraftAuditTest).
+        $this->assertSame(1, AuditEvent::query()->count());
         Mail::assertNothingSent();
         Notification::assertNothingSent();
     }

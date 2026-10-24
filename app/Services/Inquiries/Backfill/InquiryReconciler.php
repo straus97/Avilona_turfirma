@@ -5,6 +5,8 @@ namespace App\Services\Inquiries\Backfill;
 use App\Models\IncomingInquiry;
 use App\Models\Inquiry;
 use App\Services\Inquiries\InquiryAuthority;
+use App\Services\Inquiries\InquiryDraftStore;
+use App\Support\Audit\AuditEventType;
 use App\Support\Inquiries\InquiryInvariantViolation;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -38,6 +40,14 @@ use Illuminate\Support\Facades\DB;
  *    черновика в источнике отсутствуют, это ожидаемая эволюция (считается отдельно).
  *  - Вне пар: UNPROCESSED — пригодный источник без Inquiry (незавершённый перенос ИЛИ
  *    поступивший после него; отличить без отметки запуска переноса нельзя).
+ *
+ * Правка черновика считается законной эволюцией ТОЛЬКО при доказательстве (AOA-03-I4): версия
+ * черновика N > 0 должна быть подтверждена событиями аудита `inquiry.draft_updated` с версиями
+ * ровно 1…N по цепочке «до → после» и актором последнего события = draft_updated_by. Версия без
+ * событий, с пропусками или событие без соответствующей версии — это «не доказано», а не порча и
+ * не эволюция: отчёт становится неполным, но вердикт пары не меняется. Событий для назначения,
+ * статуса, клиента, закрытия и конверсии на стороне Inquiry нет — ни один сервис сегодня их не
+ * меняет, — поэтому REQUIRES_EVIDENCE и UNPROCESSED этим не разрешаются.
  */
 final class InquiryReconciler
 {
@@ -48,6 +58,13 @@ final class InquiryReconciler
     public const INDEPENDENT = 'INDEPENDENT';
 
     public const SAMPLE_LIMIT = 20;
+
+    /** Версия черновика полностью подтверждена событиями аудита. */
+    public const DRAFT_EVIDENCED = 'evidenced';
+    /** Версия черновика > 0, а событий аудита нет вовсе. */
+    public const DRAFT_UNEVIDENCED = 'unevidenced';
+    /** События есть, но не складываются в версию (пропуск, лишнее событие, чужой актор, версия 0 при событиях). */
+    public const DRAFT_INCONSISTENT = 'inconsistent';
 
     /** Изменчивые поля, сравниваемые с источником (имя Inquiry => имя в IncomingInquiry). */
     private const MIRRORED_FIELDS = [
@@ -69,12 +86,12 @@ final class InquiryReconciler
         'assigned_to', 'assigned_at',
         'client_user_id', 'client_linked_by', 'client_linked_at',
         'booking_id', 'converted_at', 'converted_by',
-        'closed_at', 'closed_by', 'close_reason', 'draft_revision',
+        'closed_at', 'closed_by', 'close_reason', 'draft_revision', 'draft_updated_by',
     ];
 
     /** Чего эта сверка принципиально не знает (выводится в отчёте, не скрывается). */
     private const LIMITS = [
-        'no_inquiry_change_log' => 'Inquiry-side changes are not audited yet (AOA-04), so an Inquiry/source difference cannot be attributed to either side.',
+        'no_inquiry_change_log' => 'Only trip-draft edits are audited (inquiry.draft_updated, AOA-03-I4). Inquiry-side status, assignment, client, closure and conversion changes have no audit trail (no service changes them yet, AOA-04/05), so an Inquiry/source difference in those fields cannot be attributed to either side.',
         'no_sync_marker' => 'No backfill/sync high-water mark exists, so an unprocessed source cannot be classified as newly arrived or missed.',
         'draft_not_mirrored' => 'Trip draft fields have no source counterpart and are never compared.',
     ];
@@ -91,6 +108,8 @@ final class InquiryReconciler
     /** @var array<string, int> */
     private array $direction = [];
     private int $draftEdited = 0;
+    /** @var array<string, int> */
+    private array $draftEvidence = [];
 
     public function __construct(private readonly VerifiedQaConnection $qa)
     {
@@ -102,6 +121,7 @@ final class InquiryReconciler
         $this->total = 0;
         $this->provenance = $this->verdicts = $this->reasons = $this->samples = $this->direction = [];
         $this->draftEdited = 0;
+        $this->draftEvidence = [self::DRAFT_EVIDENCED => 0, self::DRAFT_UNEVIDENCED => 0, self::DRAFT_INCONSISTENT => 0];
 
         Inquiry::on($this->qa->name)
             ->select(self::INQUIRY_COLUMNS)
@@ -119,6 +139,7 @@ final class InquiryReconciler
             'ownership_conflicts' => $this->verdicts[self::OWNERSHIP_CONFLICT] ?? 0,
             'requires_evidence' => $this->verdicts[self::REQUIRES_EVIDENCE] ?? 0,
             'unprocessed_sources' => $unprocessed['total'],
+            'draft_without_audit_evidence' => $this->draftEvidence[self::DRAFT_UNEVIDENCED] + $this->draftEvidence[self::DRAFT_INCONSISTENT],
         ] as $name => $count) {
             if ($count > 0) {
                 $incomplete[$name] = $count;
@@ -141,6 +162,7 @@ final class InquiryReconciler
             'sample_inquiry_ids' => $this->samples,
             'direction_of_difference' => $this->direction,
             'expected_evolution' => ['draft_edited' => $this->draftEdited],
+            'draft_audit_evidence' => $this->draftEvidence,
             'unprocessed_sources' => $unprocessed,
             'global' => $global,
             // Структурно согласованы: нет порчи связей. Это условие допускает законную эволюцию.
@@ -164,6 +186,7 @@ final class InquiryReconciler
             ->keyBy(fn (IncomingInquiry $s) => (int) $s->id);
 
         $bookingUsers = $this->bookingIdentities($chunk, $sources);
+        $draftEvents = $this->draftEvents($chunk);
 
         foreach ($chunk as $inquiry) {
             /** @var Inquiry $inquiry */
@@ -174,6 +197,10 @@ final class InquiryReconciler
             if ($inquiry->draft_revision > 0) {
                 $this->draftEdited++;
             }
+
+            $events = $draftEvents[(int) $inquiry->id] ?? [];
+            $draftEvidence = $this->draftEvidenceOf($inquiry, $events);
+            $this->draftEvidence[$draftEvidence]++;
 
             $reasons = $this->structuralReasons($inquiry, $provenance, $sources, $bookingUsers);
             $verdict = $reasons !== [] ? self::STRUCTURAL : null;
@@ -209,6 +236,11 @@ final class InquiryReconciler
 
             $this->verdicts[$verdict] = ($this->verdicts[$verdict] ?? 0) + 1;
 
+            // «Не доказано» — справка об аудите черновика; в причины вердикта пары она не входит.
+            if ($draftEvidence !== self::DRAFT_EVIDENCED) {
+                $reasons[] = 'draft_' . $draftEvidence;
+            }
+
             foreach ($reasons as $reason) {
                 $this->reasons[$reason] = ($this->reasons[$reason] ?? 0) + 1;
                 $this->samples[$reason] ??= [];
@@ -217,6 +249,73 @@ final class InquiryReconciler
                 }
             }
         }
+    }
+
+    /**
+     * События аудита правки черновика для обращений порции: id обращения → события в порядке
+     * записи. Только числа: значений черновика в журнале нет по построению (InquiryDraftStore).
+     *
+     * @param  Collection<int, Inquiry>  $chunk
+     * @return array<int, list<array{previous: ?int, new: ?int, actor: ?int}>>
+     */
+    private function draftEvents(Collection $chunk): array
+    {
+        $events = [];
+
+        $rows = DB::connection($this->qa->name)->table('audit_events')
+            ->where('event_type', AuditEventType::InquiryDraftUpdated->value)
+            ->where('subject_type', InquiryDraftStore::AUDIT_SUBJECT)
+            ->whereIn('subject_id', $chunk->pluck('id')->map(fn ($v) => (int) $v)->all())
+            ->orderBy('id')
+            ->get(['subject_id', 'actor_id', 'metadata']);
+
+        foreach ($rows as $row) {
+            $metadata = is_string($row->metadata) ? json_decode($row->metadata, true) : null;
+            $metadata = is_array($metadata) ? $metadata : [];
+
+            $events[(int) $row->subject_id][] = [
+                'previous' => is_int($metadata['previous_revision'] ?? null) ? $metadata['previous_revision'] : null,
+                'new' => is_int($metadata['new_revision'] ?? null) ? $metadata['new_revision'] : null,
+                'actor' => $row->actor_id === null ? null : (int) $row->actor_id,
+            ];
+        }
+
+        return $events;
+    }
+
+    /**
+     * Доказана ли версия черновика: события образуют цепочку 0→1→…→N без пропусков и повторов,
+     * а актор последнего события — тот, кто записан в draft_updated_by (если он не удалён).
+     *
+     * @param  list<array{previous: ?int, new: ?int, actor: ?int}>  $events
+     */
+    private function draftEvidenceOf(Inquiry $inquiry, array $events): string
+    {
+        $revision = (int) $inquiry->draft_revision;
+
+        if ($revision === 0) {
+            return $events === [] ? self::DRAFT_EVIDENCED : self::DRAFT_INCONSISTENT;
+        }
+
+        if ($events === []) {
+            return self::DRAFT_UNEVIDENCED;
+        }
+
+        if (count($events) !== $revision) {
+            return self::DRAFT_INCONSISTENT;
+        }
+
+        foreach ($events as $index => $event) {
+            if ($event['previous'] !== $index || $event['new'] !== $index + 1) {
+                return self::DRAFT_INCONSISTENT;
+            }
+        }
+
+        if ($inquiry->draft_updated_by !== null && $events[$revision - 1]['actor'] !== (int) $inquiry->draft_updated_by) {
+            return self::DRAFT_INCONSISTENT;
+        }
+
+        return self::DRAFT_EVIDENCED;
     }
 
     /**

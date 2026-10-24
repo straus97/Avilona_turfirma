@@ -16,6 +16,7 @@ enum AuditEventType: string
     case InquiryReassigned = 'inquiry.reassigned';
     case InquiryClientLinked = 'inquiry.client_linked';
     case InquiryConverted = 'inquiry.converted';
+    case InquiryDraftUpdated = 'inquiry.draft_updated';
     case BookingAssigned = 'booking.assigned';
     case BookingReassigned = 'booking.reassigned';
     case BookingPriceRevised = 'booking.price_revised';
@@ -35,6 +36,7 @@ enum AuditEventType: string
             self::InquiryReassigned => 'Обращение переназначено',
             self::InquiryClientLinked => 'Клиент привязан к обращению',
             self::InquiryConverted => 'Обращение оформлено как заявка',
+            self::InquiryDraftUpdated => 'Черновик обращения обновлён',
             self::BookingAssigned => 'Ответственный по заявке назначен',
             self::BookingReassigned => 'Ответственный по заявке изменён',
             self::BookingPriceRevised => 'Цена заявки пересмотрена',
