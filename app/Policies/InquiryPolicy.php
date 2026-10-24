@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Inquiry;
+use App\Models\User;
+
+/**
+ * Кто вправе работать с обращением агентства (AOA-03-I1, правило владельца §A3).
+ *
+ * Политика отвечает только на вопрос «кто»: роль и текущая ответственность.
+ * Допустимость действия в текущем статусе проверяет сервис внутри транзакции.
+ *
+ * Администратор видит и ведёт все обращения; менеджер — только назначенные ему
+ * СЕЙЧАС (чужие, ничьи и бывшие — нет); турист и пользователь без роли не имеют
+ * доступа к управлению обращениями. Правила не копируют IncomingInquiryPolicy
+ * слепо: создание и назначение здесь намеренно не объявлены — это AOA-04.
+ * Эффективная роль — по привычному приоритету admin > manager.
+ */
+class InquiryPolicy
+{
+    private function isAdmin(User $user): bool
+    {
+        return $user->hasRole(User::ROLE_ADMIN);
+    }
+
+    private function isAssignedManager(User $user, Inquiry $inquiry): bool
+    {
+        return $user->hasRole(User::ROLE_MANAGER)
+            && $inquiry->assigned_to !== null
+            && (int) $inquiry->assigned_to === (int) $user->id;
+    }
+
+    /** Видимость совпадает с Inquiry::scopeVisibleTo(). */
+    public function view(User $user, Inquiry $inquiry): bool
+    {
+        return $this->isAdmin($user) || $this->isAssignedManager($user, $inquiry);
+    }
+
+    /** Сохранить черновик: администратор или ответственный менеджер. */
+    public function updateDraft(User $user, Inquiry $inquiry): bool
+    {
+        return $this->view($user, $inquiry);
+    }
+}
