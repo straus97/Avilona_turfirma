@@ -116,9 +116,9 @@ class Message extends Model
     /**
      * Защищённый URL для скачивания вложения.
      *
-     * Не входит в $appends: добавляется точечно через ->append(...) только
-     * в тех JSON-ответах, где он нужен (см. MessageController::index/store),
-     * чтобы не генерировать маршрут при любой сериализации Message.
+     * Не входит в $appends: попадает в JSON только через ChatMessagePresenter
+     * (MessageController::index/store), чтобы не генерировать маршрут при любой
+     * сериализации Message.
      */
     public function getAttachmentDownloadUrlAttribute(): ?string
     {

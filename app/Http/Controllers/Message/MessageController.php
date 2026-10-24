@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Booking;
 use App\Models\User;
+use App\Support\Chat\ChatMessagePresenter;
 use App\Support\Notifications\MessageNotificationVisibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +40,7 @@ class MessageController extends Controller
         $this->authorizeBookingRead($booking);
 
         $messages = Message::byBooking($bookingId)
-            ->with(['sender', 'receiver'])
+            ->with(['sender:id,name', 'receiver:id,name'])
             ->orderBy('created_at', 'asc')
             ->get();
         
@@ -52,10 +53,8 @@ class MessageController extends Controller
                 'read_at' => now(),
             ]);
 
-        // Точечно добавляем защищённую ссылку на вложение только в этот JSON-ответ.
-        $messages->append('attachment_download_url');
-
-        return response()->json($messages);
+        // Явный минимальный контракт (SEC-FIX-01): без профилей участников.
+        return response()->json(ChatMessagePresenter::presentMany($messages));
     }
 
     /**
@@ -131,6 +130,8 @@ class MessageController extends Controller
             throw $e;
         }
 
+        // Полные модели нужны слушателю уведомлений (e-mail, настройки получателя);
+        // в JSON-ответ они попадают только через ChatMessagePresenter.
         $message->load(['sender', 'receiver']);
 
         // Сообщение уже сохранено: сбой уведомления не должен откатывать запись,
@@ -145,12 +146,10 @@ class MessageController extends Controller
         }
 
         if ($request->expectsJson()) {
-            // Точечно добавляем защищённую ссылку на вложение только в этот JSON-ответ.
-            $message->append('attachment_download_url');
-
+            // Явный минимальный контракт (SEC-FIX-01): без профилей участников.
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => ChatMessagePresenter::present($message),
             ]);
         }
 
