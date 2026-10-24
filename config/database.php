@@ -63,6 +63,28 @@ return [
             ]) : [],
         ],
 
+        /*
+         * AOA-03-I2: ТОЛЬКО для репетиции переноса обращений на одноразовой БД. Без явных
+         * AOA_QA_DB_* значений подключение пустое и InquiryBackfillGuard его отклонит.
+         * Каноническую БД и порты WAMP (3306/3308) сюда указывать нельзя — guard откажет.
+         */
+        'aoa_qa' => [
+            'driver' => 'mysql',
+            'host' => env('AOA_QA_DB_HOST', '127.0.0.1'),
+            'port' => env('AOA_QA_DB_PORT'),
+            'database' => env('AOA_QA_DB_DATABASE'),
+            'username' => env('AOA_QA_DB_USERNAME'),
+            'password' => env('AOA_QA_DB_PASSWORD', ''),
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => 'InnoDB',
+            'qa_disposable' => env('AOA_QA_DISPOSABLE', false),
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
