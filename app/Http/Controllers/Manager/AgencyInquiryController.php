@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
+use App\Services\Inquiries\InquiryAssignment;
+use App\Services\Inquiries\InquiryAssignmentException;
 use App\Services\Inquiries\InquiryAuthority;
 use App\Services\Inquiries\InquiryDraftException;
 use App\Services\Inquiries\InquiryDraftStore;
@@ -29,13 +31,16 @@ use Illuminate\Validation\ValidationException;
  *
  * Чужое, ничьё или бывшее обращение для менеджера «не существует» (404 без данных) — как для
  * IncomingInquiry. Администратор видит все самостоятельные обращения; создание администратором
- * и назначение — следующий срез AOA-04. Привязанные к IncomingInquiry обращения здесь не показываются.
+ * — следующий срез AOA-04. Назначение и передача ответственного (AOA-04-I2) — только администратор
+ * (InquiryAssignment); менеджер блок назначения и историю не видит. Привязанные к IncomingInquiry
+ * обращения здесь не показываются и не передаются.
  */
 class AgencyInquiryController extends Controller
 {
     public function __construct(
         private readonly ManualInquiryCreator $creator,
         private readonly InquiryDraftStore $drafts,
+        private readonly InquiryAssignment $assignment,
     ) {
     }
 
@@ -103,12 +108,74 @@ class AgencyInquiryController extends Controller
 
         $inquiry->load(['assignee:id,name', 'creator:id,name']);
 
+        // Блок назначения и история — только администратору: данные для них даже не загружаются
+        // для менеджера (не полагаемся на скрытие в шаблоне).
+        $canAssign = Gate::allows('assign', $inquiry);
+
         return view('manager.agency-inquiries.show', [
             'inquiry' => $inquiry,
             'draft' => $inquiry->draftSnapshot(),
             'canEdit' => $inquiry->isOpen() && Gate::allows('updateDraft', $inquiry),
             'draftConflict' => session('draft_conflict'),
+            'canAssign' => $canAssign,
+            'assignmentOpen' => $canAssign && $inquiry->status === Inquiry::STATUS_IN_PROGRESS,
+            'eligibleStaff' => $canAssign ? $this->assignment->eligibleStaff() : collect(),
+            'assignmentHistory' => $canAssign ? $this->assignment->history($inquiry) : collect(),
         ]);
+    }
+
+    /**
+     * Назначить или передать обращение другому сотруднику (AOA-04-I2). Менеджер, которому обращение
+     * видно, получает 403 (он его уже видит; права на назначение у него нет), чужое/ничьё/отсутствующее —
+     * 404 как и везде. Выбор сотрудника, причину и версию формы валидирует и проверяет сервис под
+     * блокировкой; запрос не может подменить ничего, кроме этих полей.
+     */
+    public function assign(Request $request, Inquiry $inquiry): RedirectResponse
+    {
+        $this->visible($inquiry);
+        Gate::authorize('assign', $inquiry);
+
+        $data = $request->validate([
+            'assignee_id' => ['required', 'integer', 'min:1'],
+            'expected_assignee_id' => ['present', 'nullable', 'integer', 'min:1'],
+            'reason' => ['required', 'string', 'max:' . (InquiryAssignment::REASON_MAX_LENGTH * 4)],
+        ], [
+            'assignee_id.required' => 'Выберите сотрудника, которому передаёте обращение.',
+            'assignee_id.integer' => 'Выберите сотрудника из списка.',
+            'expected_assignee_id.present' => 'Форма устарела. Обновите страницу и повторите.',
+            'expected_assignee_id.integer' => 'Форма устарела. Обновите страницу и повторите.',
+            'reason.required' => 'Укажите причину: от ' . InquiryAssignment::REASON_MIN_LENGTH . ' до ' . InquiryAssignment::REASON_MAX_LENGTH . ' символов.',
+            'reason.max' => 'Причина слишком длинная: не более ' . InquiryAssignment::REASON_MAX_LENGTH . ' символов.',
+        ]);
+
+        try {
+            $result = $this->assignment->assign(
+                $inquiry,
+                Auth::user(),
+                (int) $data['assignee_id'],
+                $data['expected_assignee_id'] === null ? null : (int) $data['expected_assignee_id'],
+                (string) $data['reason'],
+            );
+        } catch (InquiryAssignmentException $e) {
+            if ($e->isStale()) {
+                return redirect()
+                    ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+                    ->with('error', $e->getMessage() . ' Ваша передача НЕ выполнена.');
+            }
+
+            return redirect()
+                ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+                ->withErrors([$e->field => $e->getMessage()])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+            ->with('success', match ($result) {
+                InquiryAssignment::RESULT_UNCHANGED => 'Этот сотрудник уже ответственный за обращение — изменений нет.',
+                InquiryAssignment::RESULT_ASSIGNED => 'Ответственный назначен. Запись добавлена в историю назначений.',
+                default => 'Обращение передано. Запись добавлена в историю назначений.',
+            });
     }
 
     public function updateDraft(Request $request, Inquiry $inquiry): RedirectResponse

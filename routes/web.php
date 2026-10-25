@@ -91,6 +91,9 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::post('/agency-inquiries', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'store'])->name('agency-inquiries.store');
         Route::get('/agency-inquiries/{inquiry}', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'show'])->whereNumber('inquiry')->name('agency-inquiries.show');
         Route::put('/agency-inquiries/{inquiry}/draft', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'updateDraft'])->whereNumber('inquiry')->name('agency-inquiries.draft.update');
+        // AOA-04-I2: назначение/передача ответственного — только администратор (проверка в контроллере/политике:
+        // менеджеру своё обращение — 403, чужое — 404).
+        Route::post('/agency-inquiries/{inquiry}/assignment', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'assign'])->whereNumber('inquiry')->name('agency-inquiries.assign');
 
         Route::get('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'index'])->name('client-requests');
         Route::post('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'store'])->name('client-requests.store');

@@ -65,6 +65,8 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'cabinet.manager.inquiries.client.password-setup',
         // AOA-04-I1: Inquiry (manual business inquiries), exercised in test_agency_inquiry_pages_follow_current_assignment.
         'cabinet.manager.agency-inquiries.show', 'cabinet.manager.agency-inquiries.draft.update',
+        // AOA-04-I2: Admin-only assignment, classified here (manager: 403 own / 404 foreign).
+        'cabinet.manager.agency-inquiries.assign',
     ];
 
     /** Admin-only by route middleware (`role:admin`), asserted below. */
@@ -182,6 +184,23 @@ class StaffAccessPolicyMatrixTest extends TestCase
         $this->assertMatrix('agency inquiry Admin-owned', 'GET', route('cabinet.manager.agency-inquiries.show', $adminOwned), ['admin' => 200, 'A' => 404, 'B' => 404, 'T' => 403]);
         $this->assertMatrix('agency draft A', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $own), ['A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['revision' => 99]);
         $this->assertMatrix('agency draft Admin-owned', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $adminOwned), ['A' => 404, 'B' => 404, 'T' => 403], ['revision' => 99]);
+
+        // AOA-04-I2: assignment is Admin-only. A Manager who can see the record gets 403, anyone else 404 (no
+        // foreign record is confirmed); Tourists are stopped by the role middleware. Denied calls change nothing.
+        $assign = fn (Inquiry $i, User $to, ?User $from): array => [
+            'assignee_id' => $to->id, 'expected_assignee_id' => $from?->id, 'reason' => 'Синтетическая проверка матрицы',
+        ];
+        $this->assertMatrix('agency assign own', 'POST', route('cabinet.manager.agency-inquiries.assign', $own), ['A' => 403, 'B' => 404, 'T' => 403, 'U' => 403], $assign($own, $this->b, $this->a));
+        $this->assertMatrix('agency assign foreign', 'POST', route('cabinet.manager.agency-inquiries.assign', $foreign), ['A' => 404, 'B' => 403, 'T' => 403], $assign($foreign, $this->a, $this->b));
+        $this->assertMatrix('agency assign Admin-owned', 'POST', route('cabinet.manager.agency-inquiries.assign', $adminOwned), ['A' => 404, 'B' => 404, 'T' => 403], $assign($adminOwned, $this->a, $this->admin));
+        $this->assertSame($this->a->id, $own->refresh()->assigned_to);
+        $this->assertSame($this->b->id, $foreign->refresh()->assigned_to);
+        $this->assertSame(0, \App\Models\AuditEvent::query()->count());
+
+        $this->assertMatrix('agency assign (Admin)', 'POST', route('cabinet.manager.agency-inquiries.assign', $own), ['admin' => 302], $assign($own, $this->b, $this->a));
+        $this->assertSame($this->b->id, $own->refresh()->assigned_to);
+        $this->assertMatrix('agency show after transfer', 'GET', route('cabinet.manager.agency-inquiries.show', $own), ['admin' => 200, 'A' => 404, 'B' => 200]);
+        $this->assertMatrix('agency draft after transfer', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $own), ['A' => 404, 'B' => 302], ['revision' => 99]);
     }
 
     public function test_inquiry_pages_follow_current_assignment(): void

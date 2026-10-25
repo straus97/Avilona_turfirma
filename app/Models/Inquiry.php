@@ -245,7 +245,8 @@ class Inquiry extends Model
      * переходы появятся с сервисами AOA-04/05):
      *  - origin/status из закрытых списков;
      *  - external_intake ⇔ есть incoming_inquiry_id, создателя нет;
-     *    ручные origin: есть создатель, источника нет;
+     *    ручные origin: при создании есть создатель (позднее БД обнуляет его при удалении аккаунта,
+     *    приложение автора не меняет), источника нет;
      *  - contact_channel (AOA-04-I1) — из закрытого словаря; ручное обращение при создании обязано
      *    его иметь, внешнее — не имеет (канал клиента ≠ происхождение записи);
      *  - при создании: manager_created отвечает сам создатель, admin_created уже назначен
@@ -288,8 +289,15 @@ class Inquiry extends Model
             if ($this->incoming_inquiry_id !== null) {
                 $fail('A manually created inquiry cannot reference an IncomingInquiry source.');
             }
-            if ($this->created_by === null) {
+            if ($this->created_by === null && ! $this->exists) {
                 $fail('A manually created inquiry requires its creator.');
+            }
+
+            // AOA-04-I2: после удаления аккаунта создателя БД обнуляет created_by (nullOnDelete), и
+            // такое обращение нужно уметь передать другому сотруднику. Автор не переписывается:
+            // приложение не очищает и не подменяет created_by у существующей записи.
+            if ($this->exists && $this->isDirty('created_by')) {
+                $fail('The creating employee of an existing inquiry cannot be changed.');
             }
         }
 

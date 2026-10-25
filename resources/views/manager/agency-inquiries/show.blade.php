@@ -44,6 +44,66 @@
     </dl>
 </section>
 
+@if($canAssign)
+<section class="card-custom mb-4" aria-labelledby="agency-inquiry-assignment-title">
+    <div class="card-header-custom">
+        <h2 class="card-title-custom" id="agency-inquiry-assignment-title">Ответственный менеджер</h2>
+    </div>
+    <p class="mb-3"><span class="text-muted">Сейчас отвечает:</span> <strong>{{ $inquiry->assignee?->name ?? 'не назначен' }}</strong></p>
+
+    @if($assignmentOpen)
+        @php
+            $hasAssignee = $inquiry->assigned_to !== null;
+        @endphp
+        <form method="POST" action="{{ route('cabinet.manager.agency-inquiries.assign', $inquiry) }}" data-submit-once novalidate>
+            @csrf
+            <input type="hidden" name="expected_assignee_id" value="{{ $inquiry->assigned_to }}">
+            <div class="mb-3">
+                <label for="ai-assignee" class="form-label">{{ $hasAssignee ? 'Передать обращение' : 'Назначить сотрудника' }}</label>
+                <select id="ai-assignee" name="assignee_id" class="form-select @error('assignee_id') is-invalid @enderror" required>
+                    <option value="">— Выберите сотрудника —</option>
+                    @foreach($eligibleStaff as $employee)
+                        @continue($employee['id'] === (int) $inquiry->assigned_to)
+                        <option value="{{ $employee['id'] }}" @selected((int) old('assignee_id') === $employee['id'])>{{ $employee['name'] }} ({{ $employee['role'] }})</option>
+                    @endforeach
+                </select>
+                @error('assignee_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @error('expected_assignee_id')<div class="text-danger small mt-1" role="alert">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+                <label for="ai-assignment-reason" class="form-label">{{ $hasAssignee ? 'Причина переназначения' : 'Причина назначения' }}</label>
+                <textarea id="ai-assignment-reason" name="reason" rows="2" required minlength="{{ \App\Services\Inquiries\InquiryAssignment::REASON_MIN_LENGTH }}" maxlength="{{ \App\Services\Inquiries\InquiryAssignment::REASON_MAX_LENGTH }}" class="form-control @error('reason') is-invalid @enderror" aria-describedby="ai-assignment-reason-help">{{ old('reason') }}</textarea>
+                <div id="ai-assignment-reason-help" class="form-text">От {{ \App\Services\Inquiries\InquiryAssignment::REASON_MIN_LENGTH }} до {{ \App\Services\Inquiries\InquiryAssignment::REASON_MAX_LENGTH }} символов; сохраняется в истории назначений и видна администраторам. Не указывайте пароли, паспортные данные, телефоны и email клиентов.</div>
+                @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <button type="submit" class="btn btn-primary">{{ $hasAssignee ? 'Передать обращение' : 'Назначить сотрудника' }}</button>
+        </form>
+    @else
+        <p class="text-muted mb-0">Обращение не находится в работе — ответственного изменить нельзя.</p>
+    @endif
+
+    <h3 class="h6 mt-4" id="agency-inquiry-history-title">История назначений</h3>
+    @if($assignmentHistory->isEmpty())
+        <p class="text-muted small mb-0">Изменений ответственного пока не записано. Первоначального ответственного обращение получает при создании; такие назначения в эту историю не входят.</p>
+    @else
+        <ul class="list-unstyled small mb-0" aria-labelledby="agency-inquiry-history-title">
+            @foreach($assignmentHistory as $entry)
+                @php
+                    $who = fn (?int $id, ?string $name, string $none) => $id === null ? $none : ($name ?? 'учётная запись удалена');
+                @endphp
+                <li class="mb-2" style="overflow-wrap: anywhere;">
+                    <strong>{{ $entry['type'] }}</strong>
+                    · <time datetime="{{ $entry['at']?->toIso8601String() }}">{{ $entry['at']?->format('d.m.Y H:i') }}</time>
+                    · {{ $entry['actor'] ?? 'администратор не определён' }}:
+                    {{ $who($entry['previous_id'], $entry['previous'], 'не назначен') }} → {{ $who($entry['new_id'], $entry['new'], '—') }}
+                    @if($entry['reason'])<br><span class="text-muted">Причина: {{ $entry['reason'] }}</span>@endif
+                </li>
+            @endforeach
+        </ul>
+    @endif
+</section>
+@endif
+
 @if($draftConflict)
 <section class="alert alert-warning" role="region" aria-labelledby="agency-inquiry-conflict-title">
     <h2 class="h6" id="agency-inquiry-conflict-title">Ваши несохранённые значения</h2>
