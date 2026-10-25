@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
+use App\Models\User;
 use App\Services\Inquiries\InquiryAssignment;
 use App\Services\Inquiries\InquiryAssignmentException;
 use App\Services\Inquiries\InquiryAuthority;
@@ -31,7 +32,7 @@ use Illuminate\Validation\ValidationException;
  *
  * Чужое, ничьё или бывшее обращение для менеджера «не существует» (404 без данных) — как для
  * IncomingInquiry. Администратор видит все самостоятельные обращения; создание администратором
- * — следующий срез AOA-04. Назначение и передача ответственного (AOA-04-I2) — только администратор
+ * (AOA-04-I3) выбирает первого ответственного; правило задаётся по маршруту. Назначение и передача ответственного (AOA-04-I2) — только администратор
  * (InquiryAssignment); менеджер блок назначения и историю не видит. Привязанные к IncomingInquiry
  * обращения здесь не показываются и не передаются.
  */
@@ -44,67 +45,169 @@ class AgencyInquiryController extends Controller
     ) {
     }
 
-    public function index(): View
+    /** Фильтры, которые переносятся в ссылки (список → карточка → назад). */
+    private const FILTER_KEYS = ['status', 'channel', 'assignee'];
+
+    /**
+     * Список — только дополнительное сужение уже авторизованной выборки (самостоятельные обращения,
+     * visibleTo): фильтр никогда не расширяет доступ. Менеджер не может отфильтровать по
+     * ответственному — параметр для него не читается, видны лишь его обращения.
+     */
+    public function index(Request $request): View
     {
         $user = Auth::user();
+        $isAdmin = $user->hasRole(User::ROLE_ADMIN);
+        $eligibleStaff = $isAdmin ? $this->assignment->eligibleStaff() : collect();
 
-        $inquiries = InquiryAuthority::scopeIndependent(Inquiry::query())
-            ->visibleTo($user)
+        [$filters, $rejected] = $this->filters($request, $isAdmin, $eligibleStaff->pluck('id')->all());
+
+        $query = InquiryAuthority::scopeIndependent(Inquiry::query())->visibleTo($user);
+
+        if (isset($filters['status'])) {
+            $query->where('inquiries.status', $filters['status']);
+        }
+        if (isset($filters['channel'])) {
+            $query->where('inquiries.contact_channel', $filters['channel']);
+        }
+        if (isset($filters['assignee'])) {
+            $filters['assignee'] === 'none'
+                ? $query->whereNull('inquiries.assigned_to')
+                : $query->where('inquiries.assigned_to', (int) $filters['assignee']);
+        }
+
+        $inquiries = $query
             ->with('assignee:id,name')
-            ->orderByDesc('id')
-            ->paginate(20);
+            ->orderByDesc('inquiries.id')
+            ->paginate(20)
+            ->appends($filters);
 
         return view('manager.agency-inquiries.index', [
             'inquiries' => $inquiries,
-            'canCreate' => $user->can('create', Inquiry::class),
+            'canCreate' => $user->can('create', Inquiry::class) || $user->can('createForStaff', Inquiry::class),
+            'filters' => $filters,
+            'filtersRejected' => $rejected,
+            'eligibleStaff' => $eligibleStaff,
+            'carry' => $filters + ($inquiries->currentPage() > 1 ? ['page' => $inquiries->currentPage()] : []),
         ]);
+    }
+
+    /**
+     * Белый список параметров фильтра. Недопустимое значение не применяется (и помечается), а не
+     * подставляется в запрос. Параметр «ответственный» читает только администратор.
+     *
+     * @param  list<int>  $eligibleIds
+     * @return array{0: array<string, string>, 1: bool}
+     */
+    private function filters(Request $request, bool $isAdmin, array $eligibleIds): array
+    {
+        $filters = [];
+        $rejected = false;
+
+        $pick = function (string $key, array $allowed) use ($request, &$filters, &$rejected): void {
+            $value = $request->query($key);
+            if ($value === null || $value === '') {
+                return;
+            }
+            if (is_string($value) && in_array($value, $allowed, true)) {
+                $filters[$key] = $value;
+            } else {
+                $rejected = true;
+            }
+        };
+
+        $pick('status', Inquiry::statuses());
+        $pick('channel', Inquiry::contactChannels());
+
+        if ($isAdmin) {
+            $pick('assignee', ['none', ...array_map('strval', $eligibleIds)]);
+        }
+
+        return [$filters, $rejected];
     }
 
     public function create(): View
     {
-        Gate::authorize('create', Inquiry::class);
+        $user = Auth::user();
+        $forStaff = $user->can('createForStaff', Inquiry::class);
+        abort_unless($forStaff || $user->can('create', Inquiry::class), 403);
 
         return view('manager.agency-inquiries.create', [
             // Токен показа формы: повторная отправка той же формы не создаёт дубликат.
             'creationToken' => (string) Str::uuid(),
+            'chooseAssignee' => $forStaff,
+            'eligibleStaff' => $forStaff ? $this->assignment->eligibleStaff() : collect(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        Gate::authorize('create', Inquiry::class);
+        $user = Auth::user();
+        // Правило по маршруту: эффективная роль admin > manager (аккаунт с обеими ролями идёт по
+        // правилам администратора и обязан выбрать ответственного); иначе — менеджер для себя.
+        $forStaff = $user->can('createForStaff', Inquiry::class);
+        if (! $forStaff) {
+            Gate::authorize('create', Inquiry::class);
+        }
 
-        // Владелец, создатель, статус, источник, заявка и клиент задаются только сервером: любое
-        // лишнее поле (подмена) отклоняется целиком, а не молча игнорируется.
-        $unexpected = array_diff(array_map('strval', array_keys($request->all())), ['_token', 'contact_channel', 'creation_token']);
+        // Создатель, статус, источник, заявка и клиент задаются только сервером: любое лишнее поле
+        // (подмена) отклоняется целиком, а не молча игнорируется. Ответственного принимает только
+        // администратор.
+        $allowed = ['_token', 'contact_channel', 'creation_token'];
+        if ($forStaff) {
+            $allowed[] = 'assignee_id';
+        }
+        $unexpected = array_diff(array_map('strval', array_keys($request->all())), $allowed);
         if ($unexpected !== []) {
             throw ValidationException::withMessages([
-                'request' => ['Форма содержит недопустимые поля. Ответственный и статус обращения задаются автоматически.'],
+                'request' => [$forStaff
+                    ? 'Форма содержит недопустимые поля. Создатель и статус обращения задаются автоматически.'
+                    : 'Форма содержит недопустимые поля. Ответственный и статус обращения задаются автоматически.'],
             ]);
         }
 
-        $data = $request->validate([
+        $rules = [
             'contact_channel' => ['required', 'string', Rule::in(Inquiry::contactChannels())],
             'creation_token' => ['required', 'string', 'uuid'],
-        ], [
+        ];
+        $messages = [
             'contact_channel.required' => 'Выберите, как клиент связался с агентством: по телефону или в мессенджере.',
             'contact_channel.in' => 'Выберите, как клиент связался с агентством: по телефону или в мессенджере.',
             'creation_token.required' => 'Форма устарела. Обновите страницу и повторите.',
             'creation_token.uuid' => 'Форма устарела. Обновите страницу и повторите.',
-        ]);
+        ];
+        if ($forStaff) {
+            $rules['assignee_id'] = ['required', 'integer', 'min:1'];
+            $messages['assignee_id.required'] = 'Выберите ответственного сотрудника.';
+            $messages['assignee_id.integer'] = 'Выберите ответственного сотрудника из списка.';
+            $messages['assignee_id.min'] = 'Выберите ответственного сотрудника из списка.';
+        }
 
-        $inquiry = $this->creator->createForManager(Auth::user(), $data['contact_channel'], $data['creation_token']);
+        $data = $request->validate($rules, $messages);
+
+        $inquiry = $forStaff
+            ? $this->creator->createForAdmin($user, (int) $data['assignee_id'], $data['contact_channel'], $data['creation_token'])
+            : $this->creator->createForManager($user, $data['contact_channel'], $data['creation_token']);
+
+        $created = $forStaff
+            ? 'Обращение создано, ответственный назначен. Заполните данные поездки и сохраните черновик.'
+            : 'Обращение создано и закреплено за вами. Заполните данные поездки и сохраните черновик.';
 
         return redirect()
             ->route('cabinet.manager.agency-inquiries.show', $inquiry)
             ->with('success', $inquiry->wasRecentlyCreated
-                ? 'Обращение создано и закреплено за вами. Заполните данные поездки и сохраните черновик.'
-                : 'Это обращение уже было создано — открыта его карточка, дубликат не создан.');
+                ? $created
+                : 'Это обращение уже было создано — открыта его карточка, дубликат не создан. Повторно отправленные значения не применялись.');
     }
 
-    public function show(Inquiry $inquiry): View
+    public function show(Request $request, Inquiry $inquiry): View
     {
         $this->visible($inquiry);
+
+        // Параметры списка (если пришли по ссылке из него) — только для ссылки «назад».
+        $backQuery = array_filter(
+            Arr::only($request->query(), [...self::FILTER_KEYS, 'page']),
+            fn ($v): bool => is_string($v) && preg_match('/^[a-z_0-9]{1,32}$/', $v) === 1
+        );
 
         $inquiry->load(['assignee:id,name', 'creator:id,name']);
 
@@ -114,6 +217,7 @@ class AgencyInquiryController extends Controller
 
         return view('manager.agency-inquiries.show', [
             'inquiry' => $inquiry,
+            'backUrl' => route('cabinet.manager.agency-inquiries', $backQuery),
             'draft' => $inquiry->draftSnapshot(),
             'canEdit' => $inquiry->isOpen() && Gate::allows('updateDraft', $inquiry),
             'draftConflict' => session('draft_conflict'),

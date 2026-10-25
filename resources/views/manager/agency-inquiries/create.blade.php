@@ -9,7 +9,7 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Новое обращение клиента</h1>
-    <p class="page-subtitle">Запишите обращение, которое пришло к вам по телефону или в личные сообщения. Обращение закрепляется за вами автоматически. Бронирование при этом не создаётся, аккаунт туриста не нужен — данные поездки можно заполнить и дополнить позже.</p>
+    <p class="page-subtitle">Запишите обращение, которое пришло к вам по телефону или в личные сообщения. @if($chooseAssignee)Вы выбираете сотрудника, который будет за него отвечать; создателем останетесь вы.@else Обращение закрепляется за вами автоматически.@endif Бронирование при этом не создаётся, аккаунт туриста не нужен — данные поездки можно заполнить и дополнить позже.</p>
 </div>
 
 <section class="card-custom mb-4" aria-labelledby="agency-inquiry-create-title">
@@ -35,6 +35,20 @@
             @error('request')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             <p class="text-muted small mt-2 mb-0">Содержимое разговора и переписки здесь не сохраняется, контакты клиента не запрашиваются.</p>
         </fieldset>
+
+        @if($chooseAssignee)
+        <div class="mb-3">
+            <label for="agency-inquiry-assignee" class="form-label">Ответственный сотрудник</label>
+            <select id="agency-inquiry-assignee" name="assignee_id" class="form-select @error('assignee_id') is-invalid @enderror" required aria-describedby="agency-inquiry-assignee-help">
+                <option value="">— Выберите сотрудника —</option>
+                @foreach($eligibleStaff as $employee)
+                    <option value="{{ $employee['id'] }}" @selected((int) old('assignee_id') === $employee['id'])>{{ $employee['name'] }} ({{ $employee['role'] }})</option>
+                @endforeach
+            </select>
+            <div id="agency-inquiry-assignee-help" class="form-text">Менеджер или администратор, который будет вести обращение. Позже ответственного можно передать другому сотруднику.</div>
+            @error('assignee_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+        </div>
+        @endif
 
         <button type="submit" class="btn btn-primary">Создать обращение</button>
         <a href="{{ route('cabinet.manager.agency-inquiries') }}" class="btn btn-link">Отмена</a>

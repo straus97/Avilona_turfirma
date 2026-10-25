@@ -126,6 +126,22 @@ class Inquiry extends Model
     }
 
     /** @return array<string, string> */
+    public static function statusLabels(): array
+    {
+        return [
+            self::STATUS_NEW => 'Новое',
+            self::STATUS_IN_PROGRESS => 'В работе',
+            self::STATUS_CONVERTED => 'Оформлено',
+            self::STATUS_CLOSED => 'Закрыто',
+        ];
+    }
+
+    public function statusLabel(): string
+    {
+        return self::statusLabels()[$this->status] ?? 'Неизвестно';
+    }
+
+    /** @return array<string, string> */
     public static function contactChannelLabels(): array
     {
         return [

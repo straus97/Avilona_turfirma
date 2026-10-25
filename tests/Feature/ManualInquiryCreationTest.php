@@ -231,10 +231,9 @@ class ManualInquiryCreationTest extends TestCase
 
     // ───────── Роли ─────────
 
-    public function test_admin_tourist_and_guest_cannot_create(): void
+    public function test_tourist_and_guest_cannot_create(): void
     {
-        $this->actingAs($this->admin)->get(route('cabinet.manager.agency-inquiries.create'))->assertForbidden();
-        $this->create($this->admin)->assertForbidden();
+        // AOA-04-I3: администратор создаёт по своему правилу (AdminInquiryCreationTest), здесь не проверяется.
         $this->actingAs($this->tourist)->get(route('cabinet.manager.agency-inquiries.create'))->assertForbidden();
         $this->create($this->tourist)->assertForbidden();
 
@@ -251,8 +250,11 @@ class ManualInquiryCreationTest extends TestCase
         $both = $this->userWith('manager');
         $both->roles()->attach(Role::query()->where('name', 'admin')->value('id'));
 
-        $this->create($both)->assertForbidden();
+        // Без выбора ответственного маршрут администратора отказывает: правила менеджера не применяются.
+        $this->create($both)->assertSessionHasErrors('assignee_id');
         $this->assertSame(0, Inquiry::query()->count());
+        $this->expectException(AuthorizationException::class);
+        app(ManualInquiryCreator::class)->createForManager($both, 'phone', (string) Str::uuid());
     }
 
     public function test_inactive_manager_cannot_create_through_the_service(): void
@@ -395,7 +397,7 @@ class ManualInquiryCreationTest extends TestCase
 
         $htmlAdmin = $this->actingAs($this->admin)->get(route('cabinet.manager.agency-inquiries'))->assertOk()->getContent();
         $this->assertStringContainsString($this->showUrl($inquiryB), $htmlAdmin);
-        $this->assertStringNotContainsString(route('cabinet.manager.agency-inquiries.create'), $htmlAdmin);
+        $this->assertStringContainsString(route('cabinet.manager.agency-inquiries.create'), $htmlAdmin);
 
         $this->actingAs($this->tourist)->get(route('cabinet.manager.agency-inquiries'))->assertForbidden();
     }
@@ -406,7 +408,7 @@ class ManualInquiryCreationTest extends TestCase
             ->assertOk()->assertSee('Обращений клиентов пока нет')->assertSee('Новое обращение');
 
         $this->actingAs($this->admin)->get(route('cabinet.manager.agency-inquiries'))
-            ->assertOk()->assertSee('Обращений клиентов пока нет')->assertDontSee('Новое обращение');
+            ->assertOk()->assertSee('Обращений клиентов пока нет')->assertSee('Новое обращение');
     }
 
     public function test_former_assignee_loses_access_after_reassignment(): void

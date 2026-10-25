@@ -147,7 +147,15 @@ class InquiryAssignment
         $events = AuditEvent::query()
             ->where('subject_type', InquiryDraftStore::AUDIT_SUBJECT)
             ->where('subject_id', $inquiry->id)
-            ->whereIn('event_type', [AuditEventType::InquiryAssigned->value, AuditEventType::InquiryReassigned->value])
+            ->where(function ($q): void {
+                $q->whereIn('event_type', [AuditEventType::InquiryAssigned->value, AuditEventType::InquiryReassigned->value])
+                    // AOA-04-I3: первое назначение администратором при создании — тот же реальный факт,
+                    // записанный событием создания (одно событие, не дубль назначения).
+                    ->orWhere(function ($q2): void {
+                        $q2->where('event_type', AuditEventType::InquiryCreated->value)
+                            ->whereNotNull('metadata->initial_assignee_id');
+                    });
+            })
             ->orderByDesc('id')
             ->limit(self::HISTORY_LIMIT)
             ->get();
@@ -155,19 +163,20 @@ class InquiryAssignment
         $ids = $events->flatMap(fn (AuditEvent $e): array => [
             $e->actor_id,
             $e->metadata['previous_assignee_id'] ?? null,
-            $e->metadata['new_assignee_id'] ?? null,
+            $e->metadata['new_assignee_id'] ?? $e->metadata['initial_assignee_id'] ?? null,
         ])->filter()->unique()->values();
 
         $names = User::query()->whereIn('id', $ids)->pluck('name', 'id');
 
         return $events->map(fn (AuditEvent $e): array => [
+            'created' => $e->event_type === AuditEventType::InquiryCreated->value,
             'type' => $e->typeLabel(),
             'at' => $e->occurred_at,
             'actor' => $e->actor_id === null ? null : ($names[$e->actor_id] ?? null),
             'previous_id' => $e->metadata['previous_assignee_id'] ?? null,
             'previous' => $names[$e->metadata['previous_assignee_id'] ?? 0] ?? null,
-            'new_id' => $e->metadata['new_assignee_id'] ?? null,
-            'new' => $names[$e->metadata['new_assignee_id'] ?? 0] ?? null,
+            'new_id' => $e->metadata['new_assignee_id'] ?? $e->metadata['initial_assignee_id'] ?? null,
+            'new' => $names[$e->metadata['new_assignee_id'] ?? $e->metadata['initial_assignee_id'] ?? 0] ?? null,
             'reason' => $e->metadata['reason'] ?? null,
         ]);
     }

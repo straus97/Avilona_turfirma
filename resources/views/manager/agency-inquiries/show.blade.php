@@ -84,7 +84,7 @@
 
     <h3 class="h6 mt-4" id="agency-inquiry-history-title">История назначений</h3>
     @if($assignmentHistory->isEmpty())
-        <p class="text-muted small mb-0">Изменений ответственного пока не записано. Первоначального ответственного обращение получает при создании; такие назначения в эту историю не входят.</p>
+        <p class="text-muted small mb-0">Изменений ответственного пока не записано. Первоначальный ответственный, назначенный администратором при создании, и передачи отображаются здесь из записанных событий; для обращений менеджеров ответственный при создании — сам создатель.</p>
     @else
         <ul class="list-unstyled small mb-0" aria-labelledby="agency-inquiry-history-title">
             @foreach($assignmentHistory as $entry)
@@ -92,10 +92,14 @@
                     $who = fn (?int $id, ?string $name, string $none) => $id === null ? $none : ($name ?? 'учётная запись удалена');
                 @endphp
                 <li class="mb-2" style="overflow-wrap: anywhere;">
-                    <strong>{{ $entry['type'] }}</strong>
+                    <strong>{{ $entry['created'] ? 'Создано администратором' : $entry['type'] }}</strong>
                     · <time datetime="{{ $entry['at']?->toIso8601String() }}">{{ $entry['at']?->format('d.m.Y H:i') }}</time>
                     · {{ $entry['actor'] ?? 'администратор не определён' }}:
-                    {{ $who($entry['previous_id'], $entry['previous'], 'не назначен') }} → {{ $who($entry['new_id'], $entry['new'], '—') }}
+                    @if($entry['created'])
+                        первый ответственный — {{ $who($entry['new_id'], $entry['new'], '—') }}
+                    @else
+                        {{ $who($entry['previous_id'], $entry['previous'], 'не назначен') }} → {{ $who($entry['new_id'], $entry['new'], '—') }}
+                    @endif
                     @if($entry['reason'])<br><span class="text-muted">Причина: {{ $entry['reason'] }}</span>@endif
                 </li>
             @endforeach
@@ -217,7 +221,7 @@
 </section>
 
 <div class="mt-3">
-    <a href="{{ route('cabinet.manager.agency-inquiries') }}">← К списку обращений клиентов</a>
+    <a href="{{ $backUrl }}">← К списку обращений клиентов</a>
 </div>
 @endsection
 

@@ -201,6 +201,14 @@ class StaffAccessPolicyMatrixTest extends TestCase
         $this->assertSame($this->b->id, $own->refresh()->assigned_to);
         $this->assertMatrix('agency show after transfer', 'GET', route('cabinet.manager.agency-inquiries.show', $own), ['admin' => 200, 'A' => 404, 'B' => 200]);
         $this->assertMatrix('agency draft after transfer', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $own), ['A' => 404, 'B' => 302], ['revision' => 99]);
+
+        // AOA-04-I3: creation form — Admin chooses the responsible employee, Manager creates for themselves,
+        // Tourist/User are refused; the Admin store route rejects a missing assignee, the Manager route a spoofed one.
+        $this->assertMatrix('agency create form', 'GET', route('cabinet.manager.agency-inquiries.create'), ['admin' => 200, 'A' => 200, 'B' => 200, 'T' => 403, 'U' => 403]);
+        $before = Inquiry::query()->count();
+        $this->assertMatrix('agency store (Tourist/User)', 'POST', route('cabinet.manager.agency-inquiries.store'), ['T' => 403, 'U' => 403], ['contact_channel' => 'phone', 'creation_token' => (string) \Illuminate\Support\Str::uuid(), 'assignee_id' => $this->b->id]);
+        $this->assertMatrix('agency store Manager spoofing assignee', 'POST', route('cabinet.manager.agency-inquiries.store'), ['A' => 302], ['contact_channel' => 'phone', 'creation_token' => (string) \Illuminate\Support\Str::uuid(), 'assignee_id' => $this->b->id]);
+        $this->assertSame($before, Inquiry::query()->count());
     }
 
     public function test_inquiry_pages_follow_current_assignment(): void
