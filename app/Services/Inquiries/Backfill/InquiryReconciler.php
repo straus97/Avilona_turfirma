@@ -108,6 +108,7 @@ final class InquiryReconciler
     /** @var array<string, int> */
     private array $direction = [];
     private int $draftEdited = 0;
+    private int $draftEditedEvidenced = 0;
     /** @var array<string, int> */
     private array $draftEvidence = [];
 
@@ -121,6 +122,7 @@ final class InquiryReconciler
         $this->total = 0;
         $this->provenance = $this->verdicts = $this->reasons = $this->samples = $this->direction = [];
         $this->draftEdited = 0;
+        $this->draftEditedEvidenced = 0;
         $this->draftEvidence = [self::DRAFT_EVIDENCED => 0, self::DRAFT_UNEVIDENCED => 0, self::DRAFT_INCONSISTENT => 0];
 
         Inquiry::on($this->qa->name)
@@ -161,7 +163,7 @@ final class InquiryReconciler
             'reasons' => $this->reasons,
             'sample_inquiry_ids' => $this->samples,
             'direction_of_difference' => $this->direction,
-            'expected_evolution' => ['draft_edited' => $this->draftEdited],
+            'expected_evolution' => ['draft_edited' => $this->draftEdited, 'draft_edited_evidenced' => $this->draftEditedEvidenced],
             'draft_audit_evidence' => $this->draftEvidence,
             'unprocessed_sources' => $unprocessed,
             'global' => $global,
@@ -201,6 +203,9 @@ final class InquiryReconciler
             $events = $draftEvents[(int) $inquiry->id] ?? [];
             $draftEvidence = $this->draftEvidenceOf($inquiry, $events);
             $this->draftEvidence[$draftEvidence]++;
+            if ($inquiry->draft_revision > 0 && $draftEvidence === self::DRAFT_EVIDENCED) {
+                $this->draftEditedEvidenced++;
+            }
 
             $reasons = $this->structuralReasons($inquiry, $provenance, $sources, $bookingUsers);
             $verdict = $reasons !== [] ? self::STRUCTURAL : null;
