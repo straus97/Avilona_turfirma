@@ -33,6 +33,7 @@ class InquiryFactory extends Factory
     {
         return $this->state(fn () => [
             'origin' => Inquiry::ORIGIN_MANAGER_CREATED,
+            'contact_channel' => Inquiry::CHANNEL_PHONE,
             'status' => Inquiry::STATUS_IN_PROGRESS,
             'incoming_inquiry_id' => null,
             'created_by' => $manager->id,
@@ -46,6 +47,7 @@ class InquiryFactory extends Factory
     {
         return $this->state(fn () => [
             'origin' => Inquiry::ORIGIN_ADMIN_CREATED,
+            'contact_channel' => Inquiry::CHANNEL_PHONE,
             'status' => Inquiry::STATUS_IN_PROGRESS,
             'incoming_inquiry_id' => null,
             'created_by' => $admin->id,

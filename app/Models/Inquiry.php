@@ -32,6 +32,13 @@ class Inquiry extends Model
     public const ORIGIN_ADMIN_CREATED = 'admin_created';
     public const ORIGIN_EXTERNAL_INTAKE = 'external_intake';
 
+    /**
+     * Как клиент связался с агентством (AOA-04-I1). Не origin: origin — кто завёл запись.
+     * Закрытый словарь; новые каналы добавляются только осознанным решением.
+     */
+    public const CHANNEL_PHONE = 'phone';
+    public const CHANNEL_MESSENGER = 'messenger';
+
     public const STATUS_NEW = 'new';
     public const STATUS_IN_PROGRESS = 'in_progress';
     public const STATUS_CONVERTED = 'converted';
@@ -55,7 +62,7 @@ class Inquiry extends Model
 
     /** Атрибуты, при изменении которых перепроверяются инварианты. */
     private const INVARIANT_ATTRIBUTES = [
-        'origin', 'status', 'incoming_inquiry_id', 'created_by', 'assigned_to',
+        'origin', 'contact_channel', 'status', 'incoming_inquiry_id', 'created_by', 'assigned_to',
         'booking_id', 'converted_at', 'closed_at',
     ];
 
@@ -71,7 +78,7 @@ class Inquiry extends Model
      * прочее. Заметки сотрудников тоже не уходят в JSON без явной проекции.
      */
     protected $hidden = [
-        'internal_notes',
+        'internal_notes', 'creation_token',
         'incomingInquiry', 'creator', 'assignee', 'clientUser',
         'clientLinkedBy', 'booking', 'convertedBy', 'closedBy', 'draftUpdatedBy',
     ];
@@ -110,6 +117,26 @@ class Inquiry extends Model
     public static function origins(): array
     {
         return [self::ORIGIN_MANAGER_CREATED, self::ORIGIN_ADMIN_CREATED, self::ORIGIN_EXTERNAL_INTAKE];
+    }
+
+    /** @return list<string> */
+    public static function contactChannels(): array
+    {
+        return [self::CHANNEL_PHONE, self::CHANNEL_MESSENGER];
+    }
+
+    /** @return array<string, string> */
+    public static function contactChannelLabels(): array
+    {
+        return [
+            self::CHANNEL_PHONE => 'Телефонный звонок',
+            self::CHANNEL_MESSENGER => 'Личные сообщения в мессенджере',
+        ];
+    }
+
+    public function contactChannelLabel(): string
+    {
+        return self::contactChannelLabels()[$this->contact_channel] ?? 'Не указан';
     }
 
     /** @return list<string> */
@@ -219,6 +246,8 @@ class Inquiry extends Model
      *  - origin/status из закрытых списков;
      *  - external_intake ⇔ есть incoming_inquiry_id, создателя нет;
      *    ручные origin: есть создатель, источника нет;
+     *  - contact_channel (AOA-04-I1) — из закрытого словаря; ручное обращение при создании обязано
+     *    его иметь, внешнее — не имеет (канал клиента ≠ происхождение записи);
      *  - при создании: manager_created отвечает сам создатель, admin_created уже назначен
      *    (кем именно — решает Admin в AOA-04), оба начинаются in_progress;
      *  - new ⇒ без ответственного; in_progress ⇒ есть ответственный;
@@ -241,7 +270,14 @@ class Inquiry extends Model
             $fail('Unknown inquiry status.');
         }
 
+        if ($this->contact_channel !== null && ! in_array($this->contact_channel, self::contactChannels(), true)) {
+            $fail('Unknown inquiry contact channel.');
+        }
+
         if ($this->origin === self::ORIGIN_EXTERNAL_INTAKE) {
+            if ($this->contact_channel !== null) {
+                $fail('An external-intake inquiry has no manual contact channel.');
+            }
             if ($this->incoming_inquiry_id === null) {
                 $fail('An external-intake inquiry requires its IncomingInquiry source.');
             }
@@ -258,6 +294,10 @@ class Inquiry extends Model
         }
 
         if (! $this->exists) {
+            if ($this->origin !== self::ORIGIN_EXTERNAL_INTAKE && $this->contact_channel === null) {
+                $fail('A manually created inquiry records how the client made contact.');
+            }
+
             if ($this->origin === self::ORIGIN_MANAGER_CREATED
                 && ($this->assigned_to === null || (int) $this->assigned_to !== (int) $this->created_by)) {
                 $fail('A manager-created inquiry belongs to its creator.');

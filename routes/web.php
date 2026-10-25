@@ -84,6 +84,14 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::post('/inquiries/{inquiry}/convert', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'convert'])->whereNumber('inquiry')->name('inquiries.convert');
         Route::post('/inquiries/{inquiry}/close', [\App\Http\Controllers\Manager\IncomingInquiryController::class, 'close'])->whereNumber('inquiry')->name('inquiries.close');
         // AOA-01-I7: запросы на проверку клиента (менеджер -> администратор). Лимит частоты и защита от дублей — в ClientVerificationService.
+        // AOA-04-I1: обращения агентства (Inquiry), заведённые вручную. Не путать с E5 «Входящие
+        // обращения» (IncomingInquiry/Tourvisor) выше: свой префикс и имена маршрутов.
+        Route::get('/agency-inquiries', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'index'])->name('agency-inquiries');
+        Route::get('/agency-inquiries/create', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'create'])->name('agency-inquiries.create');
+        Route::post('/agency-inquiries', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'store'])->name('agency-inquiries.store');
+        Route::get('/agency-inquiries/{inquiry}', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'show'])->whereNumber('inquiry')->name('agency-inquiries.show');
+        Route::put('/agency-inquiries/{inquiry}/draft', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'updateDraft'])->whereNumber('inquiry')->name('agency-inquiries.draft.update');
+
         Route::get('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'index'])->name('client-requests');
         Route::post('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'store'])->name('client-requests.store');
         Route::get('/content', [\App\Http\Controllers\Manager\ManagerController::class, 'content'])->name('content');

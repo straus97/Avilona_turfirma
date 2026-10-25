@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Booking;
 use App\Models\BookingDocument;
 use App\Models\IncomingInquiry;
+use App\Models\Inquiry;
 use App\Models\Message;
 use App\Models\Role;
 use App\Models\User;
@@ -62,6 +63,8 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'cabinet.manager.inquiries.reassign', 'cabinet.manager.inquiries.close', 'cabinet.manager.inquiries.convert',
         'cabinet.manager.inquiries.client.select', 'cabinet.manager.inquiries.client.create',
         'cabinet.manager.inquiries.client.password-setup',
+        // AOA-04-I1: Inquiry (manual business inquiries), exercised in test_agency_inquiry_pages_follow_current_assignment.
+        'cabinet.manager.agency-inquiries.show', 'cabinet.manager.agency-inquiries.draft.update',
     ];
 
     /** Admin-only by route middleware (`role:admin`), asserted below. */
@@ -166,6 +169,19 @@ class StaffAccessPolicyMatrixTest extends TestCase
     {
         $this->assertMatrix('staff document X', 'GET', route('bookings.documents.download', [$this->x, $this->doc]), ['admin' => 200, 'A' => 200, 'B' => 403, 'T' => 403, 'U' => 403]);
         $this->assertMatrix('owner document X', 'GET', route('cabinet.documents.bookings.download', [$this->x, $this->doc]), ['T' => 200, 'U' => 403, 'A' => 302, 'B' => 302, 'admin' => 302]);
+    }
+
+    public function test_agency_inquiry_pages_follow_current_assignment(): void
+    {
+        $own = Inquiry::factory()->managerCreated($this->a)->create();
+        $foreign = Inquiry::factory()->managerCreated($this->b)->create();
+        $adminOwned = Inquiry::factory()->adminCreated($this->admin)->create();
+
+        $this->assertMatrix('agency inquiry A', 'GET', route('cabinet.manager.agency-inquiries.show', $own), ['admin' => 200, 'A' => 200, 'B' => 404, 'T' => 403, 'U' => 403]);
+        $this->assertMatrix('agency inquiry B', 'GET', route('cabinet.manager.agency-inquiries.show', $foreign), ['admin' => 200, 'A' => 404, 'B' => 200, 'T' => 403]);
+        $this->assertMatrix('agency inquiry Admin-owned', 'GET', route('cabinet.manager.agency-inquiries.show', $adminOwned), ['admin' => 200, 'A' => 404, 'B' => 404, 'T' => 403]);
+        $this->assertMatrix('agency draft A', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $own), ['A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['revision' => 99]);
+        $this->assertMatrix('agency draft Admin-owned', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $adminOwned), ['A' => 404, 'B' => 404, 'T' => 403], ['revision' => 99]);
     }
 
     public function test_inquiry_pages_follow_current_assignment(): void

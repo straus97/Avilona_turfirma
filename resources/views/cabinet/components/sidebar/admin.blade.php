@@ -54,6 +54,11 @@
             <span class="menu-badge">{{ $sidebarPendingClientRequests }}</span>
         @endif
     </a>
+    @php($isActive = $navActive('cabinet.manager.agency-inquiries*'))
+    <a href="{{ route('cabinet.manager.agency-inquiries') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
+        <i class="bi bi-telephone-inbound" aria-hidden="true"></i>
+        <span>Обращения клиентов</span>
+    </a>
     @php($isActive = $navActive('cabinet.manager.inquiries*'))
     <a href="{{ route('cabinet.manager.inquiries') }}" @class(['menu-item', 'active' => $isActive]) @if($isActive) aria-current="page" @endif>
         <i class="bi bi-inbox" aria-hidden="true"></i>
