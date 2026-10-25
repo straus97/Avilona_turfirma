@@ -219,7 +219,7 @@
                         </div>
                         <div>
                             <dt><i class="bi bi-hash" aria-hidden="true"></i></dt>
-                            <dd><span class="e2-contact-list__label">ОКТМО:</span>40337000</dd>
+                            <dd><span class="e2-contact-list__label">ОКТМО:</span>40340000</dd>
                         </div>
                         <div>
                             <dt><i class="bi bi-hash" aria-hidden="true"></i></dt>

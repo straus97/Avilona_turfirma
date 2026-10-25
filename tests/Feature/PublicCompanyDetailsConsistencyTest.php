@@ -107,6 +107,19 @@ class PublicCompanyDetailsConsistencyTest extends TestCase
         $response->assertSee(self::OGRN);
     }
 
+    public function test_contacts_page_shows_the_rosstat_oktmo_and_okpo_of_the_registered_company(): void
+    {
+        $html = $this->get(route('contact.index'))->getContent();
+
+        $this->assertMatchesRegularExpression('~ОКТМО:</span>40340000<~u', $html);
+        $this->assertMatchesRegularExpression('~ОКПО:</span>62981592<~u', $html);
+    }
+
+    public function test_contacts_page_does_not_present_the_outdated_oktmo(): void
+    {
+        $this->get(route('contact.index'))->assertDontSee('40337000');
+    }
+
     public function test_contacts_page_does_not_contain_stale_kpp(): void
     {
         $response = $this->get(route('contact.index'));
