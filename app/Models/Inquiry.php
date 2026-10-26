@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Обращение агентства (AOA-03-I1): бизнес-сущность, не зависящая от провайдера.
@@ -80,7 +81,7 @@ class Inquiry extends Model
     protected $hidden = [
         'internal_notes', 'creation_token',
         'incomingInquiry', 'creator', 'assignee', 'clientUser',
-        'clientLinkedBy', 'booking', 'convertedBy', 'closedBy', 'draftUpdatedBy',
+        'clientLinkedBy', 'booking', 'convertedBy', 'closedBy', 'draftUpdatedBy', 'contact',
     ];
 
     protected $casts = [
@@ -208,6 +209,28 @@ class Inquiry extends Model
     public function draftUpdatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'draft_updated_by');
+    }
+
+    /**
+     * Непроверенный контакт клиента (AOA-04-I4): необязательная строка 1:1. Не User и не пассажир;
+     * загружайте только для сотрудника, уже прошедшего проверку доступа к обращению.
+     */
+    public function contact(): HasOne
+    {
+        return $this->hasOne(InquiryContact::class, 'inquiry_id');
+    }
+
+    /** Явная проекция контакта для авторизованного сотрудника (версия 0 — контакта не вводили). */
+    public function contactSnapshot(): array
+    {
+        $contact = $this->contact;
+
+        return [
+            'name' => $contact?->contact_name,
+            'phone' => $contact?->contact_phone,
+            'messenger' => $contact?->contact_messenger,
+            'revision' => (int) ($contact?->revision ?? 0),
+        ];
     }
 
     /**

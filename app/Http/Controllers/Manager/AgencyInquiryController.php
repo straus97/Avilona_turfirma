@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Manager\Concerns\ResolvesAgencyInquiry;
+use App\Models\ClientVerificationRequest;
 use App\Models\Inquiry;
 use App\Models\User;
+use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
 use App\Services\Inquiries\InquiryAssignment;
 use App\Services\Inquiries\InquiryAssignmentException;
 use App\Services\Inquiries\InquiryAuthority;
@@ -38,6 +41,8 @@ use Illuminate\Validation\ValidationException;
  */
 class AgencyInquiryController extends Controller
 {
+    use ResolvesAgencyInquiry;
+
     public function __construct(
         private readonly ManualInquiryCreator $creator,
         private readonly InquiryDraftStore $drafts,
@@ -76,7 +81,7 @@ class AgencyInquiryController extends Controller
         }
 
         $inquiries = $query
-            ->with('assignee:id,name')
+            ->with(['assignee:id,name', 'contact:inquiry_id,contact_name'])
             ->orderByDesc('inquiries.id')
             ->paginate(20)
             ->appends($filters);
@@ -209,16 +214,19 @@ class AgencyInquiryController extends Controller
             fn ($v): bool => is_string($v) && preg_match('/^[a-z_0-9]{1,32}$/', $v) === 1
         );
 
-        $inquiry->load(['assignee:id,name', 'creator:id,name']);
+        $inquiry->load(['assignee:id,name', 'creator:id,name', 'contact']);
 
         // Блок назначения и история — только администратору: данные для них даже не загружаются
         // для менеджера (не полагаемся на скрытие в шаблоне).
         $canAssign = Gate::allows('assign', $inquiry);
 
-        return view('manager.agency-inquiries.show', [
+        return view('manager.agency-inquiries.show', $this->clientState($request, $inquiry) + [
             'inquiry' => $inquiry,
             'backUrl' => route('cabinet.manager.agency-inquiries', $backQuery),
             'draft' => $inquiry->draftSnapshot(),
+            'contact' => $inquiry->contactSnapshot(),
+            'canEditContact' => $inquiry->isOpen() && Gate::allows('updateContact', $inquiry),
+            'contactConflict' => session('contact_conflict'),
             'canEdit' => $inquiry->isOpen() && Gate::allows('updateDraft', $inquiry),
             'draftConflict' => session('draft_conflict'),
             'canAssign' => $canAssign,
@@ -226,6 +234,58 @@ class AgencyInquiryController extends Controller
             'eligibleStaff' => $canAssign ? $this->assignment->eligibleStaff() : collect(),
             'assignmentHistory' => $canAssign ? $this->assignment->history($inquiry) : collect(),
         ]);
+    }
+
+    /**
+     * Состояние блока «Клиент» (AOA-04-I4). Вызывается только после visible(): данные загружаются для
+     * сотрудника, уже имеющего доступ к обращению, и только то, что ему положено. Менеджер не получает
+     * ни кандидатов из справочника, ни признаков существования аккаунтов; поиск — только среди клиентов,
+     * видимых ему по ClientVisibility.
+     *
+     * @return array<string, mixed>
+     */
+    private function clientState(Request $request, Inquiry $inquiry): array
+    {
+        $user = Auth::user();
+        $open = $inquiry->isOpen();
+        $linked = $inquiry->client_user_id !== null;
+
+        $client = $linked ? User::query()->select(['id', 'name'])->find($inquiry->client_user_id) : null;
+        $canLink = $open && ! $linked && Gate::allows('linkClient', $inquiry);
+
+        $term = trim((string) $request->old('client_q', ''));
+        $results = $canLink && $term !== '' ? app(IncomingInquiryClientMatcher::class)->search($term, $user) : collect();
+
+        $isAdmin = $user->hasRole(User::ROLE_ADMIN);
+
+        return [
+            'client' => $client,
+            'clientLinked' => $linked,
+            'clientLinkedAt' => $isAdmin ? $inquiry->client_linked_at : null,
+            'clientLinkedBy' => $isAdmin && $inquiry->client_linked_by !== null
+                ? User::query()->whereKey($inquiry->client_linked_by)->value('name')
+                : null,
+            'canLinkClient' => $canLink,
+            'canRequestClient' => $open && ! $linked && Gate::allows('requestClient', $inquiry),
+            'canAdministerClient' => $open && Gate::allows('administerClient', $inquiry),
+            'clientSearchTerm' => $term,
+            'clientSearchResults' => $results,
+            // Свой последний запрос менеджера (нейтральное состояние); чужие запросы ему не показываются.
+            'myRequest' => $isAdmin ? null : ClientVerificationRequest::query()
+                ->where('agency_inquiry_id', $inquiry->id)
+                ->where('requested_by', $user->id)
+                ->orderByDesc('id')
+                ->first(),
+            // Администратор видит открытые запросы по обращению и переходит к решению на странице запроса.
+            'pendingRequests' => $isAdmin
+                ? ClientVerificationRequest::query()
+                    ->with('requester:id,name')
+                    ->where('agency_inquiry_id', $inquiry->id)
+                    ->where('status', ClientVerificationRequest::STATUS_PENDING)
+                    ->orderBy('id')
+                    ->get()
+                : collect(),
+        ];
     }
 
     /**
@@ -319,16 +379,6 @@ class AgencyInquiryController extends Controller
         return redirect()
             ->route('cabinet.manager.agency-inquiries.show', $inquiry)
             ->with('success', 'Черновик сохранён.');
-    }
-
-    /** Чужое/ничьё/бывшее — 404; также только самостоятельные (не привязанные к Tourvisor) обращения. */
-    private function visible(Inquiry $inquiry): void
-    {
-        abort_unless(
-            InquiryAuthority::provenance($inquiry) === InquiryAuthority::PROVENANCE_INDEPENDENT
-                && Gate::allows('view', $inquiry),
-            404
-        );
     }
 
     /**

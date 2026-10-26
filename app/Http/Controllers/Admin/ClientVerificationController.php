@@ -47,7 +47,7 @@ class ClientVerificationController extends Controller
     {
         $this->authorize('resolve', $clientRequest);
 
-        $clientRequest->load(['requester:id,name', 'resolver:id,name', 'resolvedUser:id,name', 'inquiry:id,workflow_state,assigned_to']);
+        $clientRequest->load(['requester:id,name', 'resolver:id,name', 'resolvedUser:id,name', 'inquiry:id,workflow_state,assigned_to', 'agencyInquiry:id,status,assigned_to,client_user_id']);
 
         $searchTerm = trim((string) $request->query('client_q', ''));
 
@@ -57,6 +57,8 @@ class ClientVerificationController extends Controller
             'searchTerm' => $searchTerm,
             'searchResults' => $clientRequest->isPending() ? $matcher->search($searchTerm, $request->user()) : collect(),
             'history' => $this->history($clientRequest),
+            // AOA-04-I4: контекст запроса мог измениться после подачи; решение всё равно проверяется под блокировкой.
+            'staleReason' => $this->service->staleReason($clientRequest),
         ]);
     }
 

@@ -19,7 +19,7 @@
     </div>
     <dl class="row mb-0">
         <dt class="col-sm-4">Менеджер</dt><dd class="col-sm-8 text-break">{{ $clientRequest->requester?->name ?? '—' }}</dd>
-        <dt class="col-sm-4">Основание</dt><dd class="col-sm-8">{{ $clientRequest->contextLabel() }}@if($clientRequest->inquiry) · <a href="{{ route('cabinet.manager.inquiries.show', $clientRequest->inquiry) }}">открыть обращение</a>@endif</dd>
+        <dt class="col-sm-4">Основание</dt><dd class="col-sm-8">{{ $clientRequest->contextLabel() }}@if($clientRequest->inquiry) · <a href="{{ route('cabinet.manager.inquiries.show', $clientRequest->inquiry) }}">открыть обращение</a>@endif @if($clientRequest->agencyInquiry) · <a href="{{ route('cabinet.manager.agency-inquiries.show', $clientRequest->agencyInquiry) }}">открыть обращение клиента</a>@endif</dd>
         <dt class="col-sm-4">Имя клиента</dt><dd class="col-sm-8 text-break">{{ $clientRequest->client_name }}</dd>
         <dt class="col-sm-4">Email</dt><dd class="col-sm-8 text-break">{{ $clientRequest->client_email ?? '—' }}</dd>
         <dt class="col-sm-4">Телефон</dt><dd class="col-sm-8 text-break">{{ $clientRequest->client_phone ?? '—' }}</dd>
@@ -35,6 +35,12 @@
         @endif
     </dl>
 </section>
+
+@if($clientRequest->isPending() && $staleReason)
+<div class="alert alert-warning" role="alert" id="cr-stale-banner">
+    <strong>Запрос потерял актуальность.</strong> {{ $staleReason }} Привязать или создать клиента по этому запросу нельзя — отклоните его. Менеджер увидит только нейтральное состояние.
+</div>
+@endif
 
 @if($clientRequest->isPending())
 <section class="card-custom mb-4" aria-labelledby="cr-match-title">
@@ -64,7 +70,7 @@
                         <form method="POST" action="{{ route('cabinet.admin.client-requests.link', $clientRequest) }}" data-submit-once>
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $candidate->id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Привязать клиента {{ $candidate->name }} к менеджеру">Привязать к менеджеру</button>
+                            <button type="submit" class="btn btn-sm btn-outline-primary" @disabled($staleReason) aria-label="Привязать клиента {{ $candidate->name }} к менеджеру">Привязать к менеджеру</button>
                         </form>
                     @endif
                 </li>
@@ -95,7 +101,7 @@
                             <form method="POST" action="{{ route('cabinet.admin.client-requests.link', $clientRequest) }}" data-submit-once>
                                 @csrf
                                 <input type="hidden" name="user_id" value="{{ $found->id }}">
-                                <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Привязать клиента {{ $found->name }} к менеджеру">Привязать к менеджеру</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary" @disabled($staleReason) aria-label="Привязать клиента {{ $found->name }} к менеджеру">Привязать к менеджеру</button>
                             </form>
                         </li>
                     @endforeach
@@ -112,7 +118,7 @@
     <p class="text-muted">Аккаунт создаётся по данным запроса: пароль случайный и нигде не показывается, email не считается подтверждённым, письма не отправляются. Если email уже принадлежит аккаунту, создание будет отказано.</p>
     <form method="POST" action="{{ route('cabinet.admin.client-requests.create', $clientRequest) }}" data-submit-once>
         @csrf
-        <button type="submit" class="btn btn-primary">Одобрить создание и привязать к менеджеру</button>
+        <button type="submit" class="btn btn-primary" @disabled($staleReason)>Одобрить создание и привязать к менеджеру</button>
     </form>
 </section>
 

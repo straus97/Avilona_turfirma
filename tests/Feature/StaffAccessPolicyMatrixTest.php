@@ -67,6 +67,13 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'cabinet.manager.agency-inquiries.show', 'cabinet.manager.agency-inquiries.draft.update',
         // AOA-04-I2: Admin-only assignment, classified here (manager: 403 own / 404 foreign).
         'cabinet.manager.agency-inquiries.assign',
+        // AOA-04-I4: unverified client contact (Admin / currently responsible Manager only), exercised below.
+        'cabinet.manager.agency-inquiries.contact.update', 'cabinet.manager.agency-inquiries.contact.clear',
+        // AOA-04-I4: client of an independent inquiry — neutral verification request (responsible Manager only),
+        // search/select a VISIBLE client (Admin or responsible Manager), create/unlink (Admin only). Exercised below.
+        'cabinet.manager.agency-inquiries.client.verification', 'cabinet.manager.agency-inquiries.client.search',
+        'cabinet.manager.agency-inquiries.client.select', 'cabinet.manager.agency-inquiries.client.create',
+        'cabinet.manager.agency-inquiries.client.unlink',
     ];
 
     /** Admin-only by route middleware (`role:admin`), asserted below. */
@@ -184,6 +191,28 @@ class StaffAccessPolicyMatrixTest extends TestCase
         $this->assertMatrix('agency inquiry Admin-owned', 'GET', route('cabinet.manager.agency-inquiries.show', $adminOwned), ['admin' => 200, 'A' => 404, 'B' => 404, 'T' => 403]);
         $this->assertMatrix('agency draft A', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $own), ['A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['revision' => 99]);
         $this->assertMatrix('agency draft Admin-owned', 'PUT', route('cabinet.manager.agency-inquiries.draft.update', $adminOwned), ['A' => 404, 'B' => 404, 'T' => 403], ['revision' => 99]);
+
+        // AOA-04-I4: the contact follows the draft rule — Admin or the Manager responsible NOW; a stale revision is a
+        // handled form error (302), never a write, and nothing is stored by any denied call.
+        $contact = ['revision' => 99, 'contact_name' => 'Матрица', 'contact_phone' => '', 'contact_messenger' => ''];
+        $this->assertMatrix('agency contact A', 'PUT', route('cabinet.manager.agency-inquiries.contact.update', $own), ['admin' => 302, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], $contact);
+        $this->assertMatrix('agency contact clear A', 'DELETE', route('cabinet.manager.agency-inquiries.contact.clear', $own), ['admin' => 302, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['revision' => 99]);
+        $this->assertMatrix('agency contact Admin-owned', 'PUT', route('cabinet.manager.agency-inquiries.contact.update', $adminOwned), ['admin' => 302, 'A' => 404, 'B' => 404, 'T' => 403], $contact);
+        $this->assertSame(0, \App\Models\InquiryContact::query()->count());
+
+        // AOA-04-I4 client routes. Bodies are deliberately invalid or point at nothing, so an ALLOWED call is a handled
+        // form error (302) and a denied call is 403/404; no request, client link or account may result from any of them.
+        $clientRoute = fn (string $name, Inquiry $i): string => route("cabinet.manager.agency-inquiries.client.{$name}", $i);
+        $this->assertMatrix('agency verification request', 'POST', $clientRoute('verification', $own), ['admin' => 403, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['client_name' => '']);
+        $this->assertMatrix('agency verification Admin-owned', 'POST', $clientRoute('verification', $adminOwned), ['admin' => 403, 'A' => 404, 'B' => 404, 'T' => 403], ['client_name' => '']);
+        $this->assertMatrix('agency client search', 'POST', $clientRoute('search', $own), ['admin' => 302, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['client_q' => 'zz']);
+        $this->assertMatrix('agency client select', 'POST', $clientRoute('select', $own), ['admin' => 302, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], ['user_id' => 999999, 'expected_client_id' => null]);
+        $this->assertMatrix('agency client select Admin-owned', 'POST', $clientRoute('select', $adminOwned), ['admin' => 302, 'A' => 404, 'B' => 404, 'T' => 403], ['user_id' => 999999, 'expected_client_id' => null]);
+        $this->assertMatrix('agency client create', 'POST', $clientRoute('create', $own), ['admin' => 302, 'A' => 403, 'B' => 404, 'T' => 403, 'U' => 403], ['client_name' => '', 'expected_client_id' => null]);
+        $this->assertMatrix('agency client unlink', 'POST', $clientRoute('unlink', $own), ['admin' => 302, 'A' => 403, 'B' => 404, 'T' => 403, 'U' => 403], ['expected_client_id' => 999999, 'reason' => 'Синтетическая проверка']);
+        $this->assertSame(0, \App\Models\ClientVerificationRequest::query()->count());
+        $this->assertNull($own->refresh()->client_user_id);
+        $this->assertNull($adminOwned->refresh()->client_user_id);
 
         // AOA-04-I2: assignment is Admin-only. A Manager who can see the record gets 403, anyone else 404 (no
         // foreign record is confirmed); Tourists are stopped by the role middleware. Denied calls change nothing.

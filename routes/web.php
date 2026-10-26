@@ -94,6 +94,16 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         // AOA-04-I2: назначение/передача ответственного — только администратор (проверка в контроллере/политике:
         // менеджеру своё обращение — 403, чужое — 404).
         Route::post('/agency-inquiries/{inquiry}/assignment', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'assign'])->whereNumber('inquiry')->name('agency-inquiries.assign');
+        // AOA-04-I4: непроверенный контакт клиента (имя, телефон, мессенджер). Только PUT/DELETE: значения не попадают в URL.
+        Route::put('/agency-inquiries/{inquiry}/contact', [\App\Http\Controllers\Manager\AgencyInquiryContactController::class, 'update'])->whereNumber('inquiry')->name('agency-inquiries.contact.update');
+        Route::delete('/agency-inquiries/{inquiry}/contact', [\App\Http\Controllers\Manager\AgencyInquiryContactController::class, 'clear'])->whereNumber('inquiry')->name('agency-inquiries.contact.clear');
+        // AOA-04-I4: клиент обращения. Запрос проверки (менеджер -> администратор, вариант C) и явная привязка.
+        Route::post('/agency-inquiries/{inquiry}/client/verification', [\App\Http\Controllers\Manager\AgencyInquiryClientController::class, 'requestVerification'])->whereNumber('inquiry')->name('agency-inquiries.client.verification');
+        Route::post('/agency-inquiries/{inquiry}/client/search', [\App\Http\Controllers\Manager\AgencyInquiryClientController::class, 'search'])->whereNumber('inquiry')->name('agency-inquiries.client.search');
+        Route::post('/agency-inquiries/{inquiry}/client/select', [\App\Http\Controllers\Manager\AgencyInquiryClientController::class, 'select'])->whereNumber('inquiry')->name('agency-inquiries.client.select');
+        // Только администратор (Gate administerClient: менеджеру своё обращение — 403, чужое — 404).
+        Route::post('/agency-inquiries/{inquiry}/client/create', [\App\Http\Controllers\Manager\AgencyInquiryClientController::class, 'create'])->whereNumber('inquiry')->name('agency-inquiries.client.create');
+        Route::post('/agency-inquiries/{inquiry}/client/unlink', [\App\Http\Controllers\Manager\AgencyInquiryClientController::class, 'unlink'])->whereNumber('inquiry')->name('agency-inquiries.client.unlink');
 
         Route::get('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'index'])->name('client-requests');
         Route::post('/client-requests', [\App\Http\Controllers\Manager\ClientVerificationController::class, 'store'])->name('client-requests.store');

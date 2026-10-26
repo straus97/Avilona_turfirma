@@ -39,7 +39,7 @@
         <dt class="col-sm-4">Канал обращения</dt><dd class="col-sm-8">{{ $inquiry->contactChannelLabel() }}</dd>
         <dt class="col-sm-4">Создано</dt><dd class="col-sm-8">{{ $inquiry->created_at?->format('d.m.Y H:i') ?? '—' }}@if($inquiry->creator) · {{ $inquiry->creator->name }}@endif</dd>
         <dt class="col-sm-4">Ответственный</dt><dd class="col-sm-8">{{ $inquiry->assignee?->name ?? '—' }}</dd>
-        <dt class="col-sm-4">Клиент</dt><dd class="col-sm-8 text-muted">Не привязан. Привязка аккаунта клиента и проверка клиента будут добавлены отдельным шагом.</dd>
+        <dt class="col-sm-4">Клиент</dt><dd class="col-sm-8 {{ $clientLinked ? '' : 'text-muted' }}">{{ $clientLinked && $client ? $client->name : 'Аккаунт не привязан' }}</dd>
         <dt class="col-sm-4">Версия черновика</dt><dd class="col-sm-8">{{ $draft['revision'] }}@if($inquiry->draft_updated_at) · сохранено {{ $inquiry->draft_updated_at->format('d.m.Y H:i') }}@endif</dd>
     </dl>
 </section>
@@ -107,6 +107,10 @@
     @endif
 </section>
 @endif
+
+@include('manager.agency-inquiries.partials.contact')
+
+@include('manager.agency-inquiries.partials.client')
 
 @if($draftConflict)
 <section class="alert alert-warning" role="region" aria-labelledby="agency-inquiry-conflict-title">

@@ -17,6 +17,8 @@ class ClientVerificationRequest extends Model
 {
     public const CONTEXT_BOOKING_FORM = 'booking_form';
     public const CONTEXT_INCOMING_INQUIRY = 'incoming_inquiry';
+    /** AOA-04-I4: самостоятельное обращение агентства (Inquiry). */
+    public const CONTEXT_INQUIRY = 'inquiry';
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
@@ -44,6 +46,12 @@ class ClientVerificationRequest extends Model
     public function inquiry(): BelongsTo
     {
         return $this->belongsTo(IncomingInquiry::class, 'incoming_inquiry_id');
+    }
+
+    /** Самостоятельное обращение агентства (AOA-04-I4), из которого подан запрос. */
+    public function agencyInquiry(): BelongsTo
+    {
+        return $this->belongsTo(Inquiry::class, 'agency_inquiry_id');
     }
 
     public function resolver(): BelongsTo
@@ -76,6 +84,7 @@ class ClientVerificationRequest extends Model
     {
         return match ($this->context_type) {
             self::CONTEXT_INCOMING_INQUIRY => 'Входящее обращение' . ($this->incoming_inquiry_id ? ' №' . $this->incoming_inquiry_id : ''),
+            self::CONTEXT_INQUIRY => 'Обращение клиента' . ($this->agency_inquiry_id ? ' №' . $this->agency_inquiry_id : ''),
             default => 'Оформление заявки',
         };
     }

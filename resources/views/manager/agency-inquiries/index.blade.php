@@ -94,6 +94,7 @@
                 <tr>
                     <th>Создано</th>
                     <th>Канал</th>
+                    <th>Клиент</th>
                     <th>Статус</th>
                     <th>Направление</th>
                     @if($isAdmin)<th>Ответственный</th>@endif
@@ -105,6 +106,10 @@
                     <tr>
                         <td class="text-nowrap">{{ $inquiry->created_at?->format('d.m.Y H:i') ?? '—' }}</td>
                         <td>{{ $inquiry->contactChannelLabel() }}</td>
+                        <td class="text-break">
+                            {{ $inquiry->contact?->contact_name ?? 'Контакт не указан' }}
+                            @if($inquiry->client_user_id !== null)<span class="badge text-bg-success">Аккаунт привязан</span>@endif
+                        </td>
                         <td>{{ $inquiry->statusLabel() }}</td>
                         <td>{{ $inquiry->destination_country ?? 'Не указано' }}</td>
                         @if($isAdmin)<td>{{ $inquiry->assignee?->name ?? '—' }}</td>@endif

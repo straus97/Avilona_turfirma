@@ -4,11 +4,15 @@ namespace App\Services\Accounts;
 
 use App\Models\ClientVerificationRequest;
 use App\Models\IncomingInquiry;
+use App\Models\Inquiry;
 use App\Models\User;
 use App\Services\Audit\AuditRecorder;
 use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
+use App\Services\Inquiries\InquiryAuthority;
+use App\Services\Inquiries\InquiryClientAssociation;
 use App\Support\Audit\AuditEventType;
 use App\Support\Audit\AuditMetadata;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
@@ -50,6 +54,7 @@ class ClientVerificationService
     public function __construct(
         private readonly StaffClientAccounts $accounts,
         private readonly AuditRecorder $audit,
+        private readonly InquiryClientAssociation $association,
     ) {
     }
 
@@ -63,23 +68,7 @@ class ClientVerificationService
      */
     public function submit(User $manager, string $name, ?string $email, ?string $phone, ?IncomingInquiry $inquiry = null): ClientVerificationRequest
     {
-        if (! $manager->hasRole(User::ROLE_MANAGER) || $manager->hasRole(User::ROLE_ADMIN) || ! User::query()->active()->whereKey($manager->id)->exists()) {
-            throw new ClientVerificationException('Запрос на проверку клиента отправляет менеджер. Администратор создаёт клиентов напрямую.');
-        }
-
-        $limiterKey = 'client-verification:' . $manager->id;
-
-        if (RateLimiter::tooManyAttempts($limiterKey, self::MAX_SUBMISSIONS_PER_MINUTE)) {
-            throw new ClientVerificationException('Слишком много запросов за короткое время. Подождите минуту и повторите.', 'client_name');
-        }
-
-        RateLimiter::hit($limiterKey, 60);
-
-        $name = trim((string) preg_replace('/\s+/u', ' ', $name));
-        $email = $email !== null ? strtolower(trim($email)) : null;
-        $email = $email === '' ? null : $email;
-        $phone = $phone !== null ? trim($phone) : null;
-        $phone = $phone === '' ? null : $phone;
+        [$name, $email, $phone] = $this->admitManagerSubmission($manager, $name, $email, $phone);
 
         $contextType = $inquiry !== null
             ? ClientVerificationRequest::CONTEXT_INCOMING_INQUIRY
@@ -139,6 +128,126 @@ class ClientVerificationService
         }
     }
 
+    /**
+     * Запрос менеджера из самостоятельного обращения агентства (AOA-04-I4, вариант C). Тот же поток,
+     * лимиты, потолок открытых запросов и защита от дублей, что у submit(); третий контекст — Inquiry.
+     *
+     * Нейтральность: метод не читает таблицу пользователей, кроме строки самого менеджера, поэтому
+     * результат (и время ответа) не зависят от того, существует ли аккаунт с указанным email.
+     *
+     * Допуск (под блокировкой строки обращения): менеджер отвечает за обращение СЕЙЧАС, обращение
+     * самостоятельное, в работе и без привязанного клиента. Пока по обращению у этого менеджера есть
+     * запрос на проверке, повтор возвращает его (второй строки и второго события нет).
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ClientVerificationException
+     */
+    public function submitForInquiry(User $manager, Inquiry $inquiry, string $name, ?string $email, ?string $phone): ClientVerificationRequest
+    {
+        [$name, $email, $phone] = $this->admitManagerSubmission($manager, $name, $email, $phone);
+
+        $key = $this->pendingKey((int) $manager->id, ClientVerificationRequest::CONTEXT_INQUIRY, (int) $inquiry->id, $name, $email, $phone);
+
+        try {
+            return DB::transaction(function () use ($manager, $inquiry, $name, $email, $phone, $key): ClientVerificationRequest {
+                $locked = Inquiry::query()->lockForUpdate()->findOrFail($inquiry->id);
+
+                // Актуальная учётная запись: роль и активность могли измениться после входа.
+                $staff = User::query()->active()->find($manager->id);
+
+                if ($staff === null) {
+                    throw new AuthorizationException('Эта учётная запись не может отправлять запросы на проверку клиента.');
+                }
+
+                if (InquiryAuthority::provenance($locked) !== InquiryAuthority::PROVENANCE_INDEPENDENT) {
+                    throw new AuthorizationException('Запрос подаётся только из самостоятельного обращения.');
+                }
+
+                Gate::forUser($staff)->authorize('requestClient', $locked);
+
+                if ($locked->status !== Inquiry::STATUS_IN_PROGRESS) {
+                    throw new ClientVerificationException('Обращение сейчас нельзя обработать: проверьте его состояние.');
+                }
+
+                if ($locked->client_user_id !== null) {
+                    throw new ClientVerificationException('К обращению уже привязан клиент.');
+                }
+
+                $existing = ClientVerificationRequest::query()
+                    ->where('agency_inquiry_id', $locked->id)
+                    ->where('requested_by', $staff->id)
+                    ->where('status', ClientVerificationRequest::STATUS_PENDING)
+                    ->orderBy('id')
+                    ->first();
+
+                if ($existing !== null) {
+                    return $existing;
+                }
+
+                $pending = ClientVerificationRequest::query()
+                    ->where('requested_by', $staff->id)
+                    ->where('status', ClientVerificationRequest::STATUS_PENDING)
+                    ->count();
+
+                if ($pending >= self::MAX_PENDING_PER_MANAGER) {
+                    throw new ClientVerificationException('Слишком много запросов на проверке. Дождитесь решения администратора по предыдущим.', 'client_name');
+                }
+
+                $request = new ClientVerificationRequest();
+                $request->forceFill([
+                    'requested_by' => $staff->id,
+                    'context_type' => ClientVerificationRequest::CONTEXT_INQUIRY,
+                    'agency_inquiry_id' => $locked->id,
+                    'client_name' => $name,
+                    'client_email' => $email,
+                    'client_phone' => $phone,
+                    'status' => ClientVerificationRequest::STATUS_PENDING,
+                    'pending_key' => $key,
+                ])->save();
+
+                $this->audit->record(AuditEventType::ClientVerificationRequested, $staff, self::AUDIT_SUBJECT, (int) $request->id, [
+                    'context' => ClientVerificationRequest::CONTEXT_INQUIRY,
+                    'agency_inquiry_id' => (int) $locked->id,
+                    'has_email' => $email !== null,
+                ]);
+
+                return $request;
+            });
+        } catch (UniqueConstraintViolationException) {
+            // Параллельная отправка того же запроса: возвращаем победителя гонки.
+            return ClientVerificationRequest::query()->where('pending_key', $key)->firstOrFail();
+        }
+    }
+
+    /**
+     * Общий допуск отправки менеджером: роль, лимит частоты (один на менеджера для любого способа
+     * отправки) и нормализация данных. Не обращается к чужим учётным записям.
+     *
+     * @return array{0: string, 1: ?string, 2: ?string}
+     */
+    private function admitManagerSubmission(User $manager, string $name, ?string $email, ?string $phone): array
+    {
+        if (! $manager->hasRole(User::ROLE_MANAGER) || $manager->hasRole(User::ROLE_ADMIN) || ! User::query()->active()->whereKey($manager->id)->exists()) {
+            throw new ClientVerificationException('Запрос на проверку клиента отправляет менеджер. Администратор создаёт клиентов напрямую.');
+        }
+
+        $limiterKey = 'client-verification:' . $manager->id;
+
+        if (RateLimiter::tooManyAttempts($limiterKey, self::MAX_SUBMISSIONS_PER_MINUTE)) {
+            throw new ClientVerificationException('Слишком много запросов за короткое время. Подождите минуту и повторите.', 'client_name');
+        }
+
+        RateLimiter::hit($limiterKey, 60);
+
+        $name = trim((string) preg_replace('/\s+/u', ' ', $name));
+        $email = $email !== null ? strtolower(trim($email)) : null;
+        $email = $email === '' ? null : $email;
+        $phone = $phone !== null ? trim($phone) : null;
+        $phone = $phone === '' ? null : $phone;
+
+        return [$name, $email, $phone];
+    }
+
     // ------------------------------------------------------------------
     // Администратор
     // ------------------------------------------------------------------
@@ -147,6 +256,7 @@ class ClientVerificationService
     public function linkExisting(ClientVerificationRequest $request, User $admin, int $userId): ClientVerificationRequest
     {
         return DB::transaction(function () use ($request, $admin, $userId): ClientVerificationRequest {
+            $this->lockAgencyInquiryFirst($request);
             $locked = $this->lockPending($request, $admin);
             $inquiry = $this->assertContextCurrent($locked);
 
@@ -167,6 +277,7 @@ class ClientVerificationService
     {
         try {
             return DB::transaction(function () use ($request, $admin): ClientVerificationRequest {
+                $this->lockAgencyInquiryFirst($request);
                 $locked = $this->lockPending($request, $admin);
                 $inquiry = $this->assertContextCurrent($locked);
 
@@ -214,7 +325,7 @@ class ClientVerificationService
                 'manager_id' => (int) $locked->requested_by,
                 'inquiry_id' => $locked->incoming_inquiry_id,
                 'reason' => $note,
-            ]);
+            ] + $this->agencyInquiryAudit($locked));
 
             return $locked->refresh();
         });
@@ -294,7 +405,7 @@ class ClientVerificationService
      * активный менеджер, а обращение (если есть) ещё принадлежит ему и открыто.
      * Бывший ответственный не получает клиента лишь потому, что когда-то подал запрос.
      */
-    private function assertContextCurrent(ClientVerificationRequest $locked): ?IncomingInquiry
+    private function assertContextCurrent(ClientVerificationRequest $locked): IncomingInquiry|Inquiry|null
     {
         $requester = User::query()
             ->active()
@@ -304,6 +415,10 @@ class ClientVerificationService
 
         if ($requester === null || $requester->hasRole(User::ROLE_ADMIN)) {
             throw new ClientVerificationException('Инициатор запроса больше не является активным менеджером. Отклоните запрос.');
+        }
+
+        if ($locked->context_type === ClientVerificationRequest::CONTEXT_INQUIRY) {
+            return $this->assertAgencyInquiryCurrent($locked, $requester);
         }
 
         if ($locked->incoming_inquiry_id === null) {
@@ -324,14 +439,61 @@ class ClientVerificationService
         return $inquiry;
     }
 
+    /**
+     * Контекст «самостоятельное обращение» (AOA-04-I4) под блокировкой, которая уже удерживает строку
+     * обращения (lockAgencyInquiryFirst): запрос актуален, только если обращение всё ещё самостоятельное,
+     * в работе, закреплено за инициатором запроса и без привязанного клиента. Старое полномочие
+     * («когда-то подал запрос») клиента не даёт.
+     */
+    private function assertAgencyInquiryCurrent(ClientVerificationRequest $locked, User $requester): Inquiry
+    {
+        $inquiry = $locked->agency_inquiry_id === null
+            ? null
+            : Inquiry::query()->lockForUpdate()->find($locked->agency_inquiry_id);
+
+        if (
+            $inquiry === null
+            || InquiryAuthority::provenance($inquiry) !== InquiryAuthority::PROVENANCE_INDEPENDENT
+            || $inquiry->status !== Inquiry::STATUS_IN_PROGRESS
+            || (int) $inquiry->assigned_to !== (int) $locked->requested_by
+            || ! InquiryAuthority::isResponsibleManager($inquiry, $requester)
+            || $inquiry->client_user_id !== null
+        ) {
+            throw new ClientVerificationException('Обращение уже переназначено, закрыто или оформлено, либо к нему уже привязан клиент — запрос потерял актуальность. Отклоните его.');
+        }
+
+        return $inquiry;
+    }
+
+    /**
+     * Порядок блокировок для контекста «обращение»: сначала строка обращения (как у InquiryAssignment),
+     * затем запрос, инициатор и клиент. id обращения читается без блокировки — он у запроса не меняется.
+     */
+    private function lockAgencyInquiryFirst(ClientVerificationRequest $request): void
+    {
+        $id = ClientVerificationRequest::query()->whereKey($request->id)->value('agency_inquiry_id');
+
+        if ($id !== null) {
+            Inquiry::query()->lockForUpdate()->find($id);
+        }
+    }
+
+    /** @return array<string, int> метаданные аудита об обращении агентства (пусто для прочих контекстов) */
+    private function agencyInquiryAudit(ClientVerificationRequest $request): array
+    {
+        return $request->agency_inquiry_id === null ? [] : ['agency_inquiry_id' => (int) $request->agency_inquiry_id];
+    }
+
     private function finish(
         ClientVerificationRequest $locked,
         User $admin,
         User $client,
         string $resolution,
-        ?IncomingInquiry $inquiry,
+        IncomingInquiry|Inquiry|null $inquiry,
         AuditEventType $type,
     ): void {
+        $agency = $inquiry instanceof Inquiry;
+
         $updated = ClientVerificationRequest::query()
             ->whereKey($locked->id)
             ->where('status', ClientVerificationRequest::STATUS_PENDING)
@@ -342,7 +504,9 @@ class ClientVerificationService
                 'resolved_at' => now(),
                 'resolution' => $resolution,
                 'resolved_user_id' => $client->id,
-                'access_expires_at' => now()->addDays(ClientVerificationRequest::ACCESS_DAYS),
+                // Контекст «обращение»: без окна рабочего доступа. Видимость клиента даёт сама привязка,
+                // пока обращение закреплено за менеджером, и исчезает вместе с ним при передаче.
+                'access_expires_at' => $agency ? null : now()->addDays(ClientVerificationRequest::ACCESS_DAYS),
                 'updated_at' => now(),
             ]);
 
@@ -352,8 +516,12 @@ class ClientVerificationService
 
         $linkedToInquiry = false;
 
-        // Обращение без выбранного клиента получает его сразу; выбранного ранее не перезаписываем.
-        if ($inquiry !== null && $inquiry->client_user_id === null) {
+        if ($agency) {
+            // Клиент обращения гарантированно не выбран (assertAgencyInquiryCurrent под блокировкой).
+            $this->association->applyLink($inquiry, $client, $admin, InquiryClientAssociation::VIA_VERIFICATION, (int) $locked->id);
+            $linkedToInquiry = true;
+        } elseif ($inquiry !== null && $inquiry->client_user_id === null) {
+            // Обращение без выбранного клиента получает его сразу; выбранного ранее не перезаписываем.
             $inquiry->forceFill([
                 'client_user_id' => $client->id,
                 'client_linked_by' => $admin->id,
@@ -367,7 +535,42 @@ class ClientVerificationService
             'client_id' => (int) $client->id,
             'inquiry_id' => $locked->incoming_inquiry_id,
             'linked_to_inquiry' => $linkedToInquiry,
-        ]);
+        ] + $this->agencyInquiryAudit($locked));
+    }
+
+    /**
+     * Актуален ли контекст запроса, БЕЗ блокировок и записи: для страницы администратора (пометка
+     * «потерял актуальность»). Решение всё равно проверяется заново под блокировками. null — актуален.
+     */
+    public function staleReason(ClientVerificationRequest $request): ?string
+    {
+        if (! $request->isPending()) {
+            return null;
+        }
+
+        $requester = User::query()->active()
+            ->whereHas('roles', fn (Builder $q) => $q->where('name', User::ROLE_MANAGER))
+            ->find($request->requested_by);
+
+        if ($requester === null || $requester->hasRole(User::ROLE_ADMIN)) {
+            return 'Инициатор запроса больше не является активным менеджером.';
+        }
+
+        if ($request->context_type === ClientVerificationRequest::CONTEXT_INQUIRY) {
+            $inquiry = $request->agency_inquiry_id === null ? null : Inquiry::query()->find($request->agency_inquiry_id);
+
+            if (
+                $inquiry === null
+                || InquiryAuthority::provenance($inquiry) !== InquiryAuthority::PROVENANCE_INDEPENDENT
+                || $inquiry->status !== Inquiry::STATUS_IN_PROGRESS
+                || ! InquiryAuthority::isResponsibleManager($inquiry, $requester)
+                || $inquiry->client_user_id !== null
+            ) {
+                return 'Обращение переназначено, закрыто или оформлено, либо к нему уже привязан клиент.';
+            }
+        }
+
+        return null;
     }
 
     private function emailBelongsToAccount(): ClientVerificationException

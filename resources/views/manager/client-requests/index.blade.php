@@ -55,16 +55,26 @@
     @else
         <ul class="list-group list-group-flush" aria-label="Мои запросы на проверку клиентов">
             @foreach($requests as $item)
+                @php
+                    $fromInquiry = $item->context_type === \App\Models\ClientVerificationRequest::CONTEXT_INQUIRY;
+                    // Обращение передано другому сотруднику: данные клиента и ссылка скрыты.
+                    $masked = $fromInquiry && ! in_array((int) $item->agency_inquiry_id, $accessibleInquiries, true);
+                @endphp
                 <li class="list-group-item">
                     <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2">
-                        <strong class="text-break">{{ $item->client_name }}</strong>
+                        <strong class="text-break">{{ $masked ? 'Обращение передано' : $item->client_name }}</strong>
                         <span class="badge {{ $item->status === 'approved' ? 'text-bg-success' : ($item->status === 'rejected' ? 'text-bg-warning' : 'text-bg-info') }}">{{ $item->managerStatusLabel() }}</span>
                     </div>
                     <div class="small text-muted text-break">
                         {{ $item->contextLabel() }} · отправлен {{ $item->created_at?->format('d.m.Y H:i') }}
-                        @if($item->client_email) · {{ $item->client_email }}@endif
+                        @if(! $masked && $item->client_email) · {{ $item->client_email }}@endif
+                        @if($fromInquiry && ! $masked) · <a href="{{ route('cabinet.manager.agency-inquiries.show', $item->agency_inquiry_id) }}">открыть обращение</a>@endif
                     </div>
-                    @if($item->status === 'approved')
+                    @if($masked)
+                        <div class="small mt-1">Вы больше не ведёте это обращение — данные клиента недоступны.</div>
+                    @elseif($item->status === 'approved' && $fromInquiry)
+                        <div class="small mt-1">Клиент подтверждён и привязан к обращению.</div>
+                    @elseif($item->status === 'approved')
                         <div class="small mt-1">
                             Клиент подтверждён и доступен вам@if($item->access_expires_at) до {{ $item->access_expires_at->format('d.m.Y') }}@endif.
                             <a href="{{ route('bookings.create') }}">Оформить заявку</a> ·

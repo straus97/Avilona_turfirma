@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClientVerificationRequest;
+use App\Models\Inquiry;
 use App\Models\User;
 use App\Services\Accounts\ClientVerificationException;
 use App\Services\Accounts\ClientVerificationService;
+use App\Services\Inquiries\InquiryAuthority;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +35,19 @@ class ClientVerificationController extends Controller
             ->orderByDesc('id')
             ->paginate(20);
 
-        return view('manager.client-requests.index', compact('requests'));
+        // AOA-04-I4: запрос из обращения показывает данные клиента только пока менеджер отвечает за это
+        // обращение; после передачи строка остаётся в истории, но данные скрыты (одним запросом на страницу).
+        $agencyIds = $requests->getCollection()->pluck('agency_inquiry_id')->filter()->unique()->values();
+        $accessibleInquiries = $agencyIds->isEmpty()
+            ? []
+            : InquiryAuthority::scopeIndependent(Inquiry::query())
+                ->visibleTo($request->user())
+                ->whereIn('inquiries.id', $agencyIds)
+                ->pluck('inquiries.id')
+                ->map(fn ($id): int => (int) $id)
+                ->all();
+
+        return view('manager.client-requests.index', compact('requests', 'accessibleInquiries'));
     }
 
     public function store(Request $request): RedirectResponse
