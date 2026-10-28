@@ -28,6 +28,8 @@ Summary «Всего / В работе / Закрыто» on «Обращени�
 
 ## 6. Client visibility after closure — observation, not changed
 
+> **Superseded by AOA-04-I6 (2026-10-28):** the owner decided that a *closed* independent Inquiry must not keep granting client-profile access; `ClientVisibility` now excludes closed Inquiries (see [AOA-04-I6](AOA-04-I6-closed-inquiry-client-visibility-and-closure-review-2026-10-28.md)). The text below records the I5 state.
+
 `ClientVisibility` gives a Manager the client of an independent Inquiry assigned to them **regardless of status**; closing therefore neither grants nor revokes visibility, and reassignment still removes it. Whether a client should stay visible to the responsible Manager after the Inquiry is closed is a business decision; **no permission was changed** (consistent with the legacy `IncomingInquiry` branch).
 
 ## 7. Verification

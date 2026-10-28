@@ -214,9 +214,23 @@ class AdminInquiryCreationAndFiltersTest extends TestCase
         $html = $this->actingAs($this->admin)->get(route('cabinet.manager.agency-inquiries.create'))
             ->assertOk()->assertSee('Ответственный сотрудник')->getContent();
 
-        $this->assertStringContainsString($this->a->name, $html);
+        // Имена из фабрики бывают с апострофом (O'Reilly): в HTML они экранируются, сравниваем экранированную форму.
+        $this->assertStringContainsString(e($this->a->name), $html);
         $this->assertStringNotContainsString($this->a->email, $html);
-        $this->assertStringNotContainsString($this->tourist->name, $html);
+        $this->assertStringNotContainsString(e($this->tourist->name), $html);
+    }
+
+    public function test_admin_form_preselects_the_creating_admin_and_still_allows_another_employee(): void
+    {
+        $html = $this->actingAs($this->admin)->get(route('cabinet.manager.agency-inquiries.create'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<option value="' . $this->admin->id . '"[^>]*\bselected\b/', $html, 'создающий администратор выбран по умолчанию');
+        $this->assertDoesNotMatchRegularExpression('/<option value="' . $this->a->id . '"[^>]*\bselected\b/', $html);
+
+        // Явный выбор другого сотрудника по-прежнему работает, а пустой выбор отклоняется сервером.
+        $this->store($this->admin, ['assignee_id' => $this->a->id])->assertSessionHasNoErrors();
+        $this->assertSame($this->a->id, Inquiry::query()->latest('id')->first()->assigned_to);
+        $this->store($this->admin, ['assignee_id' => ''])->assertSessionHasErrors('assignee_id');
     }
 
     public function test_tourist_cannot_create_even_with_an_assignee(): void

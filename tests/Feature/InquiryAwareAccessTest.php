@@ -210,12 +210,12 @@ class InquiryAwareAccessTest extends TestCase
         $this->assertSame([$client->id], $this->clientIds($current));
     }
 
-    public function test_closed_and_converted_independent_inquiries_follow_the_same_current_assignee_rule(): void
+    public function test_closed_independent_inquiry_grants_no_client_while_converted_keeps_the_assignee_rule(): void
     {
         $a = $this->userWith('manager');
         $client = $this->userWith('tourist');
         $inquiry = $this->independentInquiry($a, null, $client, ['status' => 'closed', 'closed_at' => now()]);
-        $this->assertSame([$client->id], $this->clientIds($a));
+        $this->assertSame([], $this->clientIds($a), 'AOA-04-I6: закрытое обращение профиль клиента не раскрывает');
 
         $booking = $this->bookingOf($client, $this->userWith('manager'));
         DB::table('inquiries')->where('id', $inquiry->id)->update(['status' => 'converted', 'closed_at' => null, 'booking_id' => $booking->id, 'converted_at' => now()]);

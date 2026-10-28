@@ -626,7 +626,7 @@ class ManualInquiryCreationTest extends TestCase
         $html = $this->actingAs($this->admin)->get($this->showUrl($inquiry))->assertOk()->getContent();
         $this->assertStringNotContainsString($this->a->email, $html);
         $this->assertStringNotContainsString($this->b->email, $html);
-        $this->assertStringContainsString($this->a->name, $html);
+        $this->assertStringContainsString(e($this->a->name), $html);
 
         $loaded = Inquiry::query()->with(['assignee', 'creator', 'clientUser', 'draftUpdatedBy'])->findOrFail($inquiry->id)->toArray();
         foreach (['assignee', 'creator', 'client_user', 'internal_notes', 'creation_token'] as $key) {

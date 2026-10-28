@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
  *  - Менеджер видит только тех клиентов, с которыми у него СЕЙЧАС есть рабочая
  *    связь: клиент владеет заявкой, где менеджер — ответственный, либо клиент
  *    закреплён за обращением, назначенным этому менеджеру (IncomingInquiry, а с AOA-03-I3
- *    также самостоятельный Inquiry — см. InquiryAuthority), либо подтверждён
+ *    также самостоятельный Inquiry, пока он не закрыт — см. InquiryAuthority), либо подтверждён
  *    администратором по его запросу на проверку клиента (на ограниченный срок,
  *    AOA-01-I7). Историческое назначение доступа не даёт: после переназначения
  *    связь исчезает.
@@ -67,6 +67,10 @@ class ClientVisibility
                     ->select('inquiries.client_user_id')
                     ->whereNotNull('inquiries.client_user_id')
                     ->where('inquiries.assigned_to', $actor->id)
+                    // AOA-04-I6 (решение владельца): ЗАКРЫТОЕ самостоятельное обращение профиль клиента
+                    // больше не раскрывает. Карточка обращения остаётся читаемой по InquiryPolicy, а доступ
+                    // сохраняют другие источники: открытое обращение, заявка, подтверждение администратора.
+                    ->where('inquiries.status', '!=', Inquiry::STATUS_CLOSED)
                     ->whereIn('inquiries.client_user_id', User::query()
                         ->select('users.id')
                         ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::TOURIST))))

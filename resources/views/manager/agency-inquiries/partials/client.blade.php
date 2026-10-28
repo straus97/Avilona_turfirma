@@ -17,7 +17,7 @@
                     <span class="d-block small">Привязал: {{ $clientLinkedBy ?? 'сотрудник не определён' }}@if($clientLinkedAt) · {{ $clientLinkedAt->format('d.m.Y H:i') }}@endif</span>
                 @endif
             @else
-                <span class="d-block small">Клиент доступен вам в разделе «<a href="{{ route('cabinet.manager.clients') }}">Мои клиенты</a>», пока вы ведёте это обращение. Доступ к его заявкам и переписке это не открывает.</span>
+                <span class="d-block small">Клиент доступен вам в разделе «<a href="{{ route('cabinet.manager.clients') }}">Мои клиенты</a>», пока вы ведёте это обращение в работе. После закрытия обращения этот доступ прекращается. Доступ к его заявкам и переписке это не открывает.</span>
             @endif
         </div>
 
@@ -37,6 +37,10 @@
                 </div>
             </form>
         @endif
+    @elseif($clientLinked)
+        <div class="alert alert-secondary" role="status" id="agency-inquiry-client-archived">
+            К обращению привязан аккаунт клиента. Профиль клиента вам недоступен: обращение закрыто, а другой рабочей связи с этим клиентом у вас нет.
+        </div>
     @else
         <p class="text-muted" id="agency-inquiry-client-empty">Аккаунт клиента не привязан. Контакт выше — это не аккаунт; совпадение имени, телефона или email аккаунт не выбирает.</p>
 

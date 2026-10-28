@@ -405,7 +405,7 @@ class InquiryClosureTest extends TestCase
         $this->actingAs($this->a)->get($this->show($old))->assertOk()->assertSee('Причина закрытия не записана');
     }
 
-    public function test_client_visibility_after_closure_is_unchanged_and_follows_assignment(): void
+    public function test_client_visibility_ends_on_closure_and_follows_assignment(): void
     {
         $client = $this->userWith('tourist', ['name' => 'Видимый Клиент']);
         $inquiry = $this->mine();
@@ -414,9 +414,10 @@ class InquiryClosureTest extends TestCase
         $this->assertTrue(ClientVisibility::touristsVisibleTo($this->a)->whereKey($client->id)->exists());
         $this->submit($this->a, $inquiry->refresh());
 
-        // Closing neither grants nor revokes: the current assignee keeps the existing relationship, others get none.
-        $this->assertTrue(ClientVisibility::touristsVisibleTo($this->a)->whereKey($client->id)->exists());
+        // AOA-04-I6: closing revokes the Inquiry-derived client access; the closed card itself stays readable.
+        $this->assertFalse(ClientVisibility::touristsVisibleTo($this->a)->whereKey($client->id)->exists());
         $this->assertFalse(ClientVisibility::touristsVisibleTo($this->b)->whereKey($client->id)->exists());
+        $this->actingAs($this->a)->get($this->show($inquiry))->assertOk();
     }
 
     // ---- Gate C: counters -----------------------------------------------------------------------

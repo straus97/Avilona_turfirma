@@ -42,7 +42,7 @@
             <select id="agency-inquiry-assignee" name="assignee_id" class="form-select @error('assignee_id') is-invalid @enderror" required aria-describedby="agency-inquiry-assignee-help">
                 <option value="">— Выберите сотрудника —</option>
                 @foreach($eligibleStaff as $employee)
-                    <option value="{{ $employee['id'] }}" @selected((int) old('assignee_id') === $employee['id'])>{{ $employee['name'] }} ({{ $employee['role'] }})</option>
+                    <option value="{{ $employee['id'] }}" @selected((int) old('assignee_id', $defaultAssigneeId) === $employee['id'])>{{ $employee['name'] }} ({{ $employee['role'] }})</option>
                 @endforeach
             </select>
             <div id="agency-inquiry-assignee-help" class="form-text">Менеджер или администратор, который будет вести обращение. Позже ответственного можно передать другому сотруднику.</div>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Manager\Concerns\ResolvesAgencyInquiry;
 use App\Models\ClientVerificationRequest;
 use App\Models\Inquiry;
 use App\Models\User;
+use App\Services\Accounts\ClientVisibility;
 use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
 use App\Services\Inquiries\InquiryAssignment;
 use App\Services\Inquiries\InquiryAssignmentException;
@@ -147,6 +148,8 @@ class AgencyInquiryController extends Controller
             'creationToken' => (string) Str::uuid(),
             'chooseAssignee' => $forStaff,
             'eligibleStaff' => $forStaff ? $this->assignment->eligibleStaff() : collect(),
+            // §A4: созданное администратором обращение по умолчанию остаётся за ним; выбор другого сотрудника явный.
+            'defaultAssigneeId' => $forStaff ? (int) $user->id : null,
         ]);
     }
 
@@ -310,7 +313,11 @@ class AgencyInquiryController extends Controller
         $open = $inquiry->isOpen();
         $linked = $inquiry->client_user_id !== null;
 
-        $client = $linked ? User::query()->select(['id', 'name'])->find($inquiry->client_user_id) : null;
+        // AOA-04-I6: имя аккаунта показывается, только пока профиль клиента виден сотруднику (закрытое
+        // обращение его больше не раскрывает). Сама привязка остаётся частью исторической карточки.
+        $client = $linked
+            ? ClientVisibility::scopeTo(User::query()->select(['users.id', 'users.name']), $user)->find($inquiry->client_user_id)
+            : null;
         $canLink = $open && ! $linked && Gate::allows('linkClient', $inquiry);
 
         $term = trim((string) $request->old('client_q', ''));
