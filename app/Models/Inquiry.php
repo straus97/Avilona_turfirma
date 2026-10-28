@@ -79,7 +79,7 @@ class Inquiry extends Model
      * прочее. Заметки сотрудников тоже не уходят в JSON без явной проекции.
      */
     protected $hidden = [
-        'internal_notes', 'creation_token',
+        'internal_notes', 'creation_token', 'close_reason',
         'incomingInquiry', 'creator', 'assignee', 'clientUser',
         'clientLinkedBy', 'booking', 'convertedBy', 'closedBy', 'draftUpdatedBy', 'contact',
     ];

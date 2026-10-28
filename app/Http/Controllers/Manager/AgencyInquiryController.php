@@ -11,6 +11,9 @@ use App\Services\IncomingInquiries\IncomingInquiryClientMatcher;
 use App\Services\Inquiries\InquiryAssignment;
 use App\Services\Inquiries\InquiryAssignmentException;
 use App\Services\Inquiries\InquiryAuthority;
+use App\Services\Inquiries\InquiryClosure;
+use App\Services\Inquiries\InquiryClosureException;
+use App\Services\Inquiries\InquiryWorkloadSummary;
 use App\Services\Inquiries\InquiryDraftException;
 use App\Services\Inquiries\InquiryDraftStore;
 use App\Services\Inquiries\ManualInquiryCreator;
@@ -47,6 +50,7 @@ class AgencyInquiryController extends Controller
         private readonly ManualInquiryCreator $creator,
         private readonly InquiryDraftStore $drafts,
         private readonly InquiryAssignment $assignment,
+        private readonly InquiryClosure $closure,
     ) {
     }
 
@@ -91,6 +95,8 @@ class AgencyInquiryController extends Controller
             'canCreate' => $user->can('create', Inquiry::class) || $user->can('createForStaff', Inquiry::class),
             'filters' => $filters,
             'filtersRejected' => $rejected,
+            // Сводка по всем доступным обращениям; фильтры сужают только строки ниже.
+            'summary' => InquiryWorkloadSummary::forIndependent($user),
             'eligibleStaff' => $eligibleStaff,
             'carry' => $filters + ($inquiries->currentPage() > 1 ? ['page' => $inquiries->currentPage()] : []),
         ]);
@@ -233,7 +239,61 @@ class AgencyInquiryController extends Controller
             'assignmentOpen' => $canAssign && $inquiry->status === Inquiry::STATUS_IN_PROGRESS,
             'eligibleStaff' => $canAssign ? $this->assignment->eligibleStaff() : collect(),
             'assignmentHistory' => $canAssign ? $this->assignment->history($inquiry) : collect(),
+            'canClose' => $inquiry->status === Inquiry::STATUS_IN_PROGRESS && Gate::allows('close', $inquiry),
+            // Свидетельство закрытия — только из записанного события, и только авторизованному сотруднику.
+            'closureEvidence' => $this->closure->evidence($inquiry),
         ]);
+    }
+
+    /**
+     * Закрыть обращение без заявки (AOA-04-I5). Чужое/бывшее/ничьё — 404, турист — 403 (middleware).
+     * Статус, ответственного и причину проверяет сервис под блокировкой; из запроса принимаются
+     * только эти поля.
+     */
+    public function close(Request $request, Inquiry $inquiry): RedirectResponse
+    {
+        $this->visible($inquiry);
+        Gate::authorize('close', $inquiry);
+
+        $data = $request->validate([
+            'expected_status' => ['required', 'string', 'max:32'],
+            'expected_owner_id' => ['present', 'nullable', 'integer', 'min:1'],
+            'reason' => ['required', 'string', 'max:' . (InquiryClosure::REASON_MAX_LENGTH * 4)],
+        ], [
+            'expected_status.required' => 'Форма устарела. Обновите страницу и повторите.',
+            'expected_owner_id.present' => 'Форма устарела. Обновите страницу и повторите.',
+            'expected_owner_id.integer' => 'Форма устарела. Обновите страницу и повторите.',
+            'reason.required' => 'Укажите причину закрытия: от ' . InquiryClosure::REASON_MIN_LENGTH . ' до ' . InquiryClosure::REASON_MAX_LENGTH . ' символов.',
+            'reason.max' => 'Причина слишком длинная: не более ' . InquiryClosure::REASON_MAX_LENGTH . ' символов.',
+        ]);
+
+        try {
+            $this->closure->close(
+                $inquiry,
+                Auth::user(),
+                (string) $data['expected_status'],
+                $data['expected_owner_id'] === null ? null : (int) $data['expected_owner_id'],
+                (string) $data['reason'],
+            );
+        } catch (AuthorizationException) {
+            // Ответственный сменился между показом формы и отправкой.
+            abort(404);
+        } catch (InquiryClosureException $e) {
+            if ($e->isStale()) {
+                return redirect()
+                    ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+                    ->with('error', $e->getMessage());
+            }
+
+            return redirect()
+                ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+                ->withErrors([$e->field => $e->getMessage()])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('cabinet.manager.agency-inquiries.show', $inquiry)
+            ->with('success', 'Обращение закрыто без заявки. Причина записана; карточка доступна только для чтения.');
     }
 
     /**

@@ -37,12 +37,50 @@
     </div>
     <dl class="row mb-0">
         <dt class="col-sm-4">Канал обращения</dt><dd class="col-sm-8">{{ $inquiry->contactChannelLabel() }}</dd>
+        <dt class="col-sm-4">Статус</dt><dd class="col-sm-8">{{ $inquiry->statusLabel() }}</dd>
         <dt class="col-sm-4">Создано</dt><dd class="col-sm-8">{{ $inquiry->created_at?->format('d.m.Y H:i') ?? '—' }}@if($inquiry->creator) · {{ $inquiry->creator->name }}@endif</dd>
         <dt class="col-sm-4">Ответственный</dt><dd class="col-sm-8">{{ $inquiry->assignee?->name ?? '—' }}</dd>
         <dt class="col-sm-4">Клиент</dt><dd class="col-sm-8 {{ $clientLinked ? '' : 'text-muted' }}">{{ $clientLinked && $client ? $client->name : 'Аккаунт не привязан' }}</dd>
         <dt class="col-sm-4">Версия черновика</dt><dd class="col-sm-8">{{ $draft['revision'] }}@if($inquiry->draft_updated_at) · сохранено {{ $inquiry->draft_updated_at->format('d.m.Y H:i') }}@endif</dd>
     </dl>
 </section>
+
+@if($inquiry->status === \App\Models\Inquiry::STATUS_CLOSED)
+<section class="alert alert-secondary" role="region" aria-labelledby="agency-inquiry-closed-title">
+    <h2 class="h6" id="agency-inquiry-closed-title">Обращение закрыто без заявки</h2>
+    <p class="mb-1">Карточка доступна только для чтения: черновик, контакт и клиента изменить нельзя, заявка не создавалась.</p>
+    <p class="mb-0 small" style="overflow-wrap: anywhere;">
+        @if($inquiry->closed_at)<time datetime="{{ $inquiry->closed_at->toIso8601String() }}">{{ $inquiry->closed_at->format('d.m.Y H:i') }}</time>@endif
+        @if($closureEvidence['actor']) · {{ $closureEvidence['actor'] }}@endif
+        @if($closureEvidence['reason'])<br><span class="text-muted">Причина:</span> {{ $closureEvidence['reason'] }}@else<br><span class="text-muted">Причина закрытия не записана.</span>@endif
+    </p>
+</section>
+@endif
+
+@if($canClose)
+<section class="card-custom mb-4" aria-labelledby="agency-inquiry-close-title">
+    <div class="card-header-custom">
+        <h2 class="card-title-custom" id="agency-inquiry-close-title">Закрыть обращение</h2>
+    </div>
+    <details @if($errors->has('reason') || $errors->has('verification')) open @endif>
+        <summary class="mb-2">Клиент отказался или обращение неактуально — закрыть без заявки</summary>
+        <p class="text-muted small">Закрытие необратимо: после него нельзя менять черновик, контакт и клиента, а вернуть обращение в работу или оформить его нельзя. Причина сохраняется в истории и видна сотрудникам, имеющим доступ к обращению.</p>
+        <form method="POST" action="{{ route('cabinet.manager.agency-inquiries.close', $inquiry) }}" data-submit-once novalidate>
+            @csrf
+            <input type="hidden" name="expected_status" value="{{ $inquiry->status }}">
+            <input type="hidden" name="expected_owner_id" value="{{ $inquiry->assigned_to }}">
+            <div class="mb-3">
+                <label for="ai-close-reason" class="form-label">Причина закрытия</label>
+                <textarea id="ai-close-reason" name="reason" rows="2" required minlength="{{ \App\Services\Inquiries\InquiryClosure::REASON_MIN_LENGTH }}" maxlength="{{ \App\Services\Inquiries\InquiryClosure::REASON_MAX_LENGTH }}" class="form-control @error('reason') is-invalid @enderror" aria-describedby="ai-close-reason-help">{{ old('reason') }}</textarea>
+                <div id="ai-close-reason-help" class="form-text">От {{ \App\Services\Inquiries\InquiryClosure::REASON_MIN_LENGTH }} до {{ \App\Services\Inquiries\InquiryClosure::REASON_MAX_LENGTH }} символов. Не указывайте пароли, паспортные данные, телефоны и email клиентов.</div>
+                @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @error('verification')<div class="text-danger small mt-1" role="alert">{{ $message }}</div>@enderror
+            </div>
+            <button type="submit" class="btn btn-danger">Закрыть обращение без заявки</button>
+        </form>
+    </details>
+</section>
+@endif
 
 @if($canAssign)
 <section class="card-custom mb-4" aria-labelledby="agency-inquiry-assignment-title">

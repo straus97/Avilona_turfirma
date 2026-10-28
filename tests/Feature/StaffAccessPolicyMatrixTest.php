@@ -67,6 +67,8 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'cabinet.manager.agency-inquiries.show', 'cabinet.manager.agency-inquiries.draft.update',
         // AOA-04-I2: Admin-only assignment, classified here (manager: 403 own / 404 foreign).
         'cabinet.manager.agency-inquiries.assign',
+        // AOA-04-I5: closure without a Booking (Admin / currently responsible Manager; foreign 404, Tourist 403).
+        'cabinet.manager.agency-inquiries.close',
         // AOA-04-I4: unverified client contact (Admin / currently responsible Manager only), exercised below.
         'cabinet.manager.agency-inquiries.contact.update', 'cabinet.manager.agency-inquiries.contact.clear',
         // AOA-04-I4: client of an independent inquiry — neutral verification request (responsible Manager only),

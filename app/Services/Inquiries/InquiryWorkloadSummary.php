@@ -27,6 +27,28 @@ use App\Models\User;
 final class InquiryWorkloadSummary
 {
     /**
+     * Счётчики САМОСТОЯТЕЛЬНЫХ обращений для списка «Обращения клиентов» (AOA-04-I5): та же авторизованная
+     * база, что у списка (scopeIndependent + visibleTo), один групповой агрегат в БД. Не зависят от
+     * фильтров списка и их параметров. Привязанные к IncomingInquiry обращения не учитываются.
+     *
+     * @return array{total: int, in_progress: int, closed: int}
+     */
+    public static function forIndependent(User $actor): array
+    {
+        $byStatus = InquiryAuthority::scopeIndependent(Inquiry::query())
+            ->visibleTo($actor)
+            ->groupBy('inquiries.status')
+            ->selectRaw('inquiries.status, count(*) as aggregate')
+            ->pluck('aggregate', 'status');
+
+        return [
+            'total' => (int) $byStatus->sum(),
+            'in_progress' => (int) ($byStatus[Inquiry::STATUS_IN_PROGRESS] ?? 0),
+            'closed' => (int) ($byStatus[Inquiry::STATUS_CLOSED] ?? 0),
+        ];
+    }
+
+    /**
      * @return array{
      *     by_status: array<string, int>,
      *     total: int,

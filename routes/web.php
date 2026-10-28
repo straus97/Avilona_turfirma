@@ -94,6 +94,8 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         // AOA-04-I2: назначение/передача ответственного — только администратор (проверка в контроллере/политике:
         // менеджеру своё обращение — 403, чужое — 404).
         Route::post('/agency-inquiries/{inquiry}/assignment', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'assign'])->whereNumber('inquiry')->name('agency-inquiries.assign');
+        // AOA-04-I5: закрытие самостоятельного обращения без заявки (Admin или ответственный менеджер; чужое/бывшее — 404).
+        Route::post('/agency-inquiries/{inquiry}/closure', [\App\Http\Controllers\Manager\AgencyInquiryController::class, 'close'])->whereNumber('inquiry')->name('agency-inquiries.close');
         // AOA-04-I4: непроверенный контакт клиента (имя, телефон, мессенджер). Только PUT/DELETE: значения не попадают в URL.
         Route::put('/agency-inquiries/{inquiry}/contact', [\App\Http\Controllers\Manager\AgencyInquiryContactController::class, 'update'])->whereNumber('inquiry')->name('agency-inquiries.contact.update');
         Route::delete('/agency-inquiries/{inquiry}/contact', [\App\Http\Controllers\Manager\AgencyInquiryContactController::class, 'clear'])->whereNumber('inquiry')->name('agency-inquiries.contact.clear');
