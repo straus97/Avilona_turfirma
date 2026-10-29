@@ -191,7 +191,7 @@ class AdminCabinetE3RedesignTest extends TestCase
         $html = $this->actingAs($admin)->get(route('cabinet.admin.dashboard'))->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression(
-            '/<div class="table-responsive">\s*<table class="table align-middle">[\s\S]*?' . preg_quote($manager->name, '/') . '/u',
+            '/<div class="table-responsive">\s*<table class="table align-middle">[\s\S]*?' . preg_quote(e($manager->name), '/') . '/u',
             $html,
             'The "Менеджеры и нагрузка" table must render inside a .table-responsive wrapper.'
         );
@@ -570,7 +570,7 @@ class AdminCabinetE3RedesignTest extends TestCase
         // Текущий (уже неактивный) ответственный по-прежнему виден в select этой
         // заявки — но как выбранный и disabled, чтобы его нельзя было выбрать заново.
         $this->assertMatchesRegularExpression(
-            '/<option value="' . $manager->id . '" selected disabled>\s*' . preg_quote($manager->name, '/') . '\s*\(неактивен\)\s*<\/option>/',
+            '/<option value="' . $manager->id . '" selected disabled>\s*' . preg_quote(e($manager->name), '/') . '\s*\(неактивен\)\s*<\/option>/',
             $html
         );
         // Появляется ровно один раз — как disabled fallback, а не ещё и как

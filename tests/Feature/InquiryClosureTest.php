@@ -433,14 +433,14 @@ class InquiryClosureTest extends TestCase
         $this->mine($this->b);
         $this->linkedPair($this->a, $this->a);
 
-        $this->assertSame(['total' => 2, 'in_progress' => 1, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->a));
-        $this->assertSame(['total' => 3, 'in_progress' => 2, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->b));
-        $this->assertSame(['total' => 5, 'in_progress' => 3, 'closed' => 2], InquiryWorkloadSummary::forIndependent($this->admin));
-        $this->assertSame(['total' => 0, 'in_progress' => 0, 'closed' => 0], InquiryWorkloadSummary::forIndependent($this->tourist));
+        $this->assertSame(['total' => 2, 'in_progress' => 1, 'converted' => 0, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->a));
+        $this->assertSame(['total' => 3, 'in_progress' => 2, 'converted' => 0, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->b));
+        $this->assertSame(['total' => 5, 'in_progress' => 3, 'converted' => 0, 'closed' => 2], InquiryWorkloadSummary::forIndependent($this->admin));
+        $this->assertSame(['total' => 0, 'in_progress' => 0, 'converted' => 0, 'closed' => 0], InquiryWorkloadSummary::forIndependent($this->tourist));
 
         // A former assignee loses the count together with the record.
         app(InquiryAssignment::class)->assign($mineOpen, $this->admin, $this->b->id, $this->a->id, 'Передача коллеге на время отпуска');
-        $this->assertSame(['total' => 1, 'in_progress' => 0, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->a));
+        $this->assertSame(['total' => 1, 'in_progress' => 0, 'converted' => 0, 'closed' => 1], InquiryWorkloadSummary::forIndependent($this->a));
     }
 
     public function test_list_shows_counters_independent_of_filters_and_spoofing(): void
@@ -471,7 +471,7 @@ class InquiryClosureTest extends TestCase
         }
 
         $summary = InquiryWorkloadSummary::forIndependent($this->a);
-        $this->assertSame(['total', 'in_progress', 'closed'], array_keys($summary));
+        $this->assertSame(['total', 'in_progress', 'converted', 'closed'], array_keys($summary));
         $this->assertContainsOnly('int', $summary);
 
         $second = $this->actingAs($this->a)->get(route('cabinet.manager.agency-inquiries', ['page' => 2]))->assertOk();

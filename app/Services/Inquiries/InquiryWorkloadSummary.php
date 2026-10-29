@@ -31,7 +31,10 @@ final class InquiryWorkloadSummary
      * база, что у списка (scopeIndependent + visibleTo), один групповой агрегат в БД. Не зависят от
      * фильтров списка и их параметров. Привязанные к IncomingInquiry обращения не учитываются.
      *
-     * @return array{total: int, in_progress: int, closed: int}
+     * AOA-05-I1: добавлен «converted» (оформлено в заявку). Всего = все самостоятельные обращения любого
+     * статуса; оформленное не считается «в работе».
+     *
+     * @return array{total: int, in_progress: int, converted: int, closed: int}
      */
     public static function forIndependent(User $actor): array
     {
@@ -44,6 +47,7 @@ final class InquiryWorkloadSummary
         return [
             'total' => (int) $byStatus->sum(),
             'in_progress' => (int) ($byStatus[Inquiry::STATUS_IN_PROGRESS] ?? 0),
+            'converted' => (int) ($byStatus[Inquiry::STATUS_CONVERTED] ?? 0),
             'closed' => (int) ($byStatus[Inquiry::STATUS_CLOSED] ?? 0),
         ];
     }

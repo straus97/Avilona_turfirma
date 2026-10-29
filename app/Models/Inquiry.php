@@ -132,7 +132,7 @@ class Inquiry extends Model
         return [
             self::STATUS_NEW => 'Новое',
             self::STATUS_IN_PROGRESS => 'В работе',
-            self::STATUS_CONVERTED => 'Оформлено',
+            self::STATUS_CONVERTED => 'Конвертировано в заявку',
             self::STATUS_CLOSED => 'Закрыто',
         ];
     }

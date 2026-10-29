@@ -64,7 +64,7 @@
             @if($canEditContact)
                 <button type="submit" class="btn btn-primary">Сохранить контакт</button>
             @else
-                <p class="text-muted mb-0">Обращение закрыто для редактирования.</p>
+                <p class="text-muted mb-0">Обращение закрыто или оформлено в заявку — редактирование недоступно.</p>
             @endif
         </div>
     </form>

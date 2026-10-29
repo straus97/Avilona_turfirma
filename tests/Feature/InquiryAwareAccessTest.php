@@ -210,7 +210,7 @@ class InquiryAwareAccessTest extends TestCase
         $this->assertSame([$client->id], $this->clientIds($current));
     }
 
-    public function test_closed_independent_inquiry_grants_no_client_while_converted_keeps_the_assignee_rule(): void
+    public function test_closed_and_converted_independent_inquiries_grant_no_client_the_booking_does(): void
     {
         $a = $this->userWith('manager');
         $client = $this->userWith('tourist');
@@ -219,7 +219,11 @@ class InquiryAwareAccessTest extends TestCase
 
         $booking = $this->bookingOf($client, $this->userWith('manager'));
         DB::table('inquiries')->where('id', $inquiry->id)->update(['status' => 'converted', 'closed_at' => null, 'booking_id' => $booking->id, 'converted_at' => now()]);
-        $this->assertSame([$client->id], $this->clientIds($a));
+        // AOA-05-I1: a converted Inquiry no longer grants the Tourist profile by itself; the Booking does.
+        $this->assertSame([], $this->clientIds($a), 'AOA-05-I1: оформленное обращение профиль клиента не раскрывает');
+
+        DB::table('bookings')->where('id', $booking->id)->update(['manager_id' => $a->id]);
+        $this->assertSame([$client->id], $this->clientIds($a), 'доступ даёт заявка, которую ведёт менеджер');
     }
 
     public function test_inquiry_client_must_be_a_tourist(): void

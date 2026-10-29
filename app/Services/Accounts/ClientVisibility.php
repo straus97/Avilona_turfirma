@@ -70,7 +70,10 @@ class ClientVisibility
                     // AOA-04-I6 (решение владельца): ЗАКРЫТОЕ самостоятельное обращение профиль клиента
                     // больше не раскрывает. Карточка обращения остаётся читаемой по InquiryPolicy, а доступ
                     // сохраняют другие источники: открытое обращение, заявка, подтверждение администратора.
-                    ->where('inquiries.status', '!=', Inquiry::STATUS_CLOSED)
+                    // AOA-05-I1: то же для ОФОРМЛЕННОГО обращения — доступ к клиенту дальше даёт сама заявка
+                    // (первая ветка выше: клиент владеет заявкой, где менеджер — ответственный), а не обращение;
+                    // поэтому после переназначения заявки бывший ответственный по обращению клиента не видит.
+                    ->whereNotIn('inquiries.status', [Inquiry::STATUS_CLOSED, Inquiry::STATUS_CONVERTED])
                     ->whereIn('inquiries.client_user_id', User::query()
                         ->select('users.id')
                         ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::TOURIST))))

@@ -28,7 +28,7 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Обращение клиента №{{ $inquiry->id }}</h1>
-    <p class="page-subtitle">Обращение агентства, записанное вручную. Это не бронирование и не входящее из Tourvisor: заявка создаётся только отдельным действием оформления, которое появится позже.</p>
+    <p class="page-subtitle">Обращение агентства, записанное вручную. Это не бронирование и не входящее из Tourvisor: заявка создаётся только отдельным явным действием оформления: сохранение черновика и привязка клиента её не создают.</p>
 </div>
 
 <section class="card-custom mb-4" aria-labelledby="agency-inquiry-info-title">
@@ -54,6 +54,145 @@
         @if($closureEvidence['actor']) · {{ $closureEvidence['actor'] }}@endif
         @if($closureEvidence['reason'])<br><span class="text-muted">Причина:</span> {{ $closureEvidence['reason'] }}@else<br><span class="text-muted">Причина закрытия не записана.</span>@endif
     </p>
+</section>
+@endif
+
+@if($inquiry->status === \App\Models\Inquiry::STATUS_CONVERTED)
+<section class="alert alert-success" role="region" aria-labelledby="agency-inquiry-converted-title" id="agency-inquiry-converted">
+    <h2 class="h6" id="agency-inquiry-converted-title">Обращение оформлено в заявку</h2>
+    <p class="mb-1">Карточка доступна только для чтения: черновик, контакт, ответственного и клиента изменить нельзя. История обращения сохранена.</p>
+    <p class="mb-1 small" style="overflow-wrap: anywhere;">
+        @if($convertedEvidence['at'])<time datetime="{{ $convertedEvidence['at']->toIso8601String() }}">{{ $convertedEvidence['at']->format('d.m.Y H:i') }}</time>@endif
+        @if($convertedEvidence['actor']) · оформил(а): {{ $convertedEvidence['actor'] }}@endif
+    </p>
+    @if($convertedBookingUrl)
+        <a href="{{ $convertedBookingUrl }}" class="btn btn-success btn-sm" id="agency-inquiry-booking-link">Открыть заявку</a>
+    @elseif($convertedBookingDeleted)
+        <p class="mb-0 small">Созданная заявка удалена (администратором или вместе с аккаунтом клиента). Запись об оформлении сохранена.</p>
+    @else
+        <p class="mb-0 small">Заявка ведётся другим сотрудником — ссылка недоступна.</p>
+    @endif
+</section>
+@endif
+
+@if($canConvert)
+<section class="card-custom mb-4" aria-labelledby="agency-inquiry-convert-title" id="agency-inquiry-convert">
+    <div class="card-header-custom">
+        <h2 class="card-title-custom" id="agency-inquiry-convert-title">Оформить заявку</h2>
+    </div>
+    @error('request')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+    @error('conversion')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+    @error('conversion_client')<div class="alert alert-warning" role="alert" id="agency-inquiry-convert-client-error"><strong>Нужен клиент.</strong> {{ $message }}</div>@enderror
+    @error('expected_status')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+    @error('expected_owner_id')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+    @error('expected_client_id')<div class="alert alert-danger" role="alert">{{ $message }}</div>@enderror
+
+    <p class="text-muted small">Оформление создаёт одну заявку Avilona со статусом «В работе» и необратимо переводит обращение в «Конвертировано в заявку». Цена, оплата и бронирование у туроператора при этом не создаются. Повторная отправка формы вторую заявку не создаст.</p>
+    <dl class="row small mb-3">
+        <dt class="col-sm-4">Клиент (владелец заявки)</dt>
+        <dd class="col-sm-8 text-break">{{ $clientLinked ? ($client?->name ?? 'Аккаунт привязан') : 'не привязан' }}</dd>
+        <dt class="col-sm-4">Ответственный по заявке</dt>
+        <dd class="col-sm-8 text-break">{{ $inquiry->assignee?->name ?? '—' }}</dd>
+    </dl>
+
+    @if(! $convertClientReady)
+        <div class="alert alert-secondary" role="status" id="agency-inquiry-convert-blocked">
+            @if($convertPendingVerification)
+                Запрос на проверку клиента ожидает решения администратора. Пока он не решён или не отклонён, оформить заявку нельзя.
+            @else
+                Чтобы оформить заявку, сначала привяжите к обращению существующий аккаунт клиента (блок «Клиент» ниже). Имя, телефон и email из контакта аккаунт не выбирают, и клиент автоматически не создаётся.
+            @endif
+        </div>
+    @endif
+
+    <details @if($errors->any() && ! $errors->has('conversion_client')) open @endif>
+        <summary class="mb-2">Проверить данные поездки и оформить</summary>
+        <p class="text-muted small">Значения подставлены из черновика. Проверьте их и при необходимости исправьте: в заявку попадут именно эти значения. Внутренние заметки черновика в заявку не переносятся.</p>
+        <form method="POST" action="{{ route('cabinet.manager.agency-inquiries.convert', $inquiry) }}" class="row g-3" data-submit-once novalidate>
+            @csrf
+            <input type="hidden" name="expected_status" value="{{ $inquiry->status }}">
+            <input type="hidden" name="expected_owner_id" value="{{ $inquiry->assigned_to }}">
+            <input type="hidden" name="expected_client_id" value="{{ $inquiry->client_user_id }}">
+
+            <div class="col-12 col-md-4">
+                <label for="cv-destination-country" class="form-label">Страна <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" id="cv-destination-country" name="booking[destination_country]" value="{{ old('booking.destination_country', $convertDefaults['destination_country']) }}" class="form-control @error('booking.destination_country') is-invalid @enderror" maxlength="255" required>
+                @error('booking.destination_country')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="cv-destination-city" class="form-label">Город или курорт</label>
+                <input type="text" id="cv-destination-city" name="booking[destination_city]" value="{{ old('booking.destination_city', $convertDefaults['destination_city']) }}" class="form-control @error('booking.destination_city') is-invalid @enderror" maxlength="255">
+                @error('booking.destination_city')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="cv-departure-city" class="form-label">Город вылета <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" id="cv-departure-city" name="booking[departure_city]" value="{{ old('booking.departure_city', $convertDefaults['departure_city']) }}" class="form-control @error('booking.departure_city') is-invalid @enderror" maxlength="255" required>
+                @error('booking.departure_city')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label for="cv-start-date" class="form-label">Дата вылета (с) <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="date" id="cv-start-date" name="booking[start_date]" value="{{ old('booking.start_date', $convertDefaults['start_date']) }}" class="form-control @error('booking.start_date') is-invalid @enderror" required>
+                @error('booking.start_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="cv-start-date-end" class="form-label">Дата вылета (по)</label>
+                <input type="date" id="cv-start-date-end" name="booking[start_date_end]" value="{{ old('booking.start_date_end', $convertDefaults['start_date_end']) }}" class="form-control @error('booking.start_date_end') is-invalid @enderror">
+                @error('booking.start_date_end')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="cv-nights" class="form-label">Ночей (от) <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="number" id="cv-nights" name="booking[nights]" value="{{ old('booking.nights', $convertDefaults['nights']) }}" class="form-control @error('booking.nights') is-invalid @enderror" min="1" max="30" inputmode="numeric" required>
+                @error('booking.nights')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="cv-nights-max" class="form-label">Ночей (до)</label>
+                <input type="number" id="cv-nights-max" name="booking[nights_max]" value="{{ old('booking.nights_max', $convertDefaults['nights_max']) }}" class="form-control @error('booking.nights_max') is-invalid @enderror" min="1" max="30" inputmode="numeric">
+                @error('booking.nights_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-6 col-md-3">
+                <label for="cv-adults" class="form-label">Взрослых <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="number" id="cv-adults" name="booking[adults]" value="{{ old('booking.adults', $convertDefaults['adults']) }}" class="form-control @error('booking.adults') is-invalid @enderror" min="1" max="10" inputmode="numeric" required>
+                @error('booking.adults')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="cv-children" class="form-label">Детей</label>
+                <input type="number" id="cv-children" name="booking[children]" value="{{ old('booking.children', $convertDefaults['children']) }}" class="form-control @error('booking.children') is-invalid @enderror" min="0" max="10" inputmode="numeric">
+                @error('booking.children')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12 col-md-6">
+                <label for="cv-children-ages" class="form-label">Возраст детей</label>
+                <input type="text" id="cv-children-ages" name="booking[children_ages]" value="{{ is_array(old('booking.children_ages')) ? implode(', ', old('booking.children_ages')) : old('booking.children_ages', $convertDefaults['children_ages']) }}" class="form-control @error('booking.children_ages') is-invalid @enderror @error('booking.children_ages.*') is-invalid @enderror" autocomplete="off" aria-describedby="cv-children-ages-help">
+                <div id="cv-children-ages-help" class="form-text">Через запятую, от 0 до 17 лет, например: 5, 8.</div>
+                @error('booking.children_ages')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @error('booking.children_ages.*')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-12">
+                <label for="cv-notes" class="form-label">Информация для клиента</label>
+                <textarea id="cv-notes" name="booking[notes]" rows="2" maxlength="5000" class="form-control @error('booking.notes') is-invalid @enderror" aria-describedby="cv-notes-help">{{ old('booking.notes', $convertDefaults['notes']) }}</textarea>
+                <div id="cv-notes-help" class="form-text">Видна клиенту в его заявке. Не указывайте пароли и паспортные данные.</div>
+                @error('booking.notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12">
+                <label for="cv-manager-notes" class="form-label">Заметки менеджера</label>
+                <textarea id="cv-manager-notes" name="booking[manager_notes]" rows="2" maxlength="5000" class="form-control @error('booking.manager_notes') is-invalid @enderror">{{ old('booking.manager_notes') }}</textarea>
+                @error('booking.manager_notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input @error('confirm_conversion') is-invalid @enderror" type="checkbox" id="cv-confirm" name="confirm_conversion" value="1" required @checked(old('confirm_conversion'))>
+                    <label class="form-check-label" for="cv-confirm">Клиент согласен, я оформляю заявку по этому обращению. Это действие необратимо.</label>
+                    @error('confirm_conversion')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success" @disabled(! $convertClientReady)>Оформить заявку</button>
+            </div>
+        </form>
+    </details>
 </section>
 @endif
 
@@ -256,7 +395,7 @@
             @if($canEdit)
                 <button type="submit" class="btn btn-primary">Сохранить черновик</button>
             @else
-                <p class="text-muted mb-0">Обращение закрыто для редактирования.</p>
+                <p class="text-muted mb-0">Обращение закрыто или оформлено в заявку — черновик доступен только для чтения.</p>
             @endif
         </div>
     </form>

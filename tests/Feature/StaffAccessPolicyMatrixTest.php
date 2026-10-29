@@ -69,6 +69,8 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'cabinet.manager.agency-inquiries.assign',
         // AOA-04-I5: closure without a Booking (Admin / currently responsible Manager; foreign 404, Tourist 403).
         'cabinet.manager.agency-inquiries.close',
+        // AOA-05-I1: conversion to a Booking (Admin / currently responsible Manager; foreign 404, Tourist 403).
+        'cabinet.manager.agency-inquiries.convert',
         // AOA-04-I4: unverified client contact (Admin / currently responsible Manager only), exercised below.
         'cabinet.manager.agency-inquiries.contact.update', 'cabinet.manager.agency-inquiries.contact.clear',
         // AOA-04-I4: client of an independent inquiry — neutral verification request (responsible Manager only),
@@ -227,6 +229,11 @@ class StaffAccessPolicyMatrixTest extends TestCase
         $this->assertSame($this->a->id, $own->refresh()->assigned_to);
         $this->assertSame($this->b->id, $foreign->refresh()->assigned_to);
         $this->assertSame(0, \App\Models\AuditEvent::query()->count());
+
+        // AOA-05-I1: an empty submission never converts, so the matrix only classifies who may reach the action.
+        $this->assertMatrix('agency convert own', 'POST', route('cabinet.manager.agency-inquiries.convert', $own), ['admin' => 302, 'A' => 302, 'B' => 404, 'T' => 403, 'U' => 403], []);
+        $this->assertMatrix('agency convert foreign', 'POST', route('cabinet.manager.agency-inquiries.convert', $foreign), ['admin' => 302, 'A' => 404, 'B' => 302, 'T' => 403], []);
+        $this->assertMatrix('agency convert Admin-owned', 'POST', route('cabinet.manager.agency-inquiries.convert', $adminOwned), ['admin' => 302, 'A' => 404, 'B' => 404, 'T' => 403], []);
 
         $this->assertMatrix('agency assign (Admin)', 'POST', route('cabinet.manager.agency-inquiries.assign', $own), ['admin' => 302], $assign($own, $this->b, $this->a));
         $this->assertSame($this->b->id, $own->refresh()->assigned_to);

@@ -27,9 +27,10 @@
 </div>
 
 <section class="row g-3 mb-3" aria-label="Сводка по обращениям">
-    <div class="col-12 col-md-4"><div class="card-custom h-100"><div class="text-muted small">Всего обращений</div><div class="h3 mb-0" data-summary="total">{{ $summary['total'] }}</div></div></div>
-    <div class="col-6 col-md-4"><div class="card-custom h-100"><div class="text-muted small">В работе</div><div class="h3 mb-0" data-summary="in_progress">{{ $summary['in_progress'] }}</div></div></div>
-    <div class="col-6 col-md-4"><div class="card-custom h-100"><div class="text-muted small">Закрыто</div><div class="h3 mb-0" data-summary="closed">{{ $summary['closed'] }}</div></div></div>
+    <div class="col-12 col-md-3"><div class="card-custom h-100"><div class="text-muted small">Всего обращений</div><div class="h3 mb-0" data-summary="total">{{ $summary['total'] }}</div></div></div>
+    <div class="col-4 col-md-3"><div class="card-custom h-100"><div class="text-muted small">В работе</div><div class="h3 mb-0" data-summary="in_progress">{{ $summary['in_progress'] }}</div></div></div>
+    <div class="col-4 col-md-3"><div class="card-custom h-100"><div class="text-muted small">Конвертировано</div><div class="h3 mb-0" data-summary="converted">{{ $summary['converted'] }}</div></div></div>
+    <div class="col-4 col-md-3"><div class="card-custom h-100"><div class="text-muted small">Закрыто</div><div class="h3 mb-0" data-summary="closed">{{ $summary['closed'] }}</div></div></div>
     <div class="col-12"><p class="text-muted small mb-0">Сводка считается по всем доступным вам обращениям клиентов и не зависит от фильтров ниже; фильтры сужают только список. Входящие обращения из Tourvisor здесь не учитываются.</p></div>
 </section>
 

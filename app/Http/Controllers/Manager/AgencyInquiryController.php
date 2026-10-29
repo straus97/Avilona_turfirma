@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Manager\Concerns\ResolvesAgencyInquiry;
+use App\Models\Booking;
 use App\Models\ClientVerificationRequest;
 use App\Models\Inquiry;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Services\Inquiries\InquiryAssignmentException;
 use App\Services\Inquiries\InquiryAuthority;
 use App\Services\Inquiries\InquiryClosure;
 use App\Services\Inquiries\InquiryClosureException;
+use App\Services\Inquiries\InquiryConversion;
 use App\Services\Inquiries\InquiryWorkloadSummary;
 use App\Services\Inquiries\InquiryDraftException;
 use App\Services\Inquiries\InquiryDraftStore;
@@ -52,6 +54,7 @@ class AgencyInquiryController extends Controller
         private readonly InquiryDraftStore $drafts,
         private readonly InquiryAssignment $assignment,
         private readonly InquiryClosure $closure,
+        private readonly InquiryConversion $conversion,
     ) {
     }
 
@@ -229,10 +232,13 @@ class AgencyInquiryController extends Controller
         // для менеджера (не полагаемся на скрытие в шаблоне).
         $canAssign = Gate::allows('assign', $inquiry);
 
-        return view('manager.agency-inquiries.show', $this->clientState($request, $inquiry) + [
+        $clientState = $this->clientState($request, $inquiry);
+        $draft = $inquiry->draftSnapshot();
+
+        return view('manager.agency-inquiries.show', $clientState + $this->conversionState($inquiry, $clientState, $draft) + [
             'inquiry' => $inquiry,
             'backUrl' => route('cabinet.manager.agency-inquiries', $backQuery),
-            'draft' => $inquiry->draftSnapshot(),
+            'draft' => $draft,
             'contact' => $inquiry->contactSnapshot(),
             'canEditContact' => $inquiry->isOpen() && Gate::allows('updateContact', $inquiry),
             'contactConflict' => session('contact_conflict'),
@@ -297,6 +303,59 @@ class AgencyInquiryController extends Controller
         return redirect()
             ->route('cabinet.manager.agency-inquiries.show', $inquiry)
             ->with('success', 'Обращение закрыто без заявки. Причина записана; карточка доступна только для чтения.');
+    }
+
+    /**
+     * Состояние блока оформления в заявку (AOA-05-I1). Вызывается только после visible(). Ссылка на заявку
+     * строится только если текущий сотрудник вправе её видеть (BookingPolicy::view): иначе карточка сообщает
+     * лишь, что обращение оформлено, и не раскрывает ни номер, ни существование чужой заявки.
+     *
+     * @param  array<string, mixed>  $clientState
+     * @param  array<string, mixed>  $draft
+     * @return array<string, mixed>
+     */
+    private function conversionState(Inquiry $inquiry, array $clientState, array $draft): array
+    {
+        $converted = $inquiry->status === Inquiry::STATUS_CONVERTED;
+        $bookingUrl = null;
+        $bookingDeleted = false;
+
+        if ($converted) {
+            // booking_id is NULL when the Booking row no longer exists: hard-deleting the client's account removes
+            // their Bookings through the existing foreign keys (SET NULL here). The Inquiry stays «converted».
+            $booking = $inquiry->booking_id === null ? null : Booking::withTrashed()->find($inquiry->booking_id);
+            $bookingDeleted = $booking === null || $booking->trashed();
+            $bookingUrl = ! $bookingDeleted && Gate::allows('view', $booking)
+                ? route('bookings.show', $booking)
+                : null;
+        }
+
+        $pending = $clientState['pendingRequests']->isNotEmpty()
+            || ($clientState['myRequest']?->status === ClientVerificationRequest::STATUS_PENDING);
+
+        return [
+            'canConvert' => $inquiry->status === Inquiry::STATUS_IN_PROGRESS && Gate::allows('convert', $inquiry),
+            'convertClientReady' => $clientState['clientLinked'] && ! $pending,
+            'convertPendingVerification' => $pending,
+            // Значения формы — подсказка из черновика; сотрудник подтверждает или правит их явно. Внутренние
+            // заметки черновика в заявку НЕ переносятся; пожелания клиента предлагаются как информация для клиента.
+            'convertDefaults' => [
+                'departure_city' => $draft['departure_city'],
+                'destination_country' => $draft['destination_country'],
+                'destination_city' => $draft['destination_city'],
+                'start_date' => $draft['date_from'],
+                'start_date_end' => $draft['date_to'],
+                'nights' => $draft['nights_min'],
+                'nights_max' => $draft['nights_max'],
+                'adults' => $draft['adults'],
+                'children' => $draft['children'],
+                'children_ages' => is_array($draft['children_ages']) ? implode(', ', $draft['children_ages']) : '',
+                'notes' => $draft['preferences'],
+            ],
+            'convertedEvidence' => $converted ? $this->conversion->evidence($inquiry) : null,
+            'convertedBookingUrl' => $bookingUrl,
+            'convertedBookingDeleted' => $bookingDeleted,
+        ];
     }
 
     /**
