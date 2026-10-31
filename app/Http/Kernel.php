@@ -21,6 +21,8 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        // NOV-PUBLIC-01: глобально, чтобы заголовок получали и редиректы на вход, и ответы об ошибках.
+        \App\Http\Middleware\NoIndexPrivateSurfaces::class,
     ];
 
     /**

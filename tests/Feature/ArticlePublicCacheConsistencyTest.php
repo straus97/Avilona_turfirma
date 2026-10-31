@@ -67,7 +67,7 @@ class ArticlePublicCacheConsistencyTest extends TestCase
         $this->assertStringNotContainsString('Illuminate\Support\Facades\Cache', $articlesController);
         $this->assertStringNotContainsString('Illuminate\Support\Facades\Cache', $newsController);
 
-        $routesContent = file_get_contents(base_path('routes/web.php'));
+        $routesContent = file_get_contents(base_path('routes/public.php'));
 
         foreach (['interesting_articles.index', 'helpful_information.show_interesting_news'] as $name) {
             preg_match('/Route::get\([^;]*?"' . preg_quote($name, '/') . '"[^;]*?\);/s', $routesContent, $matches);

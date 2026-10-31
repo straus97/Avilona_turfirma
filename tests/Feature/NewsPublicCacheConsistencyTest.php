@@ -78,7 +78,7 @@ class NewsPublicCacheConsistencyTest extends TestCase
         $this->assertStringNotContainsString('Illuminate\Support\Facades\Cache', $controller);
         $this->assertStringContainsString("News::where('slug', \$slug)->firstOrFail()", $controller);
 
-        $routesContent = file_get_contents(base_path('routes/web.php'));
+        $routesContent = file_get_contents(base_path('routes/public.php'));
 
         foreach (['helpful_news.index', 'news.rss', 'helpful_news_id.index'] as $name) {
             preg_match('/Route::get\([^;]*?"' . preg_quote($name, '/') . '"[^;]*?\);/s', $routesContent, $matches);

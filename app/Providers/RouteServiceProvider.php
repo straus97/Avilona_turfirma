@@ -39,6 +39,19 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
+            // NOV-PUBLIC-01: robots.txt и sitemap.xml — без сессии и cookie.
+            Route::namespace($this->namespace)
+                ->group(base_path('routes/seo.php'));
+
+            // Публичный релиз: приватные маршруты не регистрируются вовсе (см. config/release.php).
+            if (config('release.public_only')) {
+                Route::middleware('web')
+                    ->namespace($this->namespace)
+                    ->group(base_path('routes/public.php'));
+
+                return;
+            }
+
             Route::middleware('web')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));

@@ -5,6 +5,8 @@
 @section('heading', 'Требуется авторизация')
 @section('message', 'Эта страница доступна только после входа. Войдите в личный кабинет и попробуйте снова.')
 
+@unless (config('release.public_only'))
 @section('extra_action')
     <a href="{{ rescue(fn () => route('login'), '/login', false) }}" class="err-btn">Войти в кабинет</a>
 @endsection
+@endunless

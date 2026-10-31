@@ -36,7 +36,7 @@ class CaptchaReloadNotCachedTest extends TestCase
 
     public function test_routes_file_no_longer_attaches_cache_response_to_reload_captcha(): void
     {
-        $routes = file_get_contents(base_path('routes/web.php'));
+        $routes = file_get_contents(base_path('routes/public.php'));
 
         preg_match('/Route::get\([^;]*?"captcha_reload\.index"[^;]*?\);/s', $routes, $matches);
         $this->assertNotEmpty($matches, 'reload-captcha route definition not found');

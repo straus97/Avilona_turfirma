@@ -172,6 +172,8 @@
                 </ul>
 
                 <div class="e2-header__account">
+                    {{-- NOV-PUBLIC-01: в публичном релизе входа/регистрации/кабинета нет (маршруты не зарегистрированы). --}}
+                    @unless (config('release.public_only'))
                     @auth
                         <div class="dropdown">
                             <button class="btn e2-btn e2-btn--secondary e2-btn--sm dropdown-toggle" type="button" id="userMenuDropdown"
@@ -231,6 +233,7 @@
                             <i class="bi bi-person-plus"></i> Регистрация
                         </a>
                     @endauth
+                    @endunless
                 </div>
 
                 <div class="e2-header__panel-extra d-xxl-none">

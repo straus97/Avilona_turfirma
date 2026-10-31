@@ -137,7 +137,7 @@ class PublicReviewDetailRouteConsistencyTest extends TestCase
     /** 8. Удалённый маршрут и контроллер не переиспользуются в исходниках. */
     public function test_removed_route_and_controller_do_not_reappear_in_source(): void
     {
-        $routesSource = file_get_contents(base_path('routes/web.php'));
+        $routesSource = file_get_contents(base_path('routes/web.php')) . file_get_contents(base_path('routes/public.php'));
 
         $this->assertStringNotContainsString('/reviews/{id_reviews}', $routesSource);
         $this->assertStringNotContainsString('->name("reviews.show")', $routesSource);

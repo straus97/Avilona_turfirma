@@ -53,7 +53,7 @@ class HomeNewsCacheConsistencyTest extends TestCase
         $this->assertStringContainsString('->take(4)', $controller);
         $this->assertStringContainsString('->get();', $controller);
 
-        $routesContent = file_get_contents(base_path('routes/web.php'));
+        $routesContent = file_get_contents(base_path('routes/public.php'));
         preg_match('/Route::get\([^;]*?"home\.index"[^;]*?\);/s', $routesContent, $matches);
         $this->assertNotEmpty($matches, 'Route definition for home.index was not found');
         $this->assertStringNotContainsString('cache.response', $matches[0]);

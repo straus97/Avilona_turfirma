@@ -45,9 +45,11 @@
                 <h1 id="e2-page-hero-title" class="e2-page-hero__title">Отзывы туристов</h1>
                 <p class="e2-page-hero__intro">Впечатления клиентов туристического агентства «Авилона» после поездок.
                     Публикуются только отзывы, прошедшие модерацию. Уже отдыхали с нами — расскажите, как всё прошло.</p>
+                @unless (config('release.public_only'))
                 <div class="e2-page-hero__actions">
                     <a class="e2-btn e2-btn--primary" href="#review-form">Оставить отзыв</a>
                 </div>
+                @endunless
             </section>
 
             @if (session('success'))
@@ -109,14 +111,17 @@
                     <div class="e2-cta-band" aria-labelledby="e2-reviews-empty-title">
                         <h3 id="e2-reviews-empty-title" class="e2-cta-band__title">Пока нет опубликованных отзывов</h3>
                         <p class="e2-cta-band__text">Как только появятся отзывы, прошедшие модерацию, они появятся
-                            здесь. Вы можете стать первым — форма ниже.</p>
+                            здесь. @unless (config('release.public_only')) Вы можете стать первым — форма ниже. @endunless</p>
+                        @unless (config('release.public_only'))
                         <div class="e2-cta-band__actions">
                             <a class="e2-btn e2-btn--primary" href="#review-form">Оставить отзыв</a>
                         </div>
+                        @endunless
                     </div>
                 @endif
             </section>
 
+            @unless (config('release.public_only'))
             <section class="e2-section e2-section--warm" aria-labelledby="e2-review-form-title">
                 <div class="e2-contact-block">
                     <h2 id="e2-review-form-title" class="e2-section__title mb-3">Напишите нам!</h2>
@@ -259,10 +264,12 @@
                     </form>
                 </div>
             </section>
+            @endunless
         </div>
     </main>
 @endsection
 
+@unless (config('release.public_only'))
 @section('scripts')
     <script>
         $(function () {
@@ -384,3 +391,4 @@
         </script>
     @endif
 @endsection
+@endunless

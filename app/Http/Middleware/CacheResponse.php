@@ -24,11 +24,28 @@ class CacheResponse
 
         $response = $next($request);
 
-        if ($response->isSuccessful()) {
+        if ($response->isSuccessful() && ! $this->containsSessionToken($request, $response->getContent())) {
             Cache::put($cacheKey, $response->getContent(), now()->addMinutes(60)); // Кешировать на 60 минут
         }
 
         return $response;
+    }
+
+    /**
+     * NOV-PUBLIC-01: страница с формой несёт CSRF-токен текущей сессии. Кэш общий
+     * для всех посетителей, поэтому такой ответ нельзя переотдавать другим: их POST
+     * получил бы чужой токен и был бы отклонён (HTTP 419). Страницы с токеном
+     * (например /contacts) всегда рендерятся заново для каждого посетителя.
+     */
+    protected function containsSessionToken(Request $request, mixed $content): bool
+    {
+        if (! $request->hasSession() || ! is_string($content)) {
+            return false;
+        }
+
+        $token = $request->session()->token();
+
+        return is_string($token) && $token !== '' && str_contains($content, $token);
     }
 
     protected function shouldNotCache(Request $request)

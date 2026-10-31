@@ -82,7 +82,7 @@ class ReviewPublicCacheConsistencyTest extends TestCase
         $this->assertStringNotContainsString('Cache::tags', $createController);
         $this->assertStringNotContainsString('Illuminate\Support\Facades\Cache', $createController);
 
-        $routesContent = file_get_contents(base_path('routes/web.php'));
+        $routesContent = file_get_contents(base_path('routes/public.php'));
 
         foreach (['home.index', 'review.index'] as $name) {
             preg_match('/Route::get\([^;]*?"' . preg_quote($name, '/') . '"[^;]*?\);/s', $routesContent, $matches);
