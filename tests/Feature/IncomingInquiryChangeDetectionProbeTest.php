@@ -174,8 +174,8 @@ class IncomingInquiryChangeDetectionProbeTest extends TestCase
         // Удаление аккаунта сотрудника и клиента (так делают Admin и сам пользователь) срабатывает через
         // внешний ключ ON DELETE SET NULL: приложение в incoming_inquiries ничего не записывает.
         $this->at($this->t0->addDay());
-        $this->a->delete();
-        $this->tourist->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->a->id)->delete(); // прямое удаление (сырой SQL): модельное удаление защищено UserDeletion (AOA-05-I3)
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->tourist->id)->delete();
 
         $after = DB::table('incoming_inquiries')->where('id', $row->id)->first();
         $this->assertNull($after->assigned_to, 'ответственный изменился (стал NULL)');

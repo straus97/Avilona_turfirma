@@ -2,232 +2,177 @@
 
 namespace Tests\Feature;
 
-use App\Models\Booking;
-use App\Models\BookingDocument;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
+/**
+ * Очистка файлов при удалении пользователя (AOA-05-I3): файлы личных документов удаляются
+ * только ПОСЛЕ фиксации транзакции; откат не трогает ни записи, ни файлы. Заявки и их
+ * документы теперь защищены от удаления (см. UserDeletionGuardTest).
+ */
 class UserDeletionDocumentCleanupTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_model_deletion_removes_owned_document_files(): void
+    public function test_user_model_deletion_removes_personal_document_files(): void
     {
         Storage::fake('local');
 
         $owner = $this->createUserWithRole(Role::TOURIST);
-        $uploader = $this->createUserWithRole(Role::MANAGER);
-
-        $records = $this->createOwnedDocuments(
-            $owner,
-            $uploader,
-            'model-delete'
-        );
+        $records = $this->createPersonalDocument($owner, 'model-delete');
 
         $owner->delete();
 
-        Storage::disk('local')->assertMissing(
-            $records['personal_path']
-        );
-
-        Storage::disk('local')->assertMissing(
-            $records['booking_path']
-        );
-
-        $this->assertDatabaseMissing('users', [
-            'id' => $owner->id,
-        ]);
-
-        $this->assertDatabaseMissing('user_documents', [
-            'id' => $records['personal_document_id'],
-        ]);
-
-        $this->assertDatabaseMissing('bookings', [
-            'id' => $records['booking_id'],
-        ]);
-
-        $this->assertDatabaseMissing('booking_documents', [
-            'id' => $records['booking_document_id'],
-        ]);
+        Storage::disk('local')->assertMissing($records['path']);
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+        $this->assertDatabaseMissing('user_documents', ['id' => $records['document_id']]);
     }
 
-    public function test_tourist_account_deletion_removes_owned_document_files(): void
+    public function test_tourist_account_deletion_removes_personal_document_files(): void
     {
         Storage::fake('local');
 
         $owner = $this->createUserWithRole(Role::TOURIST);
-        $uploader = $this->createUserWithRole(Role::MANAGER);
-
-        $records = $this->createOwnedDocuments(
-            $owner,
-            $uploader,
-            'tourist-account'
-        );
+        $records = $this->createPersonalDocument($owner, 'tourist-account');
 
         $this
             ->actingAs($owner)
-            ->delete(
-                route('cabinet.settings.destroy-account'),
-                ['password' => 'password']
-            )
+            ->delete(route('cabinet.settings.destroy-account'), ['password' => 'password'])
             ->assertRedirect(route('home.index'));
 
-        Storage::disk('local')->assertMissing(
-            $records['personal_path']
-        );
-
-        Storage::disk('local')->assertMissing(
-            $records['booking_path']
-        );
-
-        $this->assertDatabaseMissing('users', [
-            'id' => $owner->id,
-        ]);
-
-        $this->assertDatabaseMissing('user_documents', [
-            'id' => $records['personal_document_id'],
-        ]);
-
-        $this->assertDatabaseMissing('booking_documents', [
-            'id' => $records['booking_document_id'],
-        ]);
+        Storage::disk('local')->assertMissing($records['path']);
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+        $this->assertDatabaseMissing('user_documents', ['id' => $records['document_id']]);
     }
 
-    public function test_admin_user_deletion_removes_owned_document_files(): void
+    public function test_admin_user_deletion_removes_personal_document_files(): void
     {
         Storage::fake('local');
 
         $admin = $this->createUserWithRole(Role::ADMIN);
         $target = $this->createUserWithRole(Role::TOURIST);
-
-        $records = $this->createOwnedDocuments(
-            $target,
-            $admin,
-            'admin-delete'
-        );
+        $records = $this->createPersonalDocument($target, 'admin-delete');
 
         $this
             ->actingAs($admin)
-            ->delete(
-                route(
-                    'cabinet.admin.delete-user',
-                    $target
-                )
-            )
+            ->delete(route('cabinet.admin.delete-user', $target))
             ->assertRedirect();
 
-        Storage::disk('local')->assertMissing(
-            $records['personal_path']
-        );
-
-        Storage::disk('local')->assertMissing(
-            $records['booking_path']
-        );
-
-        $this->assertDatabaseMissing('users', [
-            'id' => $target->id,
-        ]);
-
-        $this->assertDatabaseMissing('user_documents', [
-            'id' => $records['personal_document_id'],
-        ]);
-
-        $this->assertDatabaseMissing('booking_documents', [
-            'id' => $records['booking_document_id'],
-        ]);
+        Storage::disk('local')->assertMissing($records['path']);
+        $this->assertDatabaseMissing('users', ['id' => $target->id]);
+        $this->assertDatabaseMissing('user_documents', ['id' => $records['document_id']]);
     }
 
-    /**
-     * @return array{
-     *     personal_path: string,
-     *     booking_path: string,
-     *     personal_document_id: int,
-     *     booking_document_id: int,
-     *     booking_id: int
-     * }
-     */
-    private function createOwnedDocuments(
-        User $owner,
-        User $uploader,
-        string $suffix
-    ): array {
-        $personalPath =
-            'documents/personal/' . $suffix . '.pdf';
+    public function test_files_are_removed_only_after_the_outer_transaction_commits(): void
+    {
+        Storage::fake('local');
 
-        $bookingPath =
-            'documents/bookings/' . $suffix . '.pdf';
+        $owner = $this->createUserWithRole(Role::TOURIST);
+        $records = $this->createPersonalDocument($owner, 'after-commit');
 
-        Storage::disk('local')->put(
-            $personalPath,
-            'private-personal-document'
-        );
+        $pathExistedInsideTransaction = null;
 
-        Storage::disk('local')->put(
-            $bookingPath,
-            'private-booking-document'
-        );
+        DB::transaction(function () use ($owner, $records, &$pathExistedInsideTransaction): void {
+            $owner->delete();
 
-        $personalDocument = UserDocument::query()->create([
+            $pathExistedInsideTransaction = Storage::disk('local')->exists($records['path']);
+        });
+
+        $this->assertTrue($pathExistedInsideTransaction, 'File must still exist before commit.');
+        Storage::disk('local')->assertMissing($records['path']);
+    }
+
+    public function test_rollback_after_delete_keeps_user_document_row_and_file(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->createUserWithRole(Role::TOURIST);
+        $records = $this->createPersonalDocument($owner, 'rollback');
+
+        try {
+            DB::transaction(function () use ($owner): void {
+                $owner->delete();
+
+                throw new RuntimeException('forced rollback');
+            });
+            $this->fail('Expected RuntimeException was not thrown.');
+        } catch (RuntimeException) {
+            // ожидаемый откат
+        }
+
+        $this->assertDatabaseHas('users', ['id' => $owner->id]);
+        $this->assertDatabaseHas('user_documents', ['id' => $records['document_id']]);
+        Storage::disk('local')->assertExists($records['path']);
+    }
+
+    public function test_cleanup_failure_after_commit_keeps_the_deletion_and_logs_recoverable_paths(): void
+    {
+        $owner = $this->createUserWithRole(Role::TOURIST);
+
+        $disk = \Mockery::mock(\Illuminate\Contracts\Filesystem\Filesystem::class);
+        $disk->shouldReceive('delete')->once()->with('documents/personal/stuck.pdf')->andReturn(false);
+        Storage::shouldReceive('disk')->with('local')->andReturn($disk);
+
+        UserDocument::query()->create([
             'user_id' => $owner->id,
             'name' => 'Passport',
             'document_type' => 'passport',
-            'file_path' => $personalPath,
+            'file_path' => 'documents/personal/stuck.pdf',
+            'file_type' => 'pdf',
+            'file_size' => 1,
+        ]);
+
+        Log::shouldReceive('error')
+            ->once()
+            ->with('User document file cleanup failed after commit', \Mockery::on(
+                fn ($context): bool => $context['user_id'] === $owner->id
+                    && $context['total_files'] === 1
+                    && $context['failed_files'] === 1
+                    && $context['failed_paths'] === ['documents/personal/stuck.pdf']
+                    && ! array_key_exists('email', $context)
+            ));
+
+        $owner->delete();
+
+        $this->assertDatabaseMissing('users', ['id' => $owner->id]);
+    }
+
+    /**
+     * @return array{path: string, document_id: int}
+     */
+    private function createPersonalDocument(User $owner, string $suffix): array
+    {
+        $path = 'documents/personal/' . $suffix . '.pdf';
+
+        Storage::disk('local')->put($path, 'private-personal-document');
+
+        $document = UserDocument::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Passport',
+            'document_type' => 'passport',
+            'file_path' => $path,
             'file_type' => 'pdf',
             'file_size' => 25,
         ]);
 
-        $booking = Booking::withoutEvents(
-            fn (): Booking => Booking::query()->create([
-                'user_id' => $owner->id,
-                'status' => Booking::STATUS_NEW,
-                'departure_city' => 'Saint Petersburg',
-                'destination_country' => 'Tunisia',
-                'destination_city' => 'Hammamet',
-                'start_date' => '2026-07-20',
-                'nights' => 7,
-                'adults' => 2,
-                'children' => 0,
-            ])
-        );
-
-        $bookingDocument = BookingDocument::query()->create([
-            'booking_id' => $booking->id,
-            'document_type' => 'voucher',
-            'title' => 'Tour Voucher',
-            'file_path' => $bookingPath,
-            'file_size' => 24,
-            'uploaded_by' => $uploader->id,
-        ]);
-
-        return [
-            'personal_path' => $personalPath,
-            'booking_path' => $bookingPath,
-            'personal_document_id' =>
-                $personalDocument->id,
-            'booking_document_id' =>
-                $bookingDocument->id,
-            'booking_id' => $booking->id,
-        ];
+        return ['path' => $path, 'document_id' => $document->id];
     }
 
-    private function createUserWithRole(
-        string $roleName
-    ): User {
+    private function createUserWithRole(string $roleName): User
+    {
         $role = Role::query()->firstOrCreate(
             ['name' => $roleName],
-            [
-                'description' =>
-                    Role::availableRoles()[$roleName]
-                    ?? $roleName,
-            ]
+            ['description' => Role::availableRoles()[$roleName] ?? $roleName]
         );
 
         $user = User::factory()->create();
-
         $user->roles()->attach($role->id);
 
         return $user;

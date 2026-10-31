@@ -12,6 +12,8 @@ use App\Models\UserDocument;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Accounts\ClientVisibility;
+use App\Services\Accounts\UserDeletion;
+use App\Services\Accounts\UserDeletionRefused;
 use App\Support\NewsHtmlSanitizer;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -604,7 +606,7 @@ class ManagerController extends Controller
     /**
      * Удаление аккаунта менеджера
      */
-    public function destroyAccount(Request $request): RedirectResponse
+    public function destroyAccount(Request $request, UserDeletion $deletion): RedirectResponse
     {
         $request->validate([
             'password' => 'required|current_password',
@@ -617,18 +619,21 @@ class ManagerController extends Controller
             ->pluck('name')
             ->all();
 
+        // AOA-05-I3: удаление только через охраняемую операцию; при отказе сессия сохраняется.
+        try {
+            $deletion->delete($user, $user, UserDeletion::CHANNEL_SELF_SERVICE);
+        } catch (UserDeletionRefused $e) {
+            return back()->with('error', $e->userMessage(UserDeletionRefused::AUDIENCE_STAFF));
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $deleted = $user->delete();
-
-        if ($deleted === true) {
-            Log::warning('User deleted own account via manager settings', [
-                'actor_id' => $actorId,
-                'actor_roles' => $actorRoles,
-            ]);
-        }
+        Log::warning('User deleted own account via manager settings', [
+            'actor_id' => $actorId,
+            'actor_roles' => $actorRoles,
+        ]);
 
         return redirect()->route('home.index')->with('status', 'Аккаунт удален.');
     }

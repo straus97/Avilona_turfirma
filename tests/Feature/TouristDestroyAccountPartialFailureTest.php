@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\BonusAccount;
-use App\Models\Booking;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +13,7 @@ class TouristDestroyAccountPartialFailureTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_deleting_exception_preserves_tourist_booking_and_bonus_account(): void
+    public function test_user_deleting_exception_preserves_tourist_account_bonus_account_and_audit_state(): void
     {
         $password = 'correct-password';
 
@@ -30,21 +29,6 @@ class TouristDestroyAccountPartialFailureTest extends TestCase
         $tourist->roles()->attach($role->id);
         $touristId = $tourist->id;
 
-        $booking = Booking::withoutEvents(
-            fn (): Booking => Booking::query()->create([
-                'user_id' => $touristId,
-                'status' => Booking::STATUS_NEW,
-                'departure_city' => 'Saint Petersburg',
-                'destination_country' => 'Tunisia',
-                'destination_city' => 'Hammamet',
-                'start_date' => '2026-08-20',
-                'nights' => 7,
-                'adults' => 2,
-                'children' => 0,
-            ])
-        );
-        $bookingId = $booking->id;
-
         $bonusAccount = BonusAccount::query()->create([
             'user_id' => $touristId,
             'balance' => 0,
@@ -56,7 +40,6 @@ class TouristDestroyAccountPartialFailureTest extends TestCase
         $bonusAccountId = $bonusAccount->id;
 
         $this->assertDatabaseHas('users', ['id' => $touristId]);
-        $this->assertDatabaseHas('bookings', ['id' => $bookingId]);
         $this->assertDatabaseHas('bonus_accounts', ['id' => $bonusAccountId]);
 
         User::deleting(function (User $user) use ($touristId): void {
@@ -82,15 +65,10 @@ class TouristDestroyAccountPartialFailureTest extends TestCase
 
         $this->assertDatabaseHas('users', ['id' => $touristId]);
 
-        $this->assertDatabaseHas('bookings', [
-            'id' => $bookingId,
-            'user_id' => $touristId,
-            'deleted_at' => null,
-        ]);
-
         $this->assertDatabaseHas('bonus_accounts', [
             'id' => $bonusAccountId,
             'user_id' => $touristId,
         ]);
+        $this->assertDatabaseMissing('audit_events', ['event_type' => 'user.deleted']);
     }
 }

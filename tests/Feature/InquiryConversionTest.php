@@ -464,7 +464,7 @@ class InquiryConversionTest extends TestCase
     public function test_deleted_client_account_leaves_no_client_to_convert(): void
     {
         $inquiry = $this->ready();
-        $this->client->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->client->id)->delete(); // сырой SQL, минуя охрану UserDeletion
 
         $this->assertNull($inquiry->refresh()->client_user_id, 'the database detaches a deleted account');
         $this->submit($this->a, $inquiry, ['expected_client_id' => $this->client->id])->assertSessionHas('error');
@@ -779,7 +779,7 @@ class InquiryConversionTest extends TestCase
 
         // Existing product design: deleting a Tourist account cascades to their Bookings (bookings.user_id) and the
         // Inquiry link is detached (SET NULL). The Inquiry keeps its terminal status and history and must not break.
-        $this->client->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->client->id)->delete(); // сырой SQL: каскад БД обходит охрану UserDeletion (AOA-05-I3, граница до смены ON DELETE)
 
         $inquiry->refresh();
         $this->assertSame(0, Booking::query()->withTrashed()->count());

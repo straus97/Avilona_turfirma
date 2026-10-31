@@ -184,7 +184,7 @@
             <div class="d-grid gap-2">
                 <a href="{{ route('cabinet.admin.user-roles', $user->id) }}" class="btn btn-outline-secondary">Управление ролями</a>
                 @if($user->id !== Auth::id())
-                    <form action="{{ route('cabinet.admin.delete-user', $user->id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этого пользователя?');">
+                    <form action="{{ route('cabinet.admin.delete-user', $user->id) }}" method="POST" onsubmit="return confirm('Удалить пользователя? Если с ним связаны заявки, переписка или обращения, удаление будет отклонено.');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-outline-danger">Удалить пользователя</button>

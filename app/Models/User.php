@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\Accounts\UserDeletion;
+use App\Services\Accounts\UserFileCleanup;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -25,6 +26,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected static function booted(): void
     {
         static::deleting(function (User $user): void {
+            // AOA-05-I3: страховка для любого прямого $user->delete() — защищённые записи
+            // и последний активный администратор не удаляются даже в обход охраняемой операции.
+            app(UserDeletion::class)->assertDeletable($user);
+
             $personalDocumentPaths = $user
                 ->userDocuments()
                 ->pluck('file_path');
@@ -50,12 +55,8 @@ class User extends Authenticatable implements MustVerifyEmail
         });
 
         static::deleted(function (User $user): void {
-            foreach (
-                $user->documentPathsPendingDeletion
-                as $path
-            ) {
-                Storage::disk('local')->delete($path);
-            }
+            // Файлы удаляются только после фиксации внешней транзакции (при откате — никогда).
+            UserFileCleanup::schedule((int) $user->id, $user->documentPathsPendingDeletion);
 
             $user->documentPathsPendingDeletion = [];
         });

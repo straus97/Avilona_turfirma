@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Booking;
 use App\Models\Message;
+use App\Services\Accounts\UserDeletion;
+use App\Services\Accounts\UserDeletionRefused;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -189,14 +191,21 @@ class ProfileController extends Controller
     /**
      * Удалить аккаунт
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, UserDeletion $deletion): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
         $user = $request->user();
+
+        // AOA-05-I3: маршрута нет, но метод не должен стать обходом охраняемого удаления.
+        try {
+            $deletion->delete($user, $user, UserDeletion::CHANNEL_SELF_SERVICE);
+        } catch (UserDeletionRefused $e) {
+            return back()->with('error', $e->userMessage(UserDeletionRefused::AUDIENCE_STAFF));
+        }
+
         Auth::logout();
-        $user->delete();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return Redirect::to('/');

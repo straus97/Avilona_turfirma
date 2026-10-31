@@ -337,7 +337,7 @@ class InquiryBackfillTest extends TestCase
     {
         $source = $this->inProgress();
         // Удаление сотрудника обнуляет assigned_to (nullOnDelete) у ещё «в работе» обращения.
-        $this->manager->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->manager->id)->delete(); // сырой SQL, минуя охрану UserDeletion
 
         $report = $this->service()->apply();
 

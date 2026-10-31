@@ -52,7 +52,7 @@ class BookingDocumentUploaderLifecycleTest extends TestCase
             'uploaded_by' => $uploader->id,
         ]);
 
-        $uploader->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $uploader->id)->delete(); // прямое удаление (сырой SQL): модельное удаление защищено UserDeletion (AOA-05-I3)
 
         $this->assertDatabaseMissing('users', [
             'id' => $uploader->id,

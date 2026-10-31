@@ -124,7 +124,7 @@
                                     <i class="bi bi-key" aria-hidden="true"></i>
                                 </a>
                                 @if($user->id !== Auth::id())
-                                    <form action="{{ route('cabinet.admin.delete-user', $user->id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этого пользователя?');">
+                                    <form action="{{ route('cabinet.admin.delete-user', $user->id) }}" method="POST" onsubmit="return confirm('Удалить пользователя? Если с ним связаны заявки, переписка или обращения, удаление будет отклонено.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить" aria-label="Удалить пользователя {{ $user->name }}">

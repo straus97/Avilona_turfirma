@@ -200,7 +200,7 @@
             <div class="card-header-custom">
                 <div class="card-title-custom text-danger">Удаление аккаунта</div>
             </div>
-            <p class="text-muted">Удаление необратимо. Требуется подтверждение паролем.</p>
+            <p class="text-muted">Удаление необратимо. Требуется подтверждение паролем. Аккаунт с рабочей историей и последнего активного администратора удалить нельзя — аккаунт останется доступным.</p>
             <form method="POST" action="{{ route('cabinet.admin.destroy-account') }}" onsubmit="return confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо!')">
                 @csrf
                 @method('DELETE')

@@ -20,9 +20,6 @@ class TouristDestroyAccountAuditLogTest extends TestCase
         $tourist = $this->createUserWithRole(Role::TOURIST, $password);
         $touristId = $tourist->id;
 
-        $booking = $this->createBookingFor($tourist);
-        $bookingId = $booking->id;
-
         $bonusAccount = $this->createBonusAccountFor($tourist);
         $bonusAccountId = $bonusAccount->id;
 
@@ -54,7 +51,6 @@ class TouristDestroyAccountAuditLogTest extends TestCase
         $this->assertGuest();
 
         $this->assertDatabaseMissing('users', ['id' => $touristId]);
-        $this->assertDatabaseMissing('bookings', ['id' => $bookingId]);
         $this->assertDatabaseMissing('bonus_accounts', ['id' => $bonusAccountId]);
     }
 

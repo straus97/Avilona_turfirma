@@ -107,6 +107,16 @@ class MessageController extends Controller
             $message = DB::transaction(function () use ($booking, $validated): Message {
                 $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
+                // AOA-05-I3: отправитель и получатель блокируются (разделяемо) до записи —
+                // охраняемое удаление учётной записи берёт исключительную блокировку той же
+                // строки и либо видит это сообщение, либо дожидается его фиксации.
+                $participantIds = array_values(array_unique([(int) $validated['sender_id'], (int) $validated['receiver_id']]));
+                sort($participantIds);
+
+                if (User::query()->whereIn('id', $participantIds)->orderBy('id')->sharedLock()->pluck('id')->count() !== count($participantIds)) {
+                    abort(404);
+                }
+
                 $this->authorizeBookingWrite($locked);
                 $this->assertReceiverIsParticipant($locked, (int) $validated['receiver_id']);
 

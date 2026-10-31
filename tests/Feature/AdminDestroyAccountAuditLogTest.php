@@ -33,6 +33,7 @@ class AdminDestroyAccountAuditLogTest extends TestCase
         $password = 'correct-password';
         $admin = $this->createUserWithRole(Role::ADMIN, $password);
         $adminId = $admin->id;
+        $this->createUserWithRole(Role::ADMIN, 'other-password'); // не последний активный администратор
 
         Log::shouldReceive('warning')
             ->once()

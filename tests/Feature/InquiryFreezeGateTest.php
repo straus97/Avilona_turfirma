@@ -203,7 +203,7 @@ class InquiryFreezeGateTest extends TestCase
     }
 
     /**
-     * Защита от дрейфа: пользователь удаляется ровно в пяти документированных местах контроллеров
+     * Защита от дрейфа: пользователь удаляется ровно в одном месте — охраняемой операции UserDeletion (AOA-05-I3; контроллеры её вызывают)
      * (каждое — ON DELETE SET NULL по incoming_inquiries без движения updated_at). Новое место
      * удаления должно попасть в перечень писателей и в заявление ingress_stopped.
      */
@@ -217,7 +217,7 @@ class InquiryFreezeGateTest extends TestCase
             }
 
             $code = (string) preg_replace('~/\*.*?\*/|//[^\n]*|^\s*\*[^\n]*~ms', '', $file->getContents());
-            $count = preg_match_all('/\$user->(delete|forceDelete)\(|User::(destroy|query\(\)[^;]*->delete)\(|table\(\'users\'\)[^;]*->delete\(/', $code);
+            $count = preg_match_all('/\$(user|subject)->(delete|forceDelete)\(|User::(destroy|query\(\)[^;]*->delete)\(|table\(\'users\'\)[^;]*->delete\(/', $code);
 
             if ($count > 0) {
                 $sites[str_replace([app_path() . DIRECTORY_SEPARATOR, '\\'], ['', '/'], $file->getPathname())] = $count;
@@ -227,10 +227,7 @@ class InquiryFreezeGateTest extends TestCase
         ksort($sites);
 
         $this->assertSame([
-            'Http/Controllers/Admin/AdminController.php' => 2,
-            'Http/Controllers/Cabinet/CabinetController.php' => 1,
-            'Http/Controllers/Manager/ManagerController.php' => 1,
-            'Http/Controllers/ProfileController.php' => 1,
+            'Services/Accounts/UserDeletion.php' => 1,
         ], $sites);
     }
 

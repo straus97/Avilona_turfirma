@@ -236,6 +236,13 @@ class BookingController extends Controller
             $booking = DB::transaction(function () use ($actor, $validated, $clientData, $isTourist, $isNewClient): Booking {
                 $data = $validated;
 
+                // AOA-05-I3: актор, на которого ссылается заявка (владелец-турист или
+                // ответственный менеджер), блокируется до записи — охраняемое удаление
+                // учётной записи (UserDeletion) берёт ту же блокировку и видит созданную заявку.
+                if ($isTourist || $data['manager_id'] !== null) {
+                    User::query()->lockForUpdate()->findOrFail($actor->id);
+                }
+
                 if ($isTourist) {
                     $data['user_id'] = $actor->id;
                 } elseif ($isNewClient) {

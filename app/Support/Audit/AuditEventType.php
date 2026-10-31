@@ -26,6 +26,7 @@ enum AuditEventType: string
     case PaymentRecorded = 'payment.recorded';
     case DocumentPublished = 'document.published';
     case AdminAction = 'admin.action';
+    case UserDeleted = 'user.deleted';
     case ClientVerificationRequested = 'client_verification.requested';
     case ClientVerificationLinked = 'client_verification.linked';
     case ClientVerificationCreated = 'client_verification.created';
@@ -49,6 +50,7 @@ enum AuditEventType: string
             self::PaymentRecorded => 'Платёж зарегистрирован',
             self::DocumentPublished => 'Документ опубликован клиенту',
             self::AdminAction => 'Действие администратора',
+            self::UserDeleted => 'Аккаунт пользователя удалён',
             self::ClientVerificationRequested => 'Запрос на проверку клиента передан',
             self::ClientVerificationLinked => 'Клиент проверен: привязан существующий аккаунт',
             self::ClientVerificationCreated => 'Клиент проверен: создан новый аккаунт',

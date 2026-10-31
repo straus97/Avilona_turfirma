@@ -16,7 +16,7 @@ class ManagerDestroyAccountPartialFailureTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_deleting_exception_preserves_manager_booking_personal_document_and_file(): void
+    public function test_user_deleting_exception_preserves_manager_personal_document_file_and_audit_state(): void
     {
         Storage::fake('local');
 
@@ -34,25 +34,6 @@ class ManagerDestroyAccountPartialFailureTest extends TestCase
         $manager->roles()->attach($role->id);
         $managerId = $manager->id;
 
-        $bookingOwner = User::factory()->create();
-
-        $booking = Booking::withoutEvents(
-            fn (): Booking => Booking::query()->create([
-                'user_id' => $bookingOwner->id,
-                'manager_id' => $managerId,
-                'status' => Booking::STATUS_PROGRESS,
-                'departure_city' => 'Saint Petersburg',
-                'destination_country' => 'Tunisia',
-                'destination_city' => 'Hammamet',
-                'start_date' => '2026-08-20',
-                'nights' => 7,
-                'adults' => 2,
-                'children' => 0,
-            ])
-        );
-        $bookingId = $booking->id;
-        $originalManagerId = $booking->manager_id;
-
         $documentPath = 'documents/personal/manager-partial-failure-passport.pdf';
 
         $document = UserDocument::query()->create([
@@ -68,12 +49,6 @@ class ManagerDestroyAccountPartialFailureTest extends TestCase
         Storage::disk('local')->put($documentPath, 'private-personal-document');
 
         $this->assertDatabaseHas('users', ['id' => $managerId]);
-
-        $this->assertDatabaseHas('bookings', [
-            'id' => $bookingId,
-            'manager_id' => $originalManagerId,
-            'deleted_at' => null,
-        ]);
 
         $this->assertDatabaseHas('user_documents', [
             'id' => $documentId,
@@ -107,17 +82,12 @@ class ManagerDestroyAccountPartialFailureTest extends TestCase
 
         $this->assertDatabaseHas('users', ['id' => $managerId]);
 
-        $this->assertDatabaseHas('bookings', [
-            'id' => $bookingId,
-            'manager_id' => $originalManagerId,
-            'deleted_at' => null,
-        ]);
-
         $this->assertDatabaseHas('user_documents', [
             'id' => $documentId,
             'user_id' => $managerId,
         ]);
 
         Storage::disk('local')->assertExists($documentPath);
+        $this->assertDatabaseMissing('audit_events', ['event_type' => 'user.deleted']);
     }
 }

@@ -8,6 +8,8 @@ use App\Models\Message;
 use App\Models\UserDocument;
 use App\Models\BookingDocument;
 use App\Models\BonusAccount;
+use App\Services\Accounts\UserDeletion;
+use App\Services\Accounts\UserDeletionRefused;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -675,7 +677,7 @@ class CabinetController extends Controller
     /**
      * Удаление аккаунта
      */
-    public function destroyAccount(Request $request): RedirectResponse
+    public function destroyAccount(Request $request, UserDeletion $deletion): RedirectResponse
     {
         if ($redirect = $this->redirectIfNotTourist()) {
             return $redirect;
@@ -688,22 +690,21 @@ class CabinetController extends Controller
         $user = Auth::user();
         $actorId = $user->id;
 
-        // Связанные строки удаляются внешними ключами.
-        // Файлы документов очищаются lifecycle-hook модели User.
+        // AOA-05-I3: удаление только через охраняемую операцию; при отказе сессия сохраняется.
+        try {
+            $deletion->delete($user, $user, UserDeletion::CHANNEL_SELF_SERVICE);
+        } catch (UserDeletionRefused $e) {
+            return back()->with('error', $e->userMessage(UserDeletionRefused::AUDIENCE_TOURIST));
+        }
 
-        // Выход из системы
+        // Выход из системы — только после подтверждённого удаления.
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Удаление пользователя
-        $deleted = $user->delete();
-
-        if ($deleted === true) {
-            Log::warning('Tourist deleted own account', [
-                'actor_id' => $actorId,
-            ]);
-        }
+        Log::warning('Tourist deleted own account', [
+            'actor_id' => $actorId,
+        ]);
 
         return redirect()->route('home.index')->with('status', 'Ваш аккаунт успешно удален.');
     }

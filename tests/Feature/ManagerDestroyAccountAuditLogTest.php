@@ -39,24 +39,6 @@ class ManagerDestroyAccountAuditLogTest extends TestCase
         $manager = $this->createUserWithRole(Role::MANAGER, $password);
         $managerId = $manager->id;
 
-        $bookingOwner = User::factory()->create();
-
-        $booking = Booking::withoutEvents(
-            fn (): Booking => Booking::query()->create([
-                'user_id' => $bookingOwner->id,
-                'manager_id' => $manager->id,
-                'status' => Booking::STATUS_PROGRESS,
-                'departure_city' => 'Saint Petersburg',
-                'destination_country' => 'Tunisia',
-                'destination_city' => 'Hammamet',
-                'start_date' => '2026-08-20',
-                'nights' => 7,
-                'adults' => 2,
-                'children' => 0,
-            ])
-        );
-        $bookingId = $booking->id;
-
         $documentPath = 'documents/personal/manager-passport.pdf';
         Storage::disk('local')->put($documentPath, 'private-personal-document');
 
@@ -100,11 +82,6 @@ class ManagerDestroyAccountAuditLogTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['id' => $managerId]);
 
-        $this->assertDatabaseHas('bookings', [
-            'id' => $bookingId,
-            'manager_id' => null,
-        ]);
-
         $this->assertDatabaseMissing('user_documents', ['id' => $documentId]);
 
         Storage::disk('local')->assertMissing($documentPath);
@@ -115,6 +92,7 @@ class ManagerDestroyAccountAuditLogTest extends TestCase
         $password = 'correct-password';
         $admin = $this->createUserWithRole(Role::ADMIN, $password);
         $adminId = $admin->id;
+        $this->createUserWithRole(Role::ADMIN, 'other-password'); // не последний активный администратор
 
         Log::shouldReceive('warning')
             ->once()

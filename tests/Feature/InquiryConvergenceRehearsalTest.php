@@ -284,7 +284,7 @@ class InquiryConvergenceRehearsalTest extends TestCase
         $this->backfill();
         $updatedAt = DB::table('incoming_inquiries')->where('id', $source->id)->value('updated_at');
 
-        $this->a->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->a->id)->delete(); // сырой SQL, минуя охрану UserDeletion
 
         $this->assertNull(DB::table('incoming_inquiries')->where('id', $source->id)->value('assigned_to'), 'FK SET NULL happened');
         $this->assertSame($updatedAt, DB::table('incoming_inquiries')->where('id', $source->id)->value('updated_at'), 'a timestamp cursor would not see this');
@@ -314,7 +314,7 @@ class InquiryConvergenceRehearsalTest extends TestCase
     {
         $this->inquiryFor($this->a, $this->tourist);
         $this->backfill();
-        $this->tourist->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->tourist->id)->delete();
 
         $result = $this->rehearse();
 

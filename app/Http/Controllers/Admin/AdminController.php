@@ -28,6 +28,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Services\Accounts\UserDeletion;
+use App\Services\Accounts\UserDeletionRefused;
 use App\Services\Diagnostics\TechnicalLogSummary;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -704,7 +706,7 @@ class AdminController extends Controller
     /**
      * Удаление аккаунта администратора
      */
-    public function destroyAccount(Request $request): RedirectResponse
+    public function destroyAccount(Request $request, UserDeletion $deletion): RedirectResponse
     {
         $request->validate([
             'password' => 'required|current_password',
@@ -713,17 +715,20 @@ class AdminController extends Controller
         $user = $request->user();
         $actorId = $user->id;
 
+        // AOA-05-I3: удаление только через охраняемую операцию; при отказе сессия сохраняется.
+        try {
+            $deletion->delete($user, $user, UserDeletion::CHANNEL_SELF_SERVICE);
+        } catch (UserDeletionRefused $e) {
+            return back()->with('error', $e->userMessage(UserDeletionRefused::AUDIENCE_STAFF));
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $deleted = $user->delete();
-
-        if ($deleted === true) {
-            Log::warning('Admin deleted own account', [
-                'actor_id' => $actorId,
-            ]);
-        }
+        Log::warning('Admin deleted own account', [
+            'actor_id' => $actorId,
+        ]);
 
         return redirect()->route('home.index')->with('status', 'Аккаунт удален.');
     }
@@ -1009,7 +1014,7 @@ class AdminController extends Controller
     /**
      * Удалить пользователя
      */
-    public function deleteUser(Request $request, $userId): RedirectResponse
+    public function deleteUser(Request $request, UserDeletion $deletion, $userId): RedirectResponse
     {
         $user = User::findOrFail($userId);
 
@@ -1025,8 +1030,12 @@ class AdminController extends Controller
             ->pluck('name')
             ->all();
 
-        // Удаление пользователя (каскадное удаление заявок и сообщений через модель)
-        $user->delete();
+        // AOA-05-I3: охраняемое удаление; пользователь с защищённой историей не удаляется.
+        try {
+            $deletion->delete($user, $request->user(), UserDeletion::CHANNEL_ADMIN_PANEL);
+        } catch (UserDeletionRefused $e) {
+            return back()->with('error', $e->userMessage(UserDeletionRefused::AUDIENCE_ADMIN));
+        }
 
         Log::warning('Admin deleted user account', [
             'actor_id' => $actorId,

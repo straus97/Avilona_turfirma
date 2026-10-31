@@ -411,7 +411,7 @@ class InquiryAssignmentTest extends TestCase
     public function test_inquiry_orphaned_by_a_deleted_assignee_can_be_assigned_and_keeps_its_author(): void
     {
         $inquiry = $this->mine($this->a);
-        $this->a->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->a->id)->delete(); // сырой SQL, минуя охрану UserDeletion
 
         $inquiry->refresh();
         $this->assertNull($inquiry->assigned_to, 'the database nulls the assignee when the account is deleted');

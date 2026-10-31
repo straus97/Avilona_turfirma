@@ -200,13 +200,8 @@
                 @method('DELETE')
                 <div class="modal-body">
                     <p>Вы действительно хотите удалить аккаунт? <strong class="text-danger">Это действие нельзя отменить.</strong></p>
-                    <p class="mb-1">Будут удалены:</p>
-                    <ul>
-                        <li>все ваши заявки;</li>
-                        <li>личные документы;</li>
-                        <li>история сообщений;</li>
-                        <li>бонусные баллы.</li>
-                    </ul>
+                    <p class="mb-1">Если у вас нет заявок и других записей, которые турагентство обязано хранить, будут удалены личные документы и сам аккаунт.</p>
+                    <p class="mb-1">Если такие записи есть (например, оформленная заявка), аккаунт <strong>не будет удалён</strong>: вы сможете и дальше пользоваться кабинетом, а вопрос об удалении или обработке персональных данных можно направить на <a href="mailto:avilonatur@bk.ru">avilonatur@bk.ru</a> — обращение рассматривается отдельно.</p>
                     <div class="mt-3">
                         <label for="delete-password" class="form-label">Введите пароль для подтверждения</label>
                         <input type="password" name="password" id="delete-password" autocomplete="current-password"

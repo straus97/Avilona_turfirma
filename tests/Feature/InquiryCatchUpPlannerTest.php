@@ -158,7 +158,7 @@ class InquiryCatchUpPlannerTest extends TestCase
     {
         $source = $this->inquiryFor($this->a);
         $this->backfill();
-        $this->a->delete(); // внешние ключи обнуляют ответственного в обеих таблицах
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->a->id)->delete(); // внешние ключи обнуляют ответственного в обеих таблицах
 
         $plan = $this->planFor($source);
 
@@ -171,7 +171,7 @@ class InquiryCatchUpPlannerTest extends TestCase
     {
         $source = $this->inquiryFor($this->a, $this->tourist);
         $this->backfill();
-        $this->tourist->delete();
+        \Illuminate\Support\Facades\DB::table('users')->where('id', $this->tourist->id)->delete(); // сырой SQL, минуя охрану UserDeletion
 
         $this->assertSame(Planner::UNCHANGED_LINKED, $this->planFor($source)['category']);
     }
