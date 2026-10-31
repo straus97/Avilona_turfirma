@@ -85,6 +85,8 @@ class StaffAccessPolicyMatrixTest extends TestCase
         'admin.assign-role', 'cabinet.admin.assign-role', 'admin.remove-role', 'cabinet.admin.remove-role',
         'admin.delete-user', 'cabinet.admin.delete-user', 'admin.user-roles', 'cabinet.admin.user-roles',
         'cabinet.admin.user-show', 'cabinet.admin.user-update-role', 'cabinet.admin.user-document.download',
+        // AOA-05-I4: обратимое отключение / включение учётной записи.
+        'cabinet.admin.user-deactivate', 'cabinet.admin.user-reactivate',
         'cabinet.admin.client-requests.show', 'cabinet.admin.client-requests.link',
         'cabinet.admin.client-requests.create', 'cabinet.admin.client-requests.reject',
     ];

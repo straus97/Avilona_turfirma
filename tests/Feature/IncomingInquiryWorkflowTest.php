@@ -242,6 +242,12 @@ class IncomingInquiryWorkflowTest extends TestCase
         $inactive = $this->userWithRoles(['admin'], ['is_active' => false]);
         $inquiry = $this->inquiry();
 
+        // AOA-05-I4: первый рубеж — отключённая учётная запись не проходит даже до маршрута...
+        $this->actingAs($inactive)->post(route('cabinet.manager.inquiries.claim', $inquiry))->assertRedirect(route('login'));
+        $this->assertNull($inquiry->fresh()->assigned_to);
+
+        // ...а правило службы (второй рубеж) остаётся в силе при обходе первого.
+        $this->withoutMiddleware(\App\Http\Middleware\EnsureAccountIsActive::class);
         $this->actingAs($inactive)->post(route('cabinet.manager.inquiries.claim', $inquiry))->assertSessionHasErrors('workflow');
         $this->assertNull($inquiry->fresh()->assigned_to);
     }

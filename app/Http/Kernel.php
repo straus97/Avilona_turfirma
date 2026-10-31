@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \Illuminate\Session\Middleware\AuthenticateSession::class,
+            // AOA-05-I4: отключённая учётная запись теряет открытую сессию и «запомнить меня».
+            \App\Http\Middleware\EnsureAccountIsActive::class,
         ],
 
         'api' => [
@@ -67,6 +69,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckRole::class,
+        'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
         'tourvisor.webhook' => \App\Http\Middleware\VerifyTourvisorWebhookToken::class,
     ];
 }

@@ -28,8 +28,13 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Models\AuditEvent;
+use App\Services\Accounts\AccountActivation;
+use App\Services\Accounts\AccountChangeRefused;
+use App\Services\Accounts\AccountRoleChange;
 use App\Services\Accounts\UserDeletion;
 use App\Services\Accounts\UserDeletionRefused;
+use App\Support\Audit\AuditEventType;
 use App\Services\Diagnostics\TechnicalLogSummary;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -176,7 +181,7 @@ class AdminController extends Controller
     /**
      * Удалить роль у пользователя
      */
-    public function removeRole(Request $request, $userId, $roleId): RedirectResponse
+    public function removeRole(Request $request, AccountRoleChange $roleChange, $userId, $roleId): RedirectResponse
     {
         $user = User::findOrFail($userId);
         $role = Role::findOrFail($roleId);
@@ -185,9 +190,14 @@ class AdminController extends Controller
         $targetUserId = $user->id;
         $removedRole = $role->name;
 
-        $detachCount = $user->roles()->detach($role->id);
+        // AOA-05-I4: роль администратора последнего активного администратора снять нельзя.
+        try {
+            $detachCount = $roleChange->detach($user, $role, $request->user());
+        } catch (AccountChangeRefused $e) {
+            return back()->with('error', $e->userMessage());
+        }
 
-        if ($detachCount > 0) {
+        if ($detachCount) {
             Log::warning('Admin removed user role', [
                 'actor_id' => $actorId,
                 'target_user_id' => $targetUserId,
@@ -736,12 +746,67 @@ class AdminController extends Controller
     /**
      * Карточка пользователя
      */
-    public function userShow(Request $request, $userId): View
+    public function userShow(Request $request, AccountActivation $activation, $userId): View
     {
         $user = User::with(['roles', 'userDocuments', 'bookings'])->findOrFail($userId);
         $roles = Role::all();
 
-        return view('admin.user-show', compact('user', 'roles'));
+        // AOA-05-I4: статус учётной записи, состояние формы, незавершённая работа и история статуса.
+        $stateToken = $activation->stateToken($user);
+        $isStaff = $user->hasAnyRole([Role::MANAGER, Role::ADMIN]);
+        $workload = $isStaff ? $activation->openWorkload($user) : null;
+        $statusHistory = AuditEvent::query()
+            ->where('subject_type', 'user')
+            ->where('subject_id', $user->id)
+            ->whereIn('event_type', [AuditEventType::UserDeactivated->value, AuditEventType::UserReactivated->value])
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+        $statusActors = User::query()->whereIn('id', $statusHistory->pluck('actor_id')->filter()->unique())->pluck('name', 'id');
+
+        return view('admin.user-show', compact('user', 'roles', 'stateToken', 'workload', 'statusHistory', 'statusActors'));
+    }
+
+    /**
+     * Отключить учётную запись (AOA-05-I4): обратимо, без потери данных; причина обязательна.
+     */
+    public function deactivateUser(Request $request, AccountActivation $activation, $userId): RedirectResponse
+    {
+        return $this->changeAccountStatus($request, $activation, $userId, false);
+    }
+
+    /**
+     * Повторно включить отключённую учётную запись (AOA-05-I4).
+     */
+    public function reactivateUser(Request $request, AccountActivation $activation, $userId): RedirectResponse
+    {
+        return $this->changeAccountStatus($request, $activation, $userId, true);
+    }
+
+    private function changeAccountStatus(Request $request, AccountActivation $activation, $userId, bool $activate): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+            'expected_state' => ['required', 'string', 'max:100'],
+        ]);
+
+        $user = User::findOrFail($userId);
+
+        try {
+            $result = $activate
+                ? $activation->reactivate($user, $request->user(), $data['reason'], $data['expected_state'])
+                : $activation->deactivate($user, $request->user(), $data['reason'], $data['expected_state']);
+        } catch (AccountChangeRefused $e) {
+            return $e->field() === null
+                ? back()->with('error', $e->userMessage())
+                : back()->withErrors([$e->field() => $e->userMessage()])->withInput($request->only('reason'));
+        }
+
+        return back()->with('success', match ($result) {
+            AccountActivation::RESULT_DEACTIVATED => 'Учётная запись отключена. Вход закрыт, заявки, переписка и история сохранены.',
+            AccountActivation::RESULT_REACTIVATED => 'Учётная запись снова включена. Роли и история не менялись.',
+            default => 'Учётная запись уже в этом состоянии — изменений нет.',
+        });
     }
 
     /**
@@ -861,7 +926,7 @@ class AdminController extends Controller
     /**
      * Быстрая смена роли пользователя (одна основная роль)
      */
-    public function updateUserRole(Request $request, $userId): RedirectResponse
+    public function updateUserRole(Request $request, AccountRoleChange $roleChange, $userId): RedirectResponse
     {
         $request->validate([
             'role' => 'required|exists:roles,name',
@@ -873,7 +938,12 @@ class AdminController extends Controller
         $actorId = $request->user()->id;
         $targetUserId = $user->id;
 
-        $changes = $user->roles()->sync([$role->id]);
+        // AOA-05-I4: замена роли, после которой нет активного администратора, отклоняется.
+        try {
+            $changes = $roleChange->replace($user, $role, $request->user());
+        } catch (AccountChangeRefused $e) {
+            return back()->with('error', $e->userMessage());
+        }
 
         if (!empty($changes['attached']) || !empty($changes['detached'])) {
             $addedRoles = !empty($changes['attached']) ? [$role->name] : [];

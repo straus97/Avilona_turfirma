@@ -38,8 +38,9 @@ class NewPasswordController extends Controller
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
         // database. Otherwise we will parse the error and return the response.
+        // AOA-05-I4: отключённая учётная запись пароль не сбрасывает (и сброс её не включает).
         $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+            $request->only('email', 'password', 'password_confirmation', 'token') + ['is_active' => true],
             function ($user) use ($request) {
                 $user->forceFill([
                     'password' => Hash::make($request->password),

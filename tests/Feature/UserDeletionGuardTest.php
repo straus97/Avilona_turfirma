@@ -410,6 +410,12 @@ class UserDeletionGuardTest extends TestCase
         $active = $this->userWith('admin');
         $actor = $this->userWith('admin', ['is_active' => false]);
 
+        // AOA-05-I4: отключённого администратора останавливает уже вход в сессию...
+        $this->adminDelete($actor, $active)->assertRedirect(route('login'));
+        $this->assertDatabaseHas('users', ['id' => $active->id]);
+
+        // ...а правило последнего активного администратора остаётся вторым рубежом при обходе первого.
+        $this->withoutMiddleware(\App\Http\Middleware\EnsureAccountIsActive::class);
         $this->adminDelete($actor, $active)->assertSessionHas('error');
 
         $this->assertStringContainsString('последнего активного администратора', (string) session('error'));

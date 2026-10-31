@@ -177,6 +177,67 @@
             <a href="{{ route('cabinet.admin.users') }}" class="btn btn-link mt-3">← Назад к списку</a>
         </div>
 
+        <div class="card-custom mb-4" id="account-status">
+            <div class="card-header-custom">
+                <div class="card-title-custom">Статус учётной записи</div>
+            </div>
+            <p class="mb-2">
+                @if($user->is_active)
+                    <span class="badge bg-success">Активна</span>
+                @else
+                    <span class="badge bg-secondary">Отключена</span>
+                @endif
+            </p>
+            <p class="text-muted small">
+                Отключение закрывает вход и действующие сессии. Заявки, переписка, обращения, документы, роли и история сохраняются; действие обратимо.
+            </p>
+            @if($workload !== null && array_sum($workload) > 0)
+                <div class="alert alert-warning small" role="note">
+                    За сотрудником остаётся незавершённая работа: заявок — {{ $workload['bookings'] }},
+                    обращений — {{ $workload['inquiries'] }}, входящих обращений — {{ $workload['incoming_inquiries'] }}.
+                    Автоматической передачи нет: назначьте других ответственных вручную.
+                </div>
+            @endif
+            @if($user->id === Auth::id())
+                <p class="text-muted small mb-0">Свою учётную запись отключить нельзя — это может сделать другой администратор.</p>
+            @else
+                <form action="{{ route($user->is_active ? 'cabinet.admin.user-deactivate' : 'cabinet.admin.user-reactivate', $user->id) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="expected_state" value="{{ $stateToken }}">
+                    <label class="form-label" for="account-status-reason">Причина (внутренняя)</label>
+                    <textarea id="account-status-reason" name="reason" rows="2" minlength="5" maxlength="200" required
+                        class="form-control @error('reason') is-invalid @enderror"
+                        aria-describedby="account-status-reason-help">{{ old('reason') }}</textarea>
+                    @error('reason')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <div id="account-status-reason-help" class="form-text mb-2">От 5 до 200 символов, без email, телефонов и паролей. Сохраняется в журнале аудита.</div>
+                    @if($user->is_active)
+                        <button type="submit" class="btn btn-outline-danger w-100">Отключить учётную запись</button>
+                    @else
+                        <button type="submit" class="btn btn-outline-success w-100">Включить учётную запись</button>
+                    @endif
+                </form>
+            @endif
+            @if($statusHistory->isNotEmpty())
+                <h2 class="h6 mt-3">История статуса</h2>
+                <ul class="list-unstyled small mb-0">
+                    @foreach($statusHistory as $event)
+                        <li class="mb-2">
+                            <strong>{{ $event->typeLabel() }}</strong>
+                            · {{ $event->occurred_at ? $event->occurred_at->format('d.m.Y H:i') : '—' }}
+                            @if($event->actor_id && isset($statusActors[$event->actor_id]))
+                                · {{ $statusActors[$event->actor_id] }}
+                            @endif
+                            @if(!empty($event->metadata['reason']))
+                                <div class="text-muted">{{ $event->metadata['reason'] }}</div>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
         <div class="card-custom">
             <div class="card-header-custom">
                 <div class="card-title-custom">Действия</div>

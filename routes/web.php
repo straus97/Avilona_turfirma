@@ -139,6 +139,9 @@ Route::middleware(['auth', 'password.change'])->prefix('cabinet')->name('cabinet
         Route::get('/users/{user}/documents/{document}/download', [\App\Http\Controllers\Admin\AdminController::class, 'downloadUserDocument'])->name('user-document.download');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'userShow'])->name('user-show');
         Route::delete('/users/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('delete-user');
+        // AOA-05-I4: обратимое отключение / повторное включение учётной записи (только администратор).
+        Route::post('/users/{user}/deactivate', [\App\Http\Controllers\Admin\AdminController::class, 'deactivateUser'])->name('user-deactivate');
+        Route::post('/users/{user}/reactivate', [\App\Http\Controllers\Admin\AdminController::class, 'reactivateUser'])->name('user-reactivate');
         Route::get('/client-requests', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'index'])->name('client-requests');
         Route::get('/client-requests/{clientRequest}', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'show'])->whereNumber('clientRequest')->name('client-requests.show');
         Route::post('/client-requests/{clientRequest}/link', [\App\Http\Controllers\Admin\ClientVerificationController::class, 'link'])->whereNumber('clientRequest')->name('client-requests.link');

@@ -32,8 +32,10 @@ class PasswordResetLinkController extends Controller
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.
+        // AOA-05-I4: для отключённой учётной записи письмо не отправляется, ответ такой же, как
+        // для неизвестного адреса; сброс пароля сам по себе учётную запись не включает.
         $status = Password::sendResetLink(
-            $request->only('email')
+            $request->only('email') + ['is_active' => true]
         );
 
         return $status == Password::RESET_LINK_SENT

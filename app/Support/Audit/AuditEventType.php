@@ -27,6 +27,8 @@ enum AuditEventType: string
     case DocumentPublished = 'document.published';
     case AdminAction = 'admin.action';
     case UserDeleted = 'user.deleted';
+    case UserDeactivated = 'user.deactivated';
+    case UserReactivated = 'user.reactivated';
     case ClientVerificationRequested = 'client_verification.requested';
     case ClientVerificationLinked = 'client_verification.linked';
     case ClientVerificationCreated = 'client_verification.created';
@@ -51,6 +53,8 @@ enum AuditEventType: string
             self::DocumentPublished => 'Документ опубликован клиенту',
             self::AdminAction => 'Действие администратора',
             self::UserDeleted => 'Аккаунт пользователя удалён',
+            self::UserDeactivated => 'Аккаунт пользователя отключён',
+            self::UserReactivated => 'Аккаунт пользователя включён',
             self::ClientVerificationRequested => 'Запрос на проверку клиента передан',
             self::ClientVerificationLinked => 'Клиент проверен: привязан существующий аккаунт',
             self::ClientVerificationCreated => 'Клиент проверен: создан новый аккаунт',
