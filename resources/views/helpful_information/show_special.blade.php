@@ -2,7 +2,7 @@
 
 @section('title', $title)
 @section('meta_description', $meta_description)
-@section('meta_keywords', $meta_keywords)
+@section('og_image', $og_image)
 @section('og_title', $title)
 @section('og_description', $meta_description)
 @section('twitter_title', $title)

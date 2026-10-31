@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HelpfulInformation;
 
 use App\Http\Controllers\Controller;
 use App\Models\OurClient;
+use App\Support\Seo\PublicSeo;
 use Illuminate\Support\Facades\Cache;
 
 class SpecialController extends Controller
@@ -16,11 +17,11 @@ class SpecialController extends Controller
             return OurClient::where('slug', $slug)->firstOrFail();
         });
         $title = $id_special->title . " | avilona.ru";
-        $meta_description = "Специальные предложения от туристической фирмы Авилона. Узнайте больше о " . $id_special->title . ". Выгодные предложения, акции и скидки от туристической фирмы Авилона. Ознакомьтесь с нашими специальными предложениями и примите участие в розыгрышах.";
-        $meta_keywords = "специальные предложения, акции, скидки, розыгрыши, туристическая фирма Авилона, выгодные предложения, " . $id_special->title;
+        $meta_description = PublicSeo::entityDescription($id_special->title, $id_special->content, 'материал для клиентов');
+        $og_image = PublicSeo::imageUrl($id_special->image, PublicSeo::defaultImageUrl());
         return view(
             'helpful_information.show_special',
-            compact('id_special', 'title', 'meta_description', 'meta_keywords')
+            compact('id_special', 'title', 'meta_description', 'og_image')
         );
     }
 }

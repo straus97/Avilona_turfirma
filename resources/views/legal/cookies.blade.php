@@ -2,7 +2,6 @@
 
 @section('title', 'Использование cookie | avilona.ru')
 @section('meta_description', 'Какие cookie использует сайт Авилона: необходимое хранение настроек и необязательная аналитика, а также как изменить своё согласие.')
-@section('meta_keywords', 'cookie, согласие на cookie, аналитика, Авилона')
 
 @section('content')
     <main>

@@ -21,17 +21,24 @@ class PublicSeoFilesAndNoIndexTest extends TestCase
 
         $response->assertOk();
         $this->assertStringStartsWith('text/plain', (string) $response->headers->get('Content-Type'));
-        $this->assertSame(file_get_contents(base_path('robots.txt')), $response->getContent());
+        // Правила — из файла репозитория; строка Sitemap формируется из config('seo.public_url').
+        $expected = array_values(array_filter(
+            preg_split('/\R/', rtrim(file_get_contents(base_path('robots.txt')))),
+            fn ($line) => stripos($line, 'sitemap:') !== 0
+        ));
+        $this->assertSame(
+            rtrim(implode("\n", $expected)) . "\n\nSitemap: https://avilona.ru/sitemap.xml\n",
+            $response->getContent()
+        );
         $this->assertCount(0, $response->headers->getCookies(), 'robots.txt must not set cookies');
     }
 
-    public function test_sitemap_xml_is_served_as_xml_from_the_repository_file(): void
+    public function test_sitemap_xml_is_served_as_generated_xml(): void
     {
         $response = $this->get('/sitemap.xml');
 
         $response->assertOk();
         $this->assertStringContainsString('xml', (string) $response->headers->get('Content-Type'));
-        $this->assertSame(file_get_contents(base_path('sitemap.xml')), $response->getContent());
         $this->assertNotFalse(simplexml_load_string($response->getContent()));
         $this->assertCount(0, $response->headers->getCookies(), 'sitemap.xml must not set cookies');
     }

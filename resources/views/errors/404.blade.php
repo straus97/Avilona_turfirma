@@ -2,6 +2,7 @@
 
 @section('title', 'Страница не найдена | avilona.ru')
 @section('meta_description', 'Запрошенная страница не найдена на сайте туристической фирмы Авилона.')
+@section('robots', 'noindex, follow')
 
 @section('content')
     <main>

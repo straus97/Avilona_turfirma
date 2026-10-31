@@ -24,7 +24,7 @@
                 </tr>
                 <tr>
                     <td colspan="2" style="padding: 5px 50px;">
-                        <p><strong>{{ $validatedData['name'] }}</strong>, здравствуйте!</p>
+                        @if ($validatedData['name'] !== '')<p><strong>{{ $validatedData['name'] }}</strong>, здравствуйте!</p>@else<p>Здравствуйте!</p>@endif
                         <p>Большое спасибо за оставленное сообщение на сайте avilona.ru. Мы постараемся прочитать его
                             как можно скорее,
                             если оно требует ответа, то мы обязательно свяжемся с вами.</p>

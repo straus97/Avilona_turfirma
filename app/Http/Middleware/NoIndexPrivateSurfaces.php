@@ -48,7 +48,8 @@ class NoIndexPrivateSurfaces
     {
         $response = $next($request);
 
-        if ($request->is(self::PATTERNS) || $request->user()) {
+        // SEO_NOINDEX (staging) закрывает от индексации весь ответ; это страховка, а не доступ.
+        if (config('seo.noindex') || $request->is(self::PATTERNS) || $request->user()) {
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 

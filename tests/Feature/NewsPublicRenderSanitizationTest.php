@@ -227,7 +227,8 @@ class NewsPublicRenderSanitizationTest extends TestCase
         // Метаданные (E1-A4) продолжают строиться из controller-provided title/meta_description,
         // не изменённых этой правкой.
         $response->assertSee('Sanitization Marker News | avilona.ru', false);
-        $response->assertSee('Последние новости о Sanitization Marker News', false);
+        // NOV-PUBLIC-02: описание строится из текста новости, а не из шаблонной фразы.
+        $response->assertSee('Sanitization Marker News. Readable paragraph. source link', false);
     }
 
     // -----------------------------------------------------------------------

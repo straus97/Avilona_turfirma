@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Contact;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contact\SendContactRequest;
 use App\Mail\ContactFormMail;
-use App\Mail\UserFormMail;
+use App\Services\Contact\VisitorAcknowledgement;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
@@ -20,8 +20,7 @@ class SendContactController extends Controller
             $validatedData['message'] = $this->formatMessage($validatedData['message']);
             Mail::to('straus97@mail.ru')
                 ->send(new ContactFormMail($validatedData));
-            Mail::to($validatedData['email'])
-                ->send(new UserFormMail($validatedData));
+            VisitorAcknowledgement::send($validatedData);
             return redirect()->back()->with('success', 'Ваше сообщение успешно отправлено.');
         } catch (ValidationException $e) {
             return redirect()->back()

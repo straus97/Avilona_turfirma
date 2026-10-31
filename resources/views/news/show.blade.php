@@ -2,7 +2,7 @@
 
 @section('title', $title ?? $id_news->title . ' - Новости | Авилона')
 @section('meta_description', $meta_description ?? Str::limit(strip_tags($id_news->description ?? ''), 160))
-@section('meta_keywords', $meta_keywords ?? 'новости, туризм, путешествия')
+@section('og_image', $og_image ?? \App\Support\Seo\PublicSeo::defaultImageUrl())
 @section('og_title', $title ?? $id_news->title . ' - Новости | Авилона')
 @section('og_description', $meta_description ?? Str::limit(strip_tags($id_news->description ?? ''), 160))
 @section('og_type', 'article')

@@ -10,9 +10,10 @@ use Tests\TestCase;
 /**
  * Правило: shared layout (layouts.main) резолвит один канонический URL,
  * используемый одновременно для <link rel="canonical"> и <meta property="og:url">,
- * чтобы они не могли разойтись. По умолчанию используется текущий абсолютный
- * URL запроса без query-строки (url()->current()); дочерний @section('canonical_url', ...)
- * переопределяет значение. Раньше og:url был жёстко закодирован на адрес
+ * чтобы они не могли разойтись. NOV-PUBLIC-02: по умолчанию это публичный хост из
+ * config('seo.public_url') + путь запроса без query-строки (кроме ?page=N, N >= 2,
+ * который является самостоятельной страницей списка); хост запроса не используется.
+ * Дочерний @section('canonical_url', ...) переопределяет значение. Раньше og:url был жёстко закодирован на адрес
  * главной страницы для всех страниц сайта — это и есть исправляемый дефект.
  *
  * Изолированные тестовые маршруты рендерятся через Blade::render() на inline
@@ -95,7 +96,8 @@ BLADE;
         $this->assertMatchesRegularExpression('/rel="canonical"\s+href="\{\{\s*\$pageCanonicalUrl\s*\}\}"/', $layout);
         $this->assertMatchesRegularExpression('/property="og:url"\s+content="\{\{\s*\$pageCanonicalUrl\s*\}\}"/', $layout);
 
-        $this->assertStringContainsString('url()->current()', $layout);
+        $this->assertStringContainsString('PublicSeo::canonicalUrl(request())', $layout);
+        $this->assertStringNotContainsString('url()->current()', $layout);
         $this->assertStringContainsString("yieldContent('canonical_url'", $layout);
     }
 
@@ -108,7 +110,7 @@ BLADE;
         $response = $this->get(route('home.index'));
         $response->assertOk();
 
-        $expectedUrl = url('/');
+        $expectedUrl = \App\Support\Seo\PublicSeo::baseUrl() . '/';
 
         $doc = $this->parseHtml($response->getContent());
         $xpath = new \DOMXPath($doc);
@@ -133,7 +135,7 @@ BLADE;
         $response->assertOk();
         $response->assertDontSee('@endsection', false);
 
-        $expectedUrl = url('/metadata-probe');
+        $expectedUrl = \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe';
 
         $doc = $this->parseHtml($response->getContent());
         $xpath = new \DOMXPath($doc);
@@ -143,7 +145,7 @@ BLADE;
 
         $this->assertSame($expectedUrl, $canonicalHref);
         $this->assertSame($expectedUrl, $ogUrlContent);
-        $this->assertNotSame(url('/'), $canonicalHref);
+        $this->assertNotSame(\App\Support\Seo\PublicSeo::baseUrl() . '/', $canonicalHref);
     }
 
     // -----------------------------------------------------------------------
@@ -152,10 +154,11 @@ BLADE;
 
     public function test_query_parameters_are_excluded_from_default_canonical_url(): void
     {
-        $response = $this->get('/metadata-probe?utm_source=test&page=2');
+        // utm/фильтры не входят в canonical; page=2 — отдельная страница списка и входит.
+        $response = $this->get('/metadata-probe?utm_source=test&page=1&category=x');
         $response->assertOk();
 
-        $expectedUrl = url('/metadata-probe');
+        $expectedUrl = \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe';
 
         $doc = $this->parseHtml($response->getContent());
         $xpath = new \DOMXPath($doc);
@@ -169,6 +172,48 @@ BLADE;
         $this->assertStringNotContainsString('utm_source', $ogUrlContent);
         $this->assertStringNotContainsString('?', $canonicalHref);
         $this->assertStringNotContainsString('?', $ogUrlContent);
+    }
+
+    public function test_pagination_page_two_and_above_is_a_self_canonical_page(): void
+    {
+        $response = $this->get('/metadata-probe?page=3&utm_source=test');
+        $response->assertOk();
+
+        $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
+        $expected = \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe?page=3';
+
+        $this->assertSame($expected, $xpath->query('//link[@rel="canonical"]')->item(0)->getAttribute('href'));
+        $this->assertSame($expected, $xpath->query('//meta[@property="og:url"]')->item(0)->getAttribute('content'));
+        $this->assertMatchesRegularExpression('/<title>[^<]*— страница 3<\/title>/u', $response->getContent());
+
+        // нечисловой/нулевой/огромный page — не страница
+        foreach (['abc', '0', '-2', '1', '999999999'] as $bad) {
+            $r = $this->get('/metadata-probe?page=' . $bad);
+            $x = new \DOMXPath($this->parseHtml($r->getContent()));
+            $this->assertSame(
+                \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe',
+                $x->query('//link[@rel="canonical"]')->item(0)->getAttribute('href'),
+                "page={$bad} must not create its own canonical"
+            );
+        }
+    }
+
+    public function test_canonical_host_comes_from_config_not_from_the_request_host(): void
+    {
+        config(['seo.public_url' => 'https://example-canonical.test']);
+
+        $response = $this->get('http://staging.internal.test/metadata-probe');
+        $response->assertOk();
+
+        $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
+        $this->assertSame(
+            'https://example-canonical.test/metadata-probe',
+            $xpath->query('//link[@rel="canonical"]')->item(0)->getAttribute('href')
+        );
+        foreach (['//meta[@property="og:url"]', '//meta[@property="og:image"]', '//meta[@name="twitter:image"]'] as $q) {
+            $node = $xpath->query($q)->item(0);
+            $this->assertStringStartsWith('https://example-canonical.test/', $node->getAttribute('content'));
+        }
     }
 
     // -----------------------------------------------------------------------

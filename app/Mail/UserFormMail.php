@@ -20,7 +20,12 @@ class UserFormMail extends Mailable
      */
     public function __construct($validatedData)
     {
-        $this->validatedData = $validatedData;
+        // В автоответ попадает только имя, и только если оно похоже на имя: произвольный
+        // текст посетителя (ссылки, разметка, e-mail) не должен уходить от имени компании.
+        $name = trim((string) ($validatedData['name'] ?? ''));
+        $safeName = preg_match('/^[\p{L}\p{M}][\p{L}\p{M} \'’-]{0,59}$/u', $name) === 1 ? $name : '';
+
+        $this->validatedData = ['name' => $safeName];
     }
 
     public function build()

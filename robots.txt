@@ -41,9 +41,19 @@ Disallow: /admin
 Disallow: /manager
 Disallow: /cabinet
 Disallow: /profile
+Disallow: /api/
+Disallow: /messages/
+Disallow: /bookings/
+Disallow: /password/
+Disallow: /captcha
+Disallow: /reload-captcha
+Disallow: /contact/
 
 # Блокировка документов
 Disallow: /public/documents/
+# Редактируемые исходники документов (не для выдачи; это не контроль доступа)
+Disallow: /*.doc$
+Disallow: /*.docx$
 Disallow: /public/dist/
 Disallow: /public/plugins/
 

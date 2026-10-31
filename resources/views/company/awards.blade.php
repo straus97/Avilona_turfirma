@@ -7,7 +7,6 @@
 
 @section('title', $pageTitle)
 @section('meta_description', $pageDescription)
-@section('meta_keywords', 'достижения, сертификаты, дипломы, свидетельства, туристическое агентство, высокое обслуживание, доверие клиентов, туристическая фирма')
 @section('og_title', $pageTitle)
 @section('og_description', $pageDescription)
 @section('twitter_title', $pageTitle)

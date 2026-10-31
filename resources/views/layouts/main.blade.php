@@ -2,12 +2,34 @@
 <html lang="ru">
 <head>
     @php
+        // NOV-PUBLIC-02: канонический URL строится на публичном хосте из
+        // config('seo.public_url'), а не из хоста запроса (он может быть служебным,
+        // например staging). Секция canonical_url по-прежнему переопределяет значение.
         $pageCanonicalUrl = trim(
             htmlspecialchars_decode(
-                $__env->yieldContent('canonical_url', url()->current()),
+                $__env->yieldContent('canonical_url', \App\Support\Seo\PublicSeo::canonicalUrl(request())),
                 ENT_QUOTES
             )
         );
+        // Значения секций уже экранированы: раскодируем один раз, чтобы затем
+        // вывести каждое ровно через {{ }} без двойного экранирования.
+        $seoDecode = fn (string $name, string $default = '') => trim(
+            htmlspecialchars_decode($__env->yieldContent($name, $default), ENT_QUOTES)
+        );
+        $seoDefaultTitle = 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru';
+        $seoDefaultDescription = 'Туристическая фирма «Авилона» в Санкт-Петербурге: подбор туров и путевок для отдыха в России и за границей, консультации менеджеров.';
+        $seoPage = \App\Support\Seo\PublicSeo::pageNumber(request());
+        $seoTitle = \App\Support\Seo\PublicSeo::withPageSuffix($seoDecode('title', $seoDefaultTitle), $seoPage);
+        $seoDescription = \App\Support\Seo\PublicSeo::withPageDescriptionSuffix($seoDecode('meta_description', $seoDefaultDescription), $seoPage);
+        // og/twitter по умолчанию повторяют title/description страницы, а не
+        // общий текст главной — иначе страницы без явных секций делились бы
+        // одинаковым превью.
+        $seoOgTitle = $seoDecode('og_title') !== '' ? \App\Support\Seo\PublicSeo::withPageSuffix($seoDecode('og_title'), $seoPage) : $seoTitle;
+        $seoOgDescription = $seoDecode('og_description') !== '' ? \App\Support\Seo\PublicSeo::withPageDescriptionSuffix($seoDecode('og_description'), $seoPage) : $seoDescription;
+        $seoTwitterTitle = $seoDecode('twitter_title') !== '' ? \App\Support\Seo\PublicSeo::withPageSuffix($seoDecode('twitter_title'), $seoPage) : $seoOgTitle;
+        $seoTwitterDescription = $seoDecode('twitter_description') !== '' ? \App\Support\Seo\PublicSeo::withPageDescriptionSuffix($seoDecode('twitter_description'), $seoPage) : $seoOgDescription;
+        $seoImage = $seoDecode('og_image', \App\Support\Seo\PublicSeo::defaultImageUrl());
+        $seoRobots = config('seo.noindex') ? 'noindex, nofollow' : $seoDecode('robots', 'index, follow');
         // Stage 13: серверный шлюз для аналитики. App\Support\CookieConsent —
         // единственный источник истины для нормализации согласия, тот же
         // класс использует App\Http\Middleware\CacheResponse для ключа
@@ -22,34 +44,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Совместимость с IE -->
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="description"
-          content="@yield('meta_description', 'Туристическая фирма Авилона предлагает лучшие туры и путевки для отдыха в России и за границей. Индивидуальный подход к каждому клиенту, горящие предложения, удобный конструктор туров. Подарите себе незабываемые впечатления и отдых вместе с нами.')">
-    <meta name="keywords"
-          content="@yield('meta_keywords', 'отпуск, отдых, туры, путевки, море, заграница, Россия, горящие предложения, туризм')">
+    <meta name="description" content="{{ $seoDescription }}">
     <meta name="author" content="Авилона">
-    <!-- Разрешение для поисковых систем индексировать и следовать за ссылками -->
-    <meta name="robots" content="index, follow">
+    {{-- Индексация: по умолчанию разрешена; страница может задать секцию robots, staging — SEO_NOINDEX --}}
+    <meta name="robots" content="{{ $seoRobots }}">
     <!-- Канонический URL страницы -->
     <link rel="canonical" href="{{ $pageCanonicalUrl }}">
     <!-- Open Graph теги для улучшения отображения при расшаривании в социальных сетях -->
-    <meta property="og:title"
-          content="@yield('og_title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')">
+    <meta property="og:title" content="{{ $seoOgTitle }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="{{ $pageCanonicalUrl }}">
-    <meta property="og:image" content="https://avilona.ru/img/logo.png">
-    <meta property="og:description"
-          content="@yield('og_description', 'Туристическая фирма Авилона предлагает лучшие туры и путевки для отдыха в России и за границей. Индивидуальный подход к каждому клиенту, горящие предложения, удобный конструктор туров. Подарите себе незабываемые впечатления и отдых вместе с нами.')">
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta property="og:description" content="{{ $seoOgDescription }}">
     <meta property="og:site_name" content="Авилона">
     <meta property="og:locale" content="ru_RU">
     <!-- Теги для Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title"
-          content="@yield('twitter_title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')">
-    <meta name="twitter:description"
-          content="@yield('twitter_description', 'Туристическая фирма Авилона предлагает лучшие туры и путевки для отдыха в России и за границей. Индивидуальный подход к каждому клиенту, горящие предложения, удобный конструктор туров. Подарите себе незабываемые впечатления и отдых вместе с нами.')">
-    <meta name="twitter:image" content="https://avilona.ru/img/logo.png">
+    <meta name="twitter:title" content="{{ $seoTwitterTitle }}">
+    <meta name="twitter:description" content="{{ $seoTwitterDescription }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
     <link rel="shortcut icon" href="{{ asset('img/favicon.ico') }}" type="image/x-icon">
-    <title>@yield('title', 'Туристическая фирма Авилона - Путешествуйте с нами | avilona.ru')</title>
+    <title>{{ $seoTitle }}</title>
     
     <!-- Заглушка для предотвращения ошибок Google Maps и других API -->
     <script>
@@ -91,6 +106,7 @@
     ];
 
     $navHome      = request()->routeIs('home.index');
+    $navTours     = request()->routeIs('tours.index');
     $navCompany   = request()->routeIs('about_company.index', 'employees.index', 'awards.index');
     $navCountries = request()->routeIs('countries.index', 'countries.show_countries_image');
     $navDest      = request()->routeIs('destination.index', 'destinations.show_destinations_image');
@@ -131,6 +147,10 @@
                     <li class="nav-item">
                         <a class="nav-link @if($navHome) active @endif" href="{{ route('home.index') }}"
                            @if($navHome) aria-current="page" @endif>Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if($navTours) active @endif" href="{{ route('tours.index') }}"
+                           @if($navTours) aria-current="page" @endif>Поиск туров</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle @if($navCompany) active @endif" href="#"
@@ -278,12 +298,13 @@
                 <h2 class="e2-footer__heading">Краткое меню</h2>
                 <ul class="e2-footer__list">
                     <li><a href="{{route('home.index')}}">Главная</a></li>
+                    <li><a href="{{route('tours.index')}}">Поиск туров</a></li>
                     <li><a href="{{route('countries.index')}}">Страны</a></li>
                     <li><a href="{{route('destination.index')}}">Направления</a></li>
                     <li><a href="{{route('contact.index')}}">Контакты</a></li>
                     <li><a href="{{route('review.index')}}">Отзывы</a></li>
                     <li><a href="{{route('for_our_clients.index')}}">Спец. предложения</a></li>
-                    <li><a href="https://avilona.ru/sitemap.xml" target="_blank" rel="noopener">Карта сайта</a></li>
+                    <li><a href="{{ \App\Support\Seo\PublicSeo::absoluteUrl('/sitemap.xml') }}" target="_blank" rel="noopener">Карта сайта</a></li>
                 </ul>
             </nav>
             <div>
@@ -298,7 +319,7 @@
         </div>
 
         <div class="e2-footer__utility">
-            <p class="mb-0"><a href="https://avilona.ru/sitemap.xml" target="_blank" rel="noopener">Карта сайта</a></p>
+            <p class="mb-0"><a href="{{ \App\Support\Seo\PublicSeo::absoluteUrl('/sitemap.xml') }}" target="_blank" rel="noopener">Карта сайта</a></p>
             @if($avilonaAnalyticsConsent)
             {{-- Аналитика (гейт $avilonaAnalyticsConsent). Инициализация счётчиков
                  сохранена без изменений. Убраны только презентационные бейджи —
