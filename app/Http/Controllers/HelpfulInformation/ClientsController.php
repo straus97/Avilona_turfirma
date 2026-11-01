@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HelpfulInformation;
 
 use App\Http\Controllers\Controller;
 use App\Models\OurClient;
+use App\Support\Seo\PublicSeo;
 use Illuminate\Support\Facades\Cache;
 
 class ClientsController extends Controller
@@ -15,6 +16,7 @@ class ClientsController extends Controller
         $special = Cache::remember($cacheKey, $cacheTime, function () {
             return OurClient::paginate(6); // показать 6 первые (актуальные) записи
         });
+        PublicSeo::abortIfPageOutOfRange($special);
         return view('helpful_information.for_our_clients', compact('special'));
     }
 }

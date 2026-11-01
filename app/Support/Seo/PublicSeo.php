@@ -2,6 +2,7 @@
 
 namespace App\Support\Seo;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -43,16 +44,74 @@ class PublicSeo
         return self::baseUrl() . '/' . ltrim($pathOrUrl, '/');
     }
 
-    /** Номер страницы пагинации: только целое >= 2 считается отдельной страницей, иначе 1. */
+    /** Атрибут запроса, который ставит middleware public.pagination на пагинируемых списках. */
+    public const PAGINATED_ATTRIBUTE = 'seo.paginated';
+
+    /**
+     * Номер страницы пагинации: самостоятельной страницей считается только целое
+     * >= 2 на пагинируемом списке (NormalizePublicPagination). На остальных
+     * маршрутах параметр page ничего не меняет, поэтому всегда 1; значение
+     * читается так же, как пагинатор Laravel (filter_var), чтобы canonical и
+     * реально показанная страница не расходились.
+     */
     public static function pageNumber(Request $request): int
     {
-        $page = $request->query('page');
+        if ($request->attributes->get(self::PAGINATED_ATTRIBUTE) !== true) {
+            return 1;
+        }
 
-        if (is_string($page) && ctype_digit($page) && (int) $page >= 2 && (int) $page <= 100000) {
-            return (int) $page;
+        $page = filter_var($request->query('page'), FILTER_VALIDATE_INT);
+
+        if ($page !== false && $page >= 2 && $page <= 100000) {
+            return $page;
         }
 
         return 1;
+    }
+
+    /**
+     * Ссылка пагинации без лишнего ?page=1: страница 1 — это адрес без параметра
+     * (с параметром он отвечает 301). Остальные параметры и их порядок сохраняются.
+     */
+    public static function pageLinkUrl(?string $url): string
+    {
+        $url = (string) $url;
+        $queryStart = strpos($url, '?');
+
+        if ($queryStart === false) {
+            return $url;
+        }
+
+        $fragment = '';
+        $hash = strpos($url, '#');
+        if ($hash !== false) {
+            $fragment = substr($url, $hash);
+            $url = substr($url, 0, $hash);
+        }
+
+        // Только отбрасываем пару page=1; остальные пары остаются как были, без перекодирования.
+        $pairs = array_values(array_filter(
+            explode('&', substr($url, $queryStart + 1)),
+            fn (string $pair) => $pair !== 'page=1' && $pair !== ''
+        ));
+
+        return substr($url, 0, $queryStart) . ($pairs === [] ? '' : '?' . implode('&', $pairs)) . $fragment;
+    }
+
+    /**
+     * Страница за пределами списка — не существующий документ: честный 404
+     * (а не 200 с пустой страницей и собственным canonical). Первая страница
+     * пустого списка остаётся обычной страницей. Вызывается контроллерами
+     * пагинируемых списков.
+     */
+    public static function abortIfPageOutOfRange(LengthAwarePaginator $paginator): void
+    {
+        if ($paginator->currentPage() > max($paginator->lastPage(), 1)) {
+            // Страница-404 не должна объявлять собственный ?page=N каноническим адресом.
+            request()->attributes->remove(self::PAGINATED_ATTRIBUTE);
+
+            abort(404);
+        }
     }
 
     /**

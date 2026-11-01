@@ -43,6 +43,15 @@ BLADE;
             return response(Blade::render($template));
         })->name('__test.metadata-probe');
 
+        // NOV-PUBLIC-03A: только пагинируемые списки (middleware public.pagination) считают ?page=N страницей.
+        Route::get('/metadata-probe-paginated', function () {
+            return response(Blade::render("@extends('layouts.main')
+
+@section('content')
+Probe Content
+@endsection"));
+        })->name('__test.metadata-probe-paginated')->middleware('public.pagination');
+
         Route::get('/metadata-probe-override', function () {
             $canonicalOverride = 'https://override.example.com/unique-canonical-marker-9091';
 
@@ -176,25 +185,46 @@ BLADE;
 
     public function test_pagination_page_two_and_above_is_a_self_canonical_page(): void
     {
-        $response = $this->get('/metadata-probe?page=3&utm_source=test');
+        $response = $this->get('/metadata-probe-paginated?page=3&utm_source=test');
         $response->assertOk();
 
         $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
-        $expected = \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe?page=3';
+        $expected = \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe-paginated?page=3';
 
         $this->assertSame($expected, $xpath->query('//link[@rel="canonical"]')->item(0)->getAttribute('href'));
         $this->assertSame($expected, $xpath->query('//meta[@property="og:url"]')->item(0)->getAttribute('content'));
         $this->assertMatchesRegularExpression('/<title>[^<]*— страница 3<\/title>/u', $response->getContent());
 
-        // нечисловой/нулевой/огромный page — не страница
-        foreach (['abc', '0', '-2', '1', '999999999'] as $bad) {
-            $r = $this->get('/metadata-probe?page=' . $bad);
-            $x = new \DOMXPath($this->parseHtml($r->getContent()));
+        // NOV-PUBLIC-03A: нечисловой/нулевой/отрицательный/первый page — это та же первая страница:
+        // постоянный 301 на адрес без page (подробно: PublicLegacyUrlCompatibilityTest).
+        foreach (['abc', '0', '-2', '1'] as $bad) {
+            $this->get('/metadata-probe-paginated?page=' . $bad)
+                ->assertStatus(301)
+                ->assertHeader('Location', '/metadata-probe-paginated');
+        }
+
+        // Огромный page не получает собственного canonical.
+        $r = $this->get('/metadata-probe-paginated?page=999999999');
+        $x = new \DOMXPath($this->parseHtml($r->getContent()));
+        $this->assertSame(
+            \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe-paginated',
+            $x->query('//link[@rel="canonical"]')->item(0)->getAttribute('href')
+        );
+    }
+
+    public function test_page_parameter_is_ignored_on_non_paginated_pages(): void
+    {
+        // NOV-PUBLIC-03A: страница без пагинации не получает собственный canonical/title на каждое ?page=N.
+        foreach (['1', '3', 'abc'] as $page) {
+            $response = $this->get('/metadata-probe?page=' . $page);
+            $response->assertOk();
+
+            $xpath = new \DOMXPath($this->parseHtml($response->getContent()));
             $this->assertSame(
                 \App\Support\Seo\PublicSeo::baseUrl() . '/metadata-probe',
-                $x->query('//link[@rel="canonical"]')->item(0)->getAttribute('href'),
-                "page={$bad} must not create its own canonical"
+                $xpath->query('//link[@rel="canonical"]')->item(0)->getAttribute('href')
             );
+            $this->assertDoesNotMatchRegularExpression('/<title>[^<]*страница \d+<\/title>/u', $response->getContent());
         }
     }
 

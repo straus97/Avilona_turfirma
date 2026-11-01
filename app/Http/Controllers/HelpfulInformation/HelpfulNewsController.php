@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HelpfulInformation;
 use App\Http\Controllers\Controller;
 use App\Http\Filters\NewsFilter;
 use App\Models\News;
+use App\Support\Seo\PublicSeo;
 use Illuminate\Http\Request;
 
 class HelpfulNewsController extends Controller
@@ -26,6 +27,7 @@ class HelpfulNewsController extends Controller
         $newsFilter->apply($query);
         
         $news = $query->paginate(6);
+        PublicSeo::abortIfPageOutOfRange($news);
         
         return view('helpful_information.news', compact('news'));
     }

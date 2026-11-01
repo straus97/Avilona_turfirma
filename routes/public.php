@@ -63,25 +63,25 @@ Route::group(['namespace' => 'Contact'], function () {
 });
 
 Route::group(['namespace' => 'Review'], function () {
-    Route::get('/reviews', "IndexController")->name("review.index");
+    Route::get('/reviews', "IndexController")->name("review.index")->middleware('public.pagination');
 });
 
 Route::group(['namespace' => 'HelpfulInformation'], function () {
     Route::get('/helpful_information/interesting_articles', "ArticlesController")->name(
         "interesting_articles.index"
-    );
+    )->middleware('public.pagination');
     Route::get('/helpful_information/interesting_articles/{slug}', "InterestingNewsController")->name(
         "helpful_information.show_interesting_news"
     );
 
-    Route::get('/helpful_information/news', "HelpfulNewsController")->name("helpful_news.index");
+    Route::get('/helpful_information/news', "HelpfulNewsController")->name("helpful_news.index")->middleware('public.pagination');
     Route::get('/helpful_information/news/rss', "RssController")->name("news.rss");
     Route::get('/helpful_information/news/{slug}', "HelpfulNewsIdController")->name(
         "helpful_news_id.index"
     );
 
     Route::get('/helpful_information/for_our_clients', "ClientsController")->name("for_our_clients.index")->middleware(
-        'cache.response'
+        ['public.pagination', 'cache.response']
     );
     Route::get('/helpful_information/for_our_clients/{slug}', "SpecialController")->name(
         "helpful_information.show_special"

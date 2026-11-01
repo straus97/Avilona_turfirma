@@ -9,7 +9,7 @@
                     </li>
                 @else
                     <li class="page-item">
-                        <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev">@lang('pagination.previous')</a>
+                        <a class="page-link" href="{{ \App\Support\Seo\PublicSeo::pageLinkUrl($paginator->previousPageUrl()) }}" rel="prev">@lang('pagination.previous')</a>
                     </li>
                 @endif
 
@@ -48,7 +48,7 @@
                         </li>
                     @else
                         <li class="page-item">
-                            <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</a>
+                            <a class="page-link" href="{{ \App\Support\Seo\PublicSeo::pageLinkUrl($paginator->previousPageUrl()) }}" rel="prev" aria-label="@lang('pagination.previous')">&lsaquo;</a>
                         </li>
                     @endif
 
@@ -65,7 +65,7 @@
                                 @if ($page == $paginator->currentPage())
                                     <li class="page-item active" aria-current="page"><span class="page-link">{{ $page }}</span></li>
                                 @else
-                                    <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                                    <li class="page-item"><a class="page-link" href="{{ \App\Support\Seo\PublicSeo::pageLinkUrl($url) }}">{{ $page }}</a></li>
                                 @endif
                             @endforeach
                         @endif
