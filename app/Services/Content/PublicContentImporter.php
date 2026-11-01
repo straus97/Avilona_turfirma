@@ -33,7 +33,7 @@ class PublicContentImporter
     /**
      * table => [required[], optional[], htmlColumns[], imageColumns[], hasSlug]
      */
-    private const SCHEMA = [
+    public const SCHEMA = [
         'countries_images' => ['required' => ['title', 'slug', 'category', 'description'],
             'optional' => ['image_small', 'image_large', 'documents_url'], 'html' => ['description'],
             'images' => ['image_small', 'image_large'], 'slug' => true],
