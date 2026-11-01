@@ -68,7 +68,7 @@ Codes: **A** unchanged and supported · **B** resolves to an identical current d
 | U-1 | Where do the `/countries/{numeric-id}` URLs map? | A file `id,slug,title` from the **old** `countries_images` table (id as it was when those URLs were live), **and** confirmation that the new content carries the same slugs | Without the old id→slug pairs any target is a guess; the importer does not preserve ids |
 | U-2 | The 24 URLs Google reports as 404 | The Search Console export (*Pages → Not found (404) → Export*), `url` column | Needed to see which are numeric ids, which are vanished news, which are typos |
 | U-3 | The 42 *crawled – currently not indexed* URLs | Same export | Likely thin/duplicate pages; decide per pattern, not per URL |
-| U-4 | Which of the 100 historic news slugs / 50 article slugs will exist in the approved content | The approved `avilona-public-content/1` export (N-3), then `seo:audit-urls … --check-db` on a **staging** copy | News is an RSS feed; slugs derive from titles, so old items may simply be gone → 404 is correct; a redirect needs an owner-named successor |
+| U-4 | Which of the 100 historic news slugs / 50 article slugs will exist in the approved content | The approved `avilona-public-content/1` export (N-3), then a `--check-db` audit — **only** on a verified disposable QA database (F1; a staging audit needs a separate owner-authorised operation) | News is an RSS feed; slugs derive from titles, so old items may simply be gone → 404 is correct; a redirect needs an owner-named successor |
 | U-5 | Any slug that was *renamed* (not removed) | Old slug → new slug pairs, with the owner's confirmation that the document is the same | Only the owner can assert identity of content |
 | U-6 | Canonical host (apex vs `www`) | Owner decision N-5 | Yandex saw `www.avilona.ru`; the old repo file said apex |
 
@@ -97,10 +97,10 @@ Action: the five `.doc`/`.docx` are denied by `public/documents/.htaccess` (**40
 ## 8. Audit tooling (read-only)
 
 ```
-php artisan seo:audit-urls export.csv [--output=report.csv] [--check-db]
+php artisan seo:audit-urls export.csv [--output=report.csv] [--check-db --connection=<verified QA connection>]
 ```
 
-No network, no engine account, no crawler, no redirect table generated. Without `--check-db` the database is not opened; with it only `exists()` by slug runs against the **currently connected** database (point it at a disposable/staging copy). The report adds `class`, `action`, `route`, `redirect_target` (only for the proven `?page=1` case), `in_legacy_sitemap`, `blocked_by_robots`; cells starting with `= + - @` are neutralised for spreadsheets. Classes are documented in `LegacyUrlClassifier`.
+No network, no engine account, no crawler, no redirect table generated. Without `--check-db` the database is never opened. **Superseded by F1:** `--check-db` requires `--connection=<name>` and the connection must pass `VerifiedQaConnection` before any query — see [NOV-PUBLIC-03A-F1](NOV-PUBLIC-03A-F1-audit-db-safety-and-release-files-2026-11-01.md). The report adds `class`, `action`, `route`, `redirect_target` (only for the proven `?page=1` case), `in_legacy_sitemap`, `blocked_by_robots`; cells starting with `= + - @` are neutralised for spreadsheets. Classes are documented in `LegacyUrlClassifier`.
 
 ## 9. Favicon and metadata
 
@@ -114,7 +114,7 @@ No network, no engine account, no crawler, no redirect table generated. Without 
 2. `/helpful_information/news?page=1`, `/reviews?page=1` → 301 to the clean path; `?page=2` → 200; a page beyond the last → 404 `noindex`.
 3. `/countries/<numeric>` → 404 (no redirect); a real slug → 200; `/robots.txt` text/plain with one correct `Sitemap:`; `/sitemap.xml` 100 % of URLs 200.
 4. `/documents/*.pdf` → 200; `/documents/*.doc|*.docx` → 403/404 (or absent from the package).
-5. After the approved import: run `seo:audit-urls` with the owner's exports (`--check-db` on staging) and resolve U-1…U-5 **one owner-approved pattern at a time**.
+5. After the approved import: run `seo:audit-urls` with the owner's exports (`--check-db` only on a verified QA database, F1) and resolve U-1…U-5 **one owner-approved pattern at a time**.
 6. Search Console / Webmaster: add the approved host, submit the sitemap, URL-inspect representative pages, compare *Pages* statuses with §1 weekly; Yandex mirror = approved host.
 7. Only then state whether any historical equity was kept.
 

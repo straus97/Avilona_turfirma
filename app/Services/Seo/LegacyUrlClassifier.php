@@ -14,8 +14,9 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * NOV-PUBLIC-03A: классификация исторических URL относительно ТЕКУЩИХ публичных
- * маршрутов. Только чтение; сеть не используется; в базу заглядывает лишь по
- * явной просьбе ($checkDatabase) и только запросом exists() по slug.
+ * маршрутов. Только чтение; сеть не используется; в базу заглядывает лишь через
+ * проверенное одноразовое QA-подключение ($qaConnection, см. VerifiedQaConnection) и только
+ * запросом exists() по slug; подключение по умолчанию не используется никогда.
  *
  * Классификатор ничего не придумывает: он различает, что маршрут действительно
  * отдаёт тот же документ (A/B), что уже уходит постоянным редиректом по доказанной
@@ -76,7 +77,7 @@ class LegacyUrlClassifier
     /**
      * @return array{input: string, path: string, query: string, class: string, route: string, action: string}
      */
-    public function classify(string $input, bool $checkDatabase = false): array
+    public function classify(string $input, ?string $qaConnection = null): array
     {
         $input = trim($input);
         $result = ['input' => $input, 'path' => '', 'query' => '', 'class' => 'invalid_url', 'route' => '', 'action' => 'ignore'];
@@ -102,7 +103,7 @@ class LegacyUrlClassifier
         $result['route'] = $name;
 
         if (isset(self::DETAIL_ROUTES[$name])) {
-            return $this->detail($result, $name, (string) $route->parameter('slug'), $checkDatabase);
+            return $this->detail($result, $name, (string) $route->parameter('slug'), $qaConnection);
         }
 
         $isPaginated = in_array($name, self::PAGINATED_LIST_ROUTES, true);
@@ -188,16 +189,16 @@ class LegacyUrlClassifier
         return ['class' => 'no_route', 'action' => 'serve_404'] + $result;
     }
 
-    private function detail(array $result, string $name, string $slug, bool $checkDatabase): array
+    private function detail(array $result, string $name, string $slug, ?string $qaConnection): array
     {
         // Число в сегменте slug — это не slug, а прежний числовой id: id -> slug из репозитория не выводится.
         if ($slug !== '' && ctype_digit($slug)) {
             return ['class' => 'legacy_numeric_id', 'action' => 'owner_evidence'] + $result;
         }
 
-        if ($checkDatabase) {
+        if ($qaConnection !== null) {
             $model = self::DETAIL_ROUTES[$name];
-            $exists = $model::query()->where('slug', $slug)->exists();
+            $exists = $model::on($qaConnection)->where('slug', $slug)->exists();
 
             return ['class' => $exists ? 'slug_present' : 'slug_missing', 'action' => $exists ? 'none' : 'owner_evidence'] + $result;
         }

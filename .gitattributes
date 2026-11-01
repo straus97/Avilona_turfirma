@@ -1,0 +1,8 @@
+# NOV-PUBLIC-03A-F1: default-deny for editable source materials in release archives.
+# `git archive` (the only packaging mechanism in this repository) omits them. These files are
+# NOT deleted or changed; the owner decides their publication (roadmap N-4 / N-10). Legally
+# binding PDFs and all approved static assets stay in the archive. Not access control for a
+# working tree copied by other means: see docs/NOV-PUBLIC-03A-F1 (web-server rule / exclusions).
+public/**/*.doc export-ignore
+public/**/*.docx export-ignore
+public/**/*.psd export-ignore

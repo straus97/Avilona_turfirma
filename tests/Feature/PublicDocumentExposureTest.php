@@ -119,6 +119,33 @@ class PublicDocumentExposureTest extends TestCase
         $this->assertStringContainsString('Disallow: /*.docx$', $robots);
     }
 
+    public function test_release_archives_exclude_editable_sources_but_keep_pdfs_and_assets(): void
+    {
+        $attributes = (string) file_get_contents(base_path('.gitattributes'));
+        foreach (['public/**/*.doc export-ignore', 'public/**/*.docx export-ignore', 'public/**/*.psd export-ignore'] as $rule) {
+            $this->assertStringContainsString($rule, $attributes);
+        }
+        $this->assertDoesNotMatchRegularExpression('/pdf|png|jpe?g|svg|ico|css|js/i', preg_replace('/^#.*$/m', '', $attributes), 'only editable sources are denied');
+
+        $git = trim((string) @shell_exec('git --version 2>&1'));
+        if (! str_starts_with($git, 'git version')) {
+            $this->markTestSkipped('git is not available');
+        }
+
+        // `git archive` — единственный механизм упаковки; атрибуты рабочего дерева учитываются.
+        $list = (string) shell_exec('cd ' . escapeshellarg(base_path()) . ' && git archive --worktree-attributes HEAD public/documents public/img/special 2>&1 | tar -t 2>&1');
+        if (! str_contains($list, 'public/documents/User_Agreement.pdf')) {
+            $this->markTestSkipped('archive listing unavailable (tar/git)');
+        }
+
+        $this->assertDoesNotMatchRegularExpression('/\.(doc|docx|psd)\b/i', $list, 'editable sources must not be in the archive');
+        foreach (self::SOURCE_TO_PUBLISHED_PDF as $pdf) {
+            $this->assertStringContainsString('public/documents/' . $pdf, $list);
+        }
+        $this->assertStringContainsString('public/documents/.htaccess', $list);
+        $this->assertStringContainsString('public/img/special/1.jpg', $list);
+    }
+
     public function test_other_editable_sources_under_public_are_known_and_reported(): void
     {
         // Исходники изображений тоже лежат в public/ и скачиваемы; решение за владельцем (в отчёте 03A).

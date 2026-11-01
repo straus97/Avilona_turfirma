@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Inquiries\Backfill\UnsafeBackfillConnection;
+use App\Services\Inquiries\Backfill\VerifiedQaConnection;
 use App\Services\Seo\LegacyUrlClassifier;
 use App\Support\Seo\RobotsRules;
 use Illuminate\Console\Command;
@@ -11,7 +13,7 @@ use Illuminate\Console\Command;
  * Console относительно текущих маршрутов. Только чтение.
  *
  *   php artisan seo:audit-urls path/to/export.csv
- *   php artisan seo:audit-urls path/to/export.csv --output=path/to/report.csv --check-db
+ *   php artisan seo:audit-urls path/to/export.csv --check-db --connection=aoa_qa   (только одноразовая QA-база)
  *
  * Формат входного CSV (UTF-8, запятая или «;»): первая строка — заголовок.
  *   url      — обязательный: полный URL или путь (/countries/egipet?page=2)
@@ -20,8 +22,11 @@ use Illuminate\Console\Command;
  * Других колонок команда не ждёт и не использует; метрик не придумывает.
  *
  * Сеть, аккаунты поисковиков и обход сайта не используются: вход — только файл.
- * Без --check-db база не открывается; с ним выполняются только запросы exists()
- * по slug к ТЕКУЩЕЙ подключённой базе (укажите disposable/staging-копию).
+ * Без --check-db база не открывается вообще. С --check-db обязателен --connection=<имя>, и
+ * подключение проходит VerifiedQaConnection (AOA-03-I2) ДО первого запроса: только
+ * qa_disposable, loopback, не порты 3306/3308, не каноническая база, не подключение по
+ * умолчанию. Иначе — отказ. Подключение по умолчанию (.env) не используется никогда;
+ * общего обхода проверки нет. Аудит staging-копии — отдельная операция по решению владельца.
  * Никаких redirect-таблиц команда не создаёт: класс в отчёте — основание для
  * разговора с владельцем, а не готовое сопоставление.
  */
@@ -34,7 +39,8 @@ class AuditLegacyUrlsCommand extends Command
     protected $signature = 'seo:audit-urls
         {file : CSV с колонкой url (опционально source, note)}
         {--output= : Записать построчный отчёт в CSV (существующий файл не перезаписывается)}
-        {--check-db : Проверить наличие slug в текущей базе (только exists())}';
+        {--check-db : Проверить наличие slug в ОДНОРАЗОВОЙ QA-базе (только exists(); нужен --connection)}
+        {--connection= : Имя проверенного одноразового QA-подключения для --check-db}';
 
     protected $description = 'Read-only audit of exported legacy URLs against current public routes. No network, no search-engine accounts, no redirect table is generated.';
 
@@ -64,16 +70,29 @@ class AuditLegacyUrlsCommand extends Command
 
         $legacy = $this->legacySitemapSet();
         $robots = RobotsRules::fromFile(base_path('robots.txt'));
-        $checkDb = (bool) $this->option('check-db');
+        $qaConnection = null;
 
-        if ($checkDb) {
-            $this->warn('--check-db: только exists() по slug; подключение: ' . config('database.default') . '.');
+        if ($this->option('check-db')) {
+            try {
+                $qaConnection = VerifiedQaConnection::verify($this->option('connection'));
+                $this->assertServerIdentity($qaConnection);
+            } catch (UnsafeBackfillConnection $e) {
+                $this->error('REFUSED: ' . $e->getMessage());
+
+                return self::FAILURE;
+            }
+
+            $this->warn('--check-db: только exists() по slug; QA-подключение «' . $qaConnection->name . '» проверено.');
+        } elseif ($this->option('connection') !== null) {
+            $this->error('--connection имеет смысл только вместе с --check-db.');
+
+            return self::FAILURE;
         }
 
         $report = [];
         $totals = [];
         foreach ($rows as $row) {
-            $c = $classifier->classify($row['url'], $checkDb);
+            $c = $classifier->classify($row['url'], $qaConnection?->name);
             $inLegacy = $c['path'] !== '' && isset($legacy[$c['path'] . ($c['query'] !== '' ? '?' . $c['query'] : '')]);
             $blocked = $c['path'] !== '' && ! $robots->allows($c['path'] . ($c['query'] !== '' ? '?' . $c['query'] : ''));
             $target = LegacyUrlClassifier::firstPageTarget($c);
@@ -95,6 +114,29 @@ class AuditLegacyUrlsCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Для MySQL: сервер сам называет базу и порт; расхождение с проверенной конфигурацией
+     * (например, проброшенный порт на другую базу) — отказ. SQLite проверен путём в конфигурации.
+     */
+    private function assertServerIdentity(VerifiedQaConnection $qa): void
+    {
+        if ($qa->driver === 'sqlite') {
+            return;
+        }
+
+        try {
+            $row = \Illuminate\Support\Facades\DB::connection($qa->name)->selectOne('select database() as db, @@port as port');
+        } catch (\Throwable) {
+            throw new UnsafeBackfillConnection('The QA server identity could not be verified.');
+        }
+
+        $expectedPort = (int) config('database.connections.' . $qa->name . '.port');
+
+        if ($row === null || strcasecmp((string) $row->db, $qa->database) !== 0 || (int) $row->port !== $expectedPort) {
+            throw new UnsafeBackfillConnection('The server identity does not match the verified QA configuration.');
+        }
     }
 
     /** @return array<int, array{url: string, source: string, note: string}>|null */
