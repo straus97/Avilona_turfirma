@@ -28,17 +28,12 @@
                 <h1 id="e2-page-hero-title" class="e2-page-hero__title">{{ $id_destination_image->title }}</h1>
             </section>
 
-            @php
-                $destinationMedia = $id_destination_image->image_large
-                    ?: ($id_destination_image->image_small ?: null);
-            @endphp
-
             <div class="e2-discovery-detail">
                 <div class="e2-discovery-detail__main">
-                    @include('includes.e2-discovery-media', [
-                        'mediaSrc' => $destinationMedia,
-                        'mediaAlt' => $destinationMedia ? $id_destination_image->title : '',
-                        'mediaClass' => 'e2-detail-media',
+                    @include('includes.e2-detail-hero-media', [
+                        'heroSrc' => $id_destination_image->image_large,
+                        'thumbSrc' => $id_destination_image->image_small,
+                        'mediaAlt' => $id_destination_image->title,
                     ])
 
                     @if($id_destination_image->description)

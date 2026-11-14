@@ -209,9 +209,13 @@ final class LegacyImageArchiveInspector
                     $entry['flags'][] = 'excessive_pixels';
                 }
             }
-            if (str_contains($bytes, '<?php') || str_contains($bytes, '<?=')) {
+            $script = $this->scriptSignature($bytes, $ext);
+            if ($script === 'script') {
                 $entry['status'] = 'suspicious';
                 $entry['flags'][] = 'embedded_script';
+            } elseif ($script === 'incidental_short_tag') {
+                // Информационная метка: три байта «<?=» внутри сжатых данных проверенного PNG.
+                $entry['flags'][] = 'short_tag_bytes_in_compressed_data';
             }
 
             $entries[$path] = $entry;
@@ -220,6 +224,99 @@ final class LegacyImageArchiveInspector
         ksort($entries);
 
         return $entries;
+    }
+
+    /**
+     * Поиск серверного кода в байтах изображения (ничего не выполняется).
+     *
+     *   '<?php' (любой регистр) — всегда «script»: в случайных сжатых данных такая
+     *       пятибайтная последовательность практически не встречается.
+     *   '<?='  — три байта встречаются в сжатом потоке случайно (≈ один раз на ~16 МБ),
+     *       поэтому подстроки недостаточно. «incidental_short_tag» возвращается ТОЛЬКО
+     *       для PNG, у которого целиком проверена структура (сигнатура, длины и CRC всех
+     *       блоков, IEND последним, ни одного байта после него) и КАЖДОЕ вхождение лежит
+     *       внутри данных блока IDAT и не похоже на код (нет «?>» в следующих 256 байтах,
+     *       менее 24 печатных ASCII-символов из следующих 32). Любое иное вхождение
+     *       (метаданные, хвост после IEND, не-PNG формат, битая структура) — «script».
+     *
+     * @return 'none'|'script'|'incidental_short_tag'
+     */
+    private function scriptSignature(string $bytes, string $ext): string
+    {
+        if (stripos($bytes, '<?php') !== false) {
+            return 'script';
+        }
+        if (! str_contains($bytes, '<?=')) {
+            return 'none';
+        }
+        if ($ext !== 'png') {
+            return 'script';
+        }
+
+        $idat = $this->pngIdatRanges($bytes);
+        if ($idat === null) {
+            return 'script';
+        }
+
+        $offset = 0;
+        while (($pos = strpos($bytes, '<?=', $offset)) !== false) {
+            $offset = $pos + 1;
+            $inside = false;
+            foreach ($idat as [$from, $to]) {
+                if ($pos >= $from && $pos + 3 <= $to) {
+                    $inside = true;
+                    break;
+                }
+            }
+            if (! $inside || str_contains(substr($bytes, $pos, 256), '?>')
+                || preg_match_all('/[\x20-\x7E]/', substr($bytes, $pos + 3, 32)) >= 24) {
+                return 'script';
+            }
+        }
+
+        return 'incidental_short_tag';
+    }
+
+    /**
+     * Диапазоны [начало, конец) данных блоков IDAT; null, если структура PNG нарушена
+     * (сигнатура, длина, CRC, отсутствие IEND, байты после IEND, IDAT вне IHDR…IEND).
+     *
+     * @return array<int, array{0:int,1:int}>|null
+     */
+    private function pngIdatRanges(string $bytes): ?array
+    {
+        if (! str_starts_with($bytes, "\x89PNG\r\n\x1a\n")) {
+            return null;
+        }
+        $n = strlen($bytes);
+        $o = 8;
+        $ranges = [];
+        $first = true;
+
+        while ($o + 12 <= $n) {
+            $len = unpack('N', substr($bytes, $o, 4))[1];
+            $type = substr($bytes, $o + 4, 4);
+            if ($len > 0x7FFFFFFF || $o + 12 + $len > $n) {
+                return null;
+            }
+            $crc = unpack('N', substr($bytes, $o + 8 + $len, 4))[1];
+            if ((crc32(substr($bytes, $o + 4, 4 + $len)) & 0xFFFFFFFF) !== $crc) {
+                return null;
+            }
+            if ($first && $type !== 'IHDR') {
+                return null;
+            }
+            $first = false;
+            if ($type === 'IDAT') {
+                $ranges[] = [$o + 8, $o + 8 + $len];
+            }
+            $o += 12 + $len;
+            if ($type === 'IEND') {
+                return $o === $n && $ranges !== [] ? $ranges : null;
+            }
+        }
+
+        return null;
     }
 
     /**

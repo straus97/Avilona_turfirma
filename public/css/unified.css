@@ -2210,6 +2210,22 @@ html {
     display: block;
 }
 
+/* NOV-PUBLIC-04B: only a small image exists (no large file) — natural-size slot,
+   never stretched into the 16:9 / 21:9 hero frame. */
+.e2-detail-thumb {
+    margin: 1.5rem 0;
+    max-width: 270px;
+}
+
+.e2-detail-thumb img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--e2-surface-warm);
+    border: 1px solid var(--e2-border);
+    border-radius: var(--e2-radius-lg);
+}
+
 /* ---- Document / tourist-memo callout ----------------------- */
 .e2-doc-callout {
     display: flex;

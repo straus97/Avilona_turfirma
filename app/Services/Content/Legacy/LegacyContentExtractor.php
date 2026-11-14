@@ -35,6 +35,17 @@ final class LegacyContentExtractor
 
     private const MAX_COORDINATES = 500;
 
+    /**
+     * NOV-PUBLIC-04B: NOT a document URL, а путь к каталогу (директория без файла), который
+     * старый сайт хранил как «заглушку» documents_url. Тот же известный шаблон исторически
+     * уже превращался в NULL при переносе в v4 (ImportLegacyDataToV4::DOCUMENTS_URL_KNOWN_NULL).
+     * Нормализация включается ТОЛЬКО явной опцией и сравнивает значение целиком и точно:
+     * любое другое значение (в том числе реальный URL) переносится/удерживается как раньше.
+     */
+    public const DOCUMENTS_URL_DIRECTORY_PLACEHOLDERS = ['/documents/countries/'];
+
+    public const OPTION_NORMALIZE_DOCUMENTS_URL = 'normalize_documents_url';
+
     private const INVENTORY_REVIEW = [
         'news' => 'RSS-sourced: freshness, attribution and redistribution rights need owner review',
         'employees' => 'staff personal data and portraits: owner approval required before any publication',
@@ -53,10 +64,11 @@ final class LegacyContentExtractor
 
     /**
      * @param array<int,string> $acknowledgedUnknown таблицы, которые владелец явно исключил из обработки
+     * @param array<string,bool> $options self::OPTION_* => включено
      *
      * @return array<string,mixed>
      */
-    public function extract(string $sql, array $acknowledgedUnknown = []): array
+    public function extract(string $sql, array $acknowledgedUnknown = [], array $options = []): array
     {
         $parsed = $this->parser->parse($sql, fn (string $table): ?array => LegacyTablePolicy::columnsToRead($table));
 
@@ -99,12 +111,16 @@ final class LegacyContentExtractor
         $quality = [];
         $refs = [];
         $slugs = ['emitted' => [], 'held' => []];
+        $normalizations = [];
 
         foreach (LegacyTablePolicy::EXTRACT as $name) {
             if (! isset($parsed['tables'][$name])) {
                 continue;
             }
-            $result = $this->processTable($name, $parsed['tables'][$name]);
+            $result = $this->processTable($name, $parsed['tables'][$name], $options);
+            foreach ($result['normalizations'] as $item) {
+                $normalizations[] = $item;
+            }
 
             if ($result['schema_error'] !== null) {
                 $schemaErrors[$name] = $result['schema_error'];
@@ -135,15 +151,17 @@ final class LegacyContentExtractor
             'inventory' => $inventory,
             'image_refs' => array_merge($refs, $inventoryRefs),
             'slugs' => $slugs,
+            'normalizations' => $normalizations,
         ];
     }
 
     /**
      * @param array{columns: array<int,string>, row_count: int, rows: array<int, array<string,?string>>} $table
+     * @param array<string,bool> $options
      *
      * @return array<string,mixed>
      */
-    private function processTable(string $name, array $table): array
+    private function processTable(string $name, array $table, array $options = []): array
     {
         $schema = PublicContentImporter::SCHEMA[$name];
         $columns = $table['columns'];
@@ -154,7 +172,9 @@ final class LegacyContentExtractor
         $stats = ['source_rows' => $table['row_count'], 'soft_deleted' => 0, 'emitted' => 0, 'held' => 0, 'zero_date_omitted' => 0];
 
         $blank = ['schema_error' => null, 'unmapped' => $unmapped, 'rows' => [], 'stats' => $stats, 'held' => [],
-            'quality' => [], 'refs' => [], 'emitted_slugs' => [], 'held_slugs' => []];
+            'quality' => [], 'refs' => [], 'emitted_slugs' => [], 'held_slugs' => [], 'normalizations' => []];
+        $normalizations = [];
+        $normalizeDocs = ($options[self::OPTION_NORMALIZE_DOCUMENTS_URL] ?? false) === true;
 
         if ($missing !== []) {
             return ['schema_error' => ['missing_required_columns' => $missing]] + $blank;
@@ -177,6 +197,7 @@ final class LegacyContentExtractor
             $reasons = [];
             $flags = [];
             $refs = [];
+            $pendingNormalizations = [];
 
             foreach (array_merge($schema['required'], $schema['optional']) as $col) {
                 $value = $source[$col] ?? null;
@@ -207,6 +228,20 @@ final class LegacyContentExtractor
                 }
 
                 $value = trim($value);
+                if ($normalizeDocs && $col === 'documents_url' && in_array($value, self::DOCUMENTS_URL_DIRECTORY_PLACEHOLDERS, true)) {
+                    // Поле опциональное (PublicContentImporter::SCHEMA): пустое значение допустимо и
+                    // честно говорит «документа нет». Внешний URL не подставляется.
+                    $pendingNormalizations[] = [
+                        'table' => $name,
+                        'column' => 'documents_url',
+                        'rule' => 'documents_url_directory_placeholder_to_null',
+                        'source_value' => $value,
+                        'output_value' => null,
+                        'rationale' => 'Value is a directory path, not a document URL; documents_url is optional in avilona-public-content/1; no replacement URL is invented.',
+                    ];
+
+                    continue;
+                }
                 if (mb_strlen($value) > self::STRING_MAX) {
                     $reasons[] = "too_long:{$col}";
 
@@ -272,7 +307,7 @@ final class LegacyContentExtractor
                 }
             }
 
-            $candidates[] = ['ordinal' => $ordinal, 'slug' => $slug, 'row' => $row, 'refs' => $refs];
+            $candidates[] = ['ordinal' => $ordinal, 'slug' => $slug, 'row' => $row, 'refs' => $refs, 'normalizations' => $pendingNormalizations];
         }
 
         // Повтор slug (без учёта регистра: на MySQL уникальный индекс регистронезависим) — выбирать, какую
@@ -298,6 +333,9 @@ final class LegacyContentExtractor
         foreach ($candidates as $c) {
             $rows[] = $c['row'];
             $emitted[] = $c['slug'];
+            foreach ($c['normalizations'] as $n) {
+                $normalizations[] = ['ordinal' => $c['ordinal'], 'slug' => $c['slug']] + $n;
+            }
             foreach ($c['refs'] as $ref) {
                 $refsOut[] = ['group' => 'public_content', 'table' => $name, 'column' => $ref['column'], 'slug' => $c['slug'], 'ref' => $ref['ref']];
             }
@@ -316,6 +354,7 @@ final class LegacyContentExtractor
             'refs' => $refsOut,
             'emitted_slugs' => $emitted,
             'held_slugs' => array_values(array_filter(array_column($held, 'slug'))),
+            'normalizations' => $normalizations,
         ];
     }
 

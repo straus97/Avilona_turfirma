@@ -25,7 +25,9 @@ class ExtractLegacyPublicContentCommand extends Command
         {dump : Исторический .sql (phpMyAdmin/mysqldump); выполняется НЕ будет}
         {--out= : Новый или пустой каталог для результата (вне репозитория)}
         {--images= : Архив изображений .zip (инспектируется без распаковки)}
-        {--acknowledge-unknown= : Через запятую: неизвестные таблицы, которые владелец явно исключает из обработки}';
+        {--acknowledge-unknown= : Через запятую: неизвестные таблицы, которые владелец явно исключает из обработки}
+        {--normalize-documents-url : NOV-PUBLIC-04B: точное значение-каталог /documents/countries/ в documents_url -> пусто (только в производном файле)}
+        {--null-missing-large : NOV-PUBLIC-04B: image_large, которого нет в архиве, -> пусто, если image_small найден (требует --images)}';
 
     protected $description = 'Offline: turn a legacy SQL dump (parsed as data, never executed) into an avilona-public-content/1 file plus private review reports. No database connection.';
 
@@ -72,7 +74,14 @@ class ExtractLegacyPublicContentCommand extends Command
         $pipeline = LegacyPublicContentPipeline::make();
 
         try {
-            $result = $pipeline->run($dump, $images, $acknowledged, base_path('resources/seo/legacy-sitemap-paths.txt'));
+            $result = $pipeline->run($dump, $images, $acknowledged, base_path('resources/seo/legacy-sitemap-paths.txt'), array_filter([
+                'normalize_documents_url' => (bool) $this->option('normalize-documents-url'),
+                'null_missing_large' => (bool) $this->option('null-missing-large'),
+            ]));
+        } catch (\InvalidArgumentException $e) {
+            $this->error('REFUSED: ' . $e->getMessage());
+
+            return self::FAILURE;
         } catch (LegacySqlDumpException $e) {
             $this->error('REFUSED: выгрузка отвергнута — ' . $e->getMessage());
 

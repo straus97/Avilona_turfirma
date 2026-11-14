@@ -38,10 +38,13 @@ final class LegacyPublicContentPipeline
 
     /**
      * @param array<int,string> $acknowledgedUnknown
+     * @param array<string,bool> $options NOV-PUBLIC-04B, оба по умолчанию выключены:
+     *        normalize_documents_url — точный каталог-заглушка documents_url → пусто (см. LegacyContentExtractor);
+     *        null_missing_large — image_large, которого нет в архиве, → пусто, только если image_small найден.
      *
-     * @return array{report: array<string,mixed>, content: ?array<string,mixed>, manifest: ?array<string,mixed>}
+     * @return array{report: array<string,mixed>, content: ?array<string,mixed>, manifest: ?array<string,mixed>, evidence: ?array<string,mixed>}
      */
-    public function run(string $dumpPath, ?string $zipPath, array $acknowledgedUnknown, string $legacyPathsFile): array
+    public function run(string $dumpPath, ?string $zipPath, array $acknowledgedUnknown, string $legacyPathsFile, array $options = []): array
     {
         $size = filesize($dumpPath);
         if ($size === false || $size > LegacySqlDumpParser::MAX_BYTES) {
@@ -49,7 +52,14 @@ final class LegacyPublicContentPipeline
         }
         $sql = (string) file_get_contents($dumpPath);
 
-        $extracted = $this->extractor->extract($sql, $acknowledgedUnknown);
+        $nullMissingLarge = ($options['null_missing_large'] ?? false) === true;
+        if ($nullMissingLarge && $zipPath === null) {
+            throw new \InvalidArgumentException('null_missing_large_requires_images_archive');
+        }
+
+        $extracted = $this->extractor->extract($sql, $acknowledgedUnknown, [
+            LegacyContentExtractor::OPTION_NORMALIZE_DOCUMENTS_URL => ($options['normalize_documents_url'] ?? false) === true,
+        ]);
         $source = ['bytes' => $size, 'sha256' => hash('sha256', $sql)] + ['header' => $extracted['header']];
 
         $report = [
@@ -66,18 +76,28 @@ final class LegacyPublicContentPipeline
         ];
 
         if ($extracted['blocked']) {
-            return ['report' => $report, 'content' => null, 'manifest' => null];
+            return ['report' => $report, 'content' => null, 'manifest' => null, 'evidence' => null];
         }
 
         $tablesPresent = array_keys($extracted['tables_seen']);
         $manifest = null;
         $images = ['status' => 'NOT_RUN: no archive supplied'];
         $imageMissing = [];
+        $normalizations = $extracted['normalizations'];
+        $nulled = [];
 
         if ($zipPath !== null) {
             $inspection = $this->redactPortraits($this->inspector->inspect($zipPath, $extracted['image_refs']));
             $images = $this->imageSection($inspection, $extracted['image_refs']);
-            $imageMissing = $this->missingBySlug($inspection['references'], $extracted['image_refs']);
+
+            if ($nullMissingLarge) {
+                [$extracted['content'], $nullItems] = $this->nullMissingLarge($extracted['content'], $inspection['references']);
+                foreach ($nullItems as $item) {
+                    $nulled["{$item['table']}|{$item['slug']}|{$item['column']}"] = true;
+                    $normalizations[] = $item;
+                }
+            }
+            $imageMissing = $this->missingBySlug($inspection['references'], $extracted['image_refs'], $nulled);
             $manifest = [
                 'archive' => ['bytes' => (int) filesize($zipPath), 'sha256' => hash_file('sha256', $zipPath)],
                 'entries' => $inspection['entries'],
@@ -106,7 +126,118 @@ final class LegacyPublicContentPipeline
             'owner_review' => $this->ownerReview($extracted, $images, $manifest),
         ];
 
-        return ['report' => $report, 'content' => $extracted['content'], 'manifest' => $manifest];
+        $evidence = null;
+        if ($normalizations !== [] || $options !== []) {
+            $evidence = $this->evidence($normalizations);
+            $report['normalization'] = ['options' => array_map(fn ($v) => $v === true, $options)] + $evidence['summary'];
+        }
+        $report['reconciliation'] = $this->reconciliation($extracted, $normalizations);
+
+        return ['report' => $report, 'content' => $extracted['content'], 'manifest' => $manifest, 'evidence' => $evidence];
+    }
+
+    /**
+     * Пустое значение вместо ссылки на отсутствующий большой файл. Исходная ссылка сохраняется
+     * ТОЛЬКО в приватном свидетельстве; файл не придумывается и small не подменяет large.
+     * Не трогается запись, у которой не найден и image_small (там нужен выбор владельца).
+     *
+     * @param array<string,mixed>|null $content
+     * @param array<string,array<string,mixed>> $references
+     *
+     * @return array{0: array<string,mixed>|null, 1: array<int,array<string,mixed>>}
+     */
+    private function nullMissingLarge(?array $content, array $references): array
+    {
+        $items = [];
+        foreach (['countries_images', 'destination_images'] as $table) {
+            foreach ($content['tables'][$table] ?? [] as $i => $row) {
+                $large = isset($row['image_large']) ? LegacyImageArchiveInspector::normalizeRef($row['image_large']) : null;
+                $small = isset($row['image_small']) ? LegacyImageArchiveInspector::normalizeRef($row['image_small']) : null;
+                if ($large === null || ($references[$large]['status'] ?? null) !== 'missing') {
+                    continue;
+                }
+                if ($small === null || ($references[$small]['status'] ?? null) !== 'present') {
+                    continue;
+                }
+                $items[] = [
+                    'ordinal' => null,
+                    'slug' => $row['slug'] ?? null,
+                    'table' => $table,
+                    'column' => 'image_large',
+                    'rule' => 'image_large_missing_in_archive_to_null',
+                    'source_value' => $row['image_large'],
+                    'output_value' => null,
+                    'rationale' => 'Large file is absent from the supplied archive; image_small is present. The file is not fabricated and the thumbnail is not substituted here; detail pages render the thumbnail only in a small slot.',
+                    'small_width' => $references[$small]['width'] ?? null,
+                    'small_height' => $references[$small]['height'] ?? null,
+                ];
+                unset($content['tables'][$table][$i]['image_large']);
+            }
+        }
+
+        return [$content, $items];
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $items
+     *
+     * @return array{summary: array<string,mixed>, items: array<int,array<string,mixed>>}
+     */
+    private function evidence(array $items): array
+    {
+        usort($items, fn ($a, $b) => [$a['table'], $a['slug'], $a['column']] <=> [$b['table'], $b['slug'], $b['column']]);
+        $byRule = [];
+        foreach ($items as $item) {
+            $byRule[$item['rule']] = ($byRule[$item['rule']] ?? 0) + 1;
+        }
+        ksort($byRule);
+
+        return ['summary' => ['transformations' => count($items), 'by_rule' => $byRule], 'items' => $items];
+    }
+
+    /**
+     * Детерминированная сверка «источник → преобразовано → принято/удержано» по таблицам.
+     *
+     * @param array<string,mixed> $extracted
+     * @param array<int,array<string,mixed>> $normalizations
+     *
+     * @return array<string,mixed>
+     */
+    private function reconciliation(array $extracted, array $normalizations): array
+    {
+        $out = [];
+        foreach ($extracted['extract'] as $table => $s) {
+            $transformedRows = [];
+            $byRule = [];
+            foreach ($normalizations as $n) {
+                if ($n['table'] === $table) {
+                    $transformedRows[$n['slug']] = true;
+                    $byRule[$n['rule']] = ($byRule[$n['rule']] ?? 0) + 1;
+                }
+            }
+            ksort($byRule);
+            $heldReasons = [];
+            foreach ($extracted['held'][$table] as $h) {
+                foreach ($h['reasons'] as $reason) {
+                    $heldReasons[$reason] = ($heldReasons[$reason] ?? 0) + 1;
+                }
+            }
+            ksort($heldReasons);
+
+            $out[$table] = [
+                'source_rows' => $s['source_rows'],
+                'soft_deleted' => $s['soft_deleted'],
+                'accepted' => $s['emitted'],
+                'held' => $s['held'],
+                'balanced' => $s['source_rows'] === $s['soft_deleted'] + $s['emitted'] + $s['held'],
+                'rows_transformed' => count($transformedRows),
+                'transformations_by_rule' => $byRule,
+                'held_reasons' => $heldReasons,
+                'held_rows' => array_map(fn ($h) => ['ordinal' => $h['ordinal'], 'slug' => $h['slug'], 'reasons' => $h['reasons']], $extracted['held'][$table]),
+            ];
+        }
+
+        return $out;
     }
 
     /**
@@ -145,6 +276,9 @@ final class LegacyPublicContentPipeline
         }
         if ($result['manifest'] !== null) {
             $put('asset-manifest.json', $this->json($result['manifest']));
+        }
+        if (($result['evidence'] ?? null) !== null) {
+            $put('normalization-evidence.json', $this->json($result['evidence']));
         }
 
         return $written;
@@ -344,15 +478,19 @@ final class LegacyPublicContentPipeline
     /**
      * @param array<string,array<string,mixed>> $references
      * @param array<int,array<string,mixed>> $refs
+     * @param array<string,bool> $nulled «таблица|slug|столбец» ссылок, обнулённых в производном файле
      *
      * @return array<string, array<string,bool>> таблица => slug => true
      */
-    private function missingBySlug(array $references, array $refs): array
+    private function missingBySlug(array $references, array $refs, array $nulled = []): array
     {
         $out = [];
         foreach ($refs as $r) {
             if ($r['group'] !== 'public_content' || $r['slug'] === null) {
                 continue;
+            }
+            if (isset($nulled["{$r['table']}|{$r['slug']}|{$r['column']}"])) {
+                continue; // ссылка убрана из производного файла, страница её больше не выводит
             }
             $normalized = LegacyImageArchiveInspector::normalizeRef($r['ref']);
             if ($normalized !== null && isset($references[$normalized]) && $references[$normalized]['status'] !== 'present') {
@@ -433,6 +571,30 @@ final class LegacyPublicContentPipeline
                 }
                 foreach ($reasons as $reason => $count) {
                     $md[] = sprintf('  - held %s: `%s` × %d', $name, $reason, $count);
+                }
+            }
+
+            if (isset($r['normalization'])) {
+                $md[] = '';
+                $md[] = '## Normalization (derived file only; source untouched)';
+                foreach ($r['normalization']['by_rule'] as $rule => $count) {
+                    $md[] = sprintf('- `%s` × %d', $rule, $count);
+                }
+            }
+            if (isset($r['reconciliation'])) {
+                $md[] = '';
+                $md[] = '## Reconciliation (source → transformed → accepted/held)';
+                foreach ($r['reconciliation'] as $name => $c) {
+                    $md[] = sprintf(
+                        '- `%s`: source %d = soft-deleted %d + accepted %d + held %d (%s); rows transformed: %d',
+                        $name,
+                        $c['source_rows'],
+                        $c['soft_deleted'],
+                        $c['accepted'],
+                        $c['held'],
+                        $c['balanced'] ? 'balanced' : 'UNBALANCED',
+                        $c['rows_transformed'],
+                    );
                 }
             }
 
