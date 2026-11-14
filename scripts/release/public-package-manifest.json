@@ -1,0 +1,60 @@
+{
+  "_comment": "NOV-PUBLIC-03B-L3. Fail-closed allowlist for the public-only release package. Anything not matched by an allow rule is rejected by the validator, even if git archive emitted it. archive_pathspecs are git pathspecs relative to the repo root.",
+  "archive_pathspecs": [
+    "artisan",
+    "composer.json",
+    "composer.lock",
+    "robots.txt",
+    "app",
+    "bootstrap/app.php",
+    "bootstrap/cache/.gitignore",
+    "config",
+    "database/migrations",
+    "lang",
+    "public",
+    ":(exclude)public/dist",
+    ":(exclude)public/plugins",
+    "resources/views",
+    "resources/seo",
+    "routes",
+    "storage"
+  ],
+  "allow_regex": [
+    "^(artisan|composer\\.json|composer\\.lock|robots\\.txt)$",
+    "^(app|config|lang|routes|resources/views|resources/seo|database/migrations)/",
+    "^bootstrap/(app\\.php|cache/\\.gitignore)$",
+    "^public/(index\\.php|favicon\\.ico|\\.htaccess|\\.user\\.ini)$",
+    "^public/(css|js|img|documents)/",
+    "^storage/(app|framework|logs)/(.*/)?\\.gitignore$"
+  ],
+  "allowed_dotfile_basenames": [".gitignore", ".htaccess", ".user.ini"],
+  "forbidden_path_regex": [
+    "(^|/)\\.env($|\\.)",
+    "(^|/)\\.(claude|cursor|git|github|idea|vscode)(/|$)",
+    "^(tests?|docs|vendor|scripts)/",
+    "(^|/)node_modules/",
+    "\\.(sql|sqlite3?|dump|bak|backup|old|orig|log|zip|rar|7z|tar|gz|tgz|pem|key|p12|pfx|doc|docx|psd|xlsx?|bat)$",
+    "(^|/)(phpunit\\.xml|package(-lock)?\\.json|vite\\.config\\.js|tailwind\\.config\\.js|postcss\\.config\\.js|README\\.md|structure\\.txt)$",
+    "(^|/)database/(seeders|factories)/"
+  ],
+  "required_files": [
+    "artisan", "composer.json", "composer.lock", "robots.txt",
+    "bootstrap/app.php", "bootstrap/cache/.gitignore",
+    "public/index.php", "public/.htaccess",
+    "routes/public.php", "routes/seo.php", "routes/web.php",
+    "config/release.php", "app/Providers/RouteServiceProvider.php",
+    "resources/seo/legacy-sitemap-paths.txt",
+    "public/documents/User_Agreement.pdf",
+    "public/documents/Policy_regarding_the_protection_and_processing_of_personal_data.pdf",
+    "public/documents/Public_offer_for_ticket_sales_and_hotel_bookings.pdf",
+    "public/documents/Public_offer_to_conclude_an_agreement_on_the_sale_of_a_tourism_product.pdf",
+    "public/documents/Reminder_for_those_traveling_abroad_general.pdf",
+    "public/img/logo.png", "public/favicon.ico"
+  ],
+  "content_scan_regex": {
+    "private key block": "-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----",
+    "APP_KEY value": "APP_KEY\\s*=\\s*base64:[A-Za-z0-9+/=]{20,}",
+    "DB password assignment": "^\\s*DB_PASSWORD\\s*=\\s*\\S+",
+    "SQL dump header": "-- (MySQL|MariaDB) dump|-- Dump completed on"
+  }
+}
