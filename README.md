@@ -1,121 +1,95 @@
 # Avilona_turfirma
 
-Веб-сайт и внутренняя система туристического агентства «Авилона» на Laravel.
+Веб-сайт и внутренняя система туристического агентства ООО «Авилона» на Laravel.
 
-## Текущий статус
+## Текущий статус (на 2026-11-15)
 
-> **Единственный канонический источник статуса, порядка работ и решений владельца — [`docs/roadmap.md`](docs/roadmap.md).** Этот файл — краткая сводка; при расхождении прав `docs/roadmap.md`.
+> **Единственный канонический источник статуса, порядка работ и решений владельца — [`docs/roadmap.md`](docs/roadmap.md)** (текущая сводка — §A10). Этот файл — краткая справка; при расхождении прав `docs/roadmap.md`.
 
-- Project path: `C:\wamp\www\Avilona_turfirma`
-- Branch: `db-rebuild-stage3`
-- **Live HEAD определяет Git** (`git rev-parse HEAD`); здесь он не фиксируется. Последний проверенный тестовый checkpoint — `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (AO-FIX-06).
-- Stage 0–13, E1, E2, E3, E4 — ✅ CLOSED; **E5 — ✅ FULLY CLOSED** (application level); **E5.5 Agency Operations Automation — 🟢 ACTIVE** (закрыты только архитектурный checkpoint E5.5-A0 и малые исправления AO-FIX-01…06; **остальное не реализовано**); E6 — ⬜ PENDING.
-- **Production НЕ развёрнут** (используется текущий хостинг REG.RU). Закрытие приложения ≠ production-ready.
-- Last verified full PHPUnit baseline: **1478 tests / 11644 assertions**, 0 failures, 0 errors (checkpoint `4b7abff2`, AO-FIX-06; PHP 8.3.32, PHPUnit 11.5.56, Laravel 12.65.0, SQLite `:memory:`); 1 PHPUnit deprecation — XML-схема `phpunit.xml`, не функциональный сбой.
-- Следующий шаг, одобренные решения владельца (доступ Manager/Admin, назначение обращений, финансовые правила), открытые решения и план AOA — **только в [`docs/roadmap.md`](docs/roadmap.md)**.
+- Project path: `C:\wamp\www\Avilona_turfirma`; ветка `db-rebuild-stage3` (в `main` не слита).
+- **Live HEAD определяет Git** (`git rev-parse HEAD`); здесь он не фиксируется. На начало ROADMAP-SYNC-03 это был `0d34526e053dd78e9dae89ceb0753a7925c3dc07` (NOV-PUBLIC-03B-L3) — историческое значение после docs-коммита.
+- Stage 0–13, E1, E2, E3, E4 — ✅ CLOSED; E5 — ✅ CLOSED (уровень приложения); **E5.5 AOA — 🟢 ACTIVE**: AOA-01…AOA-04 ✅ CLOSED, **AOA-05 🟡 ACTIVE** (I1, I3, I4 завершены; I2 — planning-only), AOA-06…AOA-18 не начаты; **E6 — ⬜ PENDING**.
+- **Production НЕ развёрнут. Laravel не развёрнут ни на каком сервере.** Закрытие приложения ≠ production-ready; push/локальный тест/локальный tarball ≠ деплой.
+- **Два срока владельца:** (1) **ноябрь 2026** — публичный сайт на avilona.ru, доступный, пригодный к использованию и технически индексируемый; (2) **31 января 2027** — целевая сдача согласованного полного проекта. Ноябрьский запуск ≠ завершение CRM. План и gates — [`docs/roadmap.md`](docs/roadmap.md) §A10.G / §A10.H / §A10.M.
+- Последние NOV-PUBLIC шаги: L1 `b7adafda` (Composer-обновление: Laravel 12.72.0, `php ^8.3`), L3 `0d34526e` (безопасное public-only пакетирование, `scripts/release/`). Подробности — `docs/roadmap.md` §A10.D.
+- Тесты (сообщённые, не перезапускавшиеся в docs-задаче): **2646 tests / 20559 assertions** на PHP 8.3.36 / 8.4.13 / 8.5.12 (L1); после L3 полный набор **не запускался**. Ограничения и отличия сред — `docs/roadmap.md` §A2, §A10.F.
 
-Внешние Project Sources / Handoff — версионированные снимки этого репозитория, а не отдельный источник истины. Набор от 2026-09-23 (`a1d72a40`) — **исторический**. Процесс refresh — `docs/README.md` §8.1.
+Внешние Project Sources / Handoff — версионированные снимки репозитория, а не отдельный источник истины; актуален только набор, имя которого содержит `<sha8>` текущего pushed docs HEAD. Процесс refresh — `docs/README.md` §8.1.
 
-## Что закрыто
+## Публичный релиз (public-only)
 
-**Stage 0–13** — recovery R0–R6D, жизненный цикл заявки, защищённый чат/документы,
-единый role precedence (`admin > assigned manager > owner-facing tourist`),
-local/read-only каталог туров, публичный контент/CMS/RSS, уведомления,
-security/reliability/performance hardening, dependency modernization (Laravel 12,
-Vite 7, vendor/node_modules не отслеживаются), review consent/moderation/withdrawal,
-registration consent, password visibility UX, authenticated-only booking. Подробности
-— `docs/README.md` §5.
+Ноябрьский релиз — профиль `RELEASE_PUBLIC_ONLY=true` (**переменная окружения**, по умолчанию OFF; в пакете её нет): регистрируются только `routes/public.php` и `routes/seo.php`, приватные маршруты (вход, кабинеты, чат, API, webhook Tourvisor) отсутствуют (404). Без этой переменной пакет работает как полная CRM. Сборка пакета — `scripts/release/build-public-package.php` (локальный инструмент; [`docs/NOV-PUBLIC-03B-L3-release-packaging-2026-11-15.md`](docs/NOV-PUBLIC-03B-L3-release-packaging-2026-11-15.md)).
 
-**E1 Comprehensive Audit** — технически закрыт на `08d06263` (`docs/README.md` §5A):
+## Что закрыто (кратко)
 
-- E1-A1 — canonical social image host, дубли ID публичной навигации, Google Maps consent gating;
-- E1-A2 — `tel:` href сотрудника, актуальная копия оплаты/возврата, публичные реквизиты в письмах;
-- E1-A3 — sitemap, robots.txt, regression coverage;
-- E1-A4 — page-specific динамический OG/Twitter для detail-страниц;
-- E1-A5 / RSS — санитизация HTML внешнего RSS (ingest + render-time), безопасные URL-схемы;
-- E1-RPD — News listing XSS, публичные inner-cache TTL (один час), nullable image robustness, null-slug rendering;
-- E1-FINAL — About slug-ссылки, Article HTML sanitisation (write + historical), About cache TTL, убраны hardcoded «55/12», reload-captcha вне cache, Awards regression; заявление про Cyrillic `Str::slug` опровергнуто runtime.
+**Stage 0–13** — recovery R0–R6D, жизненный цикл заявки, защищённый чат/документы, role precedence (`admin > assigned manager > owner-facing tourist`), local/read-only каталог туров, публичный контент/CMS/RSS, уведомления, security/reliability/performance hardening, dependency modernization (Laravel 12, Vite 7), review consent/moderation/withdrawal, registration consent, authenticated-only booking. Подробности — `docs/README.md` §5.
 
-Намеренно отложенные пункты E1 (НЕ дефекты) — см. `docs/README.md` §5A.2, в т.ч.
-`PENDING_BUSINESS_DECISION_OPENING_HOURS` (не выбирать значение — решается до E6).
-Пункт per-page `og:type=article` закрыт в E2-A5.
+**E1–E5** — аудит, публичный и кабинетный редизайн, стабилизация, итоговый модуль поиска туров (Tourvisor → IncomingInquiry → Booking). **AOA-01…05** — бизнес-аудит, политики доступа, независимая от провайдера сущность `Inquiry`, ручное создание/назначение, конвертация в Booking, защищённое удаление и деактивация аккаунтов. Детальные статусы — только в `docs/roadmap.md` §A1/§A6.
 
 ## Roadmap E1…E6
 
 | Фаза | Название | Статус |
 |---|---|---|
-| E1 | Comprehensive Audit | ✅ TECHNICALLY CLOSED |
-| E2 | Public UX / UI / Design Redesign | ✅ CLOSED (E2-A1…E2-A7) |
-| E3 | Tourist / Manager / Admin Cabinet UX/UI Redesign | ✅ CLOSED (E3-A1…E3-A6) |
-| E4 | Post-redesign stabilization / regression / browser-device QA | ✅ CLOSED (E4-A…E4-E1) |
-| E5 | Final Tour Search Solution (Tourvisor module → IncomingInquiry → нативная Booking) | ✅ CLOSED на уровне приложения (E5-A1…E5-A4); **production НЕ развёрнут** |
-| — | Screenshot Audit Pack + независимый анализ (Astra / ChatGPT Work) | ✅ выполнены вне репозитория; статус AO — в `docs/roadmap.md` §A7 |
-| **E5.5** | Agency Operations Automation (AOA): Inquiry / OperatorBooking / finances / documents / Bridge / VK / e-mail | 🟢 **ACTIVE** — закрыты только E5.5-A0 (архитектура) и AO-FIX-01; остальное не реализовано; план и решения владельца — `docs/roadmap.md` §A3–§A9 |
-| E6 | Production Deployment / Operations Validation | ⬜ PENDING (после E5.5 и финального независимого аудита) |
+| E1–E4 | Аудит, публичный и кабинетный редизайн, стабилизация | ✅ CLOSED |
+| E5 | Final Tour Search Solution | ✅ CLOSED на уровне приложения; **production НЕ развёрнут** |
+| **E5.5** | Agency Operations Automation (AOA) | 🟢 **ACTIVE** (AOA-01…04 CLOSED; AOA-05 ACTIVE; AOA-06…18 не начаты) |
+| NOV-PUBLIC | Публичный сайт (ноябрь 2026) | 🟡 IN PREPARATION — релизный кандидат подготовлен, **не развёрнут**; gates — `docs/roadmap.md` §A10 |
+| E6 | Production Deployment / Operations Validation | ⬜ PENDING |
 
-Таблица — краткая сводка. Канонический статус и план — `docs/roadmap.md`; исторические детали фаз — `docs/README.md` §9–§13.
+Таблица — краткая сводка. Канонический статус — `docs/roadmap.md`.
 
 ## Канонические факты компании
 
+- Организация: ООО «Авилона», ИНН 7805502454, КПП 780501001, ОГРН 1097847289803.
 - Официальный публичный e-mail: `avilonatur@bk.ru`.
 - Получатель входящей публичной формы: `straus97@mail.ru` (намеренный внутренний
   submission recipient; не заменять на публичный e-mail).
-- Текущий фактический офис / публичный адрес: `198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10`.
-- Официальный юридический (регистрационный) адрес с 2026-10-12 (запись ЕГРЮЛ
-  2267802693431, выписка от 2026-10-25): `198302, г. Санкт-Петербург, вн. тер. г.
-  муниципальный округ Красненькая речка, ул. Морской Пехоты, д. 10, к. 1, литера А,
-  кв. 22`. ООО «Авилона», ИНН 7805502454, КПП 780501001, ОГРН 1097847289803. Это
-  **не** офис для клиентов: выводится только как «Юридический адрес» (контакты и
-  тексты согласий), без карты/маршрута/метки. Прежний адрес на Звенигородской
-  (`191119 … д. 22, литера А, офис 053, пом. 7Н`) больше нигде не актуален и не
-  является ни юридическим, ни фактическим адресом.
-- Оплата: наличные; интернет-эквайринг; QR на расчётный счёт организации;
-  эквайринговый терминал в офисе.
-- Возвраты: на банковскую карту клиента; итоговая сумма зависит от условий/решения
-  туроператора; при неподтверждённом отеле возможен полный возврат; отмена по
-  инициативе клиента может быть ограничена условиями оператора.
-- Передача документов: Авилона публично не рекламирует отдельную курьерскую
-  доставку. Каноническая формулировка — `«Передача документов по договорённости»`.
-- Рассрочка/кредит на поездки предлагаются, но только с общей формулировкой — без
-  выдуманных банков, ставок, партнёров и финансовых условий.
-- Часы работы: `PENDING_BUSINESS_DECISION_OPENING_HOURS` — конфликт копий (home
-  «будни 10:00–20:00» vs contacts «будни 11:00–20:00, по записи»). Не выбирать;
-  решается до E6.
+- Фактический офис для клиентов: `198261, Санкт-Петербург, ул. Генерала Симоняка, д. 10`.
+  Это **не** walk-in точка с фиксированным графиком: бизнес работает преимущественно онлайн,
+  визит в офис — по предварительной договорённости (офис — в основном для оплаты и получения
+  готовых документов). Рекомендуемая публичная формулировка (ожидает утверждения владельца):
+  «Работаем преимущественно онлайн. Посещение офиса — по предварительной договорённости.»
+  Фиксированные часы работы **не публиковать и не выдумывать**; текущие шаблоны ещё содержат
+  прежние часы — правка не сделана (`docs/roadmap.md` §A10.G.4).
+- Юридический (регистрационный) адрес с 2026-10-12 (ЕГРЮЛ запись 2267802693431, выписка от
+  2026-10-25): `198302, г. Санкт-Петербург, вн. тер. г. муниципальный округ Красненькая речка,
+  ул. Морской Пехоты, д. 10, к. 1, литера А, кв. 22` — выводится только как «Юридический адрес»,
+  без карты/маршрута. Прежний адрес на Звенигородской нигде не актуален.
+- Оплата: наличные; интернет-эквайринг; QR на расчётный счёт; эквайринговый терминал в офисе.
+- Возвраты: на банковскую карту клиента; сумма зависит от условий туроператора.
+- Передача документов: отдельная курьерская доставка **не** рекламируется; каноническая
+  формулировка — `«Передача документов по договорённости»`.
+- Рассрочка/кредит — только общая формулировка, без выдуманных банков/ставок/партнёров.
+- Юридические документы (политика ПДн, пользовательское соглашение, оферты, памятка): новые
+  редакции **не утверждены и не опубликованы**; текущие PDF не считать юридически одобренными.
 
-## Технологический стек
+## Технологический стек (проверено 2026-11-15)
 
 | Компонент | Значение |
 |---|---|
-| PHP CLI проекта | 8.3.32 |
-| Laravel | 12.65.0 |
-| PHPUnit | 11.5.56 |
-| PHPUnit DB | SQLite `:memory:` |
-| UI | Blade + Bootstrap 5 |
-| Canonical local DB | `turfirma_rebuild_v4`, port 3308 |
-| Build | Vite 7.3.6 + laravel-vite-plugin 2.1.0 |
+| Laravel | 12.72.0 (`composer.lock`) |
+| PHP | `^8.3` (поддерживаются 8.3–8.5); целевой reported сервер — 8.5.4; CLI `PATH` локально — 8.4.13; `php8.3.32` уязвим — не использовать |
+| PHPUnit | 11.5.56; БД тестов — SQLite `:memory:` |
+| UI | Blade + Bootstrap 5; сборка Vite 7.3.6 + laravel-vite-plugin 2.1.0 |
+| Canonical local DB | `turfirma_rebuild_v4` — **не открывать** без отдельного разрешения владельца |
 
-Для проекта использовать только:
-
-```text
-C:\wamp\bin\php\php8.3.32\php.exe
-```
-
-PHPUnit никогда не запускать против canonical MySQL.
+Подробный стек, расширения, очередь/scheduler/интеграции — [`docs/README.md`](docs/README.md) §1.0.
 
 ## Документация
 
-- [`docs/README.md`](docs/README.md) — индекс документации, workflow/guards, checkpoint ledger (статус и NEXT — только в roadmap).
-- [`docs/roadmap.md`](docs/roadmap.md) — **канонический roadmap**: статус этапов, решения владельца, план AOA, открытые решения, NEXT, production readiness.
-- [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](docs/E5.5-agency-operations-automation-architecture-2026-10-19.md) — техническая архитектура и инварианты E5.5 (справочно; статус и план — в roadmap).
-- `docs/archive/` — исторические документы, не руководство к действию без сверки с текущим кодом.
+- [`docs/README.md`](docs/README.md) — индекс документации, текущая справка (§1.0), workflow/guards, ledger, процедура refresh Project Sources (§8.1).
+- [`docs/roadmap.md`](docs/roadmap.md) — **канонический roadmap**: статус этапов, решения владельца, план AOA, критический путь ноября и января, gates, риски, NEXT (§A10).
+- [`docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`](docs/E5.5-agency-operations-automation-architecture-2026-10-19.md) — архитектура и инварианты E5.5 (справочно).
+- `docs/NOV-PUBLIC-*.md` — документы публичного релиза (readiness, SEO/контент/хостинг, legacy-URL, импорт контента, пакетирование).
+- `docs/archive/` — исторические документы, не руководство к действию без сверки с кодом.
 
 ## Жёсткие ограничения
 
-Без отдельного утверждённого guarded plan не выполнять:
+Без отдельного утверждённого guarded plan и явного разрешения владельца не выполнять:
 
 - `composer update`, `npm update`, `npm audit fix`;
-- migrations/seed/import/reset/refresh/wipe;
+- migrations/seed/import/reset/refresh/wipe против реальных БД; любые операции с `turfirma_rebuild_v4` и локальными портами WAMP 3306/3308;
 - PHPUnit против canonical MySQL;
-- реальные внешние provider integrations;
-- деструктивные DB/repository операции;
-- широкие refactor/batch-изменения вместо одного semantic slice.
+- любые действия на общем VPS (доступ, деплой, Nginx/PHP-FPM/MySQL/UFW/SSH) — только через координацию с инфраструктурной командой;
+- реальные внешние provider integrations; публикация реального или производного приватного контента;
+- деструктивные DB/repository операции; широкие refactor/batch-изменения вместо одного semantic slice.

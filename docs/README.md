@@ -1,16 +1,52 @@
 # Документация Avilona_turfirma
 
-Дата актуализации содержания: **2026-10-19** (ROADMAP-SYNC-01)
+Дата актуализации содержания: **2026-11-15** (ROADMAP-SYNC-03; до этого — 2026-10-19, ROADMAP-SYNC-01). Исторические разделы ниже (§4–§13, ledger в §1.1) **не переписывались**; где они расходятся с §1.0, §8.1, §13 и `docs/roadmap.md` §A10 — актуальны последние.
 
 > **Статус этапов, порядок работ (NEXT), решения владельца, открытые решения и production readiness ведутся ТОЛЬКО в [`docs/roadmap.md`](roadmap.md) — единственном каноническом источнике.** Этот файл — индекс документации, workflow/guards и checkpoint ledger; любые упоминания «следующего шага» ниже либо исторические, либо ссылаются на roadmap. При расхождении прав `docs/roadmap.md`.
 
 ## 1. Текущий checkpoint
 
+### 1.0 Сводка текущего состояния (на 2026-11-15; статусы — только в `docs/roadmap.md`)
+
+Этот раздел — краткая справка (пункты A, B, P, Q, R плана handoff). Пункты C–O (карта этапов, история NOV-PUBLIC, тесты, критический путь ноября, цель 31 января 2027, VPS, контент, SEO, юридические документы, GO/NO-GO, риски, следующие шаги) — в [`docs/roadmap.md` §A10](roadmap.md). Здесь они **не дублируются**.
+
+**A. Назначение.** Laravel-сайт и внутренняя CRM туристического агентства ООО «Авилона» (Санкт-Петербург): публичный сайт (каталог стран/направлений, статьи, контакты, юридические документы, поиск туров через модуль Tourvisor), личные кабинеты Tourist / Manager / Admin, Booking, защищённые чат и документы, `Inquiry` и аудит. Два срока владельца: **публичный сайт на avilona.ru в ноябре 2026** (доступный, пригодный к использованию, технически индексируемый) и **31 января 2027 — целевая сдача согласованного полного проекта**. Ноябрьский запуск ≠ завершение CRM (`roadmap.md` §A1.1, §A10.G/H).
+
+**B. Стек (проверено по `composer.json`, `composer.lock`, `package.json`, коду; 2026-11-15).**
+
+| Компонент | Значение |
+|---|---|
+| Backend | Laravel **12.72.0** (`composer.lock`), `php ^8.3` (после NOV-PUBLIC-03B-L1, `b7adafda`); код поддерживает PHP 8.3 – 8.5 |
+| PHP-расширения (из lock) | ctype, dom, fileinfo, filter, gd, hash, json, libxml, mbstring, openssl, pcre, session, tokenizer + `pdo_mysql` |
+| БД | MySQL; целевой reported сервер **8.4.13** (миграции на 8.4.13 **не проверены**; прежние MySQL-проверки — на disposable MySQL 9.7.1); тесты — SQLite `:memory:` |
+| Frontend | Blade + Bootstrap 5 (публичный layout подключает Bootstrap с CDN); Vite 7.3.6 + `laravel-vite-plugin` 2.1.0 только для сборки; release-пакет не содержит `node_modules`/`public/dist` |
+| Маршруты | `routes/web.php` (CRM + публичные), `routes/public.php` (только публичные — 23 объявления), `routes/seo.php` (`robots.txt`, `sitemap.xml`), `routes/api.php`; при `RELEASE_PUBLIC_ONLY=true` регистрируются только `public.php` + `seo.php` (`RouteServiceProvider`, `config/release.php`; по умолчанию OFF) |
+| Аутентификация/роли | `admin`, `manager`, `tourist` (`CheckRole`, `EnsureAccountIsActive`, Sanctum для API); приоритет `admin > назначенный manager > владелец-турист` |
+| Файлы | диски `local`/`public`/`s3` в `config/filesystems.php`; документы Booking, личные документы и вложения чата — диск `local` (`storage/app`, не публичный), скачивание через авторизованные маршруты; аватары — диск `public` (нужен `storage:link`; только CRM) |
+| Почта | Laravel Mail, `MAIL_MAILER` по умолчанию `smtp`; SMTP-доставка на сервере **не проверена** |
+| Очередь / scheduler | `QUEUE_CONNECTION` по умолчанию `sync`; единственный `ShouldQueue` — `ImportTourvisorInquiry` (CRM); одна задача расписания — `bookings:send-trip-reminders` ежедневно 10:00 (CRM) |
+| Интеграции | Tourvisor (модуль на публичной странице; Export API и webhook — только CRM, в public-only профиле маршрутов нет), RSS-синхронизация новостей (команда), Google Maps за consent-гейтом |
+| Trusted proxies | **не настроены в коде** (`TrustProxies::$proxies = null`, переменная окружения не читается) — риск R-V4 в `roadmap.md` §A10.N |
+| Версии PHP локально | CLI `PATH` → **8.4.13**; WampServer: 8.5.12, 8.4.13; **8.3.32 уязвим — не использовать как runtime**; 8.3.36 — только изолированная проверенная сборка (в WAMP не установлена) |
+
+**P. Правила сотрудничества ChatGPT ↔ Claude Code.**
+- Владельцу — по-русски; implementation prompts для Claude Code и финальные технические отчёты Claude Code — **по-английски**.
+- Для каждой задачи Claude Code ChatGPT-ассистент **вне prompt** рекомендует: модель, режим, effort и **НОВЫЙ ЧАТ / ПРОДОЛЖИТЬ ТЕКУЩИЙ**; эти настройки **не** кладутся внутрь английского prompt. Не использовать дороже, чем нужно (достаточно подходящих настроек Sonnet 5.5). Предпочитать один полный копируемый prompt без повторного контекста; не просить ZIP без необходимости; беречь кредиты владельца.
+- После полностью пройденной scoped-проверки обычный guarded commit + push разрешён без нового согласования; **отдельное согласие владельца** нужно для: расширения scope, опасных/необратимых действий, production-изменений, реальных БД, неутверждённой инфраструктурной работы. Не менять несвязанную функциональность; не деплоить без разрешения; не использовать auto-accept для рискованных правок.
+- Ручные PowerShell-инструкции — только полные копируемые блоки, без частичных фрагментов.
+- Любые действия на VPS — только через координацию с инфраструктурным чатом и явное разрешение владельца (`roadmap.md` §A10.I).
+
+**Q. Защита баз данных (жёстко).** Canonical local DB `turfirma_rebuild_v4` **никогда** не открывать (даже read-only) без отдельного явного разрешения владельца; не использовать локальные порты WAMP **3306 / 3308**; не использовать default `.env` подключение для операций с данными; никаких DROP/CREATE/деструктивных команд против реальных окружений; реальных данных в фикстурах нет; PHPUnit — только SQLite `:memory:`; проверка MySQL-движка — только на независимо проверенных disposable QA-окружениях или позднее на авторизованном staging; общая VPS-база сейчас **вне scope**. `composer update`, `npm update`, миграции/seed/import против реальных БД без отдельного утверждённого guarded plan — запрещены (§11).
+
+**R. Точная процедура refresh Project Sources** — §8.1.
+
+### 1.1 Ledger checkpoint-ов (строки ниже — ИСТОРИЧЕСКИЕ, кроме явно помеченных; live HEAD определяет Git)
+
 | Параметр | Значение |
 |---|---|
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
-| **Live HEAD** | Определяет Git (`git rev-parse HEAD`), не фиксируется в документах. Последний проверенный тестовый checkpoint — `4b7abff2f8c88c5d38a9b32ceef7ca6a4b1f54b9` (AO-FIX-06); `6cbdbcda` (AO-FIX-01) — более ранний код-коммит. Статус и порядок работ — только в `docs/roadmap.md` |
+| **Live HEAD** | Определяет Git (`git rev-parse HEAD`), не фиксируется в документах. На начало ROADMAP-SYNC-03 (2026-11-15) он был `0d34526e053dd78e9dae89ceb0753a7925c3dc07` (NOV-PUBLIC-03B-L3) — после docs-коммита это ИСТОРИЧЕСКОЕ значение. Предыдущие якоря: `b7adafda06c6f3edfd45789c4aa4f20b48b36776` (L1, зависимости); `72ae200d` (04B). Строка ниже про `4b7abff2` (AO-FIX-06) — **исторический** тестовый checkpoint. Статус и порядок работ — только в `docs/roadmap.md` |
 | Предыдущие checkpoints | docs `cb6e440a` (`docs: establish E5.5 agency operations architecture`, E5.5-A0); docs `c68b6814` (`docs: close E5 and prepare final audit`); application HEAD закрытия E5 `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`) — все НЕ текущий HEAD |
 | Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
 | Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
@@ -23,11 +59,11 @@
 | Application HEAD на момент закрытия E2 (E2-A7) | `35f91b9e270cf68654877d42fc8b0d0d59d12458` (`feat: finalize public visual system palette (E2-A7)`) — НЕ текущий HEAD |
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
-| Активный внешний documentation/source (Project Sources) checkpoint | пока что — **ИСТОРИЧЕСКИЙ набор от 2026-09-23 на `a1d72a40`** (до E5) — **STALE**; свежий набор строится из нового чистого pushed docs HEAD после этого docs-only коммита (см. §8.1) |
-| Full PHPUnit baseline | **Последний проверенный: 1478 tests / 11644 assertions**, 0 failures, 0 errors (checkpoint `4b7abff2`, AO-FIX-06; сообщён, не перезапускался в docs-slice). Ранее: AO-FIX-01 — 1403 / 9799 (SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
-| PHP | `C:\wamp\bin\php\php8.3.32\php.exe` (8.3.32) |
+| Активный внешний documentation/source (Project Sources) checkpoint | **Определяется именем файлов активного набора** (`Avilona_*_<date>_<sha8>.*` в `C:\Avilona_private\ChatGPT_sources`); набор актуален только если `<sha8>` = `git rev-parse --short=8 HEAD` на clean pushed docs HEAD (см. §8.1). Наборы 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`) — **ИСТОРИЧЕСКИЕ / STALE** |
+| Full PHPUnit baseline | **Актуальные сообщённые прогоны (2026-11-15; в docs-slice не перезапускались):** L1 `b7adafda` — **2646 tests / 20559 assertions** на PHP 8.3.36 / 8.4.13 / 8.5.12 (1 skipped, 1 PHPUnit deprecation, известный Faker-apostrophe flake); 04B `72ae200d` — 2646 / 20567 (другая среда; **не смешивать**); L3 `0d34526e` полный набор **не запускался** (только 13 tests / 291 assertions по пакетированию). Подробности — `roadmap.md` §A2/§A10.F. *Исторические значения ниже:* AO-FIX-06 `4b7abff2` — **1478 / 11644** (0 failures, 0 errors; сообщён, не перезапускался в docs-slice). Ранее: AO-FIX-01 — 1403 / 9799 (SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
+| PHP | **Актуально:** CLI `PATH` = PHP **8.4.13** (также доступен WAMP 8.5.12); поддерживаются 8.3–8.5 (`php ^8.3`); `php8.3.32` — **уязвимая** сборка, не использовать как runtime. *Историческая запись (до NOV-PUBLIC-01/L1):* `C:\wamp\bin\php\php8.3.32\php.exe` |
 | PHPUnit DB | SQLite `:memory:` only |
-| Laravel | 12.65.0 |
+| Laravel | **12.72.0** (`composer.lock`, после L1 `b7adafda`); *было:* 12.65.0 |
 | PHPUnit | 11.5.56 |
 | Stage 0–13 | ✅ CLOSED |
 | E1 Comprehensive Audit | ✅ **TECHNICALLY CLOSED** (см. §5A) |
@@ -37,7 +73,7 @@
 | **E4 — Post-redesign stabilization / resilience QA** | ✅ **CLOSED** (E4-A…E4-E1; см. §9.4). Закрыт ранее, документационный checkpoint `a1d72a40`. |
 | **E5 — Final Tour Search / Aggregation Product Block** | ✅ **CLOSED на уровне приложения** — E5-A1 … E5-A4 закрыты и запушены (см. §10). **Приложение закрыто, но production НЕ развёрнут:** production-деплоя не было, проект **не production-ready** до закрытия E6. |
 | **Следующий шаг** | **См. `docs/roadmap.md` §A9 (канонический источник).** Ничего не дублируется здесь. |
-| **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE.** Закрыты только E5.5-A0 (архитектура) и AO-FIX-01; остальное не реализовано; E5 остаётся CLOSED. План, решения владельца и gaps — `docs/roadmap.md` §A3–§A9; техническая архитектура — `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. |
+| **E5.5 — Agency Operations Automation (AOA)** | 🟢 **ACTIVE.** AOA-01, AOA-02, AOA-03, AOA-04 — ✅ CLOSED (AOA-03/04 как development stage); **AOA-05 — 🟡 ACTIVE** (I1, I3, I4 завершены; I2 — planning-only); AOA-06…AOA-18 не начаты; E5 остаётся CLOSED. Актуальная таблица — `docs/roadmap.md` §A1/§A6/§A10.C; техническая архитектура — `docs/E5.5-agency-operations-automation-architecture-2026-10-19.md`. *Историческая формулировка этой строки («закрыты только E5.5-A0 и AO-FIX-01») устарела.* |
 | E6 | ⬜ PENDING — final production / operations stage; **production НЕ развёрнут**, чеклист — §12; инфраструктурное состояние — §13 |
 
 **ПРИЛОЖЕНИЕ ЗАКРЫТО (E5) — НО PRODUCTION НЕ РАЗВЁРНУТ.** E5 закрыт на уровне
@@ -51,7 +87,7 @@ production-секреты/webhook Tourvisor не настроены. Закры�
 вывод подтверждён запуском `--display-phpunit-deprecations`). Это не
 функциональный/кодовый сбой.
 
-Последний проверенный baseline 1478 / 11644 (`4b7abff2`, AO-FIX-06); 1403 / 9799 — результат AO-FIX-01 (`6cbdbcda`).
+*(Историческая запись ниже относится к периоду E5 / AO-FIX; актуальные baseline-ы — в таблице выше и в `roadmap.md` §A2.)* Последний проверенный на тот момент baseline 1478 / 11644 (`4b7abff2`, AO-FIX-06); 1403 / 9799 — результат AO-FIX-01 (`6cbdbcda`).
 Предыдущий baseline 1393 / 9759 — финальный верифицированный E5 baseline, получен
 повторным полным прогоном в E5 docs-slice на checkpoint `c56e3306`
 (`C:\wamp\bin\php\php8.3.32\php.exe -d xdebug.mode=off -d memory_limit=2048M
@@ -67,8 +103,8 @@ Application checkpoint = `6cbdbcdab1df4b7d7605ed22cc469c53128163a3`. Этот ф
 будет новее application commit и определяется Git — он **не** известен заранее
 и не зашивается в этот файл.
 
-Project Sources: набор от 2026-09-23 (`a1d72a40`) **ИСТОРИЧЕСКИЙ** — он
-предшествует всей реализации E5 и **не** авторитетен над текущим репозиторием.
+Project Sources: наборы от 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`)
+**ИСТОРИЧЕСКИЕ** — они предшествуют AO/AOA/NOV-PUBLIC и **не** авторитетны над текущим репозиторием.
 Авторитетны текущее дерево, `git log`, тесты, миграции и docs на pushed HEAD.
 Свежий набор генерируется из нового чистого pushed docs HEAD — см. §8.1.
 
@@ -98,15 +134,14 @@ Project Sources: набор от 2026-09-23 (`a1d72a40`) **ИСТОРИЧЕСК�
 
 ### PHPUnit guard
 
-Использовать только:
+**Актуально (с NOV-PUBLIC-01 / L1, 2026-11-15):** PHPUnit — только SQLite `:memory:`, последовательно (не параллельно), Xdebug off, `memory_limit` ≥ 2048M, на **PHP 8.4.13** (CLI по `PATH`), **8.5.12** (WampServer) и, для проверки целевого минимума, на изолированной checksum-проверенной сборке **8.3.36**; **уязвимый `php8.3.32` как runtime не использовать**.
 
 ```text
-C:\wamp\bin\php\php8.3.32\php.exe
 DB_CONNECTION=sqlite
 DB_DATABASE=:memory:
 ```
 
-Глобальный `php` не считать проектным PHP. PHPUnit против canonical MySQL запрещён.
+*Историческая формулировка (до NOV-PUBLIC-01) требовала `C:\wamp\bin\php\php8.3.32\php.exe` — она устарела.* PHPUnit против canonical MySQL запрещён.
 
 ## 4. Stage 0–12
 
@@ -432,11 +467,20 @@ Stage 13 закрыт на уровне repository/local technical closure на 
 ### 8.1 Project Sources — refresh workflow
 
 - Project Sources / Handoff — **версионированные снимки** канонического репозитория, а не отдельный источник истины; авторитетны текущий Git HEAD и `docs/roadmap.md`.
-- Наборы от 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`, E5 closure) — **ИСТОРИЧЕСКИЕ**: они предшествуют AO-FIX-01 (`6cbdbcda`) и ROADMAP-SYNC-01 и не авторитетны над текущим репозиторием;
+- Наборы от 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`, E5 closure) — **ИСТОРИЧЕСКИЕ**: они предшествуют AO-FIX-01 (`6cbdbcda`), AOA, NOV-PUBLIC и ROADMAP-SYNC и не авторитетны над текущим репозиторием;
 - свежий набор строится только из **нового чистого pushed documentation HEAD** после docs-only commit/push и выравнивания local = tracking = live origin; имя архива, timestamp, SHA256 и размер определяются самой генерацией и не выдумываются заранее;
 - предыдущие наборы сохраняются (не удаляются);
 - механизм — существующий guarded PowerShell refresh (per-checkpoint wrapper + shared `Create-Avilona-ChatGPT-SourceArchive.ps1`, вне репозитория, `C:\Avilona_private\`): для нового checkpoint копируется предыдущий `_v1` wrapper-пакет в новую `_v1`-директорию и переписывается (config-блок, canonical blob-хэши, шаблоны, self-digest); исторические wrapper-пакеты не редактируются; shared helper не модифицируется;
 - архив — только tracked-источники проекта: без `.claude/`, `.env`, `vendor/`, `node_modules/`, приватных артефактов (`C:\Avilona_private\…`), секретов.
+
+**Точная процедура (пункт R; на 2026-11-15):**
+
+1. Guards: ветка `db-rebuild-stage3`; local = tracking = live `git ls-remote origin` HEAD; staging пуст; tracked worktree чист (допустим только untracked `.claude/`).
+2. **Shared helper нельзя запускать как есть:** его `ExpectedHead` захардкожен (на 2026-11-15 = `85a7b22b`, устарел), он создаёт только ZIP (не пятифайловый набор) и требует *полностью* чистого `git status`. Исходный скрипт **не редактируется** и не подменяется: делается изолированная, зарезервированная копия (backup оригинала + SHA-256) с узкой правкой `ExpectedHead` на новый HEAD и обработкой untracked `.claude/`; HEAD-проверки **не отключаются**.
+3. Сборка — во временной приватной директории: (1) tracked-source ZIP (исключения: `.env*`, `vendor`, `node_modules`, `storage` runtime, `bootstrap/cache`, `public/build|dist|plugins|img|images|uploads|storage`, дампы/архивы/логи/office/бинарные медиа; внутренний `_ARCHIVE_MANIFEST.txt`); (2) Handoff `.md`; (3) Roadmap `.md`; (4) New-Chat-Prompt `.md`; (5) CSV manifest (имя, размер, SHA-256). Все пять файлов несут один и тот же `<date>_<sha8>`.
+4. Валидация до promotion: ровно пять файлов; согласованные идентификаторы; целостность ZIP; пересчёт SHA-256 и размеров; безопасные пути записей; отсутствие секретов/персональных данных/приватного контента; ни один файл не называет старый HEAD текущим.
+5. Promotion: предыдущий активный набор — в датированный проверенный backup (`C:\Avilona_private\Avilona_Project_Sources_<date>_<sha8>_<timestamp>\` или `ChatGPT_sources\archive`), затем атомарное размещение новых пяти файлов в `C:\Avilona_private\ChatGPT_sources`; повторное чтение набора и пересверка хэшей; HEAD/staging/worktree не изменились. При любой ошибке — rollback к прежнему набору; частичный набор не публикуется.
+6. Ничего не загружается во внешние сервисы автоматически; владелец сам прикладывает файлы к новому чату.
 ## 9. Endgame roadmap — E1…E6
 
 Канонический roadmap после Stage 13 (детали — `docs/roadmap.md`):
@@ -1013,6 +1057,13 @@ application-checkpoint `55a9fcaf`. Технический closure (E4-E1) уже
   публичной копии (home: «будни 10:00–20:00» vs contacts: «будни 11:00–20:00, по
   предварительной записи»). Авторитетного выбора нет. **Не выбирать.** Должно быть
   решено до финального production-релиза (E6).
+  **Обновление 2026-11-15 (владелец):** офис — не walk-in; фиксированные часы **не**
+  публикуются и не выдумываются; бизнес работает преимущественно онлайн, визит в офис — по
+  предварительной договорённости (офис — в основном для оплаты и получения готовых
+  документов). Рекомендуемая формулировка: «Работаем преимущественно онлайн. Посещение
+  офиса — по предварительной договорённости.» Это **рекомендация, ожидающая утверждения
+  владельца**; шаблоны `home.blade.php` / `contacts.blade.php` пока всё ещё содержат
+  фиксированные часы (проверено по коду) — правка **не сделана** (`roadmap.md` §A10.G.4, R-P1).
 
 ## 10. Поиск туров — E5 ✅ CLOSED на уровне приложения
 
@@ -1300,7 +1351,7 @@ implementation gaps, план AOA-01…AOA-18, статус AO-находок и
 приёмом Tourvisor и provenance; планируется независимая от провайдера бизнес-сущность
 `Inquiry`, отдельный домен `OperatorBooking`, раздельные ledger'ы — **ничего из этого
 не реализовано**. Реализовано в рамках E5.5 только: архитектурный checkpoint E5.5-A0
-(docs) и малые исправления AO-FIX-01…06 (см. roadmap §A7). Production остаётся на REG.RU; Timeweb предзаказан, не
+(docs) и малые исправления AO-FIX-01…06 (см. roadmap §A7). *(Историческая формулировка периода E5.5-старта; актуальный статус AOA-01…05 — `roadmap.md` §A1/§A10.C, актуальная инфраструктура — §13.)* Production остаётся на REG.RU; Timeweb предзаказан, не
 production; canonical MySQL не затрагивается.
 ## 11. Запреты без отдельного operational plan
 
@@ -1322,7 +1373,7 @@ Project Sources → Screenshot Audit Pack → независимый полны�
 
 ### 12.1 Production platform
 
-- доступность/развёртывание Timeweb, когда провайдер выделит мощности (§13);
+- *(обновление 2026-11-15)* целевая площадка — общий AdminVPS `web-prod-01` под управлением инфраструктурной команды (§13; прежний пункт про Timeweb — исторический);
 - bootstrap Ubuntu-сервера;
 - SSH hardening; firewall;
 - Nginx; PHP-FPM; СУБД; TLS;
@@ -1390,10 +1441,14 @@ restore test; безопасность логов; права файлов/stora
 
 ## 13. Инфраструктура / хостинг — текущее состояние
 
-- **Текущий production-хостинг остаётся: REG.RU.** Миграции production не было.
-- **Будущий сервер Timeweb Cloud заказан (предзаказ): `web-prod-spb-01`** —
+**Актуально на 2026-11-15 (со слов владельца / инфраструктурного чата; независимо не проверено; подробности и запреты — `roadmap.md` §A10.I):** хостинг REG.RU **не продлевается**; публичный сайт планируется на **общем AdminVPS `web-prod-01`** (Hokki-Garant, Avilona, Teacher Portal), управляемом центральной командой: Ubuntu 26.04.1 LTS, Nginx 1.28.3, PHP 8.5.4, Composer 2.9.5, MySQL 8.4.13, 4 vCPU / 8 GB / 80 GB NVMe. Подготовлены пользователь `avilonaapp`, `/var/www/avilona/{releases,shared}`, изолированный PHP-FPM pool, localhost-only Nginx preview на порту 8081 и **пустая** БД `avilona_stage`. **MySQL для Avilona не мигрирован, Laravel не развёрнут.** Дата-центр — Москва (со слов владельца, не подтверждено). Backup-тикет `880372` — статус **не проверен**. Любые действия на VPS — только через явную координацию и разрешение; здесь доступа к VPS нет.
+
+*Ниже — ИСТОРИЧЕСКАЯ запись (до 2026-11-15):*
+
+- **Текущий production-хостинг оставался: REG.RU.** Миграции production не было.
+- **Сервер Timeweb Cloud заказан (предзаказ): `web-prod-spb-01`** —
   2 vCPU, 4 GB RAM, 50 GB NVMe, Санкт-Петербург. Состояние: **PREORDERED / ожидание
-  мощностей провайдера**. Это **НЕ production**.
+  мощностей провайдера**. Это **НЕ production** (актуальный статус предзаказа — не указан; владельцу подтвердить).
 - Владелец создал отдельный SSH-публичный ключ для этого будущего сервера.
   Пути к приватным ключам и секреты в документацию репозитория **не** записываются.
 - **DNS не менялся; домены остаются у REG.RU.**
