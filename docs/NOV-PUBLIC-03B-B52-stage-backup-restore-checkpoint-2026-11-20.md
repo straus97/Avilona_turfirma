@@ -13,6 +13,8 @@
 
 No secret, password, key material, dump, ciphertext identifier or personal data is recorded here.
 
+> **Update 2026-11-21 (ROADMAP-SYNC-05):** §1–§10 below are the **historical 2026-11-20 record and are not rewritten**. Statements in §6 ("authorised"), §7 ("Next safe steps") and §9 reflect what was known on 2026-11-20. The later owner-reported evidence, the infrastructure **pause** and the current authorization boundary are in **§11**, which supersedes any "next step" wording above.
+
 ## 2. Repository and source baseline
 
 | Item | Value | Status |
@@ -119,3 +121,95 @@ Contingency principles (to be written as a separate plan; not yet written): STOP
 - Project Sources date visible to the owner (2026-09-23) vs the roadmap record (2026-11-15 set promoted).
 - Roadmap R-V3 ("not proven on 8.4.13") vs the owner-reported local Docker 8.4.13 migration result: reconciled as local-only, R-V3 stays OPEN.
 - The B5.2 technical plan and transition addendum referred to by the owner are external files and not in the repository (not verified).
+
+## 11. Follow-up 2026-11-21 — evidence, infrastructure pause (ROADMAP-SYNC-05)
+
+**Documentation-only.** No VPS, SSH, SCP, MySQL, provider-API or canonical-database access by this task. Process note (author-reported, not independently verified beyond that report): the task's constraints prohibited shell and Git commands, but the author reported using Bash, read-only Git inspection and Python-based editing to apply the documentation edits — a process-constraint breach. Everything below is `OWNER_REPORTED` / `INFRASTRUCTURE_REPORT`: relayed by the owner from the infrastructure chat or from console output; **not independently verified** by this repository, by the author or by any live access. It does not rewrite §1–§10, which were accurate to what was known on 2026-11-20.
+
+### 11.1 BK-4A Revision 2 (corrected backup scenario)
+
+| Item | Report |
+|---|---|
+| Offline validation (author-reported) | 59/59 |
+| Independent infrastructure review | Technical contract accepted **subject to external prerequisites** |
+| R1 | accepted, conditional on R2 |
+| **R2** | **OPEN / BLOCKER** |
+| R3 | accepted for format validation; the actual VPS `mysqldump` output format is **still unverified** |
+| R4 | accepted |
+| R5 | accepted under trusted-directory assumptions |
+| R6 | accepted |
+| Bash scenario SHA-256 | `b39741f57273a5add680c68d55ed0a852de27fb28857aabe089b7234c347c8c2` |
+
+Revision 2 is not to be rewritten or redesigned unless a new material defect is found. The scenario has **not** been executed against the VPS.
+
+### 11.2 BK4A-R2-EVIDENCE (read-only metadata evidence scenario)
+
+A separate administrative read-only metadata evidence scenario was prepared. Author-reported offline tests: 56/56 PASS. Independent infrastructure validation: Python syntax PASS; synthetic metadata validation 26/26 PASS. Scenario SHA-256: `ed8bab5bdef652f2743805d6d74326fdb9145aca9af39b9c8e92834212561fa2`. The technical contract was accepted **under external prerequisites**:
+
+- **B1** — Unix-socket identity and same-instance evidence;
+- **B2** — existing effective non-interactive `sudo` policy;
+- **B3** — a real, coordinated, continuous no-change window;
+- **B4** — exact final stdin transport containing the unchanged evidence code.
+
+**B3 and B4 are not finally approved.** The evidence scenario has **NOT been executed** against the VPS; R2-EVIDENCE execution is **NOT_AUTHORIZED**.
+
+### 11.3 BK4A-R2-PREFLIGHT (one authorised B1/B2 attempt — consumed)
+
+Exactly one separately authorised B1/B2 preflight attempt was executed. Reviewed preflight file SHA-256: `31231758943ec4e96fc18fba9628c66894527d54609ba529d7575040f3073714`. Exact owner-reported console result:
+
+```
+SOCKET=/run/mysqld/mysqld.sock
+SOCKET_OWNER=mysql
+SOCKET_GID=107
+SOCKET_MODE=0777
+SOCKET_PARENT_GUARDS=PASS
+TCP_LISTENER=STOP:MYSQLD_PID_NOT_VISIBLE_OR_AMBIGUOUS
+UNIX_LISTENER=STOP:MYSQLD_PID_NOT_VISIBLE_OR_AMBIGUOUS
+B1=STOP:LISTENER_EVIDENCE_INCOMPLETE
+B2=STOP:TOOL_IDENTITY
+MYSQL_QUERY_EXECUTED=NO
+DUMP_APPROVAL=NOT_GRANTED
+PREFLIGHT=STOP
+```
+
+Interpretation (bounded):
+
+- Socket existence, path, type, reported owner and parent-directory guards were confirmed **at observation time**.
+- That the TCP listener and the Unix socket belong to the same mysqld PID was **not established**.
+- B2 stopped at tool-identity validation, **before** an effective `sudo` policy was established. **No `sudo` policy denial may be inferred and the failing executable must not be named without evidence.**
+- **B1 and B2 remain OPEN.** The one-time authorisation is **consumed**; no automatic retry and no privilege fallback is authorised.
+
+The reviewed scripts (backup scenario, evidence scenario, preflight) are preserved **outside the repository** and are neither reproduced nor modified here. No operational script is added to Git by this task.
+
+### 11.4 AdminVPS backup ticket `880372` (provider-reported availability)
+
+According to the infrastructure report, AdminVPS confirmed on **2026-11-21 at 10:18** (time zone not stated and not inferred):
+
+- automatic backups are activated for `web-prod-01`;
+- a snapshot dated 2026-11-15 exists;
+- backup coverage is the full disk, including applications, MySQL and system configuration.
+
+This is **backup-availability evidence only**, provider-reported. **A successful restore has NOT been demonstrated.** Not established: snapshot consistency (a disk-level snapshot of a running MySQL is not proof of a consistent database), current recovery point, RPO, RTO, restore completeness, application-level recovery. The owner **declined** purchasing an additional VPS and a paid test restoration; this decision is recorded as made and **is not acceptance of the remaining recovery risks**. **R-V2 stays OPEN** with its evidence status updated to "provider-reported backup availability, no restore".
+
+### 11.5 Infrastructure pause and current boundary
+
+Further VPS operations are **temporarily deferred**.
+
+| Item | Status |
+|---|---|
+| BK-4A | OPEN / BLOCKED / TEMPORARILY PAUSED |
+| Valid Stage backup | NOT_DONE |
+| BK4A-R2-EVIDENCE execution | NOT_AUTHORIZED |
+| New backup attempt (`mysqldump`) | NOT_AUTHORIZED |
+| B1, B2, B3, B4 | OPEN (B3/B4 not finally approved) |
+| SCP transfer and isolated restore | NOT_DONE |
+| VPS migration evidence | NOT_DONE |
+| R-V2, R-V3, R-V6 | OPEN |
+| Real B5.2 migrations, public activation, financial operations | NO-GO |
+| P5 / P7 / P8, BK-1/2/3, BK4A-D1/D2 | completed — **must not be reopened** |
+
+Current state of `avilona_stage`: the 2026-11-20 reports (§3) say it is empty. **No current authoritative evidence exists** — the R2 preflight ran no MySQL query and the evidence scenario has not run — so emptiness is a **historical report**, not a currently established fact. Any future infrastructure action requires a **new, separately authorised plan**; no authorisation in §6 or above carries over.
+
+### 11.6 Superseded wording
+
+§6 "Preparing and reviewing a corrected `mysqldump` command ✅ authorised" and §7 "Next safe steps" are historical: preparation/review is complete (Revision 2 accepted conditionally) and execution is blocked on B1–B4 and R2, with operations paused.
