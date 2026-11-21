@@ -47,6 +47,7 @@
 | Project | `C:\wamp\www\Avilona_turfirma` |
 | Branch | `db-rebuild-stage3` |
 | **Live HEAD** | Определяет Git (`git rev-parse HEAD`), не фиксируется в документах. *На 2026-11-20 (OWNER_CONSOLE, ручной read-only аудит владельца): local = tracking = live origin = `801746f11b5dee486a5084bc01d6b8c666b7dae6` — это **проверенная владельцем база до docs-коммита**, а не HEAD будущего documentation commit (его хэша ещё нет); worktree на момент аудита не чист: три намеренные неподтверждённые в коммит docs-правки + untracked `.claude/settings.json`.* На начало ROADMAP-SYNC-03 (2026-11-15) он был `0d34526e053dd78e9dae89ceb0753a7925c3dc07` (NOV-PUBLIC-03B-L3) — после docs-коммита это ИСТОРИЧЕСКОЕ значение. Предыдущие якоря: `b7adafda06c6f3edfd45789c4aa4f20b48b36776` (L1, зависимости); `72ae200d` (04B). Строка ниже про `4b7abff2` (AO-FIX-06) — **исторический** тестовый checkpoint. Статус и порядок работ — только в `docs/roadmap.md` |
+| **Последний application checkpoint (NOV-PUBLIC-OFFICE-01, 2026-11-22)** | `59d9c2299f6428c1bd2c16ff59c79df93570ec71` (`fix: unify public office operating information`; parent `2bd32df6bf4f4f3d54c407fad60edeb8e87b181b`; 6 файлов, +97/−34) — pushed. Утверждённая формулировка: «Работаем преимущественно онлайн. Посещение офиса — по предварительной договорённости.»; scoped Browser QA (статический preview) PASS — без CAPTCHA-изображений, реальной отправки форм, SMTP, внешней карты и live-приёмки. R-P1 закрыт для локальной разработки. Следующий локальный workstream: решения по юридическим документам и утверждённые ревизии (R-L1 / N-4 / G7). Инфраструктурная пауза и public-production NO-GO без изменений. Project Sources для этого checkpoint **не** регенерировались (старый набор ему не соответствует); хэш будущего docs-only коммита закрытия здесь не фиксируется — live HEAD определяет Git |
 | Предыдущие checkpoints | docs `cb6e440a` (`docs: establish E5.5 agency operations architecture`, E5.5-A0); docs `c68b6814` (`docs: close E5 and prepare final audit`); application HEAD закрытия E5 `c56e330685ffa8953b22c803d6dce5334c69e81b` (`fix: complete final tour search polish (E5-A4)`) — все НЕ текущий HEAD |
 | Documentation/source checkpoint после закрытия E4 / входа в E5 (предыдущий docs-only commit; база **ИСТОРИЧЕСКОГО** набора Project Sources от 2026-09-23) | `a1d72a4034b1d76b35e0033f4c1e2a69121ee06b` (`docs: close E4 and prepare E5`) — предшествует ВСЕЙ реализации E5, НЕ текущий HEAD, НЕ авторитетен над текущим репозиторием |
 | Application HEAD на момент закрытия E4 | `55a9fcaf6371ef0c749bb668c9b27783d1df358c` (`fix: close final E4 application polish`) — НЕ текущий HEAD |
@@ -60,7 +61,7 @@
 | Историческое E1 closure application commit | `08d0626311234faa06dedf2828cb878805241990` (`fix: close final public audit gaps`) — НЕ текущий HEAD |
 | Предыдущий функциональный checkpoint (Stage 13) | `dba20e2c6e2e66b6f69f33710b2626b3fe181e31` (`fix: remove obsolete guest booking flow`) |
 | Активный внешний documentation/source (Project Sources) checkpoint | **Определяется именем файлов активного набора** (`Avilona_*_<date>_<sha8>.*` в `C:\Avilona_private\ChatGPT_sources`); набор актуален только если `<sha8>` = `git rev-parse --short=8 HEAD` на clean pushed docs HEAD (см. §8.1). Наборы 2026-09-23 (`a1d72a40`) и 2026-10-01 (`c68b6814`) — **ИСТОРИЧЕСКИЕ / STALE** |
-| Full PHPUnit baseline | **Актуальные сообщённые прогоны (2026-11-15; в docs-slice не перезапускались):** L1 `b7adafda` — **2646 tests / 20559 assertions** на PHP 8.3.36 / 8.4.13 / 8.5.12 (1 skipped, 1 PHPUnit deprecation, известный Faker-apostrophe flake); 04B `72ae200d` — 2646 / 20567 (другая среда; **не смешивать**); L3 `0d34526e` полный набор **не запускался** (только 13 tests / 291 assertions по пакетированию). Подробности — `roadmap.md` §A2/§A10.F. *Исторические значения ниже:* AO-FIX-06 `4b7abff2` — **1478 / 11644** (0 failures, 0 errors; сообщён, не перезапускался в docs-slice). Ранее: AO-FIX-01 — 1403 / 9799 (SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
+| Full PHPUnit baseline | **Последний проверенный (2026-11-22, owner-run, NOV-PUBLIC-OFFICE-01, application commit `59d9c229`):** focused PHP 8.5.12 — 89 tests / 1862 assertions; полный набор на PHP 8.3.36 / 8.4.13 / 8.5.12 — **2656 tests / 20707 assertions** на каждой, 0 failures, 0 errors, 1 skipped (archive-exposure, **не** выполнен), 1 XML-schema deprecation; SQLite `:memory:`; Faker-flake не наблюдался, но не доказано, что исправлен. Прогон выполнен до коммита; затем проверено, что файлы идентичны закоммиченным blob'ам; после commit/push PHPUnit не перезапускался; свежая проверка release-пакета для `59d9c229` **не выполнена**. *Историческое (2026-11-15; в docs-slice не перезапускались):* L1 `b7adafda` — **2646 tests / 20559 assertions** на PHP 8.3.36 / 8.4.13 / 8.5.12 (1 skipped, 1 PHPUnit deprecation, известный Faker-apostrophe flake); 04B `72ae200d` — 2646 / 20567 (другая среда; **не смешивать**); L3 `0d34526e` полный набор **не запускался** (только 13 tests / 291 assertions по пакетированию). Подробности — `roadmap.md` §A2/§A10.F. *Исторические значения ниже:* AO-FIX-06 `4b7abff2` — **1478 / 11644** (0 failures, 0 errors; сообщён, не перезапускался в docs-slice). Ранее: AO-FIX-01 — 1403 / 9799 (SQLite `:memory:`). Предыдущий финальный E5 baseline **1393 tests / 9759 assertions** (checkpoint `c56e3306`; SQLite `:memory:`; 1 PHPUnit deprecation — XML-конфигурация `phpunit.xml` валидируется против deprecated schema, подтверждено выводом PHPUnit `--display-phpunit-deprecations`). Исторически: на закрытии E5-A3 — 1383 / 9682; на закрытии E4 — 1286 / 8628; на входе в E4 — 1242 / 8056; на закрытии E3-A5 — 1233 / 8023; после закрытия E2 — 1051 / 7180; E1-closure: 1001 / 7013 |
 | PHP | **Актуально:** CLI `PATH` = PHP **8.4.13** (также доступен WAMP 8.5.12); поддерживаются 8.3–8.5 (`php ^8.3`); `php8.3.32` — **уязвимая** сборка, не использовать как runtime. *Историческая запись (до NOV-PUBLIC-01/L1):* `C:\wamp\bin\php\php8.3.32\php.exe` |
 | PHPUnit DB | SQLite `:memory:` only |
 | Laravel | **12.72.0** (`composer.lock`, после L1 `b7adafda`); *было:* 12.65.0 |
@@ -394,11 +395,10 @@ full: 1001 tests / 7013 assertions
 Эти пункты **не «баг»** и не блокировали техническое закрытие E1. Последующие
 агенты не должны «чинить» их случайно.
 
-- **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** — конфликт копий часов работы:
-  home «будни 10:00–20:00» vs contacts «будни 11:00–20:00, по предварительной
-  записи». Авторитетного решения нет. **Не выбирать значение.** Должно быть
-  решено до финального production-релиза (E6). Не технический блокер. Остаётся
-  нерешённым.
+- **`PENDING_BUSINESS_DECISION_OPENING_HOURS`** — *историческая запись E1:* конфликт копий часов
+  работы (home «будни 10:00–20:00» vs contacts «будни 11:00–20:00, по предварительной
+  записи»). **РЕШЕНО владельцем 2026-11-22; NOV-PUBLIC-OFFICE-01 CLOSED AND PUSHED
+  (`59d9c229`)** — см. §9A и `roadmap.md`.
 - **OG type** — ✅ закрыто в E2-A5 (§9B): News detail и Article detail объявляют
   `og:type=article`; `layouts/main` использует `@yield('og_type', 'website')`.
 - **Tour search** — существующий публичный tour-search widget остаётся
@@ -1053,17 +1053,20 @@ application-checkpoint `55a9fcaf`. Технический closure (E4-E1) уже
   Каноническая публичная формулировка — `«Передача документов по договорённости»`.
 - Рассрочка/кредит на поездки сейчас предлагаются, но допустима только общая
   формулировка — не выдумывать банки, ставки, партнёров, финансовые условия.
-- Часы работы: `PENDING_BUSINESS_DECISION_OPENING_HOURS` — конфликт исторической
-  публичной копии (home: «будни 10:00–20:00» vs contacts: «будни 11:00–20:00, по
-  предварительной записи»). Авторитетного выбора нет. **Не выбирать.** Должно быть
-  решено до финального production-релиза (E6).
+- Часы работы: `PENDING_BUSINESS_DECISION_OPENING_HOURS` — *исторически* конфликт публичной
+  копии (home: «будни 10:00–20:00» vs contacts: «будни 11:00–20:00, по
+  предварительной записи»); **решено 2026-11-22, см. ниже**.
   **Обновление 2026-11-15 (владелец):** офис — не walk-in; фиксированные часы **не**
   публикуются и не выдумываются; бизнес работает преимущественно онлайн, визит в офис — по
   предварительной договорённости (офис — в основном для оплаты и получения готовых
   документов). Рекомендуемая формулировка: «Работаем преимущественно онлайн. Посещение
-  офиса — по предварительной договорённости.» Это **рекомендация, ожидающая утверждения
-  владельца**; шаблоны `home.blade.php` / `contacts.blade.php` пока всё ещё содержат
-  фиксированные часы (проверено по коду) — правка **не сделана** (`roadmap.md` §A10.G.4, R-P1).
+  офиса — по предварительной договорённости.» *(Исторически — рекомендация 2026-11-15.)*
+  **Обновление 2026-11-22: формулировка утверждена владельцем и реализована в NOV-PUBLIC-OFFICE-01 —
+  ✅ CLOSED AND PUSHED, application commit `59d9c2299f6428c1bd2c16ff59c79df93570ec71`
+  (`fix: unify public office operating information`); общий partial `includes.office-operating-mode`
+  (home, contacts, неиспользуемый legacy `profile.dashboard`); фиксированные часы и
+  `openingHours` удалены/не добавлены; R-P1 закрыт для локальной разработки.** Подтверждение на
+  развёрнутом сайте — приёмка E6; сайт не развёрнут (`roadmap.md` §A10.G.4, R-P1).
 
 ## 10. Поиск туров — E5 ✅ CLOSED на уровне приложения
 
@@ -1437,7 +1440,7 @@ restore test; безопасность логов; права файлов/stora
 
 ### 12.7 Business
 
-Решить `PENDING_BUSINESS_DECISION_OPENING_HOURS` (§9A) до финального релиза.
+~~Решить `PENDING_BUSINESS_DECISION_OPENING_HOURS` (§9A)~~ — решено владельцем 2026-11-22 (NOV-PUBLIC-OFFICE-01, `59d9c229`); подтвердить формулировку на развёрнутом сайте при приёмке E6.
 
 ## 13. Инфраструктура / хостинг — текущее состояние
 
