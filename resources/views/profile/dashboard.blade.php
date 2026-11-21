@@ -286,7 +286,7 @@
                         <div class="mb-3">
                             <i class="fas fa-clock text-primary"></i>
                             <strong>Режим работы:</strong>
-                            Пн-Пт: 9:00-20:00, Сб-Вс: 10:00-18:00
+                            @include('includes.office-operating-mode')
                         </div>
                         <div>
                             <a href="{{ route('contact.index') }}" class="btn btn-success btn-block">

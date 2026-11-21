@@ -220,8 +220,7 @@
                             </div>
                             <div>
                                 <dt><i class="bi bi-clock" aria-hidden="true"></i></dt>
-                                <dd><span class="e2-contact-list__label">Режим работы:</span>Понедельник - пятница, с 10:00 до 20:00,<br>Суббота -
-                                    воскресенье, с 12:00 до 19:00</dd>
+                                <dd><span class="e2-contact-list__label">Режим работы:</span>@include('includes.office-operating-mode')</dd>
                             </div>
                         </dl>
                     </div>

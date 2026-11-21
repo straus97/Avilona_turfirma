@@ -90,18 +90,83 @@ class PublicContactsE2RedesignTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
-    // Opening-hours conflict is NOT silently resolved in this slice
+    // NOV-PUBLIC-OFFICE-01: онлайн-формат работы, визит по договорённости
     // -----------------------------------------------------------------------
 
-    public function test_contacts_page_preserves_its_own_opening_hours_wording(): void
+    private const OPERATING_MODE = 'Работаем преимущественно онлайн. Посещение офиса — по предварительной договорённости.';
+
+    private function contactListBlock(string $html): string
+    {
+        $this->assertSame(1, preg_match('~<dl class="e2-contact-list">.*?</dl>~s', $html, $m));
+
+        return $m[0];
+    }
+
+    public function test_contacts_page_renders_approved_operating_mode_wording(): void
     {
         $response = $this->get(route('contact.index'));
 
         $response->assertOk();
-        // Формулировка «Контактов» (пн–пт 11:00–20:00, по предварительной записи)
-        // сохранена дословно; расхождение с главной остаётся открытым до E6.
-        $response->assertSee('с 11:00 до 20:00');
-        $response->assertSee('по предварительной записи', false);
+        $block = $this->contactListBlock($response->getContent());
+        $this->assertStringContainsString('Режим работы:', $block);
+        $this->assertStringContainsString(self::OPERATING_MODE, $block);
+        $this->assertStringNotContainsString('(по предварительной записи)', $block);
+    }
+
+    public function test_home_page_renders_approved_operating_mode_wording(): void
+    {
+        $response = $this->get(route('home.index'));
+
+        $response->assertOk();
+        $block = $this->contactListBlock($response->getContent());
+        $this->assertStringContainsString('Режим работы:', $block);
+        $this->assertStringContainsString(self::OPERATING_MODE, $block);
+    }
+
+    public function test_public_contact_blocks_have_no_obsolete_fixed_office_schedule(): void
+    {
+        foreach (['home.index', 'contact.index'] as $name) {
+            $block = $this->contactListBlock($this->get(route($name))->getContent());
+
+            foreach (['10:00', '11:00', '12:00', '19:00', '20:00', 'Понедельник', 'Суббота', 'Воскресенье'] as $stale) {
+                $this->assertStringNotContainsString($stale, $block, "{$name}: stale schedule fragment {$stale}");
+            }
+        }
+    }
+
+    public function test_contacts_page_keeps_actual_and_legal_addresses_distinct_with_consistent_visit_notice(): void
+    {
+        $html = $this->get(route('contact.index'))->getContent();
+        $block = $this->contactListBlock($html);
+
+        $this->assertMatchesRegularExpression('~Фактический адрес / офис:.*?Генерала Симоняка, д\. 10~s', $block);
+        $this->assertMatchesRegularExpression('~Юридический адрес:.*?Морской Пехоты, д\. 10, к\. 1, литера А, кв\. 22~s', $block);
+        $this->assertDoesNotMatchRegularExpression('~Юридический адрес:[^<]*Симоняка~u', $block);
+
+        // «Как нас найти»: визит согласуется заранее, без обещаний приёма без записи.
+        $this->assertStringContainsString('Посещение офиса — по предварительной договорённости', $html);
+        $this->assertStringNotContainsString('Офис работает по предварительной записи', $html);
+        $this->assertStringNotContainsString('без предварительной', $html);
+    }
+
+    public function test_public_structured_data_does_not_claim_opening_hours(): void
+    {
+        foreach (['home.index', 'contact.index'] as $name) {
+            $html = $this->get(route($name))->getContent();
+
+            $this->assertStringNotContainsString('openingHours', $html);
+            $this->assertStringNotContainsString('openingHoursSpecification', $html);
+        }
+    }
+
+    public function test_legacy_profile_dashboard_view_has_no_contradictory_office_schedule(): void
+    {
+        $path = resource_path('views/profile/dashboard.blade.php');
+        $source = file_get_contents($path);
+
+        $this->assertStringNotContainsString('9:00-20:00', $source);
+        $this->assertStringNotContainsString('10:00-18:00', $source);
+        $this->assertStringContainsString("@include('includes.office-operating-mode')", $source);
     }
 
     // -----------------------------------------------------------------------
