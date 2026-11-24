@@ -55,6 +55,8 @@ Each row is a **candidate discrepancy** between the reported entry and the proje
 
 - **Independence:** ORG-RKN-01 proceeds **independently of full-CRM completion** and **without unjustified delay**. It is not a CRM slice and does not wait for AOA stages, Qui-Quo or E6.
 - **Not an owner-risk item:** the accuracy of notification data is a mandatory compliance condition; owner acceptance cannot waive it. It stays **OPEN** until counsel/owner establish the facts and any amendment is made by the company.
+- **Amendment, not new registration:** ORG-RKN-01 concerns amendment of the **existing** notification (registration 78-20-007148), not a new registration.
+- **Timing:** the statutory time for notifying changes (a previously identified reference is Article 22(7) of Federal Law No. 152-FZ — a supplied reference, not verified here) needs **prompt primary-source verification**. No deadline or legal conclusion is stated here, and the known discrepancies must not be postponed indefinitely until unrelated CRM work or every possible future processing detail is settled.
 - **Out of scope here:** submitting an amendment, drafting the amendment text, contacting Roskomnadzor.
 
 ## 5. Organizational prerequisites (before any amendment text is prepared)

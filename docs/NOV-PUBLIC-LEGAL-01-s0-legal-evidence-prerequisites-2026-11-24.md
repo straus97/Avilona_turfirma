@@ -19,7 +19,7 @@ Evidence labels: see the decision register §1.
 3. **Displayed ↔ accepted ↔ archived.** *Displayed* content is rendered from the archived current version (layout excluded; link targets substituted from placeholders, with the hash computed before substitution and linked-document hashes recorded separately). *Accepted* content is identified by the version identifier and hashes stored in the future receipt. *Archived* content is retained in the repository/release package so any recorded hash can be re-verified.
 4. **Wording updates** create a new version; the old one is kept. A form rendered under version N and submitted after N+1 became current is rejected as stale and records no acceptance.
 5. **Overwrite protection and its limit.** Archived versions are marked locked in a manifest and covered by tests that fail on hash mismatch. These tests are **tamper evidence, not absolute cryptographic immutability**: a deliberate edit of both file and manifest would pass, so Git history and an owner-held hash ledger are additional pins.
-6. **No legal PDF is replaced** by S0 or S1. The first archive step records the currently published files as-is, labelled `legacy-as-published`, status **not** "approved". New approved revisions (R-L1/N-4, including NF-07/08 service scope) arrive later as new versions.
+6. **No legal PDF is replaced** by S0 or S1. The first archive step records the currently published files as-is, labelled `legacy-as-published`, status **not** "approved". The label means a legacy source artifact archived as-is; it does **not** prove deployment of the rebuilt application and is not legal approval. New approved revisions (R-L1/N-4, including NF-07/08 service scope) arrive later as new versions.
 7. **Packaging** must include the archive; how the release manifest declares includes is `UNVERIFIED` and is part of S1's design step.
 8. **Signature note:** no regular UKEP workflow is assumed (OC-10); a scanned signature is not automatically legally sufficient. Document signing questions belong to U-6/AOA-12/13, not to this archive.
 
@@ -53,7 +53,7 @@ Evidence labels: see the decision register §1.
 
 ## 7. Proposed sequence — all unauthorized after S0
 
-Owner-gated checkpoints on the existing branch `db-rebuild-stage3` (no branch per slice).
+Owner-gated checkpoints on the existing branch `db-rebuild-stage3` (no branch per slice). *Update 2026-11-25:* S0 is closed and pushed; S1 is the next technical slice only after canonical documentation closure and a verified Project Sources refresh; every slice remains individually unauthorized (see [closure and transition](NOV-PUBLIC-LEGAL-01-s0-closure-and-transition-2026-11-25.md) §10).
 
 | Slice | Objective | Database |
 |---|---|---|

@@ -4,6 +4,8 @@
 
 Nothing in this file is a legal opinion. No statement here says that any text, process or architecture is legally sufficient, approved or compliant.
 
+> **Update 2026-11-25:** S0 is **CLOSED AND PUSHED** at documentation checkpoint `593d9c71f1d30835f2ac1a6ba5e8f64650548219` (owner-console evidence). §2 below is the **historical** record of the original S0 task, which read Git state only from `.git` files and ran no commands; it is not rewritten. Later owner decisions and evidence (business model and prebooking, document generation, working legal revisions, registry extract, Qui-Quo, Sources workflow) are in [closure and transition](NOV-PUBLIC-LEGAL-01-s0-closure-and-transition-2026-11-25.md). Decision statuses and IDs here are unchanged.
+
 ## 1. Evidence legend
 
 | Label | Meaning |
@@ -44,7 +46,7 @@ A grep of `tests/` found `docs/` only inside comments and one packaging fixture 
 | OC-07 | All future CRM documents must support automated generation, versioning and protected storage. |
 | OC-08 | The November public-only release must not depend on completion of the full CRM. |
 | OC-09 | No paid services or new paid dependencies. |
-| OC-10 | Regular UK qualified electronic signature (UKEP) use is **not** part of the intended contract-signing workflow. Scanned signatures are **not** automatically deemed legally sufficient. |
+| OC-10 | Routine use of Avilona's Russian enhanced qualified electronic signature (УКЭП/UKEP) is **not** an accepted operational requirement for the contract-signing workflow (*corrected 2026-11-25: the earlier wording "UK qualified electronic signature" was erroneous*). Scanned signatures are **not** automatically deemed legally sufficient. |
 
 ### 3.2 Owner-confirmed facts added 2026-11-24 (`OWNER_PROVIDED_EVIDENCE`)
 
