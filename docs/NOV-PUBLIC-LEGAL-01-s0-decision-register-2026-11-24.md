@@ -128,3 +128,14 @@ Production remains **NOT DEPLOYED / NO-GO**. The public-only release stays indep
 ## 7. What S0 did not do
 
 No S1 or later slice; no code, config, route, migration, test, dependency or legal-PDF change; no Project Sources refresh; no Roskomnadzor submission or draft notification; no commit or push.
+
+## 8. Update 2026-11-25 — DR-08 and DR-09 after the S1 scope adjustment
+
+Documentation only; prepared from base `b89dd39a`, not yet committed or pushed. §4 rows are not rewritten and no ID changes. Owner-confirmed decisions and evidence: [prerequisites §8](NOV-PUBLIC-LEGAL-01-s0-legal-evidence-prerequisites-2026-11-24.md).
+
+| ID | Change | Status |
+|---|---|---|
+| DR-08 | The owner confirmed that application version history starts with approved new revisions. The proposed version IDs, record shape, activation rules and master-document handling are technical proposals only. Label scheme, approval references, approval authority and effective-date meaning are not decided | **OPEN** |
+| DR-09 | A verified private preservation source now exists for the five legacy PDFs as of `b89dd39a` (`OWNER_CONSOLE`). It resolves only acceptances matching those exact bytes; earlier texts, registration/review/publication Blade hashes and what the former site collected remain unresolved | **Not globally closed** |
+
+Nothing here is legal approval. S1-A and S1-B are not authorized.
