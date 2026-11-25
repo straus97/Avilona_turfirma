@@ -654,6 +654,9 @@ class CabinetChatContinuityTest extends TestCase
     public function test_tourist_chat_header_wraps_instead_of_squeezing_the_manager_name(): void
     {
         [$tourist, $manager, $booking] = $this->scenario();
+        // Фиксированное имя с апострофом и амперсандом: экранирование
+        // проверяется всегда, а не зависит от случайного имени из фабрики.
+        $manager->update(['name' => "QA O'Connor & Co"]);
 
         $html = $this->actingAs($tourist)->get(route('cabinet.chat', $booking->id))->assertOk()->getContent();
 
@@ -663,7 +666,10 @@ class CabinetChatContinuityTest extends TestCase
         $this->assertStringContainsString('tc-chat__header-main', $html);
         $this->assertStringNotContainsString('style="flex: 1; min-width: 0;"', $html);
         // Имя, контекст заявки и статус остаются в шапке: ничего не скрыто.
-        $this->assertStringContainsString($manager->name, $html);
+        $this->assertMatchesRegularExpression(
+            '/<div class="tc-chat__header-main">\s*<h2\b[^>]*>QA O&#039;Connor &amp; Co<\/h2>/',
+            $html
+        );
         $this->assertStringContainsString('Заявка #' . $booking->id, $html);
 
         $css = file_get_contents(public_path('css/cabinet-e3.css'));
