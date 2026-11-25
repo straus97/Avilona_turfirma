@@ -4,6 +4,8 @@
 
 Related: [decision register](NOV-PUBLIC-LEGAL-01-s0-decision-register-2026-11-24.md) · [retention-rule register](NOV-PUBLIC-LEGAL-01-s0-retention-rule-register-2026-11-24.md) · [RKN registry discrepancy register](NOV-PUBLIC-LEGAL-01-s0-rkn-registry-discrepancy-register-2026-11-24.md) · [legal-evidence prerequisites](NOV-PUBLIC-LEGAL-01-s0-legal-evidence-prerequisites-2026-11-24.md).
 
+> **Later transition (2026-11-25):** S1-A has since been implemented, accepted and pushed — see §14. The sections below keep their original meaning; their "not yet committed", "S1 is the next technical slice" and "unauthorized" wording about S1-A is historical.
+
 No external legal or technical verification was performed. Legal references below are **supplied references, not a fresh legal opinion**; nothing here says any document, process or architecture is legally sufficient, approved, compliant or deployable.
 
 ## 1. Evidence legend
@@ -178,3 +180,17 @@ Communication workflow: owner-facing discussion in Russian; Claude Code tasks an
 ## 13. What this reconciliation did not do
 
 No S1–S9 work; no command, test, Git write, database/VPS access or Sources refresh; no access to private legal files, quarantine or helper paths; no change to application code, configuration, routes, migrations, tests, PDFs, Word files, assets or `.claude`; no change to any gate status; no regulatory submission.
+
+## 14. Status transition 2026-11-25 — S1-A closed (documentation only)
+
+§1–§13 record the earlier reconciliation and are not rewritten. Evidence: [S1-A closure](NOV-PUBLIC-LEGAL-01-s1a-closure-2026-11-25.md).
+
+| Earlier statement | Current state |
+|---|---|
+| S0 reconciliation and S1 scope adjustment not committed (§ header, §10) | Documentation pushed at `b89dd39a`, then `1b6c5771` |
+| S1 is the next technical slice; S1-A and S1-B unauthorized (§10) | S1-A implemented, accepted, pushed at `7706517ddc663e0b8b6787e42a281445514a0ec0`; **S1 OPEN**; S1-B **not authorized** |
+| Application checkpoint `59d9c229` (§2) | `7706517d` |
+| Test baseline 2656 / 20707; Faker flake not proven fixed (§3) | 2731 / 21592 on three PHP versions, post-commit; the `CabinetChatContinuityTest` apostrophe flake fixed at `b71755b5` |
+| Project Sources not refreshed (§2) | Set for `b89dd39a` promoted (owner-confirmed); now **stale**; refresh pending |
+
+**Next:** independent review → owner-run guarded documentation commit and push → verified five-file Sources refresh (§12) → owner confirmation → new chat → legal-document approval/readiness review → separate S1-B authorization only after prerequisites. The §6 runtime mapping remains **not authorized**. §11 blockers are unchanged; production **NOT DEPLOYED / NO-GO**.

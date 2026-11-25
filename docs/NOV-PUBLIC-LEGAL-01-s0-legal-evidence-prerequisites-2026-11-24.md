@@ -2,6 +2,8 @@
 
 **Documentation-only (S0).** Part of the [decision register](NOV-PUBLIC-LEGAL-01-s0-decision-register-2026-11-24.md) set. Everything below is **`PROPOSED`** design and prerequisites. **S1 and all later slices are unauthorized.** No code, migration, configuration, test, dependency or legal-PDF change is made by S0. Nothing here is a legal opinion and nothing is claimed legally sufficient.
 
+*Update 2026-11-25:* the statements below that S1 / S1-A are unauthorized or that nothing was executed are historical; for S1-A they are superseded by §9. S1-B and S2–S9 remain unauthorized.
+
 Evidence labels: see the decision register §1. §8 (added 2026-11-25) records owner decisions and evidence as well as proposals, under its own labels.
 
 ## 1. Current state (`VERIFIED_IN_REPO`, read-only)
@@ -196,3 +198,23 @@ These are technical recommendations, **not** owner-confirmed decisions. The spli
 - Full-CRM legal readiness must **not** be inferred from public-only approval.
 - S1-B needs narrowly authorized reconciliation of the old offer labels, displayed update dates, relevant metadata and existing legal-wording test assertions. No new date or wording is invented here.
 - All unresolved legal, organizational, retention and infrastructure gates stay **OPEN**.
+
+## 9. Update 2026-11-25 — S1-A implemented and accepted
+
+**Documentation only.** §8 is kept as written at the time. Full evidence: [S1-A closure](NOV-PUBLIC-LEGAL-01-s1a-closure-2026-11-25.md). The scope-adjustment record of §8 was pushed at `1b6c5771`; S1-A was subsequently implemented, technically accepted and pushed at `7706517ddc663e0b8b6787e42a281445514a0ec0` (`OWNER_CONSOLE`). This supersedes, for S1-A only, "unauthorized" (§8), "not yet committed or pushed" (§8) and "none of these tests or package gates has been executed" (§8.8).
+
+| Subject | State |
+|---|---|
+| Registry, fragment and package-integrity validators; strict TAR reader; hardened builder | **Implemented** (technical contracts only) |
+| §8.8 S1-A gate: old/new builder byte identity on the same revision and environment | PASS (`OWNER_CONSOLE`) |
+| §8.8 S1-A gate: full pre-commit suite without planned exclusions | PASS; one pre-existing archive-exposure test still skips |
+| Bounded-memory hashing, duplicate rejection, checked output and cleanup | Implemented; limits in S1-A closure §4.8 |
+| Application registry, `resources/legal-archive/`, runtime rendering, consent receipts | **Not implemented** |
+| Package checker | Implemented, synthetic tests only, **not active** (`legal_archive=NOT_ACTIVE`) |
+| §8.6 S1-B contract, activation rules in practice, master-document handling | **`PROPOSED`, not authorized** |
+| Version IDs | The validator now requires the `rev-NNNN` form; this is a code contract, **not** an owner decision on DR-08 |
+| Evidence C | `PENDING` |
+
+Inputs for the S1-B design, found in the implemented code: the unchanged release manifest does not include `resources/legal-archive`; `effective_from` is not compared with a clock; older fragment versions would link to the current public PDF paths; no cross-revision history check exists yet.
+
+The owner-confirmed scope adjustment (§8.1) is unchanged. S1 stays **OPEN**; R-LG2 and DR-08 stay **OPEN**; nothing is legally approved.

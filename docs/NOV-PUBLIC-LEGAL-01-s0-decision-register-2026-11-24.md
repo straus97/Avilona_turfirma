@@ -139,3 +139,12 @@ Documentation only; prepared from base `b89dd39a`, not yet committed or pushed. 
 | DR-09 | A verified private preservation source now exists for the five legacy PDFs as of `b89dd39a` (`OWNER_CONSOLE`). It resolves only acceptances matching those exact bytes; earlier texts, registration/review/publication Blade hashes and what the former site collected remain unresolved | **Not globally closed** |
 
 Nothing here is legal approval. S1-A and S1-B are not authorized.
+
+## 9. Update 2026-11-25 — DR-08 and DR-09 after S1-A
+
+Documentation only. §8 is kept as historical; its "not authorized" wording is superseded for S1-A only, which is implemented and pushed at `7706517d` ([S1-A closure](NOV-PUBLIC-LEGAL-01-s1a-closure-2026-11-25.md)). S1-B is not authorized.
+
+| ID | Clarification | Status |
+|---|---|---|
+| DR-08 | S1-A implements a technical record shape, `rev-NNNN` version IDs, approval-reference and activation rules in a validator. No registry or archive exists. The code decides nothing about approval authority, actual approval references, effective-date meaning, approved texts or master-document handling, and its label form is not an owner decision | **OPEN** |
+| DR-09 | No new evidence about earlier acceptances. S1-A reads no historical data and resolves no historical hash | **Partially evidenced; not globally closed** |
